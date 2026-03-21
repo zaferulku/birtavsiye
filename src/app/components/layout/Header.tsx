@@ -1,9 +1,32 @@
 "use client";
 import Link from "next/link";
-import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { supabase } from "../../../lib/supabase";
 
 export default function Header() {
-  const { data: session } = useSession();
+  const router = useRouter();
+  const [query, setQuery] = useState("");
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    const { data: listener } = supabase.auth.onAuthStateChange((_e, session) => {
+      setUser(session?.user ?? null);
+    });
+    return () => listener.subscription.unsubscribe();
+  }, []);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (query.trim()) router.push("/ara?q=" + encodeURIComponent(query));
+  };
+
+  const displayName =
+    user?.user_metadata?.full_name ||
+    user?.user_metadata?.name ||
+    user?.email?.split("@")[0] ||
+    "";
 
   return (
     <header className="bg-white border-b border-[#E8E4DF] px-6 sticky top-0 z-50">
@@ -15,29 +38,33 @@ export default function Header() {
             <span className="text-[#6B6760]">.net</span>
           </div>
         </Link>
-        <div className="flex-1 flex items-center bg-[#F8F6F2] border border-[#E8E4DF] rounded-xl px-4 gap-2 h-10">
+
+        <form onSubmit={handleSearch} className="flex-1 flex items-center bg-[#F8F6F2] border border-[#E8E4DF] rounded-xl px-4 gap-2 h-10">
           <span className="text-[#A8A49F]">🔍</span>
           <input
             type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
             placeholder="Ürün, kategori veya marka ara..."
             className="flex-1 bg-transparent text-sm outline-none text-[#0F0E0D] placeholder:text-[#A8A49F]"
           />
-        </div>
+        </form>
+
         <div className="flex items-center gap-3">
-          {session ? (
+          {user ? (
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2">
-                <a href="/profil">
-                <div className="w-8 h-8 rounded-full bg-[#FFF0EB] flex items-center justify-center text-xs font-bold text-[#E8460A] cursor-pointer hover:ring-2 hover:ring-[#E8460A] transition-all">
-                  {session.user?.name?.[0]?.toUpperCase()}
+              <Link href="/profil">
+                <div className="flex items-center gap-2 cursor-pointer">
+                  <div className="w-8 h-8 rounded-full bg-[#FFF0EB] flex items-center justify-center text-xs font-bold text-[#E8460A] hover:ring-2 hover:ring-[#E8460A] transition-all">
+                    {displayName[0]?.toUpperCase()}
                   </div>
-                  </a>
-                              <span className="text-sm font-medium text-[#0F0E0D] hidden md:block">
-                  {session.user?.name?.split(" ")[0]}
-                </span>
-              </div>
+                  <span className="text-sm font-medium text-[#0F0E0D] hidden md:block">
+                    {displayName.split(" ")[0]}
+                  </span>
+                </div>
+              </Link>
               <button
-                onClick={() => signOut()}
+                onClick={() => { supabase.auth.signOut(); setUser(null); }}
                 className="text-xs text-[#6B6760] border border-[#E8E4DF] rounded-lg px-3 py-2 hover:border-[#E8460A] hover:text-[#E8460A] transition-all"
               >
                 Çıkış
