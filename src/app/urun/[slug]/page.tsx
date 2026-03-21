@@ -3,6 +3,7 @@ import Link from "next/link";
 import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
 import ProductGallery from "../../components/urun/ProductGallery";
+import ProductInfo from "../../components/urun/ProductInfo";
 import CommunitySection from "../../components/urun/CommunitySection";
 
 export default async function UrunDetay({ params }: { params: Promise<{ slug: string }> }) {
@@ -47,22 +48,7 @@ export default async function UrunDetay({ params }: { params: Promise<{ slug: st
         </div>
         <div className="grid grid-cols-3 gap-6 mb-8">
           <ProductGallery />
-          <div>
-            <div className="text-xs font-bold text-[#E8460A] uppercase tracking-wider mb-2">
-              {product.brand}
-            </div>
-            <h1 className="font-syne font-bold text-2xl leading-tight mb-3">
-              {product.title}
-            </h1>
-            <p className="text-sm text-[#6B6760] mb-4">{product.description}</p>
-            <div className="flex gap-2 flex-wrap mb-4">
-              {["✅ Resmi garanti", "🛡️ 2 yıl garanti", "📦 Hızlı kargo"].map((t) => (
-                <span key={t} className="bg-[#F8F6F2] border border-[#E8E4DF] text-[#6B6760] text-xs px-3 py-1 rounded-full">
-                  {t}
-                </span>
-              ))}
-            </div>
-          </div>
+          <ProductInfo product={product} />
           <div className="sticky top-20">
             <div className="bg-white border-2 border-[#E8E4DF] rounded-2xl overflow-hidden">
               <div className="bg-[#0F0E0D] px-4 py-4">

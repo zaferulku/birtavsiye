@@ -1,53 +1,89 @@
-export default function ProductInfo() {
+"use client";
+import { useState, useEffect } from "react";
+import { supabase } from "../../../lib/supabase";
+
+export default function ProductInfo({ product }: { product: any }) {
+  const [isFav, setIsFav] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+      if (data.user && product?.id) checkFav(data.user.id);
+    });
+  }, [product?.id]);
+
+  const checkFav = async (userId: string) => {
+    const { data } = await supabase
+      .from("favorites")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("product_id", product.id)
+      .maybeSingle();
+    setIsFav(!!data);
+  };
+
+  const toggleFav = async () => {
+    if (!user) { window.location.href = "/giris"; return; }
+    setLoading(true);
+    if (isFav) {
+      await supabase.from("favorites")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("product_id", product.id);
+      setIsFav(false);
+    } else {
+      await supabase.from("favorites").insert({
+        user_id: user.id,
+        product_id: product.id,
+      });
+      setIsFav(true);
+    }
+    setLoading(false);
+  };
+
   return (
     <div>
-      <div className="text-xs font-bold text-[#E8460A] uppercase tracking-wider mb-2">
-        Apple
+      <div className="flex items-start justify-between mb-2">
+        <div className="text-xs font-bold text-[#E8460A] uppercase tracking-wider">
+          {product?.brand}
+        </div>
+        {/* Favori ikonu */}
+        <button
+          onClick={toggleFav}
+          disabled={loading}
+          className={`text-xl transition-all ${
+            isFav ? "text-[#E8460A]" : "text-[#D0CBC4] hover:text-[#E8460A]"
+          }`}
+        >
+          {isFav ? "♥" : "♡"}
+        </button>
       </div>
+
       <h1 className="font-syne font-bold text-2xl leading-tight mb-3">
-        iPhone 16 Pro 256GB Doğal Titanyum
+        {product?.title}
       </h1>
-      <div className="flex items-center gap-2 mb-3 flex-wrap">
-        <span className="text-yellow-400 text-sm">★★★★★</span>
-        <span className="font-medium text-sm">4.8</span>
-        <span className="text-[#A8A49F] text-sm">· 1.284 topluluk görüşü</span>
-        <span className="text-[#E8E4DF]">|</span>
-        <span className="text-[#A8A49F] text-sm">👁 48.2K görüntüleme</span>
-      </div>
+      <p className="text-sm text-[#6B6760] mb-4">{product?.description}</p>
+
       <div className="flex gap-2 flex-wrap mb-4">
-        {["🔥 Çok Satan", "✅ Resmi garanti", "🛡️ 2 yıl", "📦 Hızlı kargo"].map((t) => (
-          <span
-            key={t}
-            className="bg-[#F8F6F2] border border-[#E8E4DF] text-[#6B6760] text-xs px-3 py-1 rounded-full"
-          >
+        {["✅ Resmi garanti", "🛡️ 2 yıl garanti", "📦 Hızlı kargo"].map((t) => (
+          <span key={t} className="bg-[#F8F6F2] border border-[#E8E4DF] text-[#6B6760] text-xs px-3 py-1 rounded-full">
             {t}
           </span>
         ))}
       </div>
-      <div className="grid grid-cols-2 gap-2 mb-4">
-        {[
-          { l: "İşlemci", v: "Apple A18 Pro" },
-          { l: "Ekran", v: '6.3" Super Retina XDR' },
-          { l: "Kamera", v: "48MP + 48MP + 12MP" },
-          { l: "Batarya", v: "3.582 mAh" },
-          { l: "RAM", v: "8 GB" },
-          { l: "Depolama", v: "256 GB" },
-        ].map((s) => (
-          <div key={s.l} className="bg-[#F8F6F2] rounded-xl p-3">
-            <div className="text-xs text-[#A8A49F] mb-1">{s.l}</div>
-            <div className="text-xs font-medium">{s.v}</div>
-          </div>
-        ))}
-      </div>
+
       <div className="flex gap-2 flex-wrap">
-        {["♡ Favorilere Ekle", "⊕ Karşılaştır", "↑ Paylaş", "🔔 Fiyat Alarmı"].map((b) => (
-          <button
-            key={b}
-            className="bg-white border border-[#E8E4DF] rounded-lg px-3 py-2 text-xs text-[#6B6760] hover:border-[#E8460A] hover:text-[#E8460A] transition-all"
-          >
-            {b}
-          </button>
-        ))}
+        <button className="bg-white border border-[#E8E4DF] rounded-lg px-4 py-2 text-xs text-[#6B6760] hover:border-[#E8460A] hover:text-[#E8460A] transition-all">
+          ⊕ Karşılaştır
+        </button>
+        <button className="bg-white border border-[#E8E4DF] rounded-lg px-4 py-2 text-xs text-[#6B6760] hover:border-[#E8460A] hover:text-[#E8460A] transition-all">
+          ↑ Paylaş
+        </button>
+        <button className="bg-white border border-[#E8E4DF] rounded-lg px-4 py-2 text-xs text-[#6B6760] hover:border-[#E8460A] hover:text-[#E8460A] transition-all">
+          🔔 Fiyat Alarmı
+        </button>
       </div>
     </div>
   );
