@@ -110,7 +110,7 @@ export default async function UrunDetay({ params }: { params: Promise<{ slug: st
             </div>
           </div>
         </div>
-        <CommunitySection />
+        <CommunitySection productId={product.id} />
       </div>
       <Footer />
     </main>
