@@ -6,7 +6,6 @@ export default async function Categories() {
     .from("categories")
     .select("id, name, slug, icon");
 
-  // Her kategori için ürün sayısını çek
   const categoriesWithCount = await Promise.all(
     (categories || []).map(async (cat) => {
       const { count } = await supabase
@@ -18,24 +17,26 @@ export default async function Categories() {
   );
 
   return (
-    <section className="max-w-6xl mx-auto px-6 py-10">
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="font-syne font-bold text-xl">Kategoriler</h2>
-        <span className="text-sm text-[#E8460A] font-medium cursor-pointer">
+    <div className="bg-white rounded-2xl p-4 mb-4 shadow-sm">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="font-bold text-base text-[#0F0E0D]">Tüm Kategoriler</h2>
+        <span className="text-xs text-[#E8460A] font-medium cursor-pointer hover:underline">
           Tümünü Gör →
         </span>
       </div>
       <div className="grid grid-cols-6 gap-3">
         {categoriesWithCount.map((c) => (
           <Link href={"/kategori/" + c.slug} key={c.id}>
-            <div className="bg-white border border-[#E8E4DF] rounded-xl p-4 text-center cursor-pointer hover:border-[#E8460A] hover:bg-[#FFF0EB] transition-all">
-              <div className="text-2xl mb-2">{c.icon}</div>
-              <div className="text-xs font-medium">{c.name}</div>
-              <div className="text-xs text-[#A8A49F] mt-1">{c.count} ürün</div>
+            <div className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-[#FFF0EB] transition-all cursor-pointer group">
+              <div className="w-14 h-14 bg-[#F3F3F3] rounded-full flex items-center justify-center text-2xl group-hover:bg-[#FFE0D6] transition-all">
+                {c.icon}
+              </div>
+              <div className="text-xs font-medium text-center text-[#0F0E0D]">{c.name}</div>
+              <div className="text-xs text-[#A8A49F]">{c.count} ürün</div>
             </div>
           </Link>
         ))}
       </div>
-    </section>
+    </div>
   );
 }

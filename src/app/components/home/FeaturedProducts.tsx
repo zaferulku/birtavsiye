@@ -1,58 +1,52 @@
+import { supabase } from "../../../lib/supabase";
 import Link from "next/link";
 
-const products = [
-  { emoji: "📱", cat: "Akıllı Telefon", name: "Samsung Galaxy S25 Ultra 512GB", rating: "4.7", reviews: "2.140", price: "62.499", shops: 18, badge: "🔥 Çok Satan", badgeColor: "bg-[#E8460A]", slug: "samsung-galaxy-s25-ultra" },
-  { emoji: "🎧", cat: "Kulaklık", name: "Sony WH-1000XM5 ANC Kulaklık", rating: "4.9", reviews: "3.820", price: "8.999", shops: 22, badge: "⚡ %22 İndirim", badgeColor: "bg-[#7C3AED]", slug: "sony-wh-1000xm5" },
-  { emoji: "💻", cat: "Laptop", name: "MacBook Air M3 13\" 8GB 256GB", rating: "4.8", reviews: "940", price: "47.499", shops: 12, badge: "✨ Yeni", badgeColor: "bg-[#059669]", slug: "macbook-air-m3" },
-  { emoji: "⌚", cat: "Akıllı Saat", name: "Apple Watch Series 10 46mm GPS", rating: "4.6", reviews: "580", price: "19.999", shops: 9, badge: "", badgeColor: "", slug: "apple-watch-series-10" },
-];
+export default async function FeaturedProducts() {
+  const { data: products } = await supabase
+    .from("products")
+    .select("id, title, slug, brand, image_url")
+    .limit(10);
 
-export default function FeaturedProducts() {
   return (
-    <section className="max-w-6xl mx-auto px-6 py-10 pt-0">
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="font-syne font-bold text-xl">Öne Çıkan Ürünler</h2>
-        <span className="text-sm text-[#E8460A] font-medium cursor-pointer">
+    <div className="mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-bold text-gray-900">Öne Çıkan Ürünler</h2>
+        <Link href="/ara?q=urun" className="text-sm text-[#E8460A] font-semibold hover:underline">
           Tümünü Gör →
-        </span>
+        </Link>
       </div>
-      <div className="grid grid-cols-4 gap-4">
-        {products.map((p) => (
-          <Link href={`/urun/${p.slug}`} key={p.name}>
-            <div className="bg-white border border-[#E8E4DF] rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg transition-all">
-              <div className="h-40 bg-[#F8F6F2] flex items-center justify-center text-5xl relative">
-                {p.badge && (
-                  <span className={`absolute top-2 left-2 ${p.badgeColor} text-white text-xs font-semibold px-2 py-1 rounded`}>
-                    {p.badge}
-                  </span>
+      <div className="grid grid-cols-4 gap-3">
+        {(products || []).map((p) => (
+          <Link href={"/urun/" + p.slug} key={p.id}>
+            <div className="bg-white rounded-2xl overflow-hidden group cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-100">
+              <div className="relative aspect-square overflow-hidden bg-gray-50">
+                {p.image_url ? (
+                  <img
+                    src={p.image_url}
+                    alt={p.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-5xl">📦</div>
                 )}
-                <span className="absolute top-2 right-2 bg-white border border-[#E8E4DF] rounded-full w-7 h-7 flex items-center justify-center text-sm cursor-pointer hover:border-[#E8460A]">
+                <button className="absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-red-500">
                   ♡
-                </span>
-                {p.emoji}
+                </button>
               </div>
               <div className="p-3">
-                <div className="text-xs font-semibold text-[#E8460A] uppercase tracking-wide mb-1">{p.cat}</div>
-                <div className="text-sm font-medium leading-snug mb-2">{p.name}</div>
-                <div className="flex items-center gap-1 mb-3 text-xs">
-                  <span className="text-yellow-400">★★★★★</span>
-                  <span className="font-medium">{p.rating}</span>
-                  <span className="text-[#A8A49F]">· {p.reviews} görüş</span>
-                </div>
+                <p className="text-xs text-gray-400 mb-1">{p.brand}</p>
+                <p className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug mb-2 min-h-[32px]">
+                  {p.title}
+                </p>
                 <div className="flex items-center justify-between">
-                  <div>
-                    <div className="font-syne font-bold text-lg text-[#E8460A]">{p.price} ₺</div>
-                  </div>
-                  <span className="text-xs text-[#A8A49F] bg-[#F8F6F2] px-2 py-1 rounded">{p.shops} mağaza</span>
+                  <span className="text-xs font-bold text-[#E8460A]">Fiyat Karşılaştır</span>
+                  <span className="text-xs text-gray-400">→</span>
                 </div>
               </div>
-              <button className="w-full bg-[#F8F6F2] border-t border-[#E8E4DF] py-2 text-xs font-medium text-[#6B6760] hover:bg-[#FFF0EB] hover:text-[#E8460A] transition-all">
-                Fiyatları Karşılaştır →
-              </button>
             </div>
           </Link>
         ))}
       </div>
-    </section>
+    </div>
   );
 }
