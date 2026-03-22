@@ -26,8 +26,8 @@ export default async function UrunDetay({ params }: { params: Promise<{ slug: st
       <main>
         <Header />
         <div className="max-w-6xl mx-auto px-6 py-20 text-center">
-          <h1 className="font-syne font-bold text-2xl mb-4">Ürün bulunamadı</h1>
-          <Link href="/" className="text-[#E8460A]">Anasayfaya dön</Link>
+          <h1 className="font-syne font-bold text-2xl mb-4">Urun bulunamadi</h1>
+          <Link href="/" className="text-[#E8460A]">Anasayfaya don</Link>
         </div>
         <Footer />
       </main>
@@ -47,21 +47,23 @@ export default async function UrunDetay({ params }: { params: Promise<{ slug: st
           <span className="text-[#0F0E0D]">{product.title}</span>
         </div>
         <div className="grid grid-cols-3 gap-6 mb-8">
-          <ProductGallery />
+          <ProductGallery imageUrl={product.image_url} />
           <ProductInfo product={product} />
           <div className="sticky top-20">
             <div className="bg-white border-2 border-[#E8E4DF] rounded-2xl overflow-hidden">
               <div className="bg-[#0F0E0D] px-4 py-4">
                 <div className="text-xs text-[#888] mb-1">
-                  En ucuz fiyat · {cheapestStore}
+                  En ucuz fiyat - {cheapestStore}
                 </div>
                 <div className="font-syne font-extrabold text-3xl text-white">
-                  {minPrice ? Number(minPrice).toLocaleString("tr-TR") : "—"} ₺
+                  {minPrice ? Number(minPrice).toLocaleString("tr-TR") : "Fiyat bekleniyor"} {minPrice ? "TL" : ""}
                 </div>
               </div>
-              <button className="w-full bg-[#E8460A] text-white py-3 text-sm font-medium">
-                {cheapestStore}&apos;a Git →
-              </button>
+              {cheapestStore && (
+                <button className="w-full bg-[#E8460A] text-white py-3 text-sm font-medium">
+                  {cheapestStore} sitesine git
+                </button>
+              )}
               <div>
                 {prices?.map((p, i) => (
                   <div key={p.id} className="flex items-center gap-3 px-4 py-3 border-b border-[#E8E4DF] last:border-0">
@@ -75,12 +77,12 @@ export default async function UrunDetay({ params }: { params: Promise<{ slug: st
                     <div className="flex-1 text-sm font-medium">{p.stores?.name}</div>
                     <div className="text-right">
                       <div className="font-syne font-bold text-sm">
-                        {Number(p.price).toLocaleString("tr-TR")} ₺
+                        {Number(p.price).toLocaleString("tr-TR")} TL
                       </div>
                       {i === 0 && <div className="text-xs text-green-600">En ucuz</div>}
                       {i > 0 && (
                         <div className="text-xs text-red-500">
-                          +{(Number(p.price) - Number(minPrice)).toLocaleString("tr-TR")} ₺
+                          +{(Number(p.price) - Number(minPrice)).toLocaleString("tr-TR")} TL
                         </div>
                       )}
                     </div>
@@ -91,7 +93,7 @@ export default async function UrunDetay({ params }: { params: Promise<{ slug: st
                 ))}
               </div>
               <div className="bg-yellow-50 border-t border-yellow-200 px-4 py-3 text-xs text-yellow-800 cursor-pointer">
-                🔔 Fiyat düşünce haber ver — Alarm kur
+                Fiyat duşunce haber ver - Alarm kur
               </div>
             </div>
           </div>
