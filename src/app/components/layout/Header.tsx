@@ -48,7 +48,6 @@ export default function Header() {
   return (
     <header className="bg-white sticky top-0 z-50" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
 
-      {/* Satir 1: Logo + Arama + Ikonlar */}
       <div className="border-b border-gray-100">
         <div className="max-w-[1400px] mx-auto px-6 flex items-center gap-5 h-16">
 
@@ -72,17 +71,18 @@ export default function Header() {
             )}
           </form>
 
-          {/* Sag Ikonlar */}
           <div className="flex items-center gap-5">
 
             {/* Hesabim */}
             <div className="relative" onMouseEnter={openProfile} onMouseLeave={closeProfile}>
-              <button className="flex items-center gap-2 text-gray-600 hover:text-[#E8460A] transition-colors">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-                </svg>
-                <span className="text-xs font-medium">Hesabim</span>
-              </button>
+              <Link href={user ? "/profil" : "/giris"}>
+                <div className="flex items-center gap-2 text-gray-600 hover:text-[#E8460A] transition-colors cursor-pointer">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                  </svg>
+                  <span className="text-xs font-medium">Hesabim</span>
+                </div>
+              </Link>
 
               {profileOpen && (
                 <div className="absolute right-0 top-10 w-60 bg-white rounded-2xl overflow-hidden z-50"
@@ -157,7 +157,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Satir 2: Kategoriler */}
+      {/* Kategoriler */}
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-[1400px] mx-auto px-6 flex items-center h-10">
 
