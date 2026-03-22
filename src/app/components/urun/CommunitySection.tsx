@@ -228,7 +228,7 @@ const topPosts = [...topPostsRaw].sort((a, b) => {
                     <button
                       onClick={() => { if (!user) { window.location.href = "/giris"; return; } setReplyToId(replyToId === p.id ? null : p.id); }}
                       className="text-xs text-gray-400 hover:text-[#E8460A] transition-colors px-1.5 py-1 rounded">
-                      ↩ {replies.length > 0 && replies.length}
+                      Yanitla {replies.length > 0 && `(${replies.length})`}
                     </button>
                   )}
                   <button onClick={() => handleVote(p, "up")}
@@ -325,15 +325,25 @@ const topPosts = [...topPostsRaw].sort((a, b) => {
     </div>
   </div>
   <div className="flex items-center gap-3">
-    <div className="flex-1 flex items-center bg-gray-100 rounded-lg px-3 gap-2 h-9">
-      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-      </svg>
-      <input type="text" placeholder="Degerlendirmelerde Ara..." 
+    <div className="flex-1">
+  <label className="text-xs text-gray-500 font-medium mb-1 block">Yorumlarda Ara</label>
+  <div className="flex items-center bg-gray-100 rounded-lg px-3 gap-2 h-9">
+    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+    </svg>
+    <input
+  type="text"
+  placeholder="Yorum veya kullanici adi ara..."
   value={searchQuery}
   onChange={(e) => setSearchQuery(e.target.value)}
-  className="flex-1 bg-transparent text-xs outline-none text-gray-700 placeholder:text-gray-400" />
-    </div>
+  onClick={(e) => e.stopPropagation()}
+  className="flex-1 bg-transparent text-xs outline-none text-gray-700 placeholder:text-gray-400"
+/>
+    {searchQuery && (
+      <button onClick={() => setSearchQuery("")} className="text-gray-400 hover:text-gray-600 text-sm">×</button>
+    )}
+  </div>
+</div>
     <select 
   value={sortBy}
   onChange={(e) => setSortBy(e.target.value)}
