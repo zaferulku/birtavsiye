@@ -97,6 +97,8 @@ export default function CommunitySection({ productId }: { productId: string }) {
   const [user, setUser] = useState<any>(null);
   const [replyToId, setReplyToId] = useState<string | null>(null);
   const [votedPosts, setVotedPosts] = useState<Record<string, "up" | "down">>({});
+  const [sortBy, setSortBy] = useState("onerilen");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -170,10 +172,22 @@ export default function CommunitySection({ productId }: { productId: string }) {
     setReplyToId(null);
   }, [user, productId]);
 
-  const topPosts = posts.filter((p) => !p.parent_id).sort((a, b) => (b.votes - b.downvotes) - (a.votes - a.downvotes));
+  const topPostsRaw = posts.filter((p) => !p.parent_id)
+  .filter((p) => searchQuery === "" || p.body.toLowerCase().includes(searchQuery.toLowerCase()) || p.user_name.toLowerCase().includes(searchQuery.toLowerCase()));
+
+const topPosts = [...topPostsRaw].sort((a, b) => {
+  if (sortBy === "en-yeni") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  if (sortBy === "en-eski") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+  if (sortBy === "en-faydali") return (b.votes - b.downvotes) - (a.votes - a.downvotes);
+  if (sortBy === "en-yuksek") return (b.rating || 0) - (a.rating || 0);
+  if (sortBy === "en-dusuk") return (a.rating || 0) - (b.rating || 0);
+  return (b.votes - b.downvotes) - (a.votes - a.downvotes);
+});
   const getReplies = (id: string) => posts.filter((p) => p.parent_id === id);
 
   const ratingsAll = topPosts.filter((p) => p.rating && p.rating > 0);
+  const yorumCount = topPosts.filter((p) => p.body && !p.body.match(/^\d yildiz puan verildi\.$/)).length;
+  const degerlendirmeCount = ratingsAll.length;
   const avgRating = ratingsAll.length > 0
     ? Math.round(ratingsAll.reduce((acc, p) => acc + (p.rating || 0), 0) / ratingsAll.length) : 0;
   const ratingDist = [5, 4, 3, 2, 1].map((star) => ({
@@ -299,10 +313,40 @@ export default function CommunitySection({ productId }: { productId: string }) {
           {/* SAG */}
           <div className="flex-1 min-w-0">
             <div id="yorum-kutusu" className="mb-6 bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-              <div className="bg-gradient-to-r from-orange-50 to-amber-50 px-5 py-3 border-b border-gray-100">
-                <h4 className="font-bold text-gray-800 text-sm">Deneyiminizi Paylasin</h4>
-                <p className="text-xs text-gray-500">Gercek yorumlar diger kullanicilara yol gosterir</p>
-              </div>
+              <div className="px-5 py-4 border-b border-gray-100">
+  <div className="flex items-center justify-between mb-3">
+    <div>
+      <h4 className="font-bold text-gray-900 text-base">Tum Degerlendirmeler</h4>
+      <div className="flex items-center gap-2 mt-1">
+        <StarRating rating={avgRating} size="sm" />
+        <span className="text-sm font-bold text-gray-800">{avgRating > 0 ? avgRating.toFixed(1) : "—"}</span>
+        <span className="text-xs text-gray-400">· {degerlendirmeCount} degerlendirme · {yorumCount} yorum</span>
+      </div>
+    </div>
+  </div>
+  <div className="flex items-center gap-3">
+    <div className="flex-1 flex items-center bg-gray-100 rounded-lg px-3 gap-2 h-9">
+      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      <input type="text" placeholder="Degerlendirmelerde Ara..." 
+  value={searchQuery}
+  onChange={(e) => setSearchQuery(e.target.value)}
+  className="flex-1 bg-transparent text-xs outline-none text-gray-700 placeholder:text-gray-400" />
+    </div>
+    <select 
+  value={sortBy}
+  onChange={(e) => setSortBy(e.target.value)}
+  className="border border-gray-200 rounded-lg px-3 h-9 text-xs text-gray-600 outline-none bg-white cursor-pointer hover:border-[#E8460A] transition-all">
+  <option value="onerilen">Onerilen Siralama</option>
+  <option value="en-yeni">En Yeni</option>
+  <option value="en-eski">En Eski</option>
+  <option value="en-faydali">En Faydali</option>
+  <option value="en-yuksek">En Yuksek Puan</option>
+  <option value="en-dusuk">En Dusuk Puan</option>
+</select>
+  </div>
+</div>
               {user ? (
                 <div className="p-4">
                   <div className="flex items-center gap-3 mb-3">
