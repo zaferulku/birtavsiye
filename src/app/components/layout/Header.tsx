@@ -40,21 +40,10 @@ export default function Header() {
     user?.user_metadata?.name ||
     user?.email?.split("@")[0] || "";
 
-  const openProfile = () => {
-    if (profileTimer.current) clearTimeout(profileTimer.current);
-    setProfileOpen(true);
-  };
-  const closeProfile = () => {
-    profileTimer.current = setTimeout(() => setProfileOpen(false), 200);
-  };
-
-  const openCats = () => {
-    if (catsTimer.current) clearTimeout(catsTimer.current);
-    setAllCatsOpen(true);
-  };
-  const closeCats = () => {
-    catsTimer.current = setTimeout(() => setAllCatsOpen(false), 200);
-  };
+  const openProfile = () => { if (profileTimer.current) clearTimeout(profileTimer.current); setProfileOpen(true); };
+  const closeProfile = () => { profileTimer.current = setTimeout(() => setProfileOpen(false), 200); };
+  const openCats = () => { if (catsTimer.current) clearTimeout(catsTimer.current); setAllCatsOpen(true); };
+  const closeCats = () => { catsTimer.current = setTimeout(() => setAllCatsOpen(false), 200); };
 
   return (
     <header className="bg-white sticky top-0 z-50" style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.08)" }}>
@@ -75,34 +64,30 @@ export default function Header() {
             <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-[#E8460A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
-            <input
-              type="text" value={query} onChange={(e) => setQuery(e.target.value)}
+            <input type="text" value={query} onChange={(e) => setQuery(e.target.value)}
               placeholder="Urun, kategori veya marka ara..."
-              className="flex-1 bg-transparent text-sm outline-none text-gray-800 placeholder:text-gray-400"
-            />
+              className="flex-1 bg-transparent text-sm outline-none text-gray-800 placeholder:text-gray-400" />
             {query && (
               <button type="button" onClick={() => setQuery("")} className="text-gray-400 hover:text-gray-600 text-lg leading-none">×</button>
             )}
           </form>
 
-          <div className="flex items-center gap-6">
+          {/* Sag Ikonlar */}
+          <div className="flex items-center gap-5">
 
             {/* Hesabim */}
             <div className="relative" onMouseEnter={openProfile} onMouseLeave={closeProfile}>
-              <button className="flex flex-col items-center gap-0.5 text-gray-600 hover:text-[#E8460A] transition-colors min-w-[52px]">
-                <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <button className="flex items-center gap-2 text-gray-600 hover:text-[#E8460A] transition-colors">
+                <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
                 </svg>
-                <span className="text-xs font-medium">{user ? displayName.split(" ")[0] : "Hesabim"}</span>
+                <span className="text-xs font-medium">Hesabim</span>
               </button>
 
               {profileOpen && (
-                <div
-                  className="absolute right-0 top-12 w-60 bg-white rounded-2xl overflow-hidden z-50"
+                <div className="absolute right-0 top-10 w-60 bg-white rounded-2xl overflow-hidden z-50"
                   style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.15)" }}
-                  onMouseEnter={openProfile}
-                  onMouseLeave={closeProfile}
-                >
+                  onMouseEnter={openProfile} onMouseLeave={closeProfile}>
                   {user ? (
                     <>
                       <div className="px-5 py-4 bg-gradient-to-br from-orange-50 to-red-50 border-b border-gray-100">
@@ -141,14 +126,10 @@ export default function Header() {
                       </div>
                       <div className="p-3 flex flex-col gap-2">
                         <Link href="/giris" onClick={() => setProfileOpen(false)}>
-                          <div className="w-full py-2.5 bg-[#E8460A] text-white text-sm font-bold rounded-xl text-center hover:bg-[#C93A08] transition-colors">
-                            Giris Yap
-                          </div>
+                          <div className="w-full py-2.5 bg-[#E8460A] text-white text-sm font-bold rounded-xl text-center hover:bg-[#C93A08] transition-colors">Giris Yap</div>
                         </Link>
                         <Link href="/giris" onClick={() => setProfileOpen(false)}>
-                          <div className="w-full py-2.5 border-2 border-gray-200 text-gray-700 text-sm font-medium rounded-xl text-center hover:border-[#E8460A] hover:text-[#E8460A] transition-colors">
-                            Kayit Ol
-                          </div>
+                          <div className="w-full py-2.5 border-2 border-gray-200 text-gray-700 text-sm font-medium rounded-xl text-center hover:border-[#E8460A] hover:text-[#E8460A] transition-colors">Kayit Ol</div>
                         </Link>
                       </div>
                     </>
@@ -158,16 +139,16 @@ export default function Header() {
             </div>
 
             {/* Favorilerim */}
-            <Link href={user ? "/profil" : "/giris"} className="flex flex-col items-center gap-0.5 text-gray-600 hover:text-[#E8460A] transition-colors min-w-[52px]">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <Link href={user ? "/profil" : "/giris"} className="flex items-center gap-2 text-gray-600 hover:text-[#E8460A] transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
               </svg>
               <span className="text-xs font-medium">Favorilerim</span>
             </Link>
 
             {/* Sepetim */}
-            <Link href="#" className="flex flex-col items-center gap-0.5 text-gray-600 hover:text-[#E8460A] transition-colors min-w-[52px]">
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <Link href="#" className="flex items-center gap-2 text-gray-600 hover:text-[#E8460A] transition-colors">
+              <svg xmlns="http://www.w3.org/2000/svg" className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.874-7.148a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z" />
               </svg>
               <span className="text-xs font-medium">Sepetim</span>
@@ -176,7 +157,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Satir 2: Kategoriler nav */}
+      {/* Satir 2: Kategoriler */}
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-[1400px] mx-auto px-6 flex items-center h-10">
 
@@ -189,12 +170,9 @@ export default function Header() {
             </button>
 
             {allCatsOpen && (
-              <div
-                className="absolute left-0 top-10 bg-white z-50 p-5 w-[640px] rounded-b-2xl"
+              <div className="absolute left-0 top-10 bg-white z-50 p-5 w-[640px] rounded-b-2xl"
                 style={{ boxShadow: "0 20px 60px rgba(0,0,0,0.12)" }}
-                onMouseEnter={openCats}
-                onMouseLeave={closeCats}
-              >
+                onMouseEnter={openCats} onMouseLeave={closeCats}>
                 <div className="grid grid-cols-3 gap-6">
                   {categories.map((cat) => (
                     <div key={cat.title}>
