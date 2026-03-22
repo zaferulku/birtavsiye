@@ -12,7 +12,14 @@ type Product = {
   slug: string;
   brand: string;
   description: string;
+  image_url?: string;
+  category_id?: string;
 };
+
+const popularSearches = [
+  "iPhone 16", "Samsung Galaxy", "MacBook", "AirPods",
+  "PlayStation 5", "Xbox", "iPad", "Dyson",
+];
 
 function AramaIcerik() {
   const searchParams = useSearchParams();
@@ -21,6 +28,8 @@ function AramaIcerik() {
   const [query, setQuery] = useState(q);
   const [results, setResults] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
+  const [sortBy, setSortBy] = useState("varsayilan");
+  const [selectedBrand, setSelectedBrand] = useState("");
 
   useEffect(() => {
     setQuery(q);
@@ -29,135 +38,196 @@ function AramaIcerik() {
   }, [q]);
 
   const search = async (term: string) => {
-  if (!term.trim()) return;
-  setLoading(true);
+    if (!term.trim()) return;
+    setLoading(true);
 
-  // Kategori adına göre ara
-  const { data: categoryData } = await supabase
-    .from("categories")
-    .select("id")
-    .ilike("name", "%" + term + "%");
+    const { data: categoryData } = await supabase
+      .from("categories").select("id").ilike("name", "%" + term + "%");
+    const categoryIds = categoryData?.map((c) => c.id) || [];
 
-  const categoryIds = categoryData?.map((c) => c.id) || [];
+    let queryBuilder = supabase
+      .from("products")
+      .select("id, title, slug, brand, description, image_url, category_id")
+      .limit(40);
 
-  // Ürünleri ara — başlık, marka, açıklama veya kategori
-  let queryBuilder = supabase
-    .from("products")
-    .select("id, title, slug, brand, description")
-    .limit(20);
+    if (categoryIds.length > 0) {
+      queryBuilder = queryBuilder.or(
+        `title.ilike.%${term}%,brand.ilike.%${term}%,description.ilike.%${term}%,category_id.in.(${categoryIds.join(",")})`
+      );
+    } else {
+      queryBuilder = queryBuilder.or(
+        `title.ilike.%${term}%,brand.ilike.%${term}%,description.ilike.%${term}%`
+      );
+    }
 
-  if (categoryIds.length > 0) {
-    queryBuilder = queryBuilder.or(
-      `title.ilike.%${term}%,brand.ilike.%${term}%,description.ilike.%${term}%,category_id.in.(${categoryIds.join(",")})`
-    );
-  } else {
-    queryBuilder = queryBuilder.or(
-      `title.ilike.%${term}%,brand.ilike.%${term}%,description.ilike.%${term}%`
-    );
-  }
-
-  const { data } = await queryBuilder;
-  if (data) setResults(data);
-  setLoading(false);
-};
+    const { data } = await queryBuilder;
+    if (data) setResults(data);
+    setLoading(false);
+  };
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) router.push("/ara?q=" + encodeURIComponent(query));
   };
 
-  const emojis: Record<string, string> = {
-    Apple: "🍎",
-    Samsung: "📱",
-    Sony: "🎧",
-    Xiaomi: "📱",
-    Google: "📱",
-    OnePlus: "📱",
-    Dell: "💻",
-    default: "📦",
-  };
+  // Filtreleme ve sıralama
+  const brands = [...new Set(results.map((p) => p.brand))].filter(Boolean);
+
+  const filteredResults = results
+    .filter((p) => selectedBrand === "" || p.brand === selectedBrand)
+    .sort((a, b) => {
+      if (sortBy === "a-z") return a.title.localeCompare(b.title);
+      if (sortBy === "z-a") return b.title.localeCompare(a.title);
+      return 0;
+    });
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-10">
-      <form onSubmit={handleSearch} className="flex gap-3 mb-8">
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Ürün, kategori veya marka ara..."
-          className="flex-1 border-2 border-[#E8E4DF] rounded-xl px-4 py-3 text-sm outline-none focus:border-[#E8460A]"
-          autoFocus
-        />
-        <button
-          type="submit"
-          className="bg-[#E8460A] text-white px-6 py-3 rounded-xl text-sm font-medium hover:bg-[#C93A08] transition-all"
-        >
+    <div className="max-w-[1400px] mx-auto px-8 py-6">
+
+      {/* Arama Formu */}
+      <form onSubmit={handleSearch} className="flex gap-3 mb-6">
+        <div className="flex-1 flex items-center bg-white border-2 border-gray-200 rounded-xl px-4 gap-3 h-12 focus-within:border-[#E8460A] transition-all">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input type="text" value={query} onChange={(e) => setQuery(e.target.value)}
+            placeholder="Urun, kategori veya marka ara..."
+            className="flex-1 bg-transparent text-sm outline-none text-gray-800 placeholder:text-gray-400"
+            autoFocus />
+          {query && (
+            <button type="button" onClick={() => { setQuery(""); router.push("/ara?q="); }}
+              className="text-gray-400 hover:text-gray-600 text-lg">×</button>
+          )}
+        </div>
+        <button type="submit"
+          className="bg-[#E8460A] text-white px-8 h-12 rounded-xl text-sm font-bold hover:bg-[#C93A08] transition-all">
           Ara
         </button>
       </form>
 
-      {loading && (
-        <div className="text-center py-16 text-[#A8A49F] text-sm">
-          Aranıyor...
-        </div>
-      )}
-
-      {!loading && q && results.length === 0 && (
-        <div className="text-center py-16">
-          <div className="text-4xl mb-3">🔍</div>
-          <div className="text-sm font-medium text-[#0F0E0D] mb-1">
-            &quot;{q}&quot; için sonuç bulunamadı
-          </div>
-          <div className="text-xs text-[#A8A49F]">
-            Farklı bir kelime dene veya kategori sayfalarına göz at.
-          </div>
-        </div>
-      )}
-
-      {!loading && results.length > 0 && (
-        <div>
-          <div className="text-sm text-[#6B6760] mb-4">
-            <strong className="text-[#0F0E0D]">{results.length}</strong> sonuç bulundu —{" "}
-            <span className="text-[#E8460A]">&quot;{q}&quot;</span>
-          </div>
-          <div className="flex flex-col gap-3">
-            {results.map((p) => (
-              <Link href={"/urun/" + p.slug} key={p.id}>
-                <div className="bg-white border border-[#E8E4DF] rounded-2xl p-4 hover:shadow-md hover:border-[#E8460A] transition-all cursor-pointer">
-                  <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-[#F8F6F2] rounded-xl flex items-center justify-center text-2xl flex-shrink-0">
-                      {emojis[p.brand] || emojis.default}
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-xs font-bold text-[#E8460A] uppercase tracking-wide mb-1">
-                        {p.brand}
-                      </div>
-                      <div className="text-sm font-medium text-[#0F0E0D] mb-1">
-                        {p.title}
-                      </div>
-                      <div className="text-xs text-[#A8A49F]">
-                        {p.description}
-                      </div>
-                    </div>
-                    <div className="text-xs text-[#E8460A] font-medium whitespace-nowrap">
-                      Fiyatları Gör →
-                    </div>
-                  </div>
-                </div>
-              </Link>
+      {/* Sonuç yok — popüler aramalar */}
+      {!q && !loading && (
+        <div className="text-center py-12">
+          <div className="text-5xl mb-4">🔍</div>
+          <div className="text-base font-bold text-gray-800 mb-2">Ne aramak istersiniz?</div>
+          <div className="text-sm text-gray-500 mb-8">Urun adi, marka veya kategori yazin</div>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {popularSearches.map((s) => (
+              <button key={s} onClick={() => router.push("/ara?q=" + encodeURIComponent(s))}
+                className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-600 hover:border-[#E8460A] hover:text-[#E8460A] transition-all">
+                {s}
+              </button>
             ))}
           </div>
         </div>
       )}
 
-      {!q && !loading && (
+      {/* Yükleniyor */}
+      {loading && (
         <div className="text-center py-16">
-          <div className="text-4xl mb-3">🔍</div>
-          <div className="text-sm font-medium text-[#0F0E0D] mb-1">
-            Ne arıyorsun?
+          <div className="text-4xl mb-3 animate-pulse">🔍</div>
+          <div className="text-sm text-gray-500">Araniyor...</div>
+        </div>
+      )}
+
+      {/* Sonuç yok */}
+      {!loading && q && results.length === 0 && (
+        <div className="text-center py-16">
+          <div className="text-5xl mb-4">😕</div>
+          <div className="text-base font-bold text-gray-800 mb-2">
+            "{q}" icin sonuc bulunamadi
           </div>
-          <div className="text-xs text-[#A8A49F]">
-            Ürün adı, marka veya kategori yaz
+          <div className="text-sm text-gray-500 mb-6">Farkli bir kelime deneyin</div>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {popularSearches.map((s) => (
+              <button key={s} onClick={() => router.push("/ara?q=" + encodeURIComponent(s))}
+                className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-600 hover:border-[#E8460A] hover:text-[#E8460A] transition-all">
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Sonuçlar */}
+      {!loading && filteredResults.length > 0 && (
+        <div className="flex gap-6">
+
+          {/* Sol - Filtreler */}
+          <div className="w-56 flex-shrink-0">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sticky top-24">
+              <h3 className="font-bold text-sm text-gray-900 mb-4">Filtrele</h3>
+
+              {/* Sıralama */}
+              <div className="mb-4">
+                <div className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Siralama</div>
+                {[
+                  { value: "varsayilan", label: "Varsayilan" },
+                  { value: "a-z", label: "A-Z" },
+                  { value: "z-a", label: "Z-A" },
+                ].map((s) => (
+                  <button key={s.value} onClick={() => setSortBy(s.value)}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-xs mb-1 transition-all ${
+                      sortBy === s.value ? "bg-orange-50 text-[#E8460A] font-semibold" : "text-gray-600 hover:bg-gray-50"
+                    }`}>
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Marka */}
+              {brands.length > 1 && (
+                <div>
+                  <div className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Marka</div>
+                  <button onClick={() => setSelectedBrand("")}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-xs mb-1 transition-all ${
+                      selectedBrand === "" ? "bg-orange-50 text-[#E8460A] font-semibold" : "text-gray-600 hover:bg-gray-50"
+                    }`}>
+                    Tumu ({results.length})
+                  </button>
+                  {brands.map((b) => (
+                    <button key={b} onClick={() => setSelectedBrand(b)}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-xs mb-1 transition-all ${
+                        selectedBrand === b ? "bg-orange-50 text-[#E8460A] font-semibold" : "text-gray-600 hover:bg-gray-50"
+                      }`}>
+                      {b} ({results.filter(p => p.brand === b).length})
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Sag - Sonuçlar */}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-sm text-gray-500">
+                <span className="font-bold text-gray-900">{filteredResults.length}</span> sonuc bulundu —{" "}
+                <span className="text-[#E8460A] font-medium">"{q}"</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-4 gap-4">
+              {filteredResults.map((p) => (
+                <Link href={"/urun/" + p.slug} key={p.id}>
+                  <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-lg hover:border-[#E8460A]/30 transition-all cursor-pointer group">
+                    <div className="aspect-square bg-gray-50 overflow-hidden">
+                      {p.image_url ? (
+                        <img src={p.image_url} alt={p.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-4xl">📦</div>
+                      )}
+                    </div>
+                    <div className="p-3">
+                      <div className="text-xs font-bold text-[#E8460A] uppercase tracking-wide mb-1">{p.brand}</div>
+                      <div className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug mb-2">{p.title}</div>
+                      <div className="text-xs text-[#E8460A] font-medium">Fiyatlari Karsilastir →</div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -167,9 +237,9 @@ function AramaIcerik() {
 
 export default function AramaSayfasi() {
   return (
-    <main>
+    <main className="bg-gray-50 min-h-screen">
       <Header />
-      <Suspense fallback={<div className="text-center py-20 text-[#A8A49F]">Yükleniyor...</div>}>
+      <Suspense fallback={<div className="text-center py-20 text-gray-400">Yukleniyor...</div>}>
         <AramaIcerik />
       </Suspense>
       <Footer />
