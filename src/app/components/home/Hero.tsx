@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Hero() {
   return (
     <section className="bg-[#0F0E0D] text-white px-6 py-12">
@@ -11,16 +13,6 @@ export default function Hero() {
             Topluluk tavsiyeleri ve gerçek zamanlı fiyat karşılaştırması ile
             akıllıca alışveriş yap.
           </p>
-          <div className="flex bg-white rounded-xl overflow-hidden">
-            <input
-              type="text"
-              placeholder="Ne arıyorsun? (örn. iPhone 16, serum, kulaklık...)"
-              className="flex-1 px-4 py-3 text-sm text-[#0F0E0D] outline-none"
-            />
-            <button className="bg-[#E8460A] text-white px-6 py-3 text-sm font-medium">
-              Ara
-            </button>
-          </div>
           <div className="flex gap-6 mt-5">
             {[
               { n: "250K+", l: "Ürün" },
@@ -45,9 +37,11 @@ export default function Hero() {
           <div className="font-syne font-bold text-lg mb-2">MacBook Air M3 13"</div>
           <div className="flex items-center gap-3">
             <span className="text-[#FF6B35] font-bold text-xl">47.499 ₺</span>
-            <span className="bg-[#E8460A]/20 text-[#FF6B35] text-xs px-2 py-1 rounded">
-              En Ucuz · 12 Mağaza
-            </span>
+            <Link href="/urun/macbook-air-m3">
+              <span className="bg-[#E8460A]/20 text-[#FF6B35] text-xs px-2 py-1 rounded cursor-pointer hover:bg-[#E8460A]/40 transition-all">
+                En Ucuz · 12 Mağaza
+              </span>
+            </Link>
           </div>
         </div>
       </div>
