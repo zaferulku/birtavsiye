@@ -1,11 +1,18 @@
+"use client";
+import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
 import Link from "next/link";
 
-export default async function FeaturedProducts() {
-  const { data: products } = await supabase
-    .from("products")
-    .select("id, title, slug, brand, image_url")
-    .limit(10);
+export default function FeaturedProducts() {
+  const [products, setProducts] = useState<any[]>([]);
+
+  useEffect(() => {
+    supabase
+      .from("products")
+      .select("id, title, slug, brand, image_url")
+      .limit(10)
+      .then(({ data }) => setProducts(data || []));
+  }, []);
 
   return (
     <div className="mb-6">
@@ -16,7 +23,7 @@ export default async function FeaturedProducts() {
         </Link>
       </div>
       <div className="grid grid-cols-4 gap-3">
-        {(products || []).map((p) => (
+        {products.map((p) => (
           <Link href={"/urun/" + p.slug} key={p.id}>
             <div className="bg-white rounded-2xl overflow-hidden group cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-100">
               <div className="relative aspect-square overflow-hidden bg-gray-50">
