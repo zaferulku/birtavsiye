@@ -100,7 +100,7 @@ export default function ProfilSayfasi() {
       : null;
     await supabase.from("profiles").upsert({
   id: user.id, username, full_name: fullName, bio, phone, birth_date: birthDate,
-  gender, age_range: ageRange,
+  gender,
 });
     setSaveMsg("Kaydedildi!");
     setTimeout(() => setSaveMsg(""), 2000);
