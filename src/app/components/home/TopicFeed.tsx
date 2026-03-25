@@ -44,30 +44,44 @@ export default function TopicFeed() {
   const [user, setUser] = useState<any>(null);
   const [search, setSearch] = useState("");
   const [newCount, setNewCount] = useState(0);
+  const [userVotes, setUserVotes] = useState<Record<string, number>>({});
   const isFirstLoad = useRef(true);
 
   useEffect(() => {
-  supabase.auth.getUser().then(({ data }) => setUser(data.user));
-  fetchTopics();
+    supabase.auth.getUser().then(async ({ data }) => {
+      setUser(data.user);
+      if (data.user) {
+        const { data: votes } = await supabase
+          .from("topic_votes")
+          .select("topic_id, vote")
+          .eq("user_id", data.user.id);
+        if (votes) {
+          const map: Record<string, number> = {};
+          votes.forEach((v) => { map[v.topic_id] = v.vote; });
+          setUserVotes(map);
+        }
+      }
+    });
+    fetchTopics();
 
-  const channel = supabase
-    .channel("topics-realtime")
-    .on("postgres_changes", { event: "INSERT", schema: "public", table: "topics" }, (payload) => {
-      const newTopic = payload.new as Topic;
-      if (isFirstLoad.current) return;
-      setTopics((prev) => [newTopic, ...prev]);
-      setNewCount((c) => c + 1);
-    })
-    .on("postgres_changes", { event: "UPDATE", schema: "public", table: "topics" }, (payload) => {
-      const updated = payload.new as Topic;
-      setTopics((prev) => prev.map((t) =>
-        t.id === updated.id ? { ...t, answer_count: updated.answer_count, votes: updated.votes } : t
-      ));
-    })
-    .subscribe();
+    const channel = supabase
+      .channel("topics-realtime")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "topics" }, (payload) => {
+        const newTopic = payload.new as Topic;
+        if (isFirstLoad.current) return;
+        setTopics((prev) => [newTopic, ...prev]);
+        setNewCount((c) => c + 1);
+      })
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "topics" }, (payload) => {
+        const updated = payload.new as Topic;
+        setTopics((prev) => prev.map((t) =>
+          t.id === updated.id ? { ...t, answer_count: updated.answer_count, votes: updated.votes } : t
+        ));
+      })
+      .subscribe();
 
-  return () => { supabase.removeChannel(channel); };
-}, []);
+    return () => { supabase.removeChannel(channel); };
+  }, []);
 
   const fetchTopics = async () => {
     const { data } = await supabase
@@ -96,17 +110,43 @@ export default function TopicFeed() {
     setLoading(false);
   };
 
+  const handleVote = async (e: React.MouseEvent, topic: Topic, voteValue: 1 | -1) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) { window.location.href = "/giris"; return; }
+
+    const currentVote = userVotes[topic.id] || 0;
+    let voteDiff = 0;
+    let newVote = 0;
+
+    if (currentVote === voteValue) {
+      // Aynı oya tekrar basınca geri al
+      newVote = 0;
+      voteDiff = -voteValue;
+      await supabase.from("topic_votes")
+        .delete()
+        .eq("topic_id", topic.id)
+        .eq("user_id", user.id);
+    } else {
+      voteDiff = currentVote === 0 ? voteValue : voteValue * 2;
+      newVote = voteValue;
+      await supabase.from("topic_votes")
+        .upsert({ topic_id: topic.id, user_id: user.id, vote: voteValue },
+          { onConflict: "topic_id,user_id" });
+    }
+
+    const newTotal = (topic.votes || 0) + voteDiff;
+    await supabase.from("topics").update({ votes: newTotal }).eq("id", topic.id);
+    setTopics((prev) => prev.map((t) => t.id === topic.id ? { ...t, votes: newTotal } : t));
+    setUserVotes((prev) => ({ ...prev, [topic.id]: newVote }));
+  };
+
   const filtered = topics
-  .filter((t) => activeCategory === "Hepsi" || t.category === activeCategory)
-  .filter((t) => !search || t.title.toLowerCase().includes(search.toLowerCase()));
+    .filter((t) => activeCategory === "Hepsi" || t.category === activeCategory)
+    .filter((t) => !search || t.title.toLowerCase().includes(search.toLowerCase()));
 
-  const trendTopics = [...topics]
-    .sort((a, b) => b.votes - a.votes)
-    .slice(0, 5);
-
-  const activeTopics = [...topics]
-    .sort((a, b) => b.answer_count - a.answer_count)
-    .slice(0, 5);
+  const trendTopics = [...topics].sort((a, b) => b.votes - a.votes).slice(0, 5);
+  const activeTopics = [...topics].sort((a, b) => b.answer_count - a.answer_count).slice(0, 5);
 
   return (
     <div className="flex gap-4">
@@ -128,7 +168,6 @@ export default function TopicFeed() {
           ))}
         </div>
 
-        {/* Yeni içerik bildirimi */}
         {newCount > 0 && (
           <button onClick={() => { setNewCount(0); window.scrollTo({ top: 0, behavior: "smooth" }); }}
             className="w-full mb-3 py-2 bg-[#E8460A] text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-2 animate-pulse">
@@ -136,19 +175,15 @@ export default function TopicFeed() {
           </button>
         )}
 
-{/* Arama çubuğu */}
-<div className="relative mb-3">
-  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-  </svg>
-  <input
-    type="text"
-    placeholder="Konularda ara..."
-    value={search}
-    onChange={(e) => setSearch(e.target.value)}
-    className="w-full pl-8 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-[#E8460A] focus:bg-white transition-all"
-  />
-</div>
+        {/* Arama çubuğu */}
+        <div className="relative mb-3">
+          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          <input type="text" placeholder="Konularda ara..." value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-8 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-[#E8460A] focus:bg-white transition-all" />
+        </div>
 
         {/* Soru Sor */}
         {!showForm ? (
@@ -193,37 +228,52 @@ export default function TopicFeed() {
               <div className="text-sm text-gray-500">Henüz soru yok — ilk soruyu sen sor!</div>
             </div>
           ) : (
-            filtered.map((t) => (
-              <Link href={"/tavsiye/" + t.id} key={t.id}>
-                <div className="bg-white rounded-2xl border border-gray-100 p-4 hover:border-[#E8460A]/30 hover:shadow-sm transition-all cursor-pointer group">
-                  <div className="flex items-start gap-3">
-                    {/* Avatar */}
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#E8460A] to-orange-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm">
-                      {(t.user_name || "A")[0].toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1 flex-wrap">
-                        <span className="text-xs font-semibold text-gray-700">{t.user_name}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${categoryColors[t.category] || "bg-gray-50 text-gray-500"}`}>
-                          {t.category}
-                        </span>
-                        <span className="text-xs text-gray-400 ml-auto">{timeAgo(t.created_at)}</span>
+            filtered.map((t) => {
+              const myVote = userVotes[t.id] || 0;
+              return (
+                <Link href={"/tavsiye/" + t.id} key={t.id}>
+                  <div className="bg-white rounded-2xl border border-gray-100 p-4 hover:border-[#E8460A]/30 hover:shadow-sm transition-all cursor-pointer group">
+                    <div className="flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#E8460A] to-orange-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm">
+                        {(t.user_name || "A")[0].toUpperCase()}
                       </div>
-                      <div className="text-sm font-semibold text-gray-800 leading-snug mb-1">{t.title}</div>
-                      {t.body && <div className="text-xs text-gray-500 line-clamp-1 mb-2">{t.body}</div>}
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs text-gray-400 flex items-center gap-1">
-  💬 <span>{t.answer_count} cevap</span>
-</span>
-<span className="text-xs text-gray-400 flex items-center gap-1">
-  👍 <span>{t.votes}</span>
-</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <span className="text-xs font-semibold text-gray-700">{t.user_name}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${categoryColors[t.category] || "bg-gray-50 text-gray-500"}`}>
+                            {t.category}
+                          </span>
+                          <span className="text-xs text-gray-400 ml-auto">{timeAgo(t.created_at)}</span>
+                        </div>
+                        <div className="text-sm font-semibold text-gray-800 leading-snug mb-1">{t.title}</div>
+                        {t.body && <div className="text-xs text-gray-500 line-clamp-1 mb-2">{t.body}</div>}
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-400 flex items-center gap-1">
+                            💬 <span>{t.answer_count} cevap</span>
+                          </span>
+                          <button onClick={(e) => handleVote(e, t, 1)}
+                            className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border transition-all ${
+                              myVote === 1
+                                ? "bg-green-50 border-green-300 text-green-600 font-semibold"
+                                : "border-gray-200 text-gray-400 hover:border-green-300 hover:text-green-500"
+                            }`}>
+                            👍 <span>{t.votes > 0 ? t.votes : 0}</span>
+                          </button>
+                          <button onClick={(e) => handleVote(e, t, -1)}
+                            className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border transition-all ${
+                              myVote === -1
+                                ? "bg-red-50 border-red-300 text-red-500 font-semibold"
+                                : "border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-400"
+                            }`}>
+                            👎
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </Link>
-            ))
+                </Link>
+              );
+            })
           )}
         </div>
       </div>
