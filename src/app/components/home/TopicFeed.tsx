@@ -42,6 +42,7 @@ export default function TopicFeed() {
   const [category, setCategory] = useState("Elektronik");
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [search, setSearch] = useState("");
   const [newCount, setNewCount] = useState(0);
   const isFirstLoad = useRef(true);
 
@@ -97,9 +98,9 @@ export default function TopicFeed() {
     setTopics((prev) => prev.map((t) => t.id === topic.id ? { ...t, votes: t.votes + 1 } : t));
   };
 
-  const filtered = activeCategory === "Hepsi"
-    ? topics
-    : topics.filter((t) => t.category === activeCategory);
+  const filtered = topics
+  .filter((t) => activeCategory === "Hepsi" || t.category === activeCategory)
+  .filter((t) => !search || t.title.toLowerCase().includes(search.toLowerCase()));
 
   const trendTopics = [...topics]
     .sort((a, b) => b.votes - a.votes)
@@ -136,6 +137,20 @@ export default function TopicFeed() {
             ↑ {newCount} yeni tavsiye geldi — görmek için tıkla
           </button>
         )}
+
+{/* Arama çubuğu */}
+<div className="relative mb-3">
+  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+  </svg>
+  <input
+    type="text"
+    placeholder="Konularda ara..."
+    value={search}
+    onChange={(e) => setSearch(e.target.value)}
+    className="w-full pl-8 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-xs outline-none focus:border-[#E8460A] focus:bg-white transition-all"
+  />
+</div>
 
         {/* Soru Sor */}
         {!showForm ? (
