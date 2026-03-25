@@ -47,22 +47,27 @@ export default function TopicFeed() {
   const isFirstLoad = useRef(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
-    fetchTopics();
+  supabase.auth.getUser().then(({ data }) => setUser(data.user));
+  fetchTopics();
 
-    // Supabase Realtime
-    const channel = supabase
-      .channel("topics-realtime")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "topics" }, (payload) => {
-        const newTopic = payload.new as Topic;
-        if (isFirstLoad.current) return;
-        setTopics((prev) => [newTopic, ...prev]);
-        setNewCount((c) => c + 1);
-      })
-      .subscribe();
+  const channel = supabase
+    .channel("topics-realtime")
+    .on("postgres_changes", { event: "INSERT", schema: "public", table: "topics" }, (payload) => {
+      const newTopic = payload.new as Topic;
+      if (isFirstLoad.current) return;
+      setTopics((prev) => [newTopic, ...prev]);
+      setNewCount((c) => c + 1);
+    })
+    .on("postgres_changes", { event: "UPDATE", schema: "public", table: "topics" }, (payload) => {
+      const updated = payload.new as Topic;
+      setTopics((prev) => prev.map((t) =>
+        t.id === updated.id ? { ...t, answer_count: updated.answer_count, votes: updated.votes } : t
+      ));
+    })
+    .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
-  }, []);
+  return () => { supabase.removeChannel(channel); };
+}, []);
 
   const fetchTopics = async () => {
     const { data } = await supabase
