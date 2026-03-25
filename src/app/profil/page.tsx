@@ -34,6 +34,7 @@ export default function ProfilSayfasi() {
   const [username, setUsername] = useState("");
   const [fullName, setFullName] = useState("");
   const [bio, setBio] = useState("");
+  const [gender, setGender] = useState("");
   const [phone, setPhone] = useState("");
   const [birthDay, setBirthDay] = useState("");
   const [birthMonth, setBirthMonth] = useState("");
@@ -66,6 +67,7 @@ export default function ProfilSayfasi() {
       setFullName(data.full_name || "");
       setBio(data.bio || "");
       setPhone(data.phone || "");
+      setGender(data.gender || "");
       if (data.birth_date) {
         const parts = data.birth_date.split("-");
         setBirthYear(parts[0] || "");
@@ -97,8 +99,9 @@ export default function ProfilSayfasi() {
       ? `${birthYear}-${birthMonth}-${birthDay}`
       : null;
     await supabase.from("profiles").upsert({
-      id: user.id, username, full_name: fullName, bio, phone, birth_date: birthDate,
-    });
+  id: user.id, username, full_name: fullName, bio, phone, birth_date: birthDate,
+  gender, age_range: ageRange,
+});
     setSaveMsg("Kaydedildi!");
     setTimeout(() => setSaveMsg(""), 2000);
     setSaving(false);
@@ -233,6 +236,26 @@ export default function ProfilSayfasi() {
                       </div>
                     </div>
                     <div>
+                      <div>
+  <label className="text-xs font-medium text-gray-500 mb-1.5 block">Cinsiyet</label>
+  <div className="grid grid-cols-2 gap-2">
+    {[
+      { value: "kadin", label: "Kadın", emoji: "👩" },
+      { value: "erkek", label: "Erkek", emoji: "👨" },
+    ].map((g) => (
+      <button key={g.value} type="button"
+        onClick={() => setGender(g.value)}
+        className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 text-sm font-medium transition-all ${
+          gender === g.value
+            ? "border-[#E8460A] bg-orange-50 text-[#E8460A]"
+            : "border-gray-200 text-gray-600 hover:border-[#E8460A]"
+        }`}>
+        <span>{g.emoji}</span> {g.label}
+      </button>
+    ))}
+  </div>
+</div>
+
                       <label className="text-xs font-medium text-gray-500 mb-1.5 block">Hakkinda</label>
                       <textarea value={bio} onChange={(e) => setBio(e.target.value)}
                         placeholder="Kendinden bahset..." rows={3}
