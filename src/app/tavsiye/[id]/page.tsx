@@ -40,6 +40,8 @@ export default function TavsiyeDetay() {
   const [userGender, setUserGender] = useState("");
   const [answerText, setAnswerText] = useState("");
   const [loading, setLoading] = useState(false);
+  // userVotes: answerId -> 1 veya -1 veya 0
+  const [userVotes, setUserVotes] = useState<Record<string, number>>({});
 
   useEffect(() => {
     fetchAll();
@@ -49,15 +51,30 @@ export default function TavsiyeDetay() {
         const { data: profile } = await supabase
           .from("profiles").select("gender").eq("id", data.user.id).maybeSingle();
         setUserGender(profile?.gender || "");
+
+        // Kullanıcının bu konudaki oylarını çek
+        const { data: votes } = await supabase
+          .from("topic_answer_votes")
+          .select("answer_id, vote")
+          .eq("user_id", data.user.id);
+        if (votes) {
+          const map: Record<string, number> = {};
+          votes.forEach((v) => { map[v.answer_id] = v.vote; });
+          setUserVotes(map);
+        }
       }
     });
 
-    const channel = supabase.channel("answers-realtime")
+    // Realtime: yeni cevap gelince ekle
+    const channel = supabase.channel(`answers-${id}`)
       .on("postgres_changes", {
         event: "INSERT", schema: "public", table: "topic_answers",
         filter: `topic_id=eq.${id}`
       }, (payload) => {
-        setAnswers((prev) => [...prev, payload.new as Answer]);
+        setAnswers((prev) => {
+          if (prev.find((a) => a.id === payload.new.id)) return prev;
+          return [...prev, payload.new as Answer];
+        });
       })
       .subscribe();
 
@@ -93,9 +110,39 @@ export default function TavsiyeDetay() {
     setLoading(false);
   };
 
-  const handleVote = async (answer: Answer) => {
-    await supabase.from("topic_answers").update({ votes: answer.votes + 1 }).eq("id", answer.id);
-    setAnswers((prev) => prev.map((a) => a.id === answer.id ? { ...a, votes: a.votes + 1 } : a));
+  const handleVote = async (answer: Answer, voteValue: 1 | -1) => {
+    if (!user) return;
+    const currentVote = userVotes[answer.id] || 0;
+    let newVote = 0;
+    let voteDiff = 0;
+
+    if (currentVote === voteValue) {
+      // Aynı oya tekrar basınca geri al
+      newVote = 0;
+      voteDiff = -voteValue;
+      await supabase.from("topic_answer_votes")
+        .delete()
+        .eq("answer_id", answer.id)
+        .eq("user_id", user.id);
+    } else {
+      // Yeni oy veya oy değiştir
+      voteDiff = currentVote === 0 ? voteValue : voteValue * 2;
+      newVote = voteValue;
+      await supabase.from("topic_answer_votes")
+        .upsert({ answer_id: answer.id, user_id: user.id, vote: voteValue },
+          { onConflict: "answer_id,user_id" });
+    }
+
+    // votes kolonunu güncelle
+    const newTotal = (answer.votes || 0) + voteDiff;
+    await supabase.from("topic_answers")
+      .update({ votes: newTotal })
+      .eq("id", answer.id);
+
+    setAnswers((prev) => prev.map((a) =>
+      a.id === answer.id ? { ...a, votes: newTotal } : a
+    ));
+    setUserVotes((prev) => ({ ...prev, [answer.id]: newVote }));
   };
 
   if (!topic) return (
@@ -142,6 +189,7 @@ export default function TavsiyeDetay() {
           ) : (
             answers.map((a) => {
               const av = genderAvatar(a.gender, a.user_name);
+              const myVote = userVotes[a.id] || 0;
               return (
                 <div key={a.id} className="bg-white rounded-2xl border border-gray-100 p-4 shadow-sm">
                   <div className="flex items-start gap-3">
@@ -155,11 +203,32 @@ export default function TavsiyeDetay() {
                         {a.gender === "erkek" && <span className="text-xs text-blue-500 bg-blue-50 px-1.5 py-0.5 rounded-full">Erkek</span>}
                         <span className="text-xs text-gray-400 ml-auto">{timeAgo(a.created_at)}</span>
                       </div>
-                      <p className="text-sm text-gray-800 leading-relaxed">{a.body}</p>
-                      <button onClick={() => handleVote(a)}
-                        className="mt-2 text-xs text-gray-400 hover:text-[#E8460A] transition-colors flex items-center gap-1">
-                        👍 {a.votes} beğeni
-                      </button>
+                      <p className="text-sm text-gray-800 leading-relaxed mb-2">{a.body}</p>
+
+                      {/* Oy butonları */}
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => handleVote(a, 1)}
+                          disabled={!user}
+                          className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border transition-all ${
+                            myVote === 1
+                              ? "bg-green-50 border-green-300 text-green-600 font-semibold"
+                              : "border-gray-200 text-gray-400 hover:border-green-300 hover:text-green-500"
+                          }`}>
+                          👍 <span>{a.votes > 0 ? a.votes : 0}</span>
+                        </button>
+                        <button
+                          onClick={() => handleVote(a, -1)}
+                          disabled={!user}
+                          className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full border transition-all ${
+                            myVote === -1
+                              ? "bg-red-50 border-red-300 text-red-500 font-semibold"
+                              : "border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-400"
+                          }`}>
+                          👎 <span>{a.votes < 0 ? Math.abs(a.votes) : 0}</span>
+                        </button>
+                        {!user && <span className="text-xs text-gray-300">Oy vermek için giriş yap</span>}
+                      </div>
                     </div>
                   </div>
                 </div>
