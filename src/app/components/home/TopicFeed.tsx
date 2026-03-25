@@ -91,13 +91,6 @@ export default function TopicFeed() {
     setLoading(false);
   };
 
-  const handleVote = async (e: React.MouseEvent, topic: Topic) => {
-    e.preventDefault();
-    e.stopPropagation();
-    await supabase.from("topics").update({ votes: topic.votes + 1 }).eq("id", topic.id);
-    setTopics((prev) => prev.map((t) => t.id === topic.id ? { ...t, votes: t.votes + 1 } : t));
-  };
-
   const filtered = topics
   .filter((t) => activeCategory === "Hepsi" || t.category === activeCategory)
   .filter((t) => !search || t.title.toLowerCase().includes(search.toLowerCase()));
@@ -215,12 +208,11 @@ export default function TopicFeed() {
                       {t.body && <div className="text-xs text-gray-500 line-clamp-1 mb-2">{t.body}</div>}
                       <div className="flex items-center gap-3">
                         <span className="text-xs text-gray-400 flex items-center gap-1">
-                          💬 <span>{t.answer_count} cevap</span>
-                        </span>
-                        <button onClick={(e) => handleVote(e, t)}
-                          className="text-xs text-gray-400 flex items-center gap-1 hover:text-[#E8460A] transition-colors">
-                          👍 <span>{t.votes}</span>
-                        </button>
+  💬 <span>{t.answer_count} cevap</span>
+</span>
+<span className="text-xs text-gray-400 flex items-center gap-1">
+  👍 <span>{t.votes}</span>
+</span>
                       </div>
                     </div>
                   </div>
