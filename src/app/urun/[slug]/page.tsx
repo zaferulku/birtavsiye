@@ -67,10 +67,11 @@ export default async function UrunDetay({ params }: { params: Promise<{ slug: st
                     {minPrice ? Number(minPrice).toLocaleString("tr-TR") + " TL" : "Fiyat bekleniyor"}
                   </div>
                 </div>
-                {cheapestStore && (
-                  <button className="w-full bg-[#E8460A] text-white py-3 text-sm font-bold hover:bg-[#C93A08] transition-all">
+                {cheapestStore && prices && prices.length > 0 && (
+                  <a href={prices[0].affiliate_url || prices[0].stores?.url || "#"} target="_blank" rel="nofollow sponsored"
+                    className="block w-full bg-[#E8460A] text-white py-3 text-sm font-bold hover:bg-[#C93A08] transition-all text-center">
                     {cheapestStore} sitesine git →
-                  </button>
+                  </a>
                 )}
                 <div>
                   {prices?.map((p, i) => (
@@ -86,7 +87,7 @@ export default async function UrunDetay({ params }: { params: Promise<{ slug: st
                           <div className="text-xs text-red-400">+{(Number(p.price) - Number(minPrice)).toLocaleString("tr-TR")} TL</div>
                         )}
                       </div>
-                      <a href={p.stores?.url || "#"} target="_blank"
+                      <a href={p.affiliate_url || p.stores?.url || "#"} target="_blank" rel="nofollow sponsored"
                         className="bg-orange-50 text-[#E8460A] text-xs px-3 py-1.5 rounded-lg font-semibold hover:bg-[#E8460A] hover:text-white transition-all">
                         Git
                       </a>
