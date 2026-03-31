@@ -6,110 +6,51 @@ const SUPABASE_URL = "https://ugnxddvbrvjyzbqxmbdr.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVnbnhkZHZicnZqeXpicXhtYmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwOTQ2OTYsImV4cCI6MjA4OTY3MDY5Nn0.ZSyfd-uONUgZ9GEfPLtPDplkeQdVLZlLiMk4Y0Nd4j0";
 const ICECAT_USER = process.env.ICECAT_USERNAME || "0xstraub";
 const ICECAT_PASS = process.env.ICECAT_PASSWORD || "Zafer21+";
+const INDEX_FILE  = "scripts/icecat-index.xml";
+const MAX_PER_KEY = 30; // Supplier+Category kombinasyonu başına max ürün
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-const INDEX_FILE = "scripts/icecat-index.xml";
-const MAX_PER_BRAND = 50;
 
-// Icecat Supplier ID → { brand, cat (DB slug), catids (Icecat category IDs) }
-const SUPPLIERS = {
-  // === TELEFON ===
-  "26":    { brand: "Samsung",   cat: "telefon",  catids: ["1584","897","222","2779","232","3174"] },
-  "710":   { brand: "Apple",     cat: "telefon",  catids: ["1584","232","897","3174","2779","222"] },
-  "11434": { brand: "Xiaomi",    cat: "telefon",  catids: ["1584","897","222","1331","2509","232"] },
-  "3780":  { brand: "Huawei",    cat: "telefon",  catids: ["1584","232","897","3174","222"] },
-
-  // === LAPTOP ===
-  "728":   { brand: "Lenovo",    cat: "laptop",   catids: ["897","222","156","989","194","388"] },
-  "1":     { brand: "HP",        cat: "laptop",   catids: ["897","156","159","989","194","222"] },
-  "176":   { brand: "Asus",      cat: "laptop",   catids: ["897","194","222","388","400","989"] },
-  "19":    { brand: "Dell",      cat: "laptop",   catids: ["897","194","222","989","388","400"] },
-  "23":    { brand: "Acer",      cat: "laptop",   catids: ["897","194","222","989","156","388"] },
-  "3":     { brand: "Microsoft", cat: "laptop",   catids: ["897","232","388","400","222","194"] },
-
-  // === TV ===
-  "293":   { brand: "LG",        cat: "tv",       catids: ["222","1584","1331","1873","2672","194"] },
-  "25":    { brand: "Philips",   cat: "tv",       catids: ["222","1584","194","195","1337","1873"] },
-  "7":     { brand: "Panasonic", cat: "tv",       catids: ["222","193","575","156","1873","195"] },
-
-  // === KULAKLIK ===
-  "5":     { brand: "Sony",      cat: "kulaklik", catids: ["219","261","575","94","1060","193","232"] },
-  "91":    { brand: "Logitech",  cat: "kulaklik", catids: ["388","396","400","486","219","786","261"] },
-  "196":   { brand: "Jabra",     cat: "kulaklik", catids: ["219","261","543","1584","388","486"] },
-  "1360":  { brand: "JBL",       cat: "kulaklik", catids: ["219","261","543","388","1873"] },
-  "431":   { brand: "Bose",      cat: "kulaklik", catids: ["219","261","1873","388","543"] },
-
-  // === DİĞER ===
-  "21":    { brand: "Canon",     cat: "diger",    catids: ["193","575","156","94","1060","486"] },
-  "82":    { brand: "Nikon",     cat: "diger",    catids: ["193","575","94","1060","486"] },
-  "342":   { brand: "Garmin",    cat: "diger",    catids: ["3174","2509","219","193","575"] },
-  "1093":  { brand: "Dyson",     cat: "diger",    catids: ["3034","1337","194","222"] },
+// Doğrulanmış Icecat Catid → DB Kategori Slug eşlemesi
+// (find-catids.mjs çıktısından elde edildi)
+const CATID_TO_SLUG = {
+  "1893": "telefon",      // Smartphones
+  "117":  "telefon",      // Telephones (akıllı)
+  "151":  "laptop",       // Laptops
+  "1584": "tv",           // TVs
+  "1637": "ses",          // Headphones & Headsets
+  "219":  "ses",          // Headsets (genel)
+  "261":  "ses",          // Wireless Earbuds
+  "1081": "ses",          // Loudspeakers/Hoparlörler
+  "575":  "fotograf",     // Digital Cameras
+  "588":  "fotograf",     // Camera Lenses
+  "2647": "spor",         // Smartwatches & Sport Watches
+  "193":  "oyun",         // Gaming Controllers
+  "2898": "oyun",         // Head-Mounted Displays (VR)
+  "897":  "laptop",       // Tablets (tablet yok, laptop'a koy)
+  "222":  "tv",           // Monitors (TV ile birlikte)
+  "2344": "tv",           // Portable TVs & Monitors
 };
 
-async function parseIndex() {
-  console.log("🔍 Index parse ediliyor...");
-
-  const brandProducts = {};
-  for (const { brand } of Object.values(SUPPLIERS)) {
-    brandProducts[brand] = [];
-  }
-
-  const rl = createInterface({
-    input: createReadStream(INDEX_FILE, { encoding: "utf8" }),
-    crlfDelay: Infinity,
-  });
-
-  let count = 0;
-  let totalFound = 0;
-
-  for await (const line of rl) {
-    if (line.startsWith("<file ")) {
-      const supplierMatch = line.match(/Supplier_id="(\d+)"/);
-      const productIdMatch = line.match(/Product_ID="(\d+)"/);
-      const dateMatch = line.match(/Date_Added="(\d{4})/);
-      const catidMatch = line.match(/Catid="(\d+)"/);
-
-      if (supplierMatch && productIdMatch) {
-        const supplierId = supplierMatch[1];
-        const supplierInfo = SUPPLIERS[supplierId];
-        const year = dateMatch ? parseInt(dateMatch[1]) : 0;
-        const catid = catidMatch ? catidMatch[1] : "";
-
-        if (supplierInfo && year >= 2020 && supplierInfo.catids.includes(catid)) {
-          const { brand } = supplierInfo;
-          if (brandProducts[brand].length < MAX_PER_BRAND) {
-            brandProducts[brand].push(productIdMatch[1]);
-            totalFound++;
-          }
-        }
-      }
-    }
-
-    count++;
-    if (count % 1000000 === 0) {
-      process.stdout.write(`  ${count / 1000000}M satır... ${totalFound} ürün bulundu\r`);
-    }
-
-    const allFull = Object.values(brandProducts).every(ids => ids.length >= MAX_PER_BRAND);
-    if (allFull) break;
-  }
-
-  console.log(`\n✅ Parse tamamlandı: ${totalFound} ürün bulundu`);
-  return brandProducts;
-}
-
-async function fetchProduct(productId) {
-  const auth = Buffer.from(`${ICECAT_USER}:${ICECAT_PASS}`).toString("base64");
-  const url = `https://live.icecat.biz/api?UserName=${ICECAT_USER}&Language=EN&icecat_id=${productId}`;
-  try {
-    const res = await fetch(url, { headers: { Authorization: `Basic ${auth}` } });
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.data || null;
-  } catch (e) {
-    return null;
-  }
-}
+// Supplier ID → Marka adı
+const SUPPLIERS = {
+  "26":    "Samsung",
+  "710":   "Apple",
+  "5":     "Sony",
+  "293":   "LG",
+  "728":   "Lenovo",
+  "1":     "HP",
+  "176":   "Asus",
+  "19":    "Dell",
+  "11434": "Xiaomi",
+  "3780":  "Huawei",
+  "431":   "Bose",
+  "1360":  "JBL",
+  "91":    "Logitech",
+  "196":   "Jabra",
+  "21":    "Canon",
+  "82":    "Nikon",
+};
 
 function makeSlug(str) {
   return str.toLowerCase()
@@ -124,82 +65,148 @@ async function getExistingIcecatIds() {
   return new Set((data || []).map(p => p.icecat_id));
 }
 
+// Index'i tara, supplier+catid kombinasyonlarına göre ürün ID'leri topla
+async function parseIndex(existingIds) {
+  console.log("🔍 Index taranıyor...");
+  const collected = {}; // "supplierId-catid" → [productId, ...]
+
+  const rl = createInterface({
+    input: createReadStream(INDEX_FILE, { encoding: "utf8" }),
+    crlfDelay: Infinity,
+  });
+
+  let lineCount = 0;
+  let totalFound = 0;
+
+  for await (const line of rl) {
+    if (line.startsWith("<file ")) {
+      const suppId = line.match(/Supplier_id="(\d+)"/)?.[1];
+      const catid  = line.match(/Catid="(\d+)"/)?.[1];
+      const pid    = line.match(/Product_ID="(\d+)"/)?.[1];
+      const year   = line.match(/Date_Added="(\d{4})/)?.[1];
+
+      if (suppId && catid && pid && SUPPLIERS[suppId] && CATID_TO_SLUG[catid]) {
+        if (parseInt(year) >= 2021 && !existingIds.has(pid)) {
+          const key = `${suppId}-${catid}`;
+          if (!collected[key]) collected[key] = [];
+          if (collected[key].length < MAX_PER_KEY) {
+            collected[key].push(pid);
+            totalFound++;
+          }
+        }
+      }
+    }
+    lineCount++;
+    if (lineCount % 2000000 === 0) {
+      process.stdout.write(`  ${lineCount / 1000000}M satır... ${totalFound} ürün\r`);
+    }
+  }
+
+  console.log(`\n✅ ${totalFound} aday ürün bulundu\n`);
+
+  // Özet
+  const byBrand = {};
+  for (const [key, ids] of Object.entries(collected)) {
+    const [suppId, catid] = key.split("-");
+    const brand = SUPPLIERS[suppId];
+    const slug  = CATID_TO_SLUG[catid];
+    const k = `${brand}/${slug}`;
+    byBrand[k] = (byBrand[k] || 0) + ids.length;
+  }
+  for (const [k, count] of Object.entries(byBrand).sort()) {
+    console.log(`  ${k}: ${count}`);
+  }
+  console.log();
+
+  return collected;
+}
+
+async function fetchIcecat(pid) {
+  const auth = Buffer.from(`${ICECAT_USER}:${ICECAT_PASS}`).toString("base64");
+  try {
+    const res = await fetch(`https://live.icecat.biz/api?UserName=${ICECAT_USER}&Language=EN&icecat_id=${pid}`, {
+      headers: { Authorization: `Basic ${auth}` }
+    });
+    if (!res.ok) return null;
+    const d = await res.json();
+    return d.data || null;
+  } catch { return null; }
+}
+
+function getBestImage(product) {
+  const img = product?.Image;
+  if (!img) return null;
+  return img.HighPic || img.Pic500x500 || img.LowPic || null;
+}
+
 async function main() {
-  console.log("🚀 Başlıyor...");
-  console.log(`📦 ${Object.keys(SUPPLIERS).length} marka, marka başına max ${MAX_PER_BRAND} ürün\n`);
+  console.log("🚀 Import başlıyor...\n");
 
-  const { data: categories, error } = await supabase.from("categories").select("id, slug");
-  if (error) { console.log("❌ Supabase hatası:", error.message); return; }
-  console.log("✅ Kategoriler:", categories.map(c => c.slug).join(", "));
+  const { data: categories } = await supabase.from("categories").select("id, slug");
+  const catMap = Object.fromEntries(categories.map(c => [c.slug, c.id]));
+  console.log("✅ Kategoriler:", Object.keys(catMap).join(", "), "\n");
 
-  // Zaten import edilmiş ürünleri atla
   const existingIds = await getExistingIcecatIds();
   console.log(`ℹ️  Mevcut ${existingIds.size} ürün atlanacak\n`);
 
-  const brandProducts = await parseIndex();
+  const collected = await parseIndex(existingIds);
 
-  console.log("\n📊 Bulunacak ürünler:");
-  let total = 0;
-  for (const [brand, ids] of Object.entries(brandProducts)) {
-    const newIds = ids.filter(id => !existingIds.has(String(id)));
-    console.log(`  ${brand}: ${ids.length} (${newIds.length} yeni)`);
-    total += newIds.length;
-  }
-  console.log(`  TOPLAM: ${total} yeni ürün\n`);
+  // Görsel hash tracker — aynı görseli iki farklı ürüne koyma
+  const usedImageHashes = new Set();
 
-  let success = 0;
-  let fail = 0;
-  let skipped = 0;
+  let success = 0, skipped = 0, failed = 0;
 
-  for (const [, { brand, cat }] of Object.entries(SUPPLIERS)) {
-    const ids = brandProducts[brand] || [];
-    const category = categories.find(c => c.slug === cat);
+  for (const [key, pids] of Object.entries(collected)) {
+    const [suppId, catid] = key.split("-");
+    const brand = SUPPLIERS[suppId];
+    const slug  = CATID_TO_SLUG[catid];
+    const categoryId = catMap[slug];
 
-    for (const id of ids) {
-      if (existingIds.has(String(id))) { skipped++; continue; }
+    for (const pid of pids) {
+      process.stdout.write(`⏳ ${brand} [${slug}] #${pid} `);
 
-      process.stdout.write(`⏳ ${brand} #${id} `);
-      const product = await fetchProduct(id);
+      const product = await fetchIcecat(pid);
+      await new Promise(r => setTimeout(r, 400));
 
-      if (!product) { console.log("❌ Çekilemedi"); fail++; continue; }
+      if (!product) { console.log("❌ API'den gelmedi"); failed++; continue; }
+
+      const imgUrl = getBestImage(product);
+      if (!imgUrl) { console.log("⚠️  Görsel yok"); skipped++; continue; }
+
+      const imgHash = imgUrl.split("/").pop()?.split(".")[0] || "";
+      if (usedImageHashes.has(imgHash)) { console.log("= Görsel tekrarı, atlandı"); skipped++; continue; }
 
       const brandName = product.GeneralInfo?.BrandName || brand;
-      const name = product.GeneralInfo?.ProductName || "";
-      const title = `${brandName} ${name}`.trim();
-      const slug = makeSlug(title);
+      const name      = product.GeneralInfo?.ProductName || product.GeneralInfo?.Title || "";
+      const title     = `${brandName} ${name}`.trim();
+      const slug2     = makeSlug(title);
       const description = product.GeneralInfo?.SummaryDescription?.LongSummaryDescription ||
                           product.GeneralInfo?.SummaryDescription?.ShortSummaryDescription || "";
-      const imageUrl = product.Image?.HighPic || product.Image?.LowPic || product.Image?.Pic500x500 || "";
-      const specs = product.FeaturesGroups ? JSON.stringify(product.FeaturesGroups) : null;
+      const specs     = product.FeaturesGroups ? JSON.stringify(product.FeaturesGroups) : null;
 
-      const { error: dbErr } = await supabase.from("products").insert({
-        title, slug, brand: brandName, description,
-        image_url: imageUrl, specs,
-        icecat_id: String(id),
-        category_id: category?.id || null,
+      const { error } = await supabase.from("products").insert({
+        title, slug: slug2, brand: brandName, description,
+        image_url: imgUrl, specs,
+        icecat_id: String(pid),
+        category_id: categoryId || null,
       });
 
-      if (dbErr) {
-        if (dbErr.message.includes("unique")) {
-          console.log(`⚠️  Slug çakışması, atlandı`);
-          skipped++;
-        } else {
-          console.log(`❌ ${dbErr.message}`);
-          fail++;
-        }
+      if (error) {
+        if (error.message.includes("unique")) { console.log("⚠️  Slug çakışması"); skipped++; }
+        else { console.log(`❌ ${error.message}`); failed++; }
       } else {
-        console.log(`✅ ${title}`);
+        console.log(`✅ ${title.slice(0, 55)}`);
+        usedImageHashes.add(imgHash);
+        existingIds.add(String(pid));
         success++;
       }
-
-      await new Promise(r => setTimeout(r, 400));
     }
   }
 
   console.log(`\n🎉 Tamamlandı:`);
   console.log(`   ✅ ${success} ürün eklendi`);
-  console.log(`   ⚠️  ${skipped} atlandı (zaten var veya slug çakışması)`);
-  console.log(`   ❌ ${fail} hata`);
+  console.log(`   ⚠️  ${skipped} atlandı`);
+  console.log(`   ❌ ${failed} hata`);
 }
 
 main().catch(console.error);
