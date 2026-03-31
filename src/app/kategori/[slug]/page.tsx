@@ -12,11 +12,12 @@ export default async function KategoriSayfasi({ params }: { params: Promise<{ sl
     .eq("slug", slug)
     .maybeSingle();
 
-  const { data: products } = await supabase
+  const { data: products, count } = await supabase
     .from("products")
-    .select("id, title, slug, brand, description")
+    .select("id, title, slug, brand, description, image_url", { count: "exact" })
     .eq("category_id", category?.id)
-    .limit(24);
+    .order("created_at", { ascending: false })
+    .limit(48);
 
   return (
     <main>
@@ -34,7 +35,7 @@ export default async function KategoriSayfasi({ params }: { params: Promise<{ sl
             {category?.icon} {category?.name || slug}
           </h1>
           <p className="text-[#888] text-sm">
-            {products?.length || 0} ürün bulundu
+            {count || 0} ürün bulundu
           </p>
         </div>
       </div>
@@ -59,8 +60,11 @@ export default async function KategoriSayfasi({ params }: { params: Promise<{ sl
             {products.map((p) => (
               <Link href={"/urun/" + p.slug} key={p.id}>
                 <div className="bg-white border border-[#E8E4DF] rounded-2xl overflow-hidden cursor-pointer hover:shadow-lg transition-all">
-                  <div className="h-40 bg-[#F8F6F2] flex items-center justify-center text-5xl">
-                    {category?.icon || "📦"}
+                  <div className="h-40 bg-[#F8F6F2] flex items-center justify-center overflow-hidden">
+                    {p.image_url
+                      ? <img src={p.image_url} alt={p.title} className="h-full w-full object-contain p-3" />
+                      : <span className="text-5xl">{category?.icon || "📦"}</span>
+                    }
                   </div>
                   <div className="p-3">
                     <div className="text-xs font-bold text-[#E8460A] uppercase tracking-wide mb-1">
