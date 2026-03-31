@@ -12,24 +12,27 @@ const MAX_PER_KEY = 30; // Supplier+Category kombinasyonu başına max ürün
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Doğrulanmış Icecat Catid → DB Kategori Slug eşlemesi
-// (find-catids.mjs çıktısından elde edildi)
 const CATID_TO_SLUG = {
-  "1893": "telefon",      // Smartphones
-  "117":  "telefon",      // Telephones (akıllı)
-  "151":  "laptop",       // Laptops
-  "1584": "tv",           // TVs
-  "1637": "ses",          // Headphones & Headsets
-  "219":  "ses",          // Headsets (genel)
-  "261":  "ses",          // Wireless Earbuds
-  "1081": "ses",          // Loudspeakers/Hoparlörler
-  "575":  "fotograf",     // Digital Cameras
-  "588":  "fotograf",     // Camera Lenses
-  "2647": "spor",         // Smartwatches & Sport Watches
-  "193":  "oyun",         // Gaming Controllers
-  "2898": "oyun",         // Head-Mounted Displays (VR)
-  "897":  "laptop",       // Tablets (tablet yok, laptop'a koy)
-  "222":  "tv",           // Monitors (TV ile birlikte)
-  "2344": "tv",           // Portable TVs & Monitors
+  "1893": "telefon-aksesuar",   // Smartphones
+  "117":  "telefon-aksesuar",   // Telephones
+  "119":  "telefon-aksesuar",   // Mobile Phones
+  "151":  "bilgisayar-tablet",  // Laptops
+  "153":  "bilgisayar-tablet",  // PCs/Workstations
+  "222":  "bilgisayar-tablet",  // Monitors
+  "897":  "bilgisayar-tablet",  // Tablets
+  "1584": "tv-ses",             // TVs
+  "1637": "tv-ses",             // Headphones & Headsets
+  "219":  "tv-ses",             // Headsets
+  "261":  "tv-ses",             // Wireless Earbuds
+  "1081": "tv-ses",             // Loudspeakers
+  "1339": "tv-ses",             // Home Audio Systems
+  "2344": "tv-ses",             // Portable TVs & Monitors
+  "2647": "giyilebilir",        // Smartwatches & Sport Watches
+  "3437": "giyilebilir",        // Smart Wearable Accessories
+  "575":  "fotograf-kamera",    // Digital Cameras
+  "588":  "fotograf-kamera",    // Camera Lenses
+  "193":  "oyun-konsol",        // Gaming Controllers
+  "2898": "oyun-konsol",        // Head-Mounted Displays (VR)
 };
 
 // Supplier ID → Marka adı

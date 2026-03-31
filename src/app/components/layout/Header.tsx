@@ -5,12 +5,21 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "../../../lib/supabase";
 
 const categories = [
-  { title: "Elektronik", slug: "elektronik", items: ["Akilli Telefon", "Laptop", "Tablet", "TV", "Kulaklik", "Kamera"] },
-  { title: "Kozmetik", slug: "kozmetik", items: ["Parfum", "Cilt Bakim", "Sac Bakim", "Makyaj"] },
-  { title: "Ev & Yasam", slug: "ev-aletleri", items: ["Mutfak", "Mobilya", "Aydinlatma", "Dekorasyon"] },
-  { title: "Spor", slug: "spor", items: ["Fitness", "Outdoor", "Spor Giyim", "Bisiklet"] },
-  { title: "Bebek", slug: "bebek", items: ["Bebek Bakim", "Oyuncaklar", "Bebek Giyim"] },
-  { title: "Kitap", slug: "kitap", items: ["Roman", "Kisisel Gelisim", "Cocuk Kitaplari"] },
+  { title: "Telefon & Aksesuar",      slug: "telefon-aksesuar",  icon: "📱", items: ["Akıllı Telefon", "Telefon Kılıfı", "Şarj Aleti", "Kablosuz Kulaklık", "Akıllı Saat"] },
+  { title: "Bilgisayar & Tablet",     slug: "bilgisayar-tablet", icon: "💻", items: ["Laptop", "Tablet", "Masaüstü PC", "Monitör", "Klavye & Mouse"] },
+  { title: "TV & Ses Sistemleri",     slug: "tv-ses",            icon: "📺", items: ["Televizyon", "Soundbar", "Bluetooth Hoparlör", "Kulaklık", "Ev Sinema"] },
+  { title: "Giyilebilir Teknoloji",   slug: "giyilebilir",       icon: "⌚", items: ["Akıllı Saat", "Fitness Bileklik", "VR Gözlük", "Spor Saati"] },
+  { title: "Fotoğraf & Kamera",       slug: "fotograf-kamera",   icon: "📷", items: ["Fotoğraf Makinesi", "Lens", "Drone", "Aksiyon Kamera", "Tripod"] },
+  { title: "Oyun & Konsol",           slug: "oyun-konsol",       icon: "🎮", items: ["PlayStation", "Xbox", "Nintendo", "Oyun Kolu", "Gaming PC"] },
+  { title: "Beyaz Eşya",              slug: "beyaz-esya",        icon: "🫙", items: ["Çamaşır Makinesi", "Bulaşık Makinesi", "Buzdolabı", "Fırın", "Klima"] },
+  { title: "Küçük Ev Aletleri",       slug: "kucuk-ev-aletleri", icon: "🔌", items: ["Kahve Makinesi", "Robot Süpürge", "Tost Makinesi", "Blender", "Ütü"] },
+  { title: "Kozmetik & Kişisel Bakım",slug: "kozmetik-bakim",    icon: "💄", items: ["Parfüm", "Cilt Bakım", "Saç Bakım", "Makyaj", "Erkek Bakım"] },
+  { title: "Spor & Outdoor",          slug: "spor-outdoor",      icon: "🏃", items: ["Fitness Aleti", "Bisiklet", "Kamp Malzemesi", "Yüzme", "Koşu"] },
+  { title: "Kitap & Hobi",            slug: "kitap-hobi",        icon: "📚", items: ["Roman", "Kişisel Gelişim", "Müzik Aleti", "Oyuncak", "Puzzle"] },
+  { title: "Bebek & Çocuk",           slug: "bebek-cocuk",       icon: "🧸", items: ["Bebek Bakım", "Bebek Arabası", "Oyuncak", "Bebek Kıyafeti", "Emzirme"] },
+  { title: "Ev & Yaşam",             slug: "ev-yasam",          icon: "🏠", items: ["Mobilya", "Aydınlatma", "Dekorasyon", "Mutfak", "Banyo"] },
+  { title: "Otomotiv",                slug: "otomotiv",          icon: "🚗", items: ["Araç Aksesuarı", "Araba Bakım", "GPS", "Araç Kamerası", "Lastik"] },
+  { title: "Evcil Hayvan",            slug: "evcil-hayvan",      icon: "🐾", items: ["Kedi", "Köpek", "Kuş", "Balık", "Mama & Ödül"] },
 ];
 
 export default function Header() {
@@ -177,7 +186,7 @@ export default function Header() {
                   {categories.map((cat) => (
                     <div key={cat.title}>
                       <Link href={"/kategori/" + cat.slug} onClick={() => setAllCatsOpen(false)}>
-                        <div className="font-bold text-sm text-[#E8460A] mb-2 hover:underline cursor-pointer">{cat.title}</div>
+                        <div className="font-bold text-sm text-[#E8460A] mb-2 hover:underline cursor-pointer flex items-center gap-1"><span>{cat.icon}</span>{cat.title}</div>
                       </Link>
                       {cat.items.map((item) => (
                         <Link key={item} href={"/ara?q=" + encodeURIComponent(item)} onClick={() => setAllCatsOpen(false)}>
@@ -195,8 +204,8 @@ export default function Header() {
             {categories.map((cat) => (
               <div key={cat.title} className="relative group">
                 <Link href={"/kategori/" + cat.slug}>
-                  <div className="px-3 h-10 flex items-center text-xs font-medium text-gray-600 hover:text-[#E8460A] whitespace-nowrap cursor-pointer border-b-2 border-transparent hover:border-[#E8460A] transition-all">
-                    {cat.title}
+                  <div className="px-3 h-10 flex items-center gap-1 text-xs font-medium text-gray-600 hover:text-[#E8460A] whitespace-nowrap cursor-pointer border-b-2 border-transparent hover:border-[#E8460A] transition-all">
+                    <span>{cat.icon}</span>{cat.title}
                   </div>
                 </Link>
                 <div className="absolute left-0 top-10 bg-white rounded-b-xl hidden group-hover:block z-50 min-w-[160px] py-2" style={{ boxShadow: "0 10px 40px rgba(0,0,0,0.12)" }}>
