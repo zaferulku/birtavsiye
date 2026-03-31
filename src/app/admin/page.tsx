@@ -28,6 +28,13 @@ export default function AdminPanel() {
   const [priceSuccess, setPriceSuccess] = useState("");
   const [priceError, setPriceError] = useState("");
 
+  // CSV import
+  const [csvText, setCsvText] = useState("");
+  const [csvParsed, setCsvParsed] = useState<any[]>([]);
+  const [csvError, setCsvError] = useState("");
+  const [csvImporting, setCsvImporting] = useState(false);
+  const [csvResult, setCsvResult] = useState("");
+
   // Icecat arama
   const [icecatQuery, setIcecatQuery] = useState("");
   const [icecatBrand, setIcecatBrand] = useState("");
@@ -245,6 +252,82 @@ export default function AdminPanel() {
     setProducts((prev) => prev.filter((p) => p.id !== id));
   };
 
+  // CSV parse: başlık satırı + veri satırları
+  const parseCSV = (text: string) => {
+    setCsvError(""); setCsvResult("");
+    const lines = text.trim().split("\n").map(l => l.trim()).filter(Boolean);
+    if (lines.length < 2) { setCsvError("En az 1 başlık + 1 veri satırı gerekli"); setCsvParsed([]); return; }
+
+    const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/"/g, ""));
+    const required = ["title", "brand", "category", "image_url"];
+    const missing = required.filter(r => !headers.includes(r));
+    if (missing.length > 0) { setCsvError(`Eksik sütunlar: ${missing.join(", ")}`); setCsvParsed([]); return; }
+
+    const rows = lines.slice(1).map(line => {
+      // Virgüllü değerlere izin vermek için basit CSV parse
+      const vals: string[] = [];
+      let cur = ""; let inQ = false;
+      for (const ch of line) {
+        if (ch === '"') { inQ = !inQ; }
+        else if (ch === "," && !inQ) { vals.push(cur.trim()); cur = ""; }
+        else cur += ch;
+      }
+      vals.push(cur.trim());
+      const row: Record<string, string> = {};
+      headers.forEach((h, i) => { row[h] = (vals[i] || "").replace(/"/g, ""); });
+      return row;
+    }).filter(r => r.title && r.brand);
+
+    setCsvParsed(rows);
+    if (rows.length === 0) setCsvError("Geçerli satır bulunamadı");
+  };
+
+  const handleCsvFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      setCsvText(text);
+      parseCSV(text);
+    };
+    reader.readAsText(file, "utf-8");
+  };
+
+  function makeSlug(str: string) {
+    return str.toLowerCase()
+      .replace(/ğ/g, "g").replace(/ü/g, "u").replace(/ş/g, "s")
+      .replace(/ı/g, "i").replace(/ö/g, "o").replace(/ç/g, "c")
+      .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")
+      + "-" + Math.random().toString(36).slice(2, 6);
+  }
+
+  const handleCsvImport = async () => {
+    if (csvParsed.length === 0) return;
+    setCsvImporting(true); setCsvResult(""); setCsvError("");
+    let ok = 0; let fail = 0;
+
+    for (const row of csvParsed) {
+      const cat = categories.find(c => c.slug === row.category || c.name.toLowerCase() === row.category.toLowerCase());
+      const { error } = await supabase.from("products").insert({
+        title: row.title,
+        slug: makeSlug(row.title),
+        brand: row.brand,
+        description: row.description || null,
+        image_url: row.image_url || null,
+        category_id: cat?.id || null,
+        specs: row.specs ? JSON.parse(row.specs) : null,
+      });
+      if (error) fail++; else ok++;
+    }
+
+    setCsvResult(`✅ ${ok} ürün eklendi${fail > 0 ? `, ❌ ${fail} hata` : ""}`);
+    setCsvImporting(false);
+    setCsvParsed([]);
+    setCsvText("");
+    loadProducts();
+  };
+
   if (loading) return (
     <main><Header />
       <div className="max-w-6xl mx-auto px-6 py-20 text-center text-gray-400">Yükleniyor...</div>
@@ -260,7 +343,7 @@ export default function AdminPanel() {
         <p className="text-sm text-gray-400 mb-6">birtavsiye.net — {products.length} ürün</p>
 
         <div className="flex border-b border-gray-200 mb-6">
-          {[["urunler", "Ürünler"], ["ekle", "Yeni Ürün Ekle"], ["fiyatler", "Fiyat Yönetimi"]].map(([t, label]) => (
+          {[["urunler", "Ürünler"], ["ekle", "Yeni Ürün Ekle"], ["csv", "CSV Import"], ["fiyatler", "Fiyat Yönetimi"]].map(([t, label]) => (
             <button key={t} onClick={() => setActiveTab(t)}
               className={`px-5 py-3 text-sm font-medium border-b-2 transition-all ${
                 activeTab === t ? "border-[#E8460A] text-[#E8460A]" : "border-transparent text-gray-500"
@@ -418,6 +501,84 @@ export default function AdminPanel() {
                 className="mt-5 bg-[#E8460A] text-white rounded-xl px-6 py-3 text-sm font-bold disabled:opacity-50 hover:bg-[#C93A08] transition-all">
                 {saving ? "Ekleniyor..." : "Ürünü Ekle"}
               </button>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "csv" && (
+          <div className="space-y-5">
+            {/* Şablon indirme */}
+            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5">
+              <h2 className="font-bold text-sm text-blue-800 mb-1">CSV Formatı</h2>
+              <p className="text-xs text-blue-600 mb-3">Dosyanın ilk satırı başlık olmalı. Zorunlu: <strong>title, brand, category, image_url</strong></p>
+              <div className="bg-white border border-blue-100 rounded-xl p-3 font-mono text-xs text-gray-600 overflow-x-auto">
+                title,brand,category,image_url,description<br />
+                "iPhone 15 Pro 256GB",Apple,telefon,https://example.com/img.jpg,"Apple'ın amiral gemisi"<br />
+                "Galaxy S24 Ultra",Samsung,telefon,https://example.com/img2.jpg,""
+              </div>
+              <p className="text-xs text-blue-600 mt-2">
+                Kategoriler: <strong>telefon, laptop, tv, ses, kozmetik, ev-aletleri, spor, oyun, fotograf, saglik, bebek, kitap</strong>
+              </p>
+              <button
+                onClick={() => {
+                  const csv = "title,brand,category,image_url,description\n\"iPhone 15 Pro 256GB\",Apple,telefon,https://example.com/img.jpg,\"Açıklama\"\n";
+                  const a = document.createElement("a");
+                  a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+                  a.download = "urun-sablonu.csv";
+                  a.click();
+                }}
+                className="mt-3 text-xs bg-blue-600 text-white px-4 py-2 rounded-xl font-semibold hover:bg-blue-700 transition-all"
+              >
+                Şablon İndir
+              </button>
+            </div>
+
+            {/* Dosya yükle */}
+            <div className="bg-white border border-gray-200 rounded-2xl p-5">
+              <h2 className="font-bold text-base mb-4">CSV Dosyası Yükle</h2>
+
+              <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-2xl p-10 cursor-pointer hover:border-[#E8460A] hover:bg-orange-50 transition-all">
+                <div className="text-3xl mb-2">📂</div>
+                <div className="text-sm font-medium text-gray-700">CSV dosyası seç</div>
+                <div className="text-xs text-gray-400 mt-1">.csv formatında, UTF-8 kodlamasında</div>
+                <input type="file" accept=".csv" onChange={handleCsvFile} className="hidden" />
+              </label>
+
+              {csvError && (
+                <div className="mt-3 bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl">{csvError}</div>
+              )}
+
+              {csvParsed.length > 0 && (
+                <div className="mt-4">
+                  <div className="text-sm font-semibold text-gray-700 mb-2">{csvParsed.length} ürün hazır — önizleme:</div>
+                  <div className="border border-gray-100 rounded-xl overflow-hidden max-h-64 overflow-y-auto">
+                    {csvParsed.slice(0, 20).map((row, i) => (
+                      <div key={i} className={`flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 last:border-0 ${i % 2 === 0 ? "bg-white" : "bg-gray-50/40"}`}>
+                        {row.image_url && (
+                          <img src={row.image_url} alt="" className="w-10 h-10 object-contain rounded-lg border border-gray-100 flex-shrink-0" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-medium truncate">{row.title}</div>
+                          <div className="text-xs text-gray-400">{row.brand} · {row.category}</div>
+                        </div>
+                        <div className="text-xs text-green-600 font-medium">✓</div>
+                      </div>
+                    ))}
+                    {csvParsed.length > 20 && (
+                      <div className="text-center py-2 text-xs text-gray-400">+{csvParsed.length - 20} ürün daha</div>
+                    )}
+                  </div>
+
+                  <button onClick={handleCsvImport} disabled={csvImporting}
+                    className="mt-4 bg-[#E8460A] text-white rounded-xl px-6 py-3 text-sm font-bold disabled:opacity-50 hover:bg-[#C93A08] transition-all">
+                    {csvImporting ? `İçe aktarılıyor... (${csvParsed.length} ürün)` : `${csvParsed.length} Ürünü İçe Aktar`}
+                  </button>
+                </div>
+              )}
+
+              {csvResult && (
+                <div className="mt-4 bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl font-medium">{csvResult}</div>
+              )}
             </div>
           </div>
         )}
