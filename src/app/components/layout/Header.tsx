@@ -291,10 +291,7 @@ export default function Header() {
                       <div className="grid grid-cols-2 gap-1">
                         {active.categories[0].brands.map(brand => (
                           <Link key={brand} href={"/ara?q=" + encodeURIComponent(brand)} onClick={() => setActiveGroup(null)}>
-                            <div className="flex items-center gap-2 px-2 py-1.5 rounded-xl text-sm text-gray-600 hover:bg-orange-50 hover:text-[#E8460A] transition-colors">
-                              <div className="w-6 h-6 bg-gray-100 rounded-lg flex items-center justify-center text-xs font-bold text-gray-500 flex-shrink-0">
-                                {brand[0]}
-                              </div>
+                            <div className="flex items-center px-2 py-1.5 rounded-xl text-sm text-gray-600 hover:bg-orange-50 hover:text-[#E8460A] transition-colors">
                               <span className="text-xs">{brand}</span>
                             </div>
                           </Link>
@@ -326,10 +323,7 @@ export default function Header() {
                         <div className="grid grid-cols-3 gap-1">
                           {Array.from(new Set(active.categories.flatMap(c => c.brands))).slice(0, 12).map(brand => (
                             <Link key={brand} href={"/ara?q=" + encodeURIComponent(brand)} onClick={() => setActiveGroup(null)}>
-                              <div className="flex items-center gap-2 px-2 py-2 rounded-xl text-sm text-gray-600 hover:bg-orange-50 hover:text-[#E8460A] transition-colors cursor-pointer">
-                                <div className="w-7 h-7 bg-gray-100 rounded-lg flex items-center justify-center text-xs font-bold text-gray-500 flex-shrink-0">
-                                  {brand[0]}
-                                </div>
+                              <div className="flex items-center px-2 py-2 rounded-xl text-sm text-gray-600 hover:bg-orange-50 hover:text-[#E8460A] transition-colors cursor-pointer">
                                 <span className="text-xs font-medium truncate">{brand}</span>
                               </div>
                             </Link>
