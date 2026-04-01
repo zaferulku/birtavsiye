@@ -16,10 +16,10 @@ const CATID_TO_SLUG = {
   "1893": "akilli-telefon",     // Smartphones
   "117":  "akilli-telefon",     // Telephones
   "119":  "akilli-telefon",     // Mobile Phones
-  "151":  "bilgisayar-tablet",  // Laptops
-  "153":  "bilgisayar-tablet",  // PCs/Workstations
-  "222":  "bilgisayar-tablet",  // Monitors
-  "897":  "bilgisayar-tablet",  // Tablets
+  "151":  "bilgisayar-laptop",  // Laptops
+  "153":  "bilgisayar-laptop",  // PCs/Workstations
+  "222":  "bilgisayar-laptop",  // Monitors
+  "897":  "tablet",             // Tablets
   "1584": "tv",                 // TVs
   "2344": "tv",                 // Portable TVs & Monitors
   "1637": "ses-kulaklik",       // Headphones & Headsets
