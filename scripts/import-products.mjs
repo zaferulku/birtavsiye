@@ -13,22 +13,22 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // Doğrulanmış Icecat Catid → DB Kategori Slug eşlemesi
 const CATID_TO_SLUG = {
-  "1893": "telefon-aksesuar",   // Smartphones
-  "117":  "telefon-aksesuar",   // Telephones
-  "119":  "telefon-aksesuar",   // Mobile Phones
+  "1893": "akilli-telefon",     // Smartphones
+  "117":  "akilli-telefon",     // Telephones
+  "119":  "akilli-telefon",     // Mobile Phones
   "151":  "bilgisayar-tablet",  // Laptops
   "153":  "bilgisayar-tablet",  // PCs/Workstations
   "222":  "bilgisayar-tablet",  // Monitors
   "897":  "bilgisayar-tablet",  // Tablets
-  "1584": "tv-ses",             // TVs
-  "1637": "tv-ses",             // Headphones & Headsets
-  "219":  "tv-ses",             // Headsets
-  "261":  "tv-ses",             // Wireless Earbuds
-  "1081": "tv-ses",             // Loudspeakers
-  "1339": "tv-ses",             // Home Audio Systems
-  "2344": "tv-ses",             // Portable TVs & Monitors
-  "2647": "giyilebilir",        // Smartwatches & Sport Watches
-  "3437": "giyilebilir",        // Smart Wearable Accessories
+  "1584": "tv",                 // TVs
+  "2344": "tv",                 // Portable TVs & Monitors
+  "1637": "ses-kulaklik",       // Headphones & Headsets
+  "219":  "ses-kulaklik",       // Headsets
+  "261":  "ses-kulaklik",       // Wireless Earbuds
+  "1081": "ses-kulaklik",       // Loudspeakers
+  "1339": "ses-kulaklik",       // Home Audio Systems
+  "2647": "akilli-saat",        // Smartwatches & Sport Watches
+  "3437": "akilli-saat",        // Smart Wearable Accessories
   "575":  "fotograf-kamera",    // Digital Cameras
   "588":  "fotograf-kamera",    // Camera Lenses
   "193":  "oyun-konsol",        // Gaming Controllers
