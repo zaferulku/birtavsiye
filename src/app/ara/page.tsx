@@ -14,6 +14,7 @@ type Product = {
   description: string;
   image_url?: string;
   category_id?: string;
+  prices?: { price: number; stores: { name: string }[] }[];
 };
 
 const popularSearches = [
@@ -47,7 +48,7 @@ function AramaIcerik() {
 
     let queryBuilder = supabase
       .from("products")
-      .select("id, title, slug, brand, description, image_url, category_id")
+      .select("id, title, slug, brand, description, image_url, category_id, prices(price,stores(name))")
       .limit(40);
 
     if (categoryIds.length > 0) {
@@ -208,25 +209,34 @@ function AramaIcerik() {
             </div>
 
             <div className="grid grid-cols-4 gap-4">
-              {filteredResults.map((p) => (
-                <Link href={"/urun/" + p.slug} key={p.id}>
-                  <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-lg hover:border-[#E8460A]/30 transition-all cursor-pointer group">
-                    <div className="aspect-square bg-gray-50 overflow-hidden">
-                      {p.image_url ? (
-                        <img src={p.image_url} alt={p.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-4xl">📦</div>
-                      )}
+              {filteredResults.map((p) => {
+                const minPrice = p.prices?.length
+                  ? p.prices.reduce((m, x) => x.price < m.price ? x : m, p.prices[0])
+                  : null;
+                return (
+                  <Link href={"/urun/" + p.slug} key={p.id}>
+                    <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-lg hover:border-[#E8460A]/30 transition-all cursor-pointer group">
+                      <div className="aspect-square bg-gray-50 overflow-hidden">
+                        {p.image_url ? (
+                          <img src={p.image_url} alt={p.title}
+                            className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-4xl">📦</div>
+                        )}
+                      </div>
+                      <div className="p-3">
+                        <div className="text-xs font-bold text-[#E8460A] uppercase tracking-wide mb-1">{p.brand}</div>
+                        <div className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug mb-2">{p.title}</div>
+                        {minPrice ? (
+                          <div className="text-sm font-bold text-gray-900">{minPrice.price.toLocaleString("tr-TR")} <span className="text-xs font-normal text-gray-400">₺</span></div>
+                        ) : (
+                          <div className="text-xs text-[#E8460A] font-medium">Fiyatları Karşılaştır →</div>
+                        )}
+                      </div>
                     </div>
-                    <div className="p-3">
-                      <div className="text-xs font-bold text-[#E8460A] uppercase tracking-wide mb-1">{p.brand}</div>
-                      <div className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug mb-2">{p.title}</div>
-                      <div className="text-xs text-[#E8460A] font-medium">Fiyatlari Karsilastir →</div>
-                    </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           </div>
         </div>

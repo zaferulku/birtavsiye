@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../../../lib/supabase";
+import Link from "next/link";
 
 const tabs = ["Yorumlar", "Teknik Özellikler", "Benzer Ürünler"];
 
@@ -15,6 +16,15 @@ type Post = {
   rating?: number;
 };
 
+type SimilarProduct = {
+  id: string;
+  title: string;
+  slug: string;
+  brand: string;
+  image_url?: string;
+  prices?: { price: number }[];
+};
+
 const StarRating = ({ rating, size = "sm" }: { rating: number; size?: "sm" | "lg" }) => (
   <div className="flex items-center gap-0.5">
     {[1, 2, 3, 4, 5].map((s) => (
@@ -26,7 +36,7 @@ const StarRating = ({ rating, size = "sm" }: { rating: number; size?: "sm" | "lg
 );
 
 const StarSelector = ({ value, onChange }: { value: number; onChange: (v: number) => void }) => {
-  const labels = ["", "Cok Kotu", "Kotu", "Orta", "Iyi", "Mukemmel"];
+  const labels = ["", "Çok Kötü", "Kötü", "Orta", "İyi", "Mükemmel"];
   return (
     <div className="flex items-center gap-2">
       {[1, 2, 3, 4, 5].map((s) => (
@@ -69,11 +79,11 @@ function ReplyBox({ post, onSubmit, onCancel }: {
 
   return (
     <div className="ml-12 mt-2 bg-gray-50 rounded-xl p-3 border border-gray-200">
-      {sent && <div className="text-xs text-green-600 font-medium mb-1.5">✓ Yanitiniz gonderildi!</div>}
+      {sent && <div className="text-xs text-green-600 font-medium mb-1.5">✓ Yanıtınız gönderildi!</div>}
       <textarea
         className="w-full bg-white border border-gray-200 rounded-lg p-3 text-sm outline-none resize-none placeholder:text-gray-400 focus:border-[#E8460A] transition-all"
         rows={2}
-        placeholder={post.user_name + " kullanicisina yanitinizi yazin..."}
+        placeholder={post.user_name + " kullanıcısına yanıtınızı yazın..."}
         value={replyBody}
         onChange={(e) => { setReplyBody(e.target.value); setSent(false); }}
       />
@@ -81,14 +91,22 @@ function ReplyBox({ post, onSubmit, onCancel }: {
         <button onClick={onCancel} className="px-3 py-1.5 text-xs text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition-all">Kapat</button>
         <button onClick={handleSubmit} disabled={loading || !replyBody.trim()}
           className="px-4 py-1.5 text-xs bg-[#E8460A] text-white rounded-lg hover:bg-[#C93A08] disabled:opacity-40 transition-all">
-          {loading ? "Gonderiliyor..." : "Yanitla"}
+          {loading ? "Gönderiliyor..." : "Yanıtla"}
         </button>
       </div>
     </div>
   );
 }
 
-export default function CommunitySection({ productId }: { productId: string }) {
+export default function CommunitySection({
+  productId,
+  specs,
+  categoryId,
+}: {
+  productId: string;
+  specs?: Record<string, string> | null;
+  categoryId?: string | null;
+}) {
   const [activeTab, setActiveTab] = useState(0);
   const [posts, setPosts] = useState<Post[]>([]);
   const [body, setBody] = useState("");
@@ -99,6 +117,7 @@ export default function CommunitySection({ productId }: { productId: string }) {
   const [votedPosts, setVotedPosts] = useState<Record<string, "up" | "down">>({});
   const [sortBy, setSortBy] = useState("onerilen");
   const [searchQuery, setSearchQuery] = useState("");
+  const [similarProducts, setSimilarProducts] = useState<SimilarProduct[]>([]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -107,6 +126,16 @@ export default function CommunitySection({ productId }: { productId: string }) {
     });
     fetchPosts();
   }, [productId]);
+
+  useEffect(() => {
+    if (!categoryId) return;
+    supabase.from("products")
+      .select("id,title,slug,brand,image_url,prices(price)")
+      .eq("category_id", categoryId)
+      .neq("id", productId)
+      .limit(8)
+      .then(({ data }) => { if (data) setSimilarProducts(data as unknown as SimilarProduct[]); });
+  }, [categoryId, productId]);
 
   const loadUserVotes = async (userId: string) => {
     const { data } = await supabase.from("post_votes").select("post_id, vote_type").eq("user_id", userId);
@@ -124,7 +153,7 @@ export default function CommunitySection({ productId }: { productId: string }) {
   };
 
   const getDisplayName = (u: any) =>
-    u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "Kullanici";
+    u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "Kullanıcı";
 
   const handleVote = async (post: Post, type: "up" | "down") => {
     if (!user) { window.location.href = "/giris"; return; }
@@ -150,7 +179,7 @@ export default function CommunitySection({ productId }: { productId: string }) {
     if (userRating === 0) return;
     if (!user) { window.location.href = "/giris"; return; }
     setLoading(true);
-    const submitBody = body.trim() || `${userRating} yildiz puan verildi.`;
+    const submitBody = body.trim() || `${userRating} yıldız puan verildi.`;
     await supabase.from("community_posts").insert({
       product_id: productId, user_id: user.id,
       user_name: getDisplayName(user), type: "yorum",
@@ -173,20 +202,20 @@ export default function CommunitySection({ productId }: { productId: string }) {
   }, [user, productId]);
 
   const topPostsRaw = posts.filter((p) => !p.parent_id)
-  .filter((p) => searchQuery === "" || p.body.toLowerCase().includes(searchQuery.toLowerCase()) || p.user_name.toLowerCase().includes(searchQuery.toLowerCase()));
+    .filter((p) => searchQuery === "" || p.body.toLowerCase().includes(searchQuery.toLowerCase()) || p.user_name.toLowerCase().includes(searchQuery.toLowerCase()));
 
-const topPosts = [...topPostsRaw].sort((a, b) => {
-  if (sortBy === "en-yeni") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-  if (sortBy === "en-eski") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
-  if (sortBy === "en-faydali") return (b.votes - b.downvotes) - (a.votes - a.downvotes);
-  if (sortBy === "en-yuksek") return (b.rating || 0) - (a.rating || 0);
-  if (sortBy === "en-dusuk") return (a.rating || 0) - (b.rating || 0);
-  return (b.votes - b.downvotes) - (a.votes - a.downvotes);
-});
+  const topPosts = [...topPostsRaw].sort((a, b) => {
+    if (sortBy === "en-yeni") return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    if (sortBy === "en-eski") return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+    if (sortBy === "en-faydali") return (b.votes - b.downvotes) - (a.votes - a.downvotes);
+    if (sortBy === "en-yuksek") return (b.rating || 0) - (a.rating || 0);
+    if (sortBy === "en-dusuk") return (a.rating || 0) - (b.rating || 0);
+    return (b.votes - b.downvotes) - (a.votes - a.downvotes);
+  });
   const getReplies = (id: string) => posts.filter((p) => p.parent_id === id);
 
   const ratingsAll = topPosts.filter((p) => p.rating && p.rating > 0);
-  const yorumCount = topPosts.filter((p) => p.body && !p.body.match(/^\d yildiz puan verildi\.$/)).length;
+  const yorumCount = topPosts.filter((p) => p.body && !p.body.match(/^\d yıldız puan verildi\.$/)).length;
   const degerlendirmeCount = ratingsAll.length;
   const avgRating = ratingsAll.length > 0
     ? Math.round(ratingsAll.reduce((acc, p) => acc + (p.rating || 0), 0) / ratingsAll.length) : 0;
@@ -195,11 +224,13 @@ const topPosts = [...topPostsRaw].sort((a, b) => {
   }));
   const maxCount = Math.max(...ratingDist.map((r) => r.count), 1);
 
+  const specEntries = specs ? Object.entries(specs).filter(([, v]) => v) : [];
+
   const PostRow = ({ p, indent = false }: { p: Post; indent?: boolean }) => {
     const replies = getReplies(p.id);
     const voted = votedPosts[p.id];
     const postRating = p.rating || 0;
-    const isPureRating = p.body === `${postRating} yildiz puan verildi.`;
+    const isPureRating = p.body === `${postRating} yıldız puan verildi.`;
     if (isPureRating) return null;
 
     return (
@@ -208,7 +239,6 @@ const topPosts = [...topPostsRaw].sort((a, b) => {
           <div className="flex gap-3">
             <Avatar name={p.user_name} size={indent ? "sm" : "md"} />
             <div className="flex-1 min-w-0">
-              {/* Üst satır: isim + tarih + yıldız + badge */}
               <div className="flex items-center gap-1.5 flex-wrap mb-1">
                 <span className="font-semibold text-sm text-gray-900">{p.user_name || "Anonim"}</span>
                 <span className="text-gray-300 text-xs">·</span>
@@ -216,11 +246,10 @@ const topPosts = [...topPostsRaw].sort((a, b) => {
                 {!indent && postRating > 0 && <StarRating rating={postRating} />}
                 {!indent && (
                   <span className="text-xs text-green-700 bg-green-50 border border-green-100 px-1.5 py-0.5 rounded-full">
-                    Dogrulanmis
+                    Doğrulanmış
                   </span>
                 )}
               </div>
-              {/* Yorum metni + emojiler aynı satırda */}
               <div className="flex items-start justify-between gap-3">
                 <p className="text-sm text-gray-700 leading-relaxed flex-1">{p.body}</p>
                 <div className="flex items-center gap-1.5 flex-shrink-0 mt-0.5">
@@ -228,7 +257,7 @@ const topPosts = [...topPostsRaw].sort((a, b) => {
                     <button
                       onClick={() => { if (!user) { window.location.href = "/giris"; return; } setReplyToId(replyToId === p.id ? null : p.id); }}
                       className="text-xs text-gray-400 hover:text-[#E8460A] transition-colors px-1.5 py-1 rounded">
-                      Yanitla {replies.length > 0 && `(${replies.length})`}
+                      Yanıtla {replies.length > 0 && `(${replies.length})`}
                     </button>
                   )}
                   <button onClick={() => handleVote(p, "up")}
@@ -264,26 +293,29 @@ const topPosts = [...topPostsRaw].sort((a, b) => {
         {tabs.map((t, i) => (
           <button key={t} onClick={() => setActiveTab(i)}
             className={`px-6 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-all ${activeTab === i ? "border-[#E8460A] text-[#E8460A]" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
-            {t} {i === 0 && `(${topPosts.length})`}
+            {t}
+            {i === 0 && ` (${topPosts.length})`}
+            {i === 1 && specEntries.length > 0 && ` (${specEntries.length})`}
+            {i === 2 && similarProducts.length > 0 && ` (${similarProducts.length})`}
           </button>
         ))}
       </div>
 
+      {/* Yorumlar */}
       {activeTab === 0 && (
         <div className="flex gap-10">
-          {/* SOL */}
           <div className="w-72 flex-shrink-0">
             <div className="sticky top-24">
-              <h3 className="font-bold text-base text-gray-900 mb-4">Musteri Yorumlari</h3>
+              <h3 className="font-bold text-base text-gray-900 mb-4">Müşteri Yorumları</h3>
               <div className="mb-4">
                 <div className="text-5xl font-bold text-gray-900 mb-1">{avgRating > 0 ? avgRating.toFixed(1) : "—"}</div>
                 <StarRating rating={avgRating} size="lg" />
-                <div className="text-sm text-gray-500 mt-1">{topPosts.length} degerlendirme</div>
+                <div className="text-sm text-gray-500 mt-1">{topPosts.length} değerlendirme</div>
               </div>
               <div className="mb-5 space-y-1.5">
                 {ratingDist.map(({ star, count }) => (
                   <div key={star} className="flex items-center gap-2">
-                    <span className="text-xs text-[#E8460A] w-12 text-right flex-shrink-0">{star} yildiz</span>
+                    <span className="text-xs text-[#E8460A] w-12 text-right flex-shrink-0">{star} yıldız</span>
                     <div className="flex-1 bg-gray-200 rounded-full h-2 overflow-hidden">
                       <div className="bg-[#E8A000] h-full rounded-full" style={{ width: `${maxCount > 0 ? Math.round((count / maxCount) * 100) : 0}%` }} />
                     </div>
@@ -294,79 +326,78 @@ const topPosts = [...topPostsRaw].sort((a, b) => {
                 ))}
               </div>
               <div className="border-t border-gray-100 pt-4">
-                <div className="text-sm font-bold text-gray-800 mb-0.5">Bu urunu incele</div>
-                <div className="text-xs text-gray-500 mb-3">Dusuncelerinizi paylasın</div>
+                <div className="text-sm font-bold text-gray-800 mb-0.5">Bu ürünü incele</div>
+                <div className="text-xs text-gray-500 mb-3">Düşüncelerinizi paylaşın</div>
                 {user ? (
                   <button onClick={() => document.getElementById("yorum-kutusu")?.scrollIntoView({ behavior: "smooth" })}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-[#E8460A] hover:text-[#E8460A] transition-all">
-                    Yorum yazin
+                    Yorum yaz
                   </button>
                 ) : (
                   <a href="/giris" className="block w-full px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:border-[#E8460A] hover:text-[#E8460A] transition-all text-center">
-                    Giris yapip yorum yazin
+                    Giriş yapıp yorum yaz
                   </a>
                 )}
               </div>
             </div>
           </div>
 
-          {/* SAG */}
           <div className="flex-1 min-w-0">
             <div id="yorum-kutusu" className="mb-6 bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
               <div className="px-5 py-4 border-b border-gray-100">
-  <div className="flex items-center justify-between mb-3">
-    <div>
-      <h4 className="font-bold text-gray-900 text-base">Tum Degerlendirmeler</h4>
-      <div className="flex items-center gap-2 mt-1">
-        <StarRating rating={avgRating} size="sm" />
-        <span className="text-sm font-bold text-gray-800">{avgRating > 0 ? avgRating.toFixed(1) : "—"}</span>
-        <span className="text-xs text-gray-400">· {degerlendirmeCount} degerlendirme · {yorumCount} yorum</span>
-      </div>
-    </div>
-  </div>
-  <div className="flex items-center gap-3">
-    <div className="flex-1">
-  <label className="text-xs text-gray-500 font-medium mb-1 block">Yorumlarda Ara</label>
-  <div className="flex items-center bg-gray-100 rounded-lg px-3 gap-2 h-9">
-    <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-    </svg>
-    <input
-  type="text"
-  placeholder="Yorum veya kullanici adi ara..."
-  value={searchQuery}
-  onChange={(e) => setSearchQuery(e.target.value)}
-  onClick={(e) => e.stopPropagation()}
-  className="flex-1 bg-transparent text-xs outline-none text-gray-700 placeholder:text-gray-400"
-/>
-    {searchQuery && (
-      <button onClick={() => setSearchQuery("")} className="text-gray-400 hover:text-gray-600 text-sm">×</button>
-    )}
-  </div>
-</div>
-    <select 
-  value={sortBy}
-  onChange={(e) => setSortBy(e.target.value)}
-  className="border border-gray-200 rounded-lg px-3 h-9 text-xs text-gray-600 outline-none bg-white cursor-pointer hover:border-[#E8460A] transition-all">
-  <option value="onerilen">Onerilen Siralama</option>
-  <option value="en-yeni">En Yeni</option>
-  <option value="en-eski">En Eski</option>
-  <option value="en-faydali">En Faydali</option>
-  <option value="en-yuksek">En Yuksek Puan</option>
-  <option value="en-dusuk">En Dusuk Puan</option>
-</select>
-  </div>
-</div>
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h4 className="font-bold text-gray-900 text-base">Tüm Değerlendirmeler</h4>
+                    <div className="flex items-center gap-2 mt-1">
+                      <StarRating rating={avgRating} size="sm" />
+                      <span className="text-sm font-bold text-gray-800">{avgRating > 0 ? avgRating.toFixed(1) : "—"}</span>
+                      <span className="text-xs text-gray-400">· {degerlendirmeCount} değerlendirme · {yorumCount} yorum</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <label className="text-xs text-gray-500 font-medium mb-1 block">Yorumlarda Ara</label>
+                    <div className="flex items-center bg-gray-100 rounded-lg px-3 gap-2 h-9">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
+                      <input
+                        type="text"
+                        placeholder="Yorum veya kullanıcı adı ara..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        className="flex-1 bg-transparent text-xs outline-none text-gray-700 placeholder:text-gray-400"
+                      />
+                      {searchQuery && (
+                        <button onClick={() => setSearchQuery("")} className="text-gray-400 hover:text-gray-600 text-sm">×</button>
+                      )}
+                    </div>
+                  </div>
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
+                    className="border border-gray-200 rounded-lg px-3 h-9 text-xs text-gray-600 outline-none bg-white cursor-pointer hover:border-[#E8460A] transition-all">
+                    <option value="onerilen">Önerilen Sıralama</option>
+                    <option value="en-yeni">En Yeni</option>
+                    <option value="en-eski">En Eski</option>
+                    <option value="en-faydali">En Faydalı</option>
+                    <option value="en-yuksek">En Yüksek Puan</option>
+                    <option value="en-dusuk">En Düşük Puan</option>
+                  </select>
+                </div>
+              </div>
               {user ? (
                 <div className="p-4">
                   <div className="flex items-center gap-3 mb-3">
                     <Avatar name={getDisplayName(user)} />
                     <div className="flex-1">
                       <div className="text-sm font-semibold text-gray-800">{getDisplayName(user)}</div>
-                      <div className="text-xs text-gray-400">Dogrulanmis uye</div>
+                      <div className="text-xs text-gray-400">Doğrulanmış üye</div>
                     </div>
                     <div>
-                      <div className="text-xs text-gray-500 mb-1">Puaniniz</div>
+                      <div className="text-xs text-gray-500 mb-1">Puanınız</div>
                       <StarSelector value={userRating} onChange={setUserRating} />
                     </div>
                   </div>
@@ -378,19 +409,19 @@ const topPosts = [...topPostsRaw].sort((a, b) => {
                     onChange={(e) => setBody(e.target.value)}
                   />
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-xs text-gray-400">{userRating === 0 ? "En az puan secin" : `${["", "Cok Kotu", "Kotu", "Orta", "Iyi", "Mukemmel"][userRating]} secildi ✓`}</span>
+                    <span className="text-xs text-gray-400">{userRating === 0 ? "En az puan seçin" : `${["", "Çok Kötü", "Kötü", "Orta", "İyi", "Mükemmel"][userRating]} seçildi ✓`}</span>
                     <button onClick={handleSubmit} disabled={loading || userRating === 0}
                       className="px-6 py-2 bg-[#E8A000] hover:bg-[#CC8C00] text-white text-sm font-bold rounded-xl disabled:opacity-40 transition-all">
-                      {loading ? "Gonderiliyor..." : "Gonder"}
+                      {loading ? "Gönderiliyor..." : "Gönder"}
                     </button>
                   </div>
                 </div>
               ) : (
                 <div className="p-6 text-center">
                   <div className="text-2xl mb-2">✍️</div>
-                  <p className="text-sm text-gray-600 mb-1">Yorum yazmak icin giris yapiniz</p>
-                  <p className="text-xs text-gray-400 mb-4">Deneyiminizi paylasarak diger kullanicilara yardimci olun</p>
-                  <a href="/giris" className="px-6 py-2.5 bg-[#E8460A] text-white text-sm font-bold rounded-xl hover:bg-[#C93A08] transition-all inline-block">Giris Yap</a>
+                  <p className="text-sm text-gray-600 mb-1">Yorum yazmak için giriş yapınız</p>
+                  <p className="text-xs text-gray-400 mb-4">Deneyiminizi paylaşarak diğer kullanıcılara yardımcı olun</p>
+                  <a href="/giris" className="px-6 py-2.5 bg-[#E8460A] text-white text-sm font-bold rounded-xl hover:bg-[#C93A08] transition-all inline-block">Giriş Yap</a>
                 </div>
               )}
             </div>
@@ -398,12 +429,12 @@ const topPosts = [...topPostsRaw].sort((a, b) => {
             {topPosts.length === 0 ? (
               <div className="text-center py-12">
                 <div className="text-4xl mb-3">💬</div>
-                <div className="text-sm font-semibold text-gray-700 mb-1">Henuz yorum yok</div>
-                <div className="text-xs text-gray-400">Ilk degerlendirmeyi sen yap!</div>
+                <div className="text-sm font-semibold text-gray-700 mb-1">Henüz yorum yok</div>
+                <div className="text-xs text-gray-400">İlk değerlendirmeyi sen yap!</div>
               </div>
             ) : (
               <div>
-                <h3 className="font-bold text-sm text-gray-900 mb-1">En iyi degerlendirmeler</h3>
+                <h3 className="font-bold text-sm text-gray-900 mb-1">En iyi değerlendirmeler</h3>
                 {topPosts.map((p) => <PostRow key={p.id} p={p} />)}
               </div>
             )}
@@ -411,42 +442,70 @@ const topPosts = [...topPostsRaw].sort((a, b) => {
         </div>
       )}
 
+      {/* Teknik Özellikler */}
       {activeTab === 1 && (
-        <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
-          <table className="w-full text-sm">
-            {[
-              ["Islemci", "Apple A18 Pro (3nm)"],
-              ["Ekran", '6.3" Super Retina XDR OLED'],
-              ["Yenileme Hizi", "120 Hz ProMotion"],
-              ["Ana Kamera", "48MP f/1.78"],
-              ["Batarya", "3.582 mAh"],
-              ["Baglanti", "5G - Wi-Fi 7 - USB-C"],
-            ].map(([l, v], i) => (
-              <tr key={l} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                <td className="px-6 py-4 text-gray-500 font-medium w-1/3">{l}</td>
-                <td className="px-6 py-4 text-gray-800">{v}</td>
-              </tr>
-            ))}
-          </table>
+        <div>
+          {specEntries.length === 0 ? (
+            <div className="text-center py-16 bg-gray-50 rounded-2xl">
+              <div className="text-3xl mb-3">📋</div>
+              <div className="text-sm font-medium text-gray-600 mb-1">Teknik özellik girilmemiş</div>
+              <div className="text-xs text-gray-400">Bu ürün için henüz teknik özellik bilgisi bulunmuyor</div>
+            </div>
+          ) : (
+            <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+              <table className="w-full text-sm">
+                <tbody>
+                  {specEntries.map(([key, value], i) => (
+                    <tr key={key} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                      <td className="px-6 py-3.5 text-gray-500 font-medium w-2/5 border-r border-gray-100">{key}</td>
+                      <td className="px-6 py-3.5 text-gray-800 font-medium">{value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       )}
 
+      {/* Benzer Ürünler */}
       {activeTab === 2 && (
-        <div className="grid grid-cols-4 gap-4">
-          {[
-            { emoji: "📱", name: "Samsung Galaxy S25 Ultra", price: "59.999" },
-            { emoji: "📱", name: "iPhone 16 128GB", price: "62.999" },
-            { emoji: "📱", name: "Google Pixel 9 Pro", price: "48.499" },
-            { emoji: "📱", name: "OnePlus 13 512GB", price: "34.999" },
-          ].map((p) => (
-            <div key={p.name} className="bg-white border border-gray-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-md transition-all">
-              <div className="h-24 bg-gray-50 flex items-center justify-center text-4xl">{p.emoji}</div>
-              <div className="p-3">
-                <div className="text-xs font-medium mb-1.5 leading-snug text-gray-800">{p.name}</div>
-                <div className="font-bold text-sm text-[#E8460A]">{p.price} TL</div>
-              </div>
+        <div>
+          {similarProducts.length === 0 ? (
+            <div className="text-center py-16 bg-gray-50 rounded-2xl">
+              <div className="text-3xl mb-3">📦</div>
+              <div className="text-sm font-medium text-gray-600">Benzer ürün bulunamadı</div>
             </div>
-          ))}
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {similarProducts.map((p) => {
+                const minPrice = p.prices?.length
+                  ? p.prices.reduce((m, x) => x.price < m.price ? x : m, p.prices[0])
+                  : null;
+                return (
+                  <Link href={"/urun/" + p.slug} key={p.id}>
+                    <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md hover:border-[#E8460A]/30 transition-all group cursor-pointer">
+                      <div className="aspect-square bg-gray-50 overflow-hidden">
+                        {p.image_url
+                          ? <img src={p.image_url} alt={p.title} className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300" />
+                          : <div className="w-full h-full flex items-center justify-center text-4xl">📦</div>
+                        }
+                      </div>
+                      <div className="p-3">
+                        <div className="text-[10px] font-bold text-[#E8460A] uppercase tracking-wide mb-0.5">{p.brand}</div>
+                        <div className="text-xs font-medium text-gray-800 line-clamp-2 leading-snug mb-2">{p.title}</div>
+                        {minPrice ? (
+                          <div className="text-sm font-bold text-gray-900">{minPrice.price.toLocaleString("tr-TR")} <span className="text-xs font-normal text-gray-400">₺</span></div>
+                        ) : (
+                          <div className="text-xs text-[#E8460A] font-semibold">Fiyatları Gör →</div>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>

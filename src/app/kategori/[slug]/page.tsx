@@ -19,7 +19,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   // Tüm ürünleri çek (marka filtresi için)
   let query = supabase
     .from("products")
-    .select("id, title, slug, brand, description, image_url", { count: "exact" })
+    .select("id, title, slug, brand, description, image_url, prices(price)", { count: "exact" })
     .eq("category_id", category?.id);
 
   if (marka) query = query.eq("brand", marka);
@@ -146,23 +146,31 @@ export default async function KategoriSayfasi({ params, searchParams }: {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {products.map((p) => (
                 <Link href={"/urun/" + p.slug} key={p.id}>
-                  <div className="bg-white border border-[#E8E4DF] rounded-2xl overflow-hidden hover:shadow-lg hover:border-[#E8460A]/30 transition-all group">
-                    <div className="h-44 bg-[#F8F6F2] flex items-center justify-center overflow-hidden">
-                      {p.image_url
-                        ? <img src={p.image_url} alt={p.title} className="h-full w-full object-contain p-4 group-hover:scale-105 transition-transform duration-300" />
-                        : <span className="text-5xl">{category.icon}</span>
-                      }
-                    </div>
-                    <div className="p-3">
-                      <div className="text-[10px] font-bold text-[#E8460A] uppercase tracking-wider mb-0.5">{p.brand}</div>
-                      <div className="text-xs font-medium text-gray-800 leading-snug line-clamp-2 min-h-[2.5rem]">{p.title}</div>
-                    </div>
-                    <div className="px-3 pb-3">
-                      <div className="w-full bg-[#F8F6F2] border border-[#E8E4DF] rounded-xl py-2 text-xs font-semibold text-gray-600 text-center group-hover:bg-[#E8460A] group-hover:text-white group-hover:border-[#E8460A] transition-all">
-                        Fiyatları Karşılaştır →
+                  {(() => {
+                    const priceList = (p as any).prices as { price: number }[] | undefined;
+                    const minPrice = priceList?.length
+                      ? priceList.reduce((m: { price: number }, x: { price: number }) => x.price < m.price ? x : m, priceList[0])
+                      : null;
+                    return (
+                      <div className="bg-white border border-[#E8E4DF] rounded-2xl overflow-hidden hover:shadow-lg hover:border-[#E8460A]/30 transition-all group">
+                        <div className="h-44 bg-[#F8F6F2] flex items-center justify-center overflow-hidden">
+                          {p.image_url
+                            ? <img src={p.image_url} alt={p.title} className="h-full w-full object-contain p-4 group-hover:scale-105 transition-transform duration-300" />
+                            : <span className="text-5xl">{category.icon}</span>
+                          }
+                        </div>
+                        <div className="p-3 pb-2">
+                          <div className="text-[10px] font-bold text-[#E8460A] uppercase tracking-wider mb-0.5">{p.brand}</div>
+                          <div className="text-xs font-medium text-gray-800 leading-snug line-clamp-2 min-h-[2.5rem] mb-2">{p.title}</div>
+                          {minPrice ? (
+                            <div className="text-sm font-bold text-gray-900">{Number(minPrice.price).toLocaleString("tr-TR")} <span className="text-xs font-normal text-gray-400">₺</span></div>
+                          ) : (
+                            <div className="text-xs text-[#E8460A] font-semibold">Fiyatları Karşılaştır →</div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    );
+                  })()}
                 </Link>
               ))}
             </div>

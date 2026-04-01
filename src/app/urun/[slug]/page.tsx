@@ -104,7 +104,11 @@ export default async function UrunDetay({ params }: { params: Promise<{ slug: st
 
         {/* Yorumlar Bölümü - tam genişlik */}
         <div className="bg-white rounded-2xl p-6 shadow-sm">
-          <CommunitySection productId={product.id} />
+          <CommunitySection
+            productId={product.id}
+            specs={product.specs}
+            categoryId={product.category_id}
+          />
         </div>
 
       </div>
