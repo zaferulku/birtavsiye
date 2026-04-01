@@ -88,7 +88,16 @@ function ReplyBox({ post, onSubmit, onCancel }: {
   );
 }
 
-export default function CommunitySection({ productId }: { productId: string }) {
+type SimilarProduct = {
+  id: string; title: string; slug: string; brand: string;
+  image_url: string | null;
+  prices?: { price: number }[];
+};
+
+export default function CommunitySection({ productId, product }: {
+  productId: string;
+  product?: { specs?: Record<string, string> | null; category_id?: string | null; id?: string };
+}) {
   const [activeTab, setActiveTab] = useState(0);
   const [posts, setPosts] = useState<Post[]>([]);
   const [body, setBody] = useState("");
@@ -99,6 +108,7 @@ export default function CommunitySection({ productId }: { productId: string }) {
   const [votedPosts, setVotedPosts] = useState<Record<string, "up" | "down">>({});
   const [sortBy, setSortBy] = useState("onerilen");
   const [searchQuery, setSearchQuery] = useState("");
+  const [similarProducts, setSimilarProducts] = useState<SimilarProduct[]>([]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -106,7 +116,19 @@ export default function CommunitySection({ productId }: { productId: string }) {
       if (data.user) loadUserVotes(data.user.id);
     });
     fetchPosts();
+    if (product?.category_id) fetchSimilar();
   }, [productId]);
+
+  const fetchSimilar = async () => {
+    if (!product?.category_id) return;
+    const { data } = await supabase
+      .from("products")
+      .select("id, title, slug, brand, image_url, prices(price)")
+      .eq("category_id", product.category_id)
+      .neq("id", productId)
+      .limit(4);
+    if (data) setSimilarProducts(data as unknown as SimilarProduct[]);
+  };
 
   const loadUserVotes = async (userId: string) => {
     const { data } = await supabase.from("post_votes").select("post_id, vote_type").eq("user_id", userId);
@@ -412,42 +434,63 @@ const topPosts = [...topPostsRaw].sort((a, b) => {
       )}
 
       {activeTab === 1 && (
-        <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
-          <table className="w-full text-sm">
-            {[
-              ["Islemci", "Apple A18 Pro (3nm)"],
-              ["Ekran", '6.3" Super Retina XDR OLED'],
-              ["Yenileme Hizi", "120 Hz ProMotion"],
-              ["Ana Kamera", "48MP f/1.78"],
-              ["Batarya", "3.582 mAh"],
-              ["Baglanti", "5G - Wi-Fi 7 - USB-C"],
-            ].map(([l, v], i) => (
-              <tr key={l} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                <td className="px-6 py-4 text-gray-500 font-medium w-1/3">{l}</td>
-                <td className="px-6 py-4 text-gray-800">{v}</td>
-              </tr>
-            ))}
-          </table>
-        </div>
+        (() => {
+          const specs = product?.specs;
+          const entries = specs && typeof specs === "object" ? Object.entries(specs) : [];
+          return entries.length > 0 ? (
+            <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
+              <table className="w-full text-sm">
+                <tbody>
+                  {entries.map(([label, value], i) => (
+                    <tr key={label} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
+                      <td className="px-6 py-3.5 text-gray-500 font-medium w-1/3">{label}</td>
+                      <td className="px-6 py-3.5 text-gray-800">{String(value)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+              <div className="text-4xl mb-3">📋</div>
+              <div className="text-sm text-gray-500 font-medium">Teknik özellik bilgisi henüz eklenmedi</div>
+            </div>
+          );
+        })()
       )}
 
       {activeTab === 2 && (
-        <div className="grid grid-cols-4 gap-4">
-          {[
-            { emoji: "📱", name: "Samsung Galaxy S25 Ultra", price: "59.999" },
-            { emoji: "📱", name: "iPhone 16 128GB", price: "62.999" },
-            { emoji: "📱", name: "Google Pixel 9 Pro", price: "48.499" },
-            { emoji: "📱", name: "OnePlus 13 512GB", price: "34.999" },
-          ].map((p) => (
-            <div key={p.name} className="bg-white border border-gray-100 rounded-xl overflow-hidden cursor-pointer hover:shadow-md transition-all">
-              <div className="h-24 bg-gray-50 flex items-center justify-center text-4xl">{p.emoji}</div>
-              <div className="p-3">
-                <div className="text-xs font-medium mb-1.5 leading-snug text-gray-800">{p.name}</div>
-                <div className="font-bold text-sm text-[#E8460A]">{p.price} TL</div>
-              </div>
-            </div>
-          ))}
-        </div>
+        similarProducts.length > 0 ? (
+          <div className="grid grid-cols-4 gap-4">
+            {similarProducts.map((p) => {
+              const minPrice = p.prices?.length ? Math.min(...p.prices.map(x => x.price)) : null;
+              return (
+                <a href={"/urun/" + p.slug} key={p.id}
+                  className="bg-white border border-gray-100 rounded-xl overflow-hidden hover:shadow-md hover:border-[#E8460A]/30 transition-all cursor-pointer group">
+                  <div className="aspect-square bg-gray-50 flex items-center justify-center overflow-hidden">
+                    {p.image_url
+                      ? <img src={p.image_url} alt={p.title} className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300" />
+                      : <span className="text-4xl">📦</span>
+                    }
+                  </div>
+                  <div className="p-3">
+                    <div className="text-[10px] font-bold text-[#E8460A] uppercase tracking-wide mb-0.5">{p.brand}</div>
+                    <div className="text-xs font-medium mb-1.5 leading-snug text-gray-800 line-clamp-2">{p.title}</div>
+                    {minPrice
+                      ? <div className="font-bold text-sm text-green-700">{minPrice.toLocaleString("tr-TR")} ₺</div>
+                      : <div className="text-xs text-gray-400">Fiyat yok</div>
+                    }
+                  </div>
+                </a>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+            <div className="text-4xl mb-3">🔍</div>
+            <div className="text-sm text-gray-500 font-medium">Bu kategoride başka ürün bulunamadı</div>
+          </div>
+        )
       )}
     </div>
   );

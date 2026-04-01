@@ -3,6 +3,13 @@ import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
 import Link from "next/link";
 
+type Price = { price: number; stores: { name: string } | null };
+type Product = {
+  id: string; title: string; slug: string; brand: string;
+  description: string; image_url: string | null;
+  prices?: Price[];
+};
+
 export default async function KategoriSayfasi({ params, searchParams }: {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ marka?: string; siralama?: string }>;
@@ -16,10 +23,9 @@ export default async function KategoriSayfasi({ params, searchParams }: {
     .eq("slug", slug)
     .maybeSingle();
 
-  // Tüm ürünleri çek (marka filtresi için)
   let query = supabase
     .from("products")
-    .select("id, title, slug, brand, description, image_url", { count: "exact" })
+    .select("id, title, slug, brand, description, image_url, prices(price, stores(name))", { count: "exact" })
     .eq("category_id", category?.id);
 
   if (marka) query = query.eq("brand", marka);
@@ -28,9 +34,25 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   else if (siralama === "za") query = query.order("title", { ascending: false });
   else query = query.order("created_at", { ascending: false });
 
-  const { data: products, count } = await query.limit(96);
+  const { data: rawProducts, count } = await query.limit(96);
 
-  // Markalar listesi (filtre için)
+  let products = (rawProducts as unknown as Product[]) || [];
+
+  if (siralama === "fiyat-asc") {
+    products = [...products].sort((a, b) => {
+      const pa = a.prices?.length ? Math.min(...a.prices.map(x => x.price)) : Infinity;
+      const pb = b.prices?.length ? Math.min(...b.prices.map(x => x.price)) : Infinity;
+      return pa - pb;
+    });
+  } else if (siralama === "fiyat-desc") {
+    products = [...products].sort((a, b) => {
+      const pa = a.prices?.length ? Math.min(...a.prices.map(x => x.price)) : 0;
+      const pb = b.prices?.length ? Math.min(...b.prices.map(x => x.price)) : 0;
+      return pb - pa;
+    });
+  }
+
+  // Markalar listesi
   const { data: allProducts } = await supabase
     .from("products")
     .select("brand")
@@ -56,6 +78,16 @@ export default async function KategoriSayfasi({ params, searchParams }: {
       </main>
     );
   }
+
+  const buildHref = (opts: { marka?: string | null; siralama?: string }) => {
+    const params = new URLSearchParams();
+    const m = opts.marka !== undefined ? opts.marka : marka;
+    const s = opts.siralama !== undefined ? opts.siralama : siralama;
+    if (m) params.set("marka", m);
+    if (s) params.set("siralama", s);
+    const qs = params.toString();
+    return "/kategori/" + slug + (qs ? "?" + qs : "");
+  };
 
   return (
     <main className="bg-[#F8F6F2] min-h-screen">
@@ -87,15 +119,14 @@ export default async function KategoriSayfasi({ params, searchParams }: {
               <div className="font-bold text-sm text-gray-800">Marka</div>
             </div>
             <div className="py-2 max-h-96 overflow-y-auto">
-              <Link href={"/kategori/" + slug + (siralama ? "?siralama=" + siralama : "")}>
+              <Link href={buildHref({ marka: null })}>
                 <div className={`flex items-center justify-between px-4 py-2 text-sm cursor-pointer transition-colors ${!marka ? "text-[#E8460A] font-semibold bg-orange-50" : "text-gray-700 hover:bg-gray-50"}`}>
                   <span>Tümü</span>
                   <span className="text-xs text-gray-400">{count || 0}</span>
                 </div>
               </Link>
               {brands.map((b) => (
-                <Link key={b.name}
-                  href={"/kategori/" + slug + "?marka=" + encodeURIComponent(b.name) + (siralama ? "&siralama=" + siralama : "")}>
+                <Link key={b.name} href={buildHref({ marka: b.name })}>
                   <div className={`flex items-center justify-between px-4 py-2 text-sm cursor-pointer transition-colors ${marka === b.name ? "text-[#E8460A] font-semibold bg-orange-50" : "text-gray-700 hover:bg-gray-50"}`}>
                     <span>{b.name}</span>
                     <span className="text-xs text-gray-400">{b.count}</span>
@@ -109,20 +140,22 @@ export default async function KategoriSayfasi({ params, searchParams }: {
         {/* Sağ: Ürün grid */}
         <div className="flex-1 min-w-0">
           {/* Sıralama bar */}
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
             <div className="text-sm text-gray-500">
               {marka && <span className="font-semibold text-gray-800">{marka}</span>}
               {marka && " · "}
-              {products?.length || 0} ürün gösteriliyor
+              {products.length} ürün gösteriliyor
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs text-gray-500">Sırala:</span>
               {[
                 { label: "En Yeni", val: "" },
+                { label: "En Ucuz", val: "fiyat-asc" },
+                { label: "En Pahalı", val: "fiyat-desc" },
                 { label: "A → Z", val: "az" },
                 { label: "Z → A", val: "za" },
               ].map(({ label, val }) => (
-                <Link key={val} href={"/kategori/" + slug + "?" + (marka ? "marka=" + encodeURIComponent(marka) + "&" : "") + (val ? "siralama=" + val : "")}>
+                <Link key={val} href={buildHref({ siralama: val || undefined })}>
                   <div className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${
                     (siralama || "") === val
                       ? "bg-[#E8460A] text-white border-[#E8460A]"
@@ -133,7 +166,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
             </div>
           </div>
 
-          {!products || products.length === 0 ? (
+          {products.length === 0 ? (
             <div className="text-center py-20 bg-white rounded-2xl border border-[#E8E4DF]">
               <div className="text-4xl mb-3">{category.icon}</div>
               <div className="text-sm font-medium text-gray-700 mb-1">Ürün bulunamadı</div>
@@ -144,27 +177,53 @@ export default async function KategoriSayfasi({ params, searchParams }: {
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {products.map((p) => (
-                <Link href={"/urun/" + p.slug} key={p.id}>
-                  <div className="bg-white border border-[#E8E4DF] rounded-2xl overflow-hidden hover:shadow-lg hover:border-[#E8460A]/30 transition-all group">
-                    <div className="h-44 bg-[#F8F6F2] flex items-center justify-center overflow-hidden">
-                      {p.image_url
-                        ? <img src={p.image_url} alt={p.title} className="h-full w-full object-contain p-4 group-hover:scale-105 transition-transform duration-300" />
-                        : <span className="text-5xl">{category.icon}</span>
-                      }
-                    </div>
-                    <div className="p-3">
-                      <div className="text-[10px] font-bold text-[#E8460A] uppercase tracking-wider mb-0.5">{p.brand}</div>
-                      <div className="text-xs font-medium text-gray-800 leading-snug line-clamp-2 min-h-[2.5rem]">{p.title}</div>
-                    </div>
-                    <div className="px-3 pb-3">
-                      <div className="w-full bg-[#F8F6F2] border border-[#E8E4DF] rounded-xl py-2 text-xs font-semibold text-gray-600 text-center group-hover:bg-[#E8460A] group-hover:text-white group-hover:border-[#E8460A] transition-all">
-                        Fiyatları Karşılaştır →
+              {products.map((p) => {
+                const minPrice = p.prices?.length
+                  ? p.prices.reduce((min, x) => x.price < min.price ? x : min, p.prices[0])
+                  : null;
+                return (
+                  <Link href={"/urun/" + p.slug} key={p.id}>
+                    <div className="bg-white border border-[#E8E4DF] rounded-2xl overflow-hidden hover:shadow-lg hover:border-[#E8460A]/30 transition-all group flex flex-col h-full">
+                      <div className="h-44 bg-[#F8F6F2] flex items-center justify-center overflow-hidden">
+                        {p.image_url
+                          ? <img src={p.image_url} alt={p.title} className="h-full w-full object-contain p-4 group-hover:scale-105 transition-transform duration-300" />
+                          : <span className="text-5xl">{category.icon}</span>
+                        }
+                      </div>
+                      <div className="p-3 flex flex-col flex-1">
+                        <div className="text-[10px] font-bold text-[#E8460A] uppercase tracking-wider mb-0.5">{p.brand}</div>
+                        <div className="text-xs font-medium text-gray-800 leading-snug line-clamp-2 min-h-[2.5rem] mb-2">{p.title}</div>
+                        <div className="mt-auto">
+                          {minPrice ? (
+                            <div className="bg-green-50 border border-green-100 rounded-xl px-2.5 py-1.5">
+                              <div className="text-[10px] text-green-600 font-medium">En Düşük Fiyat</div>
+                              <div className="flex items-center justify-between">
+                                <div className="text-sm font-extrabold text-green-700">
+                                  {minPrice.price.toLocaleString("tr-TR")} ₺
+                                </div>
+                                {minPrice.stores && (
+                                  <div className="text-[10px] text-gray-500 font-semibold truncate max-w-[60px]">
+                                    {minPrice.stores.name}
+                                  </div>
+                                )}
+                              </div>
+                              {(p.prices?.length ?? 0) > 1 && (
+                                <div className="text-[10px] text-gray-400 mt-0.5">
+                                  +{(p.prices?.length ?? 1) - 1} mağaza
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            <div className="w-full bg-[#F8F6F2] border border-[#E8E4DF] rounded-xl py-2 text-xs font-semibold text-gray-600 text-center group-hover:bg-[#E8460A] group-hover:text-white group-hover:border-[#E8460A] transition-all">
+                              Fiyatları Karşılaştır →
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>
