@@ -15,31 +15,93 @@ const NAV_GROUPS = [
     categories: [
       {
         label: "Akıllı Telefon", slug: "akilli-telefon", icon: "📱",
-        brands: ["Apple", "Samsung", "Xiaomi", "Huawei", "Sony"],
+        brands: ["Apple", "Samsung", "Xiaomi", "Huawei", "Sony", "OnePlus"],
       },
       {
-        label: "Bilgisayar & Tablet", slug: "bilgisayar-tablet", icon: "💻",
-        brands: ["Apple", "Lenovo", "HP", "Dell", "Asus", "Samsung"],
+        label: "Bilgisayar & Laptop", slug: "bilgisayar-laptop", icon: "💻",
+        brands: ["Apple", "Lenovo", "HP", "Dell", "Asus", "MSI"],
       },
       {
-        label: "TV", slug: "tv", icon: "📺",
-        brands: ["Samsung", "LG", "Sony", "Philips", "Hisense"],
+        label: "Tablet", slug: "tablet", icon: "📟",
+        brands: ["Apple", "Samsung", "Lenovo", "Huawei", "Xiaomi"],
       },
       {
-        label: "Ses & Kulaklık", slug: "ses-kulaklik", icon: "🎧",
-        brands: ["Sony", "JBL", "Bose", "Apple", "Samsung", "Jabra"],
+        label: "TV & Projeksiyon", slug: "tv", icon: "📺",
+        brands: ["Samsung", "LG", "Sony", "Philips", "Hisense", "TCL"],
       },
       {
-        label: "Akıllı Saat", slug: "akilli-saat", icon: "⌚",
-        brands: ["Samsung", "Apple", "Garmin", "Huawei", "Xiaomi"],
+        label: "Ses Sistemleri & Kulaklık", slug: "ses-kulaklik", icon: "🎧",
+        brands: ["Sony", "JBL", "Bose", "Apple", "Samsung", "Jabra", "Sennheiser"],
+      },
+      {
+        label: "Akıllı Saat & Bileklik", slug: "akilli-saat", icon: "⌚",
+        brands: ["Samsung", "Apple", "Garmin", "Huawei", "Xiaomi", "Fitbit"],
       },
       {
         label: "Fotoğraf & Kamera", slug: "fotograf-kamera", icon: "📷",
-        brands: ["Sony", "Canon", "Nikon", "Fujifilm", "DJI"],
+        brands: ["Sony", "Canon", "Nikon", "Fujifilm", "DJI", "GoPro"],
       },
       {
         label: "Oyun & Konsol", slug: "oyun-konsol", icon: "🎮",
-        brands: ["Sony", "Microsoft", "Nintendo", "Logitech", "Razer"],
+        brands: ["Sony", "Microsoft", "Nintendo", "Logitech", "Razer", "SteelSeries"],
+      },
+      {
+        label: "Yazıcı & Tarayıcı", slug: "yazici-tarayici", icon: "🖨️",
+        brands: ["HP", "Canon", "Epson", "Brother", "Xerox"],
+      },
+      {
+        label: "Networking & Modem", slug: "networking", icon: "📡",
+        brands: ["TP-Link", "Asus", "Netgear", "D-Link", "Huawei"],
+      },
+      {
+        label: "Telefon Aksesuar", slug: "telefon-aksesuar", icon: "🔌",
+        brands: ["Apple", "Samsung", "Anker", "Spigen", "Baseus"],
+      },
+      {
+        label: "Bilgisayar Bileşenleri", slug: "bilgisayar-bilesenleri", icon: "🖥️",
+        brands: ["Intel", "AMD", "Nvidia", "Corsair", "Samsung", "WD"],
+      },
+    ],
+  },
+  {
+    title: "Moda",
+    icon: "👗",
+    categories: [
+      {
+        label: "Kadın Giyim", slug: "kadin-giyim", icon: "👗",
+        brands: ["Zara", "H&M", "Mango", "LC Waikiki", "Koton", "DeFacto"],
+      },
+      {
+        label: "Erkek Giyim", slug: "erkek-giyim", icon: "👔",
+        brands: ["Zara", "H&M", "LC Waikiki", "Mavi", "Jack & Jones", "DeFacto"],
+      },
+      {
+        label: "Çocuk Giyim", slug: "cocuk-giyim", icon: "🧒",
+        brands: ["LC Waikiki", "Zara Kids", "H&M", "DeFacto Kids", "Benetton"],
+      },
+      {
+        label: "Kadın Ayakkabı", slug: "kadin-ayakkabi", icon: "👠",
+        brands: ["Nike", "Adidas", "Steve Madden", "Aldo", "Nine West"],
+      },
+      {
+        label: "Erkek Ayakkabı", slug: "erkek-ayakkabi", icon: "👞",
+        brands: ["Nike", "Adidas", "New Balance", "Timberland", "Clarks"],
+      },
+      {
+        label: "Çanta & Cüzdan", slug: "canta-cuzdan", icon: "👜",
+        brands: ["Coach", "Michael Kors", "Guess", "Versace", "Tommy Hilfiger"],
+      },
+      {
+        label: "Saat & Takı", slug: "saat-taki", icon: "💍",
+        brands: ["Casio", "Swatch", "Fossil", "Michael Kors", "Guess"],
+      },
+      {
+        label: "İç Giyim & Pijama", slug: "ic-giyim", icon: "🩲",
+        brands: ["Marks & Spencer", "Calvin Klein", "Tommy Hilfiger", "Emporio Armani"],
+      },
+      {
+        label: "Gözlük", slug: "gozluk", icon: "🕶️",
+        brands: ["Ray-Ban", "Oakley", "Guess", "Emporio Armani", "Carrera"],
       },
     ],
   },
@@ -49,15 +111,39 @@ const NAV_GROUPS = [
     categories: [
       {
         label: "Beyaz Eşya", slug: "beyaz-esya", icon: "🫙",
-        brands: ["Arçelik", "Bosch", "LG", "Samsung", "Beko", "Vestel"],
+        brands: ["Arçelik", "Bosch", "LG", "Samsung", "Beko", "Vestel", "Siemens"],
       },
       {
         label: "Küçük Ev Aletleri", slug: "kucuk-ev-aletleri", icon: "🔌",
-        brands: ["Philips", "Dyson", "Bosch", "Tefal", "Braun"],
+        brands: ["Philips", "Dyson", "Bosch", "Tefal", "Braun", "Rowenta"],
       },
       {
-        label: "Ev & Dekorasyon", slug: "ev-yasam", icon: "🏠",
-        brands: ["IKEA", "Karaca", "English Home", "Madame Coco"],
+        label: "Mobilya & Dekorasyon", slug: "mobilya-dekorasyon", icon: "🛋️",
+        brands: ["IKEA", "Bellona", "İstikbal", "Mondi", "Doğtaş"],
+      },
+      {
+        label: "Mutfak & Sofra", slug: "mutfak-sofra", icon: "🍽️",
+        brands: ["Karaca", "Tefal", "WMF", "Bodum", "Cuisinart", "KitchenAid"],
+      },
+      {
+        label: "Ev Tekstili", slug: "ev-tekstili", icon: "🛏️",
+        brands: ["English Home", "Madame Coco", "Yataş", "Taç", "Özdilek"],
+      },
+      {
+        label: "Aydınlatma", slug: "aydinlatma", icon: "💡",
+        brands: ["Philips", "IKEA", "Osram", "Ledvance", "Segula"],
+      },
+      {
+        label: "Bahçe & Balkon", slug: "bahce-balkon", icon: "🌿",
+        brands: ["Bosch", "Gardena", "Husqvarna", "Black+Decker", "Makita"],
+      },
+      {
+        label: "Yapı Market & El Aletleri", slug: "yapi-market", icon: "🔧",
+        brands: ["Bosch", "Makita", "DeWalt", "Stanley", "Black+Decker"],
+      },
+      {
+        label: "Temizlik & Deterjan", slug: "temizlik", icon: "🧹",
+        brands: ["Ariel", "Omo", "Fairy", "Domestos", "Ace", "Pril"],
       },
     ],
   },
@@ -66,8 +152,28 @@ const NAV_GROUPS = [
     icon: "💄",
     categories: [
       {
-        label: "Kozmetik & Kişisel Bakım", slug: "kozmetik-bakim", icon: "💄",
-        brands: ["L'Oréal", "Nivea", "Gillette", "Philips", "Braun", "Maybelline"],
+        label: "Cilt Bakımı", slug: "cilt-bakimi", icon: "🧴",
+        brands: ["Nivea", "L'Oréal", "Neutrogena", "Olay", "Clinique", "La Roche-Posay"],
+      },
+      {
+        label: "Makyaj", slug: "makyaj", icon: "💋",
+        brands: ["Maybelline", "L'Oréal", "MAC", "NYX", "Urban Decay", "Charlotte Tilbury"],
+      },
+      {
+        label: "Saç Bakımı", slug: "sac-bakimi", icon: "💇",
+        brands: ["Pantene", "Head & Shoulders", "Wella", "Schwarzkopf", "Dyson", "Philips"],
+      },
+      {
+        label: "Parfüm & Deodorant", slug: "parfum", icon: "🌸",
+        brands: ["Chanel", "Dior", "Versace", "Armani", "Hugo Boss", "Calvin Klein"],
+      },
+      {
+        label: "Erkek Bakımı", slug: "erkek-bakimi", icon: "🪒",
+        brands: ["Gillette", "Braun", "Philips", "Nivea Men", "Beiersdorf"],
+      },
+      {
+        label: "Ağız & Diş Sağlığı", slug: "agiz-dis", icon: "🦷",
+        brands: ["Oral-B", "Philips Sonicare", "Colgate", "Signal", "Listerine"],
       },
     ],
   },
@@ -76,8 +182,36 @@ const NAV_GROUPS = [
     icon: "🏃",
     categories: [
       {
-        label: "Spor & Outdoor", slug: "spor-outdoor", icon: "🏃",
-        brands: ["Nike", "Adidas", "Under Armour", "Garmin", "Decathlon"],
+        label: "Spor Giyim & Ayakkabı", slug: "spor-giyim", icon: "👟",
+        brands: ["Nike", "Adidas", "Puma", "Under Armour", "New Balance", "ASICS"],
+      },
+      {
+        label: "Fitness & Kondisyon", slug: "fitness", icon: "🏋️",
+        brands: ["Bowflex", "NordicTrack", "Technogym", "Garmin", "Polar"],
+      },
+      {
+        label: "Outdoor & Kamp", slug: "outdoor-kamp", icon: "🏕️",
+        brands: ["The North Face", "Columbia", "Salomon", "Mammut", "Deuter"],
+      },
+      {
+        label: "Bisiklet & Scooter", slug: "bisiklet", icon: "🚴",
+        brands: ["Trek", "Giant", "Bianchi", "Xiaomi", "Segway"],
+      },
+      {
+        label: "Su Sporları", slug: "su-sporlari", icon: "🏊",
+        brands: ["Speedo", "Arena", "Aqua Sphere", "GoPro", "Garmin"],
+      },
+      {
+        label: "Takım Sporları", slug: "takim-sporlari", icon: "⚽",
+        brands: ["Nike", "Adidas", "Puma", "Molten", "Wilson"],
+      },
+      {
+        label: "Yoga & Pilates", slug: "yoga", icon: "🧘",
+        brands: ["Lululemon", "Nike", "Adidas", "Manduka", "Gaiam"],
+      },
+      {
+        label: "Outdoor Giyim", slug: "outdoor-giyim", icon: "🧥",
+        brands: ["The North Face", "Patagonia", "Columbia", "Jack Wolfskin", "Marmot"],
       },
     ],
   },
@@ -86,8 +220,28 @@ const NAV_GROUPS = [
     icon: "🧸",
     categories: [
       {
-        label: "Bebek & Çocuk", slug: "bebek-cocuk", icon: "🧸",
-        brands: ["Chicco", "Joie", "Maxi-Cosi", "LEGO", "Fisher-Price"],
+        label: "Bebek Bakım", slug: "bebek-bakim", icon: "🍼",
+        brands: ["Philips Avent", "Chicco", "NUK", "Tommee Tippee", "Medela"],
+      },
+      {
+        label: "Bebek Giyim", slug: "bebek-giyim", icon: "🧸",
+        brands: ["Chicco", "Carter's", "LC Waikiki", "Mothercare", "Benetton"],
+      },
+      {
+        label: "Bebek Arabası & Güvenlik", slug: "bebek-arabasi", icon: "🛒",
+        brands: ["Chicco", "Joie", "Maxi-Cosi", "Graco", "Bugaboo"],
+      },
+      {
+        label: "Oyuncak", slug: "oyuncak", icon: "🎁",
+        brands: ["LEGO", "Fisher-Price", "Barbie", "Hot Wheels", "Playmobil"],
+      },
+      {
+        label: "Çocuk Kitapları", slug: "cocuk-kitaplari", icon: "📚",
+        brands: ["Tübitak", "İş Bankası", "Yapı Kredi", "Redhouse", "Pegasus"],
+      },
+      {
+        label: "Çocuk Odası", slug: "cocuk-odasi", icon: "🎨",
+        brands: ["IKEA", "Bellona", "İstikbal", "Cilek", "Doğtaş"],
       },
     ],
   },
@@ -96,8 +250,46 @@ const NAV_GROUPS = [
     icon: "📚",
     categories: [
       {
-        label: "Kitap & Hobi", slug: "kitap-hobi", icon: "📚",
-        brands: ["İş Bankası Yayınları", "Yapı Kredi", "Doğan Kitap"],
+        label: "Kitap", slug: "kitap", icon: "📖",
+        brands: ["İş Bankası Yayınları", "Yapı Kredi", "Doğan Kitap", "Epsilon", "İletişim"],
+      },
+      {
+        label: "Müzik Aleti", slug: "muzik-aleti", icon: "🎸",
+        brands: ["Yamaha", "Roland", "Fender", "Gibson", "Casio"],
+      },
+      {
+        label: "Film & Dizi", slug: "film-dizi", icon: "🎬",
+        brands: ["Warner", "Universal", "Sony Pictures", "Disney", "Blu-ray"],
+      },
+      {
+        label: "Hobi & Sanat", slug: "hobi-sanat", icon: "🎨",
+        brands: ["Maped", "Faber-Castell", "Staedtler", "Pelikan", "Vallejo"],
+      },
+      {
+        label: "Bulmaca & Masa Oyunu", slug: "masa-oyunu", icon: "♟️",
+        brands: ["Hasbro", "Mattel", "Ravensburger", "Asmodee", "Trefl"],
+      },
+      {
+        label: "Koleksiyon", slug: "koleksiyon", icon: "🏆",
+        brands: ["Funko", "Hot Wheels", "LEGO", "Matchbox"],
+      },
+    ],
+  },
+  {
+    title: "Ofis & Kırtasiye",
+    icon: "✏️",
+    categories: [
+      {
+        label: "Ofis Mobilyası", slug: "ofis-mobilyasi", icon: "🪑",
+        brands: ["IKEA", "Ergotron", "Herman Miller", "Steelcase", "Logitech"],
+      },
+      {
+        label: "Kırtasiye & Okul", slug: "kirtasiye", icon: "✏️",
+        brands: ["Faber-Castell", "Staedtler", "Pilot", "Maped", "Pelikan"],
+      },
+      {
+        label: "Ofis Elektroniği", slug: "ofis-elektronigi", icon: "📠",
+        brands: ["HP", "Canon", "Epson", "Brother", "Logitech"],
       },
     ],
   },
@@ -106,8 +298,24 @@ const NAV_GROUPS = [
     icon: "🚗",
     categories: [
       {
-        label: "Otomotiv", slug: "otomotiv", icon: "🚗",
-        brands: ["Bosch", "Pioneer", "Garmin", "3M", "Meguiar's"],
+        label: "Araç Elektroniği", slug: "arac-elektronigi", icon: "📻",
+        brands: ["Pioneer", "Sony", "Kenwood", "JVC", "Garmin"],
+      },
+      {
+        label: "Lastik & Jant", slug: "lastik-jant", icon: "🛞",
+        brands: ["Michelin", "Bridgestone", "Pirelli", "Goodyear", "Continental"],
+      },
+      {
+        label: "Araç Bakım & Aksesuar", slug: "arac-aksesuar", icon: "🔧",
+        brands: ["Bosch", "3M", "Meguiar's", "Castrol", "Shell"],
+      },
+      {
+        label: "Motor & Scooter", slug: "motor-scooter", icon: "🏍️",
+        brands: ["Honda", "Yamaha", "Vespa", "Suzuki", "Kawasaki"],
+      },
+      {
+        label: "Navigasyon & GPS", slug: "navigasyon", icon: "🗺️",
+        brands: ["Garmin", "TomTom", "Pioneer", "Sony", "Kenwood"],
       },
     ],
   },
@@ -116,8 +324,20 @@ const NAV_GROUPS = [
     icon: "🐾",
     categories: [
       {
-        label: "Evcil Hayvan", slug: "evcil-hayvan", icon: "🐾",
-        brands: ["Royal Canin", "Purina", "Hill's", "Pedigree", "Whiskas"],
+        label: "Köpek", slug: "kopek", icon: "🐕",
+        brands: ["Royal Canin", "Purina Pro Plan", "Hill's", "Pedigree", "Eukanuba"],
+      },
+      {
+        label: "Kedi", slug: "kedi", icon: "🐈",
+        brands: ["Royal Canin", "Whiskas", "Felix", "Purina", "Hill's"],
+      },
+      {
+        label: "Kuş", slug: "kus", icon: "🦜",
+        brands: ["Versele-Laga", "Vitakraft", "Trill", "Prestige"],
+      },
+      {
+        label: "Balık & Akvaryum", slug: "balik-akvaryum", icon: "🐠",
+        brands: ["Tetra", "JBL", "Fluval", "Sera", "Eheim"],
       },
     ],
   },
