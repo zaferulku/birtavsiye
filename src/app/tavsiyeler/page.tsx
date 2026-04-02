@@ -161,18 +161,6 @@ export default function TavsiyelerSayfasi() {
 
           {/* Kategori filtreler */}
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden mb-4 shadow-sm">
-            <div className="flex items-center justify-between px-4 pt-3 pb-1">
-              <div className="flex items-center gap-2">
-                <span className="font-bold text-sm text-gray-900">Tavsiyeler</span>
-                <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{filtered.length} soru</span>
-              </div>
-              <button
-                onClick={() => { if (!user) { window.location.href = "/giris"; return; } setShowForm(v => !v); }}
-                className="flex items-center gap-1.5 bg-[#E8460A] hover:bg-[#C93A08] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all">
-                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                Soru Sor
-              </button>
-            </div>
             <div className="flex gap-0 overflow-x-auto px-1" style={{ scrollbarWidth: "none" }}>
               {CATS.map(c => {
                 const style = CAT_STYLE[c];
@@ -226,6 +214,21 @@ export default function TavsiyelerSayfasi() {
               {newCount} yeni soru geldi
             </button>
           )}
+
+          {/* Tavsiyeler başlık + Soru Sor */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-bold text-sm text-gray-900">Tavsiyeler</span>
+              <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{filtered.length} soru</span>
+            </div>
+            <button
+              onClick={() => { if (!user) { window.location.href = "/giris"; return; } setShowForm(v => !v); }}
+              className="flex items-center gap-1.5 bg-[#E8460A] hover:bg-[#C93A08] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+              Soru Sor
+            </button>
+          </div>
 
           {/* Sorular */}
           {filtered.length === 0 ? (
