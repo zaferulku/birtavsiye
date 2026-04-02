@@ -68,6 +68,9 @@ export default function TavsiyelerSayfasi() {
   const [user, setUser] = useState<any>(null);
   const [newCount, setNewCount] = useState(0);
   const [userVotes, setUserVotes] = useState<Record<string, number>>({});
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
   const isFirst = useRef(true);
 
   useEffect(() => {
@@ -144,10 +147,33 @@ export default function TavsiyelerSayfasi() {
     setUserVotes(prev => ({ ...prev, [t.id]: nv }));
   };
 
-  const normalize = (s: string) => s.replace(/ğ/g, "g").replace(/ş/g, "s").replace(/İ/g, "I").replace(/ı/g, "i");
-  const filtered = topics.filter(t =>
+  const normalize = (s: string) => s
+    .toLowerCase()
+    .replace(/ğ/g, "g").replace(/ş/g, "s").replace(/ı/g, "i")
+    .replace(/İ/g, "i").replace(/ö/g, "o").replace(/ü/g, "u").replace(/ç/g, "c");
+
+  const scoreSearch = (t: Topic, q: string): number => {
+    const words = normalize(q.trim()).split(/\s+/).filter(Boolean);
+    if (!words.length) return 1;
+    const ntitle = normalize(t.title);
+    const nbody = normalize(t.body || "");
+    const ncat = normalize(t.category);
+    let score = 0;
+    for (const w of words) {
+      if (ntitle.includes(w)) score += ntitle.split(/\s+/).some(tw => tw === w) ? 4 : 2;
+      if (nbody.includes(w)) score += 1;
+      if (ncat.includes(w)) score += 1;
+    }
+    return score;
+  };
+
+  const catFiltered = topics.filter(t =>
     activeCat === "Hepsi" || t.category === activeCat || normalize(t.category) === normalize(activeCat)
   );
+  const filtered = searchQuery.trim()
+    ? catFiltered.map(t => ({ t, score: scoreSearch(t, searchQuery) })).filter(x => x.score > 0).sort((a, b) => b.score - a.score).map(x => x.t)
+    : catFiltered;
+
   const popular = [...topics].sort((a, b) => (b.votes || 0) - (a.votes || 0)).slice(0, 12);
 
   return (
@@ -193,6 +219,49 @@ export default function TavsiyelerSayfasi() {
                 );
               })}
             </div>
+          </div>
+
+          {/* Arama satırı */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm mb-4 overflow-hidden">
+            <button
+              onClick={() => {
+                setShowSearch(v => !v);
+                if (!showSearch) setTimeout(() => searchRef.current?.focus(), 50);
+                else setSearchQuery("");
+              }}
+              className="w-full flex items-center gap-2.5 px-4 py-3 text-left hover:bg-gray-50 transition-colors">
+              <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+              </svg>
+              <span className={`text-sm font-semibold flex-1 ${searchQuery ? "text-[#E8460A]" : "text-gray-400"}`}>
+                {searchQuery ? `"${searchQuery}" · ${filtered.length} sonuç` : "Konularda tavsiye ara..."}
+              </span>
+              {searchQuery
+                ? <span onClick={e => { e.stopPropagation(); setSearchQuery(""); setShowSearch(false); }} className="text-gray-300 hover:text-gray-500 text-lg leading-none">✕</span>
+                : <svg className={`w-4 h-4 text-gray-300 transition-transform ${showSearch ? "rotate-180" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+              }
+            </button>
+            {showSearch && (
+              <div className="border-t border-gray-100 px-4 py-3">
+                <input
+                  ref={searchRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="örn: kulaklık, güneş kremi, laptop..."
+                  className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-[#E8460A] focus:ring-2 focus:ring-[#E8460A]/10 transition-all"
+                  autoFocus
+                />
+                {searchQuery && (
+                  <p className="text-[11px] text-gray-400 mt-1.5 px-1">
+                    {filtered.length > 0
+                      ? <><span className="text-[#E8460A] font-bold">{filtered.length}</span> konu bulundu</>
+                      : <span className="text-gray-400">Sonuç bulunamadı — farklı kelime deneyin</span>
+                    }
+                  </p>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Soru formu */}
