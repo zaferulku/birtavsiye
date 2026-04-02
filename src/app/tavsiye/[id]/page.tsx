@@ -183,8 +183,8 @@ export default function TavsiyeDetay() {
       <Header />
 
       {/* ── Banner ── */}
-      <div className={`bg-gradient-to-br ${cat.from} ${cat.to} relative overflow-hidden`}>
-        <div className="absolute inset-0 bg-black/20" />
+      <div className="bg-gradient-to-br from-[#E8460A] to-orange-500 relative overflow-hidden">
+        <div className="absolute inset-0 bg-black/15" />
         <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-white/5" />
         <div className="absolute left-1/3 bottom-0 w-48 h-48 rounded-full bg-black/10" />
 
@@ -234,6 +234,34 @@ export default function TavsiyeDetay() {
 
         {/* ── Ana İçerik ── */}
         <div className="flex-1 min-w-0">
+
+          {/* ── Öne Çıkan 2 Yanıt ── */}
+          {topLevel.length > 0 && (() => {
+            const top2 = [...topLevel].sort((a, b) => (b.votes || 0) - (a.votes || 0)).slice(0, 2);
+            return (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4">
+                <div className="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                  <span className="text-xs font-black text-gray-700">⭐ Öne Çıkan Yanıtlar</span>
+                  <span className="text-[10px] text-gray-400 ml-auto">{topLevel.length} yanıtın en iyileri</span>
+                </div>
+                <div className="divide-y divide-gray-50">
+                  {top2.map(a => (
+                    <div key={a.id} className="flex items-start gap-3 px-4 py-3">
+                      <Avatar gender={a.gender} name={a.user_name} size="sm" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="text-xs font-bold text-gray-800">{a.user_name}</span>
+                          <GenderPill gender={a.gender} />
+                          {a.votes > 0 && <span className="ml-auto text-[11px] text-emerald-600 font-bold">👍 {a.votes}</span>}
+                        </div>
+                        <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">{a.body}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* ── Yanıt Yaz ── */}
           {user ? (
@@ -298,19 +326,12 @@ export default function TavsiyeDetay() {
                 const nested = repliesOf(a.id);
                 const isOpen = replyOpen[a.id] || false;
                 const isBest = bestAnswer?.id === a.id && (bestAnswer?.votes || 0) > 0;
-
-                // Kart rengi cinsiyete göre
-                const cardBg = a.gender === "kadin"
-                  ? "bg-gradient-to-br from-pink-50 to-rose-50 border-pink-200"
-                  : a.gender === "erkek"
-                  ? "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200"
-                  : "bg-white border-gray-100";
-
-                const dividerColor = a.gender === "kadin" ? "border-pink-100" : a.gender === "erkek" ? "border-blue-100" : "border-gray-100";
+                const genderBorder = a.gender === "kadin" ? "border-l-pink-400" : a.gender === "erkek" ? "border-l-blue-400" : "border-l-gray-200";
+                const dividerColor = "border-gray-100";
 
                 return (
                   <div key={a.id}>
-                    <div className={`rounded-2xl border ${cardBg} shadow-sm overflow-hidden`}>
+                    <div className={`rounded-2xl border border-gray-100 border-l-4 ${genderBorder} bg-white shadow-sm overflow-hidden`}>
 
                       {isBest && (
                         <div className="bg-gradient-to-r from-amber-400 to-yellow-300 px-4 py-1.5 flex items-center gap-2">
@@ -409,13 +430,9 @@ export default function TavsiyeDetay() {
                       <div className="ml-10 mt-1.5 space-y-1.5">
                         {nested.map(r => {
                           const rv = userVotes[r.id] || 0;
-                          const rBg = r.gender === "kadin"
-                            ? "bg-pink-50 border-pink-200"
-                            : r.gender === "erkek"
-                            ? "bg-blue-50 border-blue-200"
-                            : "bg-white border-gray-100";
+                          const rBorder = r.gender === "kadin" ? "border-l-pink-300" : r.gender === "erkek" ? "border-l-blue-300" : "border-l-gray-200";
                           return (
-                            <div key={r.id} className={`rounded-xl border ${rBg} p-3`}>
+                            <div key={r.id} className={`rounded-xl border border-gray-100 border-l-4 ${rBorder} bg-white p-3`}>
                               <div className="flex items-start gap-2.5">
                                 <Avatar gender={r.gender} name={r.user_name} size="xs" />
                                 <div className="flex-1">
