@@ -214,46 +214,44 @@ export default function TavsiyelerSayfasi() {
             <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{filtered.length} soru</span>
           </div>
 
-          {/* Kategori filtreler + Soru Sor + Ara */}
+          {/* Kategori filtreler + butonlar */}
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden mb-4 shadow-sm">
-            <div className="flex items-center">
-              <div className="flex gap-0 overflow-x-auto flex-1 px-1" style={{ scrollbarWidth: "none" }}>
-                {CATS.map(c => {
-                  const style = CAT_STYLE[c];
-                  const isActive = activeCat === c;
-                  return (
-                    <button key={c} onClick={() => setActiveCat(c)}
-                      className={`flex-shrink-0 flex items-center gap-1 px-3 py-3 text-[11px] font-semibold whitespace-nowrap border-b-2 transition-all ${
-                        isActive ? "border-[#E8460A] text-[#E8460A]" : "border-transparent text-gray-400 hover:text-gray-600"
-                      }`}>
-                      {style && !isActive && <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />}
-                      {c}
-                    </button>
-                  );
-                })}
-              </div>
-              <div className="flex items-center gap-1.5 px-2 flex-shrink-0 border-l border-gray-100">
-                <button
-                  onClick={() => {
-                    setShowSearch(v => !v);
-                    if (!showSearch) setTimeout(() => searchRef.current?.focus(), 50);
-                    else setSearchQuery("");
-                  }}
-                  className={`flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg transition-all ${
-                    showSearch || searchQuery ? "bg-[#E8460A]/10 text-[#E8460A]" : "text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                  }`}>
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
-                  </svg>
-                  Ara
-                </button>
-                <button
-                  onClick={() => { if (!user) { window.location.href = "/giris"; return; } setShowForm(v => !v); }}
-                  className="flex items-center gap-1 text-[11px] font-bold px-2.5 py-1.5 rounded-lg bg-[#E8460A] text-white hover:bg-[#C93A08] transition-all">
-                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-                  Soru Sor
-                </button>
-              </div>
+            <div className="flex gap-0 overflow-x-auto px-1" style={{ scrollbarWidth: "none" }}>
+              {CATS.map(c => {
+                const style = CAT_STYLE[c];
+                const isActive = activeCat === c;
+                return (
+                  <button key={c} onClick={() => setActiveCat(c)}
+                    className={`flex-shrink-0 flex items-center gap-1 px-3 py-3 text-[11px] font-semibold whitespace-nowrap border-b-2 transition-all ${
+                      isActive ? "border-[#E8460A] text-[#E8460A]" : "border-transparent text-gray-400 hover:text-gray-600"
+                    }`}>
+                    {style && !isActive && <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />}
+                    {c}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Butonlar — kategori barının altında */}
+            <div className="flex items-center gap-2 px-3 py-2.5 border-t border-gray-100">
+              <button
+                onClick={() => {
+                  setShowSearch(v => !v);
+                  if (!showSearch) setTimeout(() => searchRef.current?.focus(), 50);
+                  else setSearchQuery("");
+                }}
+                className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl bg-[#E8460A] text-white hover:bg-[#C93A08] transition-all">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+                Tavsiyelerde Ara
+              </button>
+              <button
+                onClick={() => { if (!user) { window.location.href = "/giris"; return; } setShowForm(v => !v); }}
+                className="flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl bg-[#E8460A] text-white hover:bg-[#C93A08] transition-all">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                Soru Sor
+              </button>
             </div>
 
             {/* Arama input */}
