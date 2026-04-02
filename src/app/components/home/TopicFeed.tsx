@@ -11,33 +11,46 @@ type Topic = {
 
 const CATS = ["Hepsi", "Elektronik", "Kozmetik", "Ev & Yaşam", "Spor", "Hediye", "Diğer"];
 
-const CAT: Record<string, { bg: string; text: string; dot: string }> = {
-  Elektronik:    { bg: "bg-blue-50",    text: "text-blue-600",    dot: "bg-blue-400" },
-  Kozmetik:      { bg: "bg-pink-50",    text: "text-pink-600",    dot: "bg-pink-400" },
-  "Ev & Yaşam":  { bg: "bg-emerald-50", text: "text-emerald-600", dot: "bg-emerald-400" },
-  "Ev & Yasam":  { bg: "bg-emerald-50", text: "text-emerald-600", dot: "bg-emerald-400" },
-  Spor:          { bg: "bg-orange-50",  text: "text-orange-600",  dot: "bg-orange-400" },
-  Hediye:        { bg: "bg-purple-50",  text: "text-purple-600",  dot: "bg-purple-400" },
-  Diğer:         { bg: "bg-gray-50",    text: "text-gray-500",    dot: "bg-gray-300" },
-  Diger:         { bg: "bg-gray-50",    text: "text-gray-500",    dot: "bg-gray-300" },
+const CAT_STYLE: Record<string, { bg: string; text: string; border: string; dot: string }> = {
+  Elektronik:   { bg: "bg-blue-50",    text: "text-blue-700",    border: "border-blue-200",   dot: "bg-blue-400" },
+  Kozmetik:     { bg: "bg-pink-50",    text: "text-pink-700",    border: "border-pink-200",   dot: "bg-pink-400" },
+  "Ev & Yaşam": { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200",dot: "bg-emerald-400" },
+  "Ev & Yasam": { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200",dot: "bg-emerald-400" },
+  Spor:         { bg: "bg-orange-50",  text: "text-orange-700",  border: "border-orange-200", dot: "bg-orange-400" },
+  Hediye:       { bg: "bg-purple-50",  text: "text-purple-700",  border: "border-purple-200", dot: "bg-purple-400" },
+  Diğer:        { bg: "bg-gray-100",   text: "text-gray-600",    border: "border-gray-200",   dot: "bg-gray-400" },
+  Diger:        { bg: "bg-gray-100",   text: "text-gray-600",    border: "border-gray-200",   dot: "bg-gray-400" },
 };
 
-const AVATAR_GRADIENTS = [
+const CAT_LEFT_BORDER: Record<string, string> = {
+  Elektronik:   "border-l-blue-400",
+  Kozmetik:     "border-l-pink-400",
+  "Ev & Yaşam": "border-l-emerald-400",
+  "Ev & Yasam": "border-l-emerald-400",
+  Spor:         "border-l-orange-400",
+  Hediye:       "border-l-purple-400",
+  Diğer:        "border-l-gray-300",
+  Diger:        "border-l-gray-300",
+};
+
+const GRADIENTS = [
   "from-violet-500 to-purple-600",
   "from-blue-500 to-cyan-500",
   "from-emerald-500 to-teal-500",
   "from-rose-500 to-pink-500",
   "from-amber-500 to-orange-500",
   "from-indigo-500 to-blue-600",
+  "from-teal-500 to-green-500",
+  "from-red-500 to-rose-600",
 ];
-const grad = (name: string) => AVATAR_GRADIENTS[(name || "A").charCodeAt(0) % AVATAR_GRADIENTS.length];
+const avatarGrad = (name: string) => GRADIENTS[(name || "A").charCodeAt(0) % GRADIENTS.length];
 
 const timeAgo = (d: string) => {
   const s = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
   if (s < 60) return "şimdi";
-  if (s < 3600) return Math.floor(s / 60) + "dk";
-  if (s < 86400) return Math.floor(s / 3600) + "sa";
-  return Math.floor(s / 86400) + "g";
+  if (s < 3600) return Math.floor(s / 60) + " dk önce";
+  if (s < 86400) return Math.floor(s / 3600) + " sa önce";
+  return Math.floor(s / 86400) + " gün önce";
 };
 
 export default function TopicFeed({ compact: _compact }: { compact?: boolean }) {
@@ -63,7 +76,7 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
       }
     });
     fetchTopics();
-    const ch = supabase.channel("topics-rt2")
+    const ch = supabase.channel("topics-rt3")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "topics" }, p => {
         if (isFirst.current) return;
         setTopics(prev => [p.new as Topic, ...prev]);
@@ -79,7 +92,7 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
 
   const fetchTopics = async () => {
     const { data } = await supabase.from("topics").select("*")
-      .order("created_at", { ascending: false }).limit(50);
+      .order("created_at", { ascending: false }).limit(60);
     if (data) { setTopics(data); isFirst.current = false; }
   };
 
@@ -100,8 +113,8 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
     e.preventDefault(); e.stopPropagation();
     if (!user) { window.location.href = "/giris"; return; }
     const cur = userVotes[t.id] || 0;
-    let diff = cur === val ? -val : cur === 0 ? val : val * 2;
-    let nv = cur === val ? 0 : val;
+    const diff = cur === val ? -val : cur === 0 ? val : val * 2;
+    const nv = cur === val ? 0 : val;
     if (cur === val) await supabase.from("topic_votes").delete().eq("topic_id", t.id).eq("user_id", user.id);
     else await supabase.from("topic_votes").upsert({ topic_id: t.id, user_id: user.id, vote: val }, { onConflict: "topic_id,user_id" });
     const newTotal = (t.votes || 0) + diff;
@@ -110,132 +123,181 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
     setUserVotes(prev => ({ ...prev, [t.id]: nv }));
   };
 
-  const filtered = topics.filter(t => activeCat === "Hepsi" || t.category === activeCat || t.category === activeCat.replace("ş", "s").replace("ğ", "g").replace("İ", "I"));
+  const normalize = (s: string) => s.replace(/ğ/g, "g").replace(/ş/g, "s").replace(/İ/g, "I").replace(/ı/g, "i");
+  const filtered = topics.filter(t =>
+    activeCat === "Hepsi" || t.category === activeCat || normalize(t.category) === normalize(activeCat)
+  );
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-[#FAFAF8]">
 
-      {/* Header */}
-      <div className="px-4 pt-4 pb-3 border-b border-gray-100">
+      {/* ── Header ── */}
+      <div className="bg-white border-b border-gray-100 px-4 pt-4 pb-0">
+        {/* Başlık satırı */}
         <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-sm text-gray-900">Bana Bir Tavsiye</span>
-            <div className="flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="text-[10px] font-semibold text-emerald-600">Canlı</span>
+          <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="font-bold text-sm text-gray-900">Canlı Tavsiye Feed</span>
             </div>
+            <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{filtered.length} soru</span>
           </div>
           <button
             onClick={() => { if (!user) { window.location.href = "/giris"; return; } setShowForm(v => !v); }}
-            className="flex items-center gap-1.5 bg-[#E8460A] text-white text-xs font-semibold px-3 py-1.5 rounded-full hover:bg-[#C93A08] transition-all">
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+            className="flex items-center gap-1.5 bg-[#E8460A] hover:bg-[#C93A08] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all shadow-sm shadow-orange-200">
+            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
             Soru Sor
           </button>
         </div>
 
-        {/* Kategori filtreleri */}
-        <div className="flex gap-1.5 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
-          {CATS.map(c => (
-            <button key={c} onClick={() => setActiveCat(c)}
-              className={`flex-shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium whitespace-nowrap transition-all ${
-                activeCat === c ? "bg-gray-900 text-white" : "text-gray-500 hover:bg-gray-100"
-              }`}>
-              {CAT[c] && activeCat !== c && <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1 ${CAT[c].dot}`} />}
-              {c}
-            </button>
-          ))}
+        {/* Kategori sekmeleri */}
+        <div className="flex gap-0 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+          {CATS.map(c => {
+            const style = CAT_STYLE[c];
+            const isActive = activeCat === c;
+            return (
+              <button key={c} onClick={() => setActiveCat(c)}
+                className={`flex-shrink-0 flex items-center gap-1 px-3 py-2.5 text-[11px] font-semibold whitespace-nowrap border-b-2 transition-all ${
+                  isActive
+                    ? "border-[#E8460A] text-[#E8460A]"
+                    : "border-transparent text-gray-400 hover:text-gray-600"
+                }`}>
+                {style && !isActive && <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />}
+                {c}
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Soru formu */}
+      {/* ── Soru Formu ── */}
       {showForm && (
-        <div className="mx-4 mt-3 bg-white border border-gray-200 rounded-2xl p-3.5 shadow-sm">
-          <input type="text" value={titleVal} onChange={e => setTitleVal(e.target.value)}
-            placeholder="Ne sormak istiyorsunuz? (örn: 5000₺'ye en iyi kulaklık hangisi?)"
-            className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-[#E8460A] mb-2 transition-all" />
-          <textarea value={bodyVal} onChange={e => setBodyVal(e.target.value)}
-            placeholder="Detay ekleyin (isteğe bağlı)" rows={2}
-            className="w-full text-xs border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-[#E8460A] resize-none mb-2 transition-all text-gray-700" />
-          <div className="flex gap-2">
-            <select value={catVal} onChange={e => setCatVal(e.target.value)}
-              className="flex-1 text-xs border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-[#E8460A] bg-white">
-              {CATS.filter(c => c !== "Hepsi").map(c => <option key={c}>{c}</option>)}
-            </select>
-            <button onClick={handleSubmit} disabled={submitting || !titleVal.trim()}
-              className="px-4 py-2 bg-[#E8460A] text-white text-xs font-bold rounded-xl hover:bg-[#C93A08] disabled:opacity-40 transition-all">
-              {submitting ? "..." : "Gönder"}
-            </button>
-            <button onClick={() => setShowForm(false)} className="px-3 py-2 text-xs text-gray-400 hover:text-gray-600 border border-gray-200 rounded-xl">İptal</button>
+        <div className="mx-4 mt-3 bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+          <div className="bg-gray-50 px-4 py-2.5 border-b border-gray-100 flex items-center justify-between">
+            <span className="text-xs font-bold text-gray-700">Yeni Soru</span>
+            <button onClick={() => setShowForm(false)} className="text-gray-400 hover:text-gray-600 text-sm">✕</button>
+          </div>
+          <div className="p-3.5">
+            <input type="text" value={titleVal} onChange={e => setTitleVal(e.target.value)}
+              placeholder="Sorunuzu yazın... (örn: 5000₺'ye en iyi kulaklık hangisi?)"
+              className="w-full text-sm border border-gray-200 rounded-xl px-3 py-2.5 outline-none focus:border-[#E8460A] mb-2.5 transition-all" />
+            <textarea value={bodyVal} onChange={e => setBodyVal(e.target.value)}
+              placeholder="Detay ekleyin (isteğe bağlı)" rows={2}
+              className="w-full text-xs border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-[#E8460A] resize-none mb-2.5 transition-all text-gray-700" />
+            <div className="flex gap-2">
+              <select value={catVal} onChange={e => setCatVal(e.target.value)}
+                className="flex-1 text-xs border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-[#E8460A] bg-white text-gray-700">
+                {CATS.filter(c => c !== "Hepsi").map(c => <option key={c}>{c}</option>)}
+              </select>
+              <button onClick={handleSubmit} disabled={submitting || !titleVal.trim()}
+                className="px-5 py-2 bg-[#E8460A] text-white text-xs font-bold rounded-xl hover:bg-[#C93A08] disabled:opacity-40 transition-all">
+                {submitting ? "..." : "Gönder"}
+              </button>
+            </div>
           </div>
         </div>
       )}
 
-      {/* Yeni bildirim */}
+      {/* ── Yeni soru bildirimi ── */}
       {newCount > 0 && (
         <button onClick={() => setNewCount(0)}
-          className="mx-4 mt-2 py-1.5 bg-emerald-500 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5 animate-pulse">
-          <span className="w-1.5 h-1.5 rounded-full bg-white" />
-          {newCount} yeni tavsiye
+          className="mx-4 mt-2 py-1.5 bg-emerald-500 text-white text-xs font-semibold rounded-xl flex items-center justify-center gap-1.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" />
+          {newCount} yeni soru geldi — görmek için tıkla
         </button>
       )}
 
-      {/* Feed */}
+      {/* ── Feed ── */}
       <div className="flex-1 overflow-y-auto">
         {filtered.length === 0 ? (
-          <div className="text-center py-16 text-sm text-gray-300">Henüz soru yok</div>
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="text-4xl mb-3">💬</div>
+            <div className="text-sm font-semibold text-gray-500 mb-1">Henüz soru yok</div>
+            <div className="text-xs text-gray-400">Bu kategoride ilk soruyu sen sor!</div>
+          </div>
         ) : (
-          <div className="divide-y divide-gray-50">
+          <div className="py-2 px-3 space-y-2">
             {filtered.map(t => {
-              const cs = CAT[t.category];
+              const cs = CAT_STYLE[t.category];
+              const leftBorder = CAT_LEFT_BORDER[t.category] || "border-l-gray-200";
               const myVote = userVotes[t.id] || 0;
+              const netVotes = t.votes || 0;
+
               return (
                 <Link href={"/tavsiye/" + t.id} key={t.id}>
-                  <div className="px-4 py-3.5 hover:bg-white transition-colors cursor-pointer group">
-                    <div className="flex gap-3">
-                      {/* Avatar */}
-                      <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${grad(t.user_name)} flex items-center justify-center text-white text-xs font-bold flex-shrink-0 mt-0.5`}>
-                        {(t.user_name || "?")[0].toUpperCase()}
+                  <div className={`bg-white rounded-xl border border-gray-100 border-l-4 ${leftBorder} hover:shadow-md hover:border-gray-200 transition-all cursor-pointer group overflow-hidden`}>
+                    <div className="p-3.5">
+                      {/* Üst satır: avatar + isim + kategori + zaman */}
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${avatarGrad(t.user_name)} flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0`}>
+                          {(t.user_name || "?")[0].toUpperCase()}
+                        </div>
+                        <span className="text-xs font-semibold text-gray-700 truncate max-w-[80px]">{t.user_name}</span>
+                        {cs && (
+                          <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cs.bg} ${cs.text} ${cs.border}`}>
+                            {t.category}
+                          </span>
+                        )}
+                        <span className="text-[10px] text-gray-300 ml-auto flex-shrink-0">{timeAgo(t.created_at)}</span>
                       </div>
 
-                      <div className="flex-1 min-w-0">
-                        {/* Meta satırı */}
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <span className="text-xs font-semibold text-gray-700 truncate max-w-[90px]">{t.user_name}</span>
-                          {cs && (
-                            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md ${cs.bg} ${cs.text}`}>
-                              {t.category}
-                            </span>
-                          )}
-                          <span className="text-[10px] text-gray-300 ml-auto flex-shrink-0">{timeAgo(t.created_at)}</span>
+                      {/* Soru başlığı */}
+                      <p className="text-sm font-semibold text-gray-800 leading-snug mb-1 group-hover:text-[#E8460A] transition-colors line-clamp-2">
+                        {t.title}
+                      </p>
+
+                      {/* Body önizleme */}
+                      {t.body && (
+                        <p className="text-xs text-gray-400 line-clamp-1 mb-2.5 leading-relaxed">{t.body}</p>
+                      )}
+
+                      {/* Alt satır: istatistikler + oy butonları */}
+                      <div className="flex items-center gap-2">
+                        {/* Yanıt sayısı */}
+                        <div className="flex items-center gap-1 text-[11px] text-gray-400">
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                          </svg>
+                          <span className="font-medium">{t.answer_count}</span>
+                          <span>yanıt</span>
                         </div>
 
-                        {/* Başlık */}
-                        <p className="text-sm font-semibold text-gray-800 leading-snug mb-1 group-hover:text-[#E8460A] transition-colors line-clamp-2">{t.title}</p>
-
-                        {/* Body */}
-                        {t.body && <p className="text-xs text-gray-400 line-clamp-1 mb-2">{t.body}</p>}
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-2.5">
-                          <span className="flex items-center gap-1 text-[11px] text-gray-400">
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" /></svg>
-                            {t.answer_count}
-                          </span>
+                        {/* Oy butonları */}
+                        <div className="ml-auto flex items-center gap-1">
                           <button onClick={e => handleVote(e, t, 1)}
-                            className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border transition-all ${
-                              myVote === 1 ? "bg-emerald-50 border-emerald-300 text-emerald-600 font-semibold" : "border-gray-200 text-gray-400 hover:border-emerald-300 hover:text-emerald-500"
+                            className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg border transition-all ${
+                              myVote === 1
+                                ? "bg-emerald-50 border-emerald-300 text-emerald-600 font-bold"
+                                : "border-gray-150 text-gray-400 hover:border-emerald-200 hover:text-emerald-500 hover:bg-emerald-50"
                             }`}>
-                            ↑ {t.votes > 0 ? t.votes : 0}
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 10.5L12 3m0 0l7.5 7.5M12 3v18" />
+                            </svg>
+                            <span className="font-semibold">{netVotes > 0 ? netVotes : 0}</span>
                           </button>
                           <button onClick={e => handleVote(e, t, -1)}
-                            className={`text-[11px] px-2 py-0.5 rounded-full border transition-all ${
-                              myVote === -1 ? "bg-red-50 border-red-300 text-red-500" : "border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-400"
+                            className={`flex items-center text-[11px] px-2 py-1 rounded-lg border transition-all ${
+                              myVote === -1
+                                ? "bg-red-50 border-red-300 text-red-500"
+                                : "border-gray-150 text-gray-300 hover:border-red-200 hover:text-red-400 hover:bg-red-50"
                             }`}>
-                            ↓
+                            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
+                            </svg>
                           </button>
                         </div>
                       </div>
                     </div>
+
+                    {/* Yanıt var ise progress bar gibi ince bir çizgi */}
+                    {t.answer_count > 0 && (
+                      <div className="h-0.5 bg-gray-50">
+                        <div
+                          className={`h-full ${cs ? cs.dot.replace("bg-", "bg-") : "bg-gray-200"} opacity-40`}
+                          style={{ width: `${Math.min(t.answer_count * 10, 100)}%` }}
+                        />
+                      </div>
+                    )}
                   </div>
                 </Link>
               );
