@@ -1,11 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 
 const supabase = createClient(
-  "https://ugnxddvbrvjyzbqxmbdr.supabase.co",
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVnbnhkZHZicnZqeXpicXhtYmRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwOTQ2OTYsImV4cCI6MjA4OTY3MDY5Nn0.ZSyfd-uONUgZ9GEfPLtPDplkeQdVLZlLiMk4Y0Nd4j0"
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const UNSPLASH_KEY = "AQ2-_YEyadrglHrtTz0iRXtmL3KM6McLB_y5R_LH08g";
+const UNSPLASH_KEY = process.env.UNSPLASH_ACCESS_KEY!;
 
 // Ürün adına göre manuel arama sorguları
 const searchQueries: Record<string, string> = {

@@ -1,0 +1,68 @@
+import { NextRequest, NextResponse } from 'next/server'
+
+// Rate limiting için basit in-memory store (production'da Redis kullanılmalı)
+const rateLimit = new Map<string, { count: number; resetAt: number }>()
+const RATE_LIMIT = 60       // 60 istek
+const RATE_WINDOW = 60_000  // 1 dakika
+
+function getRateLimitKey(req: NextRequest): string {
+  return req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || req.headers.get('x-real-ip')
+    || 'unknown'
+}
+
+function isRateLimited(key: string): boolean {
+  const now = Date.now()
+  const entry = rateLimit.get(key)
+
+  if (!entry || entry.resetAt < now) {
+    rateLimit.set(key, { count: 1, resetAt: now + RATE_WINDOW })
+    return false
+  }
+
+  if (entry.count >= RATE_LIMIT) return true
+  entry.count++
+  return false
+}
+
+export function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl
+
+  // Güvenlik header'ları — tüm yanıtlara ekle
+  const res = NextResponse.next()
+  res.headers.set('X-Content-Type-Options', 'nosniff')
+  res.headers.set('X-Frame-Options', 'DENY')
+  res.headers.set('X-XSS-Protection', '1; mode=block')
+  res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+
+  // API route'larına rate limiting uygula
+  if (pathname.startsWith('/api/')) {
+    const key = getRateLimitKey(req)
+    if (isRateLimited(key)) {
+      return new NextResponse(
+        JSON.stringify({ error: 'Çok fazla istek. Lütfen bekleyin.' }),
+        { status: 429, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+
+    // /api/internal/* route'larına ek doğrulama
+    if (pathname.startsWith('/api/internal/')) {
+      const secret = req.headers.get('x-internal-secret')
+      if (!secret || secret !== process.env.INTERNAL_API_SECRET) {
+        return new NextResponse(
+          JSON.stringify({ error: 'Yetkisiz erişim' }),
+          { status: 401, headers: { 'Content-Type': 'application/json' } }
+        )
+      }
+    }
+  }
+
+  return res
+}
+
+export const config = {
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico).*)',
+  ],
+}
