@@ -165,7 +165,7 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
           <div className="flex items-center gap-2.5">
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="font-bold text-sm text-gray-900">Sıcak Tavsiyeler</span>
+              <span className="font-bold text-sm text-gray-900">Tavsiyeler</span>
             </div>
             <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{filtered.length} soru</span>
           </div>
