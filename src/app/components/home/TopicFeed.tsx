@@ -165,7 +165,7 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
           <div className="flex items-center gap-2.5">
             <div className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span className="font-bold text-sm text-gray-900">Canlı Tavsiye Feed</span>
+              <span className="font-bold text-sm text-gray-900">Sıcak Tavsiyeler</span>
             </div>
             <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{filtered.length} soru</span>
           </div>
@@ -302,15 +302,15 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
                           </div>
                         )}
 
-                        {/* Alt satır: yanıt sayısı + oy butonları */}
-                        <div className="flex items-center gap-2">
-                          <div className="flex items-center gap-1 text-[11px] text-gray-400">
-                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
-                            </svg>
-                            <span className="font-medium">{t.answer_count}</span>
-                            <span>yanıt</span>
-                          </div>
+                        {/* Alt satır: yanıtla + oy */}
+                        <div className="flex items-center gap-1.5">
+                          <Link
+                            href={"/tavsiye/" + t.id}
+                            onClick={e => e.stopPropagation()}
+                            className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-[#E8460A]/5 text-[#E8460A] font-semibold hover:bg-[#E8460A]/10 transition-all border border-[#E8460A]/10">
+                            💬 Yanıtla
+                            {t.answer_count > 0 && <span className="text-[10px] text-[#E8460A]/60">{t.answer_count}</span>}
+                          </Link>
 
                           <div className="ml-auto flex items-center gap-1">
                             <button onClick={e => handleVote(e, t, 1)}
@@ -351,7 +351,7 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
         </div>
 
         {/* ── Popüler Sorular Sidebar ── */}
-        <div className="w-[180px] flex-shrink-0 border-l border-gray-100 bg-white overflow-y-auto">
+        <div className="w-[220px] flex-shrink-0 border-l border-gray-100 bg-white overflow-y-auto">
           <div className="px-3 pt-3 pb-2 border-b border-gray-100">
             <div className="flex items-center gap-1.5">
               <span className="text-sm">🔥</span>
