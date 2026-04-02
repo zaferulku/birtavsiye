@@ -154,27 +154,24 @@ export default function TavsiyelerSayfasi() {
     <main className="min-h-screen bg-[#F5F4F0]">
       <Header />
 
-      {/* Sub header */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-30">
-        <div className="max-w-[1100px] mx-auto px-6 flex items-center justify-between h-12">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-bold text-sm text-gray-900">Sıcak Tavsiyeler</span>
-            <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{filtered.length} soru</span>
-          </div>
-          <button
-            onClick={() => { if (!user) { window.location.href = "/giris"; return; } setShowForm(v => !v); }}
-            className="flex items-center gap-1.5 bg-[#E8460A] hover:bg-[#C93A08] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all">
-            <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-            Soru Sor
-          </button>
-        </div>
-      </div>
-
       <div className="max-w-[1100px] mx-auto px-6 py-5 flex gap-6">
 
         {/* ── Orta: Ana Feed ── */}
         <div className="flex-1 min-w-0">
+
+          {/* Başlık + Soru Sor */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-base text-gray-900">Tavsiyeler</span>
+              <span className="text-[10px] font-semibold text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full">{filtered.length} soru</span>
+            </div>
+            <button
+              onClick={() => { if (!user) { window.location.href = "/giris"; return; } setShowForm(v => !v); }}
+              className="flex items-center gap-1.5 bg-[#E8460A] hover:bg-[#C93A08] text-white text-xs font-bold px-3.5 py-2 rounded-xl transition-all">
+              <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+              Soru Sor
+            </button>
+          </div>
 
           {/* Kategori filtreler */}
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden mb-4 shadow-sm">
