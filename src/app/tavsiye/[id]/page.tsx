@@ -166,7 +166,7 @@ export default function TavsiyeDetay() {
   const cat = topic ? (CAT_GRADIENT[topic.category] || DEFAULT_CAT) : DEFAULT_CAT;
 
   if (!topic) return (
-    <main className="min-h-screen bg-[#F5F4F0]">
+    <main className="min-h-screen bg-[#F2F2F0]">
       <Header />
       <div className="flex items-center justify-center py-32">
         <div className="flex items-center gap-3 text-gray-400">
@@ -179,41 +179,52 @@ export default function TavsiyeDetay() {
   );
 
   return (
-    <main className="min-h-screen bg-[#F5F4F0]">
+    <main className="min-h-screen bg-[#F2F2F0]">
       <Header />
 
-      {/* ── Renkli Soru Banner ── */}
-      <div className={`bg-gradient-to-r ${cat.from} ${cat.to} relative overflow-hidden`}>
-        {/* Dekoratif daireler */}
-        <div className="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-white/5" />
-        <div className="absolute -right-4 -bottom-10 w-32 h-32 rounded-full bg-white/5" />
-        <div className="max-w-[1100px] mx-auto px-4 py-6 relative z-10">
-          <Link href="/tavsiyeler" className="inline-flex items-center gap-1 text-white/70 hover:text-white text-xs mb-4 transition-colors">
+      {/* ── Banner ── */}
+      <div className={`bg-gradient-to-br ${cat.from} ${cat.to} relative overflow-hidden`}>
+        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-white/5" />
+        <div className="absolute left-1/3 bottom-0 w-48 h-48 rounded-full bg-black/10" />
+
+        <div className="max-w-[1100px] mx-auto px-4 pt-5 pb-0 relative z-10">
+          <Link href="/tavsiyeler" className="inline-flex items-center gap-1 text-white/60 hover:text-white text-xs mb-5 transition-colors">
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
             Sıcak Tavsiyeler
           </Link>
 
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center text-white text-xl font-bold flex-shrink-0 border border-white/30 shadow-lg">
-              {(topic.user_name || "?")[0].toUpperCase()}
+          <div className="max-w-2xl">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[11px] font-bold text-white/60 bg-white/10 border border-white/20 px-2.5 py-1 rounded-full uppercase tracking-wide">
+                {topic.category}
+              </span>
             </div>
-            <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-black text-white leading-snug mb-2 drop-shadow-sm">{topic.title}</h1>
-              {topic.body && <p className="text-sm text-white/80 leading-relaxed mb-3">{topic.body}</p>}
-              <div className="flex items-center gap-3 flex-wrap">
-                <span className="text-xs font-semibold text-white/90">{topic.user_name}</span>
-                <span className="text-white/40 text-xs">·</span>
-                <span className="text-xs text-white/70">{timeAgo(topic.created_at)}</span>
-                <span className="text-xs text-white/60 bg-white/15 px-2 py-0.5 rounded-full border border-white/20">
-                  {topic.category}
-                </span>
-                <div className="ml-auto flex items-center gap-3">
-                  <span className="text-xs text-white/80 font-semibold">👍 {topic.votes || 0}</span>
-                  <span className="text-xs text-white/80 font-semibold">💬 {answers.length} yanıt</span>
-                </div>
+            <h1 className="text-2xl font-black text-white leading-tight mb-3" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>
+              {topic.title}
+            </h1>
+            {topic.body && (
+              <p className="text-sm text-white/75 leading-relaxed mb-4">{topic.body}</p>
+            )}
+          </div>
+
+          {/* Stats bar — sayfanın altına yapışık */}
+          <div className="flex items-center gap-4 bg-black/20 -mx-4 px-4 py-3 mt-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-white text-xs font-bold">
+                {(topic.user_name || "?")[0].toUpperCase()}
               </div>
+              <span className="text-sm font-semibold text-white">{topic.user_name}</span>
+            </div>
+            <span className="text-white/40">·</span>
+            <span className="text-xs text-white/60">{timeAgo(topic.created_at)}</span>
+            <div className="ml-auto flex items-center gap-4">
+              <span className="text-sm font-bold text-white/90">👍 {topic.votes || 0}</span>
+              <span className="text-sm font-bold text-white bg-white/20 px-3 py-1 rounded-full">
+                💬 {answers.length} yanıt
+              </span>
             </div>
           </div>
         </div>
@@ -226,65 +237,57 @@ export default function TavsiyeDetay() {
 
           {/* ── Yanıt Yaz ── */}
           {user ? (
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 mb-5">
-              <div className="flex items-center gap-2 mb-3">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-5">
+              <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-gray-100">
                 <Avatar gender={userGender} name={userName} size="sm" />
-                <div>
-                  <span className="text-xs font-bold text-gray-800">{userName}</span>
+                <div className="flex-1">
+                  <span className="text-xs font-bold text-gray-900">{userName}</span>
                   <div className="mt-0.5"><GenderPill gender={userGender} /></div>
                 </div>
-                <span className="ml-auto text-xs text-gray-400">yanıtın paylaşılacak</span>
+                <span className="text-[11px] text-gray-400">Tavsiyeni paylaş</span>
               </div>
-              <textarea
-                ref={mainReplyRef}
-                value={answerText}
-                onChange={e => setAnswerText(e.target.value)}
-                placeholder="Tavsiyeni paylaş, deneyimini aktar..."
-                rows={3}
-                className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#E8460A] focus:ring-2 focus:ring-[#E8460A]/10 resize-none transition-all"
-              />
-              <div className="flex items-center justify-between mt-2">
-                <span className="text-[11px] text-gray-400">{answerText.length} karakter</span>
-                <button
-                  onClick={handleAnswer}
-                  disabled={loading || !answerText.trim()}
-                  className={`px-5 py-2 text-sm font-bold rounded-xl transition-all flex items-center gap-2 ${
-                    answerText.trim()
-                      ? "bg-gradient-to-r from-[#E8460A] to-orange-500 text-white hover:shadow-md hover:shadow-orange-200 hover:-translate-y-0.5"
-                      : "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  }`}>
-                  {loading ? (
-                    <>
-                      <div className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" />
-                      Gönderiliyor
-                    </>
-                  ) : (
-                    <>💬 Yanıtla</>
-                  )}
-                </button>
+              <div className="px-4 pb-4 pt-3">
+                <textarea
+                  ref={mainReplyRef}
+                  value={answerText}
+                  onChange={e => setAnswerText(e.target.value)}
+                  placeholder="Deneyimini paylaş, tavsiyeni ver..."
+                  rows={3}
+                  className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm outline-none focus:border-[#E8460A] focus:ring-2 focus:ring-[#E8460A]/10 resize-none transition-all placeholder:text-gray-300"
+                />
+                <div className="flex items-center justify-between mt-3">
+                  <span className="text-[11px] text-gray-300">{answerText.length > 0 ? answerText.length + " karakter" : ""}</span>
+                  <button
+                    onClick={handleAnswer}
+                    disabled={loading || !answerText.trim()}
+                    className="px-6 py-2.5 text-sm font-bold rounded-xl transition-all flex items-center gap-2 bg-gradient-to-r from-[#E8460A] to-orange-400 text-white disabled:opacity-30 hover:shadow-lg hover:shadow-orange-200 hover:-translate-y-0.5 disabled:hover:translate-y-0 disabled:hover:shadow-none">
+                    {loading
+                      ? <><div className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" /> Gönderiliyor</>
+                      : <>💬 Yanıtla</>}
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
             <Link href="/giris">
-              <div className={`bg-gradient-to-r ${cat.from} ${cat.to} rounded-2xl p-4 text-center text-white font-semibold hover:shadow-lg transition-all cursor-pointer mb-5 text-sm`}>
+              <div className={`bg-gradient-to-r ${cat.from} ${cat.to} rounded-2xl p-5 text-center text-white font-bold hover:shadow-lg transition-all cursor-pointer mb-5 text-sm`}>
                 Yanıt vermek için giriş yap →
               </div>
             </Link>
           )}
 
-          {/* ── Yanıtlar Başlık ── */}
+          {/* ── Yanıtlar ── */}
           {topLevel.length > 0 && (
-            <div className="flex items-center gap-2 mb-3 px-1">
-              <span className="text-sm font-bold text-gray-800">{topLevel.length} Yanıt</span>
+            <div className="flex items-center gap-3 mb-3 px-1">
+              <span className="text-sm font-black text-gray-700">{topLevel.length} Yanıt</span>
               <div className="flex-1 h-px bg-gray-200" />
               <span className="text-[11px] text-gray-400">en eskiden yeniye</span>
             </div>
           )}
 
-          {/* ── Yanıt Listesi ── */}
           {topLevel.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-gray-100 py-14 text-center shadow-sm">
-              <div className="text-4xl mb-3">💬</div>
+            <div className="bg-white rounded-2xl border border-gray-100 py-16 text-center shadow-sm">
+              <div className="text-5xl mb-3">💬</div>
               <div className="text-sm font-bold text-gray-600 mb-1">Henüz yanıt yok</div>
               <div className="text-xs text-gray-400">İlk tavsiyeyi veren sen ol!</div>
             </div>
@@ -295,64 +298,73 @@ export default function TavsiyeDetay() {
                 const nested = repliesOf(a.id);
                 const isOpen = replyOpen[a.id] || false;
                 const isBest = bestAnswer?.id === a.id && (bestAnswer?.votes || 0) > 0;
-                const genderBorder = a.gender === "kadin" ? "border-l-pink-400" : a.gender === "erkek" ? "border-l-blue-400" : "border-l-gray-200";
+
+                // Kart rengi cinsiyete göre
+                const cardBg = a.gender === "kadin"
+                  ? "bg-gradient-to-br from-pink-50 to-rose-50 border-pink-200"
+                  : a.gender === "erkek"
+                  ? "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200"
+                  : "bg-white border-gray-100";
+
+                const dividerColor = a.gender === "kadin" ? "border-pink-100" : a.gender === "erkek" ? "border-blue-100" : "border-gray-100";
 
                 return (
                   <div key={a.id}>
-                    <div className={`bg-white rounded-2xl border border-gray-100 border-l-4 ${genderBorder} shadow-sm overflow-hidden transition-all hover:shadow-md`}>
+                    <div className={`rounded-2xl border ${cardBg} shadow-sm overflow-hidden`}>
 
-                      {/* En iyi yanıt rozeti */}
                       {isBest && (
-                        <div className="bg-gradient-to-r from-amber-400 to-yellow-400 px-4 py-1.5 flex items-center gap-2">
+                        <div className="bg-gradient-to-r from-amber-400 to-yellow-300 px-4 py-1.5 flex items-center gap-2">
                           <span className="text-xs font-black text-amber-900">⭐ En Çok Beğenilen Yanıt</span>
                         </div>
                       )}
 
                       <div className="p-4">
-                        {/* Kullanıcı satırı */}
                         <div className="flex items-start gap-3">
-                          <div className="flex flex-col items-center gap-1">
+                          {/* Avatar + sıra no */}
+                          <div className="flex flex-col items-center gap-1 flex-shrink-0">
                             <Avatar gender={a.gender} name={a.user_name} size="md" />
-                            <span className="text-[10px] font-bold text-gray-400">#{idx + 1}</span>
+                            <span className="text-[9px] font-bold text-gray-300">#{idx + 1}</span>
                           </div>
+
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap mb-2">
-                              <span className="text-sm font-black text-gray-800">{a.user_name}</span>
+                            {/* İsim + cinsiyet + zaman */}
+                            <div className="flex items-center gap-2 flex-wrap mb-2.5">
+                              <span className="text-sm font-black text-gray-900">{a.user_name}</span>
                               <GenderPill gender={a.gender} />
                               <span className="text-[11px] text-gray-400 ml-auto">{timeAgo(a.created_at)}</span>
                             </div>
                             {/* Yanıt metni */}
-                            <p className="text-sm text-gray-800 leading-relaxed">{a.body}</p>
+                            <p className="text-[15px] text-gray-800 leading-relaxed">{a.body}</p>
                           </div>
                         </div>
 
                         {/* Aksiyonlar */}
-                        <div className="flex items-center gap-3 mt-3 pt-3 border-t border-gray-50">
-                          <div className="flex items-center gap-1.5">
-                            <button onClick={() => handleVote(a, 1)} disabled={!user}
-                              className={`group flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border font-semibold transition-all ${
-                                myVote === 1
-                                  ? "bg-emerald-500 border-emerald-500 text-white shadow-sm"
-                                  : "border-gray-200 text-gray-500 hover:border-emerald-400 hover:text-emerald-600 hover:bg-emerald-50"
-                              }`}>
-                              👍 <span>{a.votes > 0 ? a.votes : 0}</span>
-                            </button>
-                            <button onClick={() => handleVote(a, -1)} disabled={!user}
-                              className={`group flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full border font-semibold transition-all ${
-                                myVote === -1
-                                  ? "bg-red-500 border-red-500 text-white shadow-sm"
-                                  : "border-gray-200 text-gray-500 hover:border-red-300 hover:text-red-500 hover:bg-red-50"
-                              }`}>
-                              👎 <span>{a.votes < 0 ? Math.abs(a.votes) : 0}</span>
-                            </button>
-                          </div>
+                        <div className={`flex items-center gap-2 mt-3 pt-3 border-t ${dividerColor}`}>
+                          <button onClick={() => handleVote(a, 1)} disabled={!user}
+                            className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-bold transition-all ${
+                              myVote === 1
+                                ? "bg-emerald-500 text-white shadow"
+                                : "bg-white/60 border border-gray-200 text-gray-500 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-600"
+                            }`}>
+                            👍 {a.votes > 0 ? a.votes : 0}
+                          </button>
+                          <button onClick={() => handleVote(a, -1)} disabled={!user}
+                            className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-bold transition-all ${
+                              myVote === -1
+                                ? "bg-red-500 text-white shadow"
+                                : "bg-white/60 border border-gray-200 text-gray-500 hover:bg-red-50 hover:border-red-300 hover:text-red-500"
+                            }`}>
+                            👎 {a.votes < 0 ? Math.abs(a.votes) : 0}
+                          </button>
 
                           {user && (
                             <button
                               onClick={() => setReplyOpen(prev => ({ ...prev, [a.id]: !isOpen }))}
-                              className="ml-auto text-xs text-gray-400 hover:text-[#E8460A] font-semibold transition-colors hover:underline">
-                              {isOpen ? "Vazgeç" : `💬 Yanıtla`}
-                              {nested.length > 0 && !isOpen && <span className="ml-1 text-[10px] bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded-full">{nested.length}</span>}
+                              className="ml-auto text-xs text-gray-400 hover:text-[#E8460A] font-semibold transition-colors">
+                              {isOpen ? "Vazgeç" : "💬 Yanıtla"}
+                              {nested.length > 0 && !isOpen && (
+                                <span className="ml-1 text-[10px] bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded-full">{nested.length}</span>
+                              )}
                             </button>
                           )}
                           {!user && nested.length > 0 && (
@@ -363,7 +375,7 @@ export default function TavsiyeDetay() {
 
                       {/* İnline yanıt kutusu */}
                       {isOpen && user && (
-                        <div className="border-t border-gray-100 bg-gray-50 px-4 py-3">
+                        <div className={`border-t ${dividerColor} bg-white/50 px-4 py-3`}>
                           <div className="flex items-start gap-2">
                             <Avatar gender={userGender} name={userName} size="xs" />
                             <div className="flex-1">
@@ -397,25 +409,29 @@ export default function TavsiyeDetay() {
                       <div className="ml-10 mt-1.5 space-y-1.5">
                         {nested.map(r => {
                           const rv = userVotes[r.id] || 0;
-                          const rBorder = r.gender === "kadin" ? "border-l-pink-300" : r.gender === "erkek" ? "border-l-blue-300" : "border-l-gray-200";
+                          const rBg = r.gender === "kadin"
+                            ? "bg-pink-50 border-pink-200"
+                            : r.gender === "erkek"
+                            ? "bg-blue-50 border-blue-200"
+                            : "bg-white border-gray-100";
                           return (
-                            <div key={r.id} className={`bg-white/70 rounded-xl border border-gray-100 border-l-4 ${rBorder} p-3 relative`}>
+                            <div key={r.id} className={`rounded-xl border ${rBg} p-3`}>
                               <div className="flex items-start gap-2.5">
                                 <Avatar gender={r.gender} name={r.user_name} size="xs" />
                                 <div className="flex-1">
-                                  <div className="flex items-center gap-2 flex-wrap mb-1">
-                                    <span className="text-xs font-bold text-gray-800">{r.user_name}</span>
+                                  <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                                    <span className="text-xs font-black text-gray-800">{r.user_name}</span>
                                     <GenderPill gender={r.gender} />
                                     <span className="text-[10px] text-gray-400 ml-auto">{timeAgo(r.created_at)}</span>
                                   </div>
-                                  <p className="text-sm text-gray-700 leading-relaxed">{r.body}</p>
-                                  <div className="flex items-center gap-1.5 mt-2">
+                                  <p className="text-sm text-gray-700 leading-relaxed mb-2">{r.body}</p>
+                                  <div className="flex items-center gap-1.5">
                                     <button onClick={() => handleVote(r, 1)} disabled={!user}
-                                      className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border transition-all ${rv === 1 ? "bg-emerald-500 border-emerald-500 text-white" : "border-gray-200 text-gray-400 hover:border-emerald-300 hover:text-emerald-600"}`}>
+                                      className={`flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-bold border transition-all ${rv === 1 ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white border-gray-200 text-gray-400 hover:border-emerald-300 hover:text-emerald-600"}`}>
                                       👍 {r.votes > 0 ? r.votes : 0}
                                     </button>
                                     <button onClick={() => handleVote(r, -1)} disabled={!user}
-                                      className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full border transition-all ${rv === -1 ? "bg-red-500 border-red-500 text-white" : "border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500"}`}>
+                                      className={`flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-bold border transition-all ${rv === -1 ? "bg-red-500 border-red-500 text-white" : "bg-white border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500"}`}>
                                       👎 {r.votes < 0 ? Math.abs(r.votes) : 0}
                                     </button>
                                   </div>
@@ -432,11 +448,9 @@ export default function TavsiyeDetay() {
             </div>
           )}
 
-          {/* Alt CTA */}
-          {!user && (
+          {!user && topLevel.length > 0 && (
             <Link href="/giris">
               <div className="mt-4 bg-white rounded-2xl border-2 border-dashed border-gray-200 p-5 text-center hover:border-[#E8460A]/40 hover:bg-orange-50 transition-all cursor-pointer">
-                <div className="text-2xl mb-2">💬</div>
                 <div className="text-sm font-bold text-gray-600 mb-1">Sen de tavsiyeni paylaş</div>
                 <div className="text-xs text-[#E8460A] font-semibold">Giriş yap →</div>
               </div>
