@@ -246,7 +246,7 @@ export default function TavsiyelerSayfasi() {
                 const leftBorder = CAT_LEFT_BORDER[t.category] || "border-l-gray-200";
                 const myVote = userVotes[t.id] || 0;
                 const netVotes = t.votes || 0;
-                const topAnswers = (answers[t.id] || []).slice(0, 2);
+                const topAnswers = [...(answers[t.id] || [])].sort((a, b) => (b.votes || 0) - (a.votes || 0)).slice(0, 2);
 
                 return (
                   <div key={t.id} className={`bg-white rounded-2xl border border-gray-100 border-l-4 ${leftBorder} shadow-sm overflow-hidden`}>

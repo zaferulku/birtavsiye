@@ -251,7 +251,7 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
                 const leftBorder = CAT_LEFT_BORDER[t.category] || "border-l-gray-200";
                 const myVote = userVotes[t.id] || 0;
                 const netVotes = t.votes || 0;
-                const topAnswers = (answers[t.id] || []).slice(0, 2);
+                const topAnswers = [...(answers[t.id] || [])].sort((a, b) => (b.votes || 0) - (a.votes || 0)).slice(0, 2);
 
                 return (
                   <Link href={"/tavsiye/" + t.id} key={t.id}>
