@@ -233,7 +233,8 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
       )}
 
       {/* ── İçerik: Feed + Popüler Sidebar ── */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden justify-center">
+        <div className="w-full max-w-[1100px] flex overflow-hidden">
 
         {/* Ana Feed */}
         <div className="flex-1 overflow-y-auto min-w-0">
@@ -307,9 +308,9 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
                           <Link
                             href={"/tavsiye/" + t.id}
                             onClick={e => e.stopPropagation()}
-                            className="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-lg bg-[#E8460A]/5 text-[#E8460A] font-semibold hover:bg-[#E8460A]/10 transition-all border border-[#E8460A]/10">
+                            className="flex items-center gap-1 text-[11px] text-[#E8460A] font-semibold hover:underline transition-all">
                             💬 Yanıtla
-                            {t.answer_count > 0 && <span className="text-[10px] text-[#E8460A]/60">{t.answer_count}</span>}
+                            {t.answer_count > 0 && <span className="text-[10px] text-[#E8460A]/60">({t.answer_count})</span>}
                           </Link>
 
                           <div className="ml-auto flex items-center gap-1">
@@ -387,6 +388,7 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
           </div>
         </div>
 
+        </div>
       </div>
     </div>
   );

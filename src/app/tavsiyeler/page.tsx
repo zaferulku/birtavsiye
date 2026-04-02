@@ -156,7 +156,7 @@ export default function TavsiyelerSayfasi() {
 
       {/* Sub header */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-30">
-        <div className="max-w-[1400px] mx-auto px-6 flex items-center justify-between h-12">
+        <div className="max-w-[1100px] mx-auto px-6 flex items-center justify-between h-12">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="font-bold text-sm text-gray-900">Sıcak Tavsiyeler</span>
@@ -171,13 +171,10 @@ export default function TavsiyelerSayfasi() {
         </div>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-6 py-5 flex gap-6">
-
-        {/* Sol boşluk (denge için) */}
-        <div className="hidden xl:block w-52 flex-shrink-0" />
+      <div className="max-w-[1100px] mx-auto px-6 py-5 flex gap-6">
 
         {/* ── Orta: Ana Feed ── */}
-        <div className="flex-1 min-w-0 max-w-2xl mx-auto">
+        <div className="flex-1 min-w-0">
 
           {/* Kategori filtreler */}
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden mb-4 shadow-sm">
@@ -303,12 +300,9 @@ export default function TavsiyelerSayfasi() {
                       {/* Aksiyonlar */}
                       <div className="flex items-center gap-2">
                         <Link href={"/tavsiye/" + t.id}
-                          className="flex items-center gap-1.5 text-xs px-3 py-1.5 bg-[#E8460A] text-white font-semibold rounded-lg hover:bg-[#C93A08] transition-all">
-                          <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.087.81.22 1.668.337 2.555.337z" />
-                          </svg>
-                          Yanıtla
-                          {t.answer_count > 0 && <span className="bg-white/20 px-1 rounded text-[10px]">{t.answer_count}</span>}
+                          className="flex items-center gap-1 text-xs text-[#E8460A] font-semibold hover:underline transition-all">
+                          💬 Yanıtla
+                          {t.answer_count > 0 && <span className="text-[10px] text-[#E8460A]/60">({t.answer_count})</span>}
                         </Link>
 
                         <div className="ml-auto flex items-center gap-1">
