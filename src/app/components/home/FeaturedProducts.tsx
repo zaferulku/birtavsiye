@@ -27,20 +27,20 @@ function ProductCard({ p }: { p: Product }) {
 
   return (
     <Link href={"/urun/" + p.slug}>
-      <div className="flex-shrink-0 w-36 bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md hover:border-gray-200 transition-all group cursor-pointer">
+      <div className="flex-shrink-0 w-44 bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md hover:border-gray-200 transition-all group cursor-pointer">
         <div className="w-full aspect-square bg-gray-50 overflow-hidden">
           {p.image_url
-            ? <img src={p.image_url} alt={p.title} className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300" />
-            : <div className="w-full h-full flex items-center justify-center text-3xl">📦</div>
+            ? <img src={p.image_url} alt={p.title} className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300" />
+            : <div className="w-full h-full flex items-center justify-center text-4xl">📦</div>
           }
         </div>
-        <div className="p-2.5">
-          <div className="text-[10px] font-bold text-[#E8460A] uppercase tracking-wide mb-0.5 truncate">{p.brand}</div>
-          <div className="text-xs font-medium text-gray-800 line-clamp-2 leading-snug min-h-[2.5rem] mb-1.5">{p.title}</div>
+        <div className="p-3">
+          <div className="text-[10px] font-bold text-[#E8460A] uppercase tracking-wide mb-1 truncate">{p.brand}</div>
+          <div className="text-xs font-medium text-gray-800 line-clamp-2 leading-snug min-h-[2.5rem] mb-2">{p.title}</div>
           {lowest ? (
             <div className="text-sm font-bold text-gray-900">{lowest.price.toLocaleString("tr-TR")} <span className="text-xs font-normal text-gray-400">₺</span></div>
           ) : (
-            <div className="text-[10px] text-[#E8460A] font-semibold">Fiyatları Gör →</div>
+            <div className="text-xs text-[#E8460A] font-semibold">Fiyatları Gör →</div>
           )}
         </div>
       </div>
@@ -77,17 +77,16 @@ export default function FeaturedProducts() {
     supabase
       .from("products")
       .select("id,title,slug,brand,image_url,prices(price,store:stores(name))")
-      .limit(60)
+      .limit(32)
       .then(({ data }) => {
         if (!data) { setLoading(false); return; }
         const all = data as unknown as Product[];
         const s = shuffle(all);
-        const chunk = Math.ceil(s.length / 4);
         setSections({
-          son:     s.slice(0, chunk),
-          avantaj: s.slice(chunk, chunk * 2),
-          ozel:    s.slice(chunk * 2, chunk * 3),
-          "popüler": s.slice(chunk * 3),
+          son:     s.slice(0, 8),
+          avantaj: s.slice(8, 16),
+          ozel:    s.slice(16, 24),
+          "popüler": s.slice(24, 32),
         });
         setLoading(false);
       });
