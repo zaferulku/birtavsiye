@@ -158,10 +158,12 @@ export default function TavsiyelerSayfasi() {
     if (!words.length) return 1;
     const ntitle = normalize(t.title);
     const nbody = normalize(t.body || "");
+    const nanswers = (answers[t.id] || []).map(a => normalize(a.body)).join(" ");
     let score = 0;
     for (const w of words) {
       if (ntitle.includes(w)) score += ntitle.split(/\s+/).some(tw => tw === w) ? 4 : 2;
       if (nbody.includes(w)) score += 1;
+      if (nanswers.includes(w)) score += 1;
     }
     return score;
   };
