@@ -68,6 +68,9 @@ export default function TavsiyelerSayfasi() {
   const [user, setUser] = useState<any>(null);
   const [newCount, setNewCount] = useState(0);
   const [userVotes, setUserVotes] = useState<Record<string, number>>({});
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
   const isFirst = useRef(true);
 
   useEffect(() => {
@@ -144,10 +147,40 @@ export default function TavsiyelerSayfasi() {
     setUserVotes(prev => ({ ...prev, [t.id]: nv }));
   };
 
-  const normalize = (s: string) => s.replace(/ğ/g, "g").replace(/ş/g, "s").replace(/İ/g, "I").replace(/ı/g, "i");
-  const filtered = topics.filter(t =>
+  const normalize = (s: string) => s
+    .toLowerCase()
+    .replace(/ğ/g, "g").replace(/ş/g, "s").replace(/ı/g, "i")
+    .replace(/İ/g, "i").replace(/ö/g, "o").replace(/ü/g, "u").replace(/ç/g, "c");
+
+  // Arama skoru: tam kelime eşleşmesi başlıkta > kısmi başlık > gövde > kategori
+  const scoreSearch = (t: Topic, q: string): number => {
+    const nq = normalize(q.trim());
+    if (!nq) return 1;
+    const words = nq.split(/\s+/).filter(Boolean);
+    const ntitle = normalize(t.title);
+    const nbody = normalize(t.body || "");
+    const ncat = normalize(t.category);
+    let score = 0;
+    for (const w of words) {
+      if (ntitle.includes(w)) score += ntitle.startsWith(w) ? 4 : ntitle.split(/\s+/).some(tw => tw === w) ? 3 : 2;
+      if (nbody.includes(w)) score += 1;
+      if (ncat.includes(w)) score += 1;
+    }
+    return score;
+  };
+
+  const catFiltered = topics.filter(t =>
     activeCat === "Hepsi" || t.category === activeCat || normalize(t.category) === normalize(activeCat)
   );
+
+  const filtered = searchQuery.trim()
+    ? catFiltered
+        .map(t => ({ t, score: scoreSearch(t, searchQuery) }))
+        .filter(x => x.score > 0)
+        .sort((a, b) => b.score - a.score)
+        .map(x => x.t)
+    : catFiltered;
+
   const popular = [...topics].sort((a, b) => (b.votes || 0) - (a.votes || 0)).slice(0, 12);
 
   return (
@@ -176,23 +209,72 @@ export default function TavsiyelerSayfasi() {
         {/* ── Orta: Ana Feed ── */}
         <div className="flex-1 min-w-0">
 
-          {/* Kategori filtreler */}
+          {/* Kategori filtreler + Arama */}
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden mb-4 shadow-sm">
-            <div className="flex gap-0 overflow-x-auto px-1" style={{ scrollbarWidth: "none" }}>
-              {CATS.map(c => {
-                const style = CAT_STYLE[c];
-                const isActive = activeCat === c;
-                return (
-                  <button key={c} onClick={() => setActiveCat(c)}
-                    className={`flex-shrink-0 flex items-center gap-1 px-3 py-3 text-[11px] font-semibold whitespace-nowrap border-b-2 transition-all ${
-                      isActive ? "border-[#E8460A] text-[#E8460A]" : "border-transparent text-gray-400 hover:text-gray-600"
-                    }`}>
-                    {style && !isActive && <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />}
-                    {c}
-                  </button>
-                );
-              })}
+            <div className="flex items-center gap-0" style={{ scrollbarWidth: "none" }}>
+              <div className="flex gap-0 overflow-x-auto flex-1 px-1" style={{ scrollbarWidth: "none" }}>
+                {CATS.map(c => {
+                  const style = CAT_STYLE[c];
+                  const isActive = activeCat === c;
+                  return (
+                    <button key={c} onClick={() => setActiveCat(c)}
+                      className={`flex-shrink-0 flex items-center gap-1 px-3 py-3 text-[11px] font-semibold whitespace-nowrap border-b-2 transition-all ${
+                        isActive ? "border-[#E8460A] text-[#E8460A]" : "border-transparent text-gray-400 hover:text-gray-600"
+                      }`}>
+                      {style && !isActive && <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />}
+                      {c}
+                    </button>
+                  );
+                })}
+              </div>
+              {/* Arama butonu */}
+              <button
+                onClick={() => {
+                  setShowSearch(v => !v);
+                  if (!showSearch) setTimeout(() => searchRef.current?.focus(), 50);
+                  else setSearchQuery("");
+                }}
+                className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-2.5 text-[11px] font-semibold border-b-2 transition-all mr-1 ${
+                  showSearch || searchQuery ? "border-[#E8460A] text-[#E8460A]" : "border-transparent text-gray-400 hover:text-gray-600"
+                }`}>
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                </svg>
+                Ara
+              </button>
             </div>
+
+            {/* Arama input */}
+            {showSearch && (
+              <div className="px-3 pb-3 pt-1 border-t border-gray-100">
+                <div className="relative">
+                  <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                  </svg>
+                  <input
+                    ref={searchRef}
+                    type="text"
+                    value={searchQuery}
+                    onChange={e => setSearchQuery(e.target.value)}
+                    placeholder="Konularda ara... (örn: kulaklık, güneş kremi)"
+                    className="w-full text-sm border border-gray-200 rounded-xl pl-8 pr-8 py-2.5 outline-none focus:border-[#E8460A] focus:ring-2 focus:ring-[#E8460A]/10 transition-all"
+                  />
+                  {searchQuery && (
+                    <button onClick={() => setSearchQuery("")}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+                {searchQuery && (
+                  <div className="text-[11px] text-gray-400 mt-1.5 px-1">
+                    {filtered.length > 0 ? <><span className="text-[#E8460A] font-semibold">{filtered.length}</span> sonuç bulundu</> : "Sonuç bulunamadı"}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Soru formu */}
