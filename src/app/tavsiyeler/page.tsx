@@ -288,9 +288,9 @@ export default function TavsiyelerSayfasi() {
             <div className="flex gap-0 overflow-x-auto px-1" style={{ scrollbarWidth: "none" }}>
               {CATS.map(c => {
                 const style = CAT_STYLE[c];
-                const isActive = activeCat === c;
+                const isActive = activeCat === c && genderFilter === "hepsi";
                 return (
-                  <button key={c} onClick={() => setActiveCat(c)}
+                  <button key={c} onClick={() => { setActiveCat(c); setGenderFilter("hepsi"); }}
                     className={`flex-shrink-0 flex items-center gap-1 px-3 py-3 text-[11px] font-semibold whitespace-nowrap border-b-2 transition-all ${
                       isActive ? "border-[#E8460A] text-[#E8460A]" : "border-transparent text-gray-400 hover:text-gray-600"
                     }`}>
@@ -299,29 +299,23 @@ export default function TavsiyelerSayfasi() {
                   </button>
                 );
               })}
-            </div>
-
-            {/* Gender filter sekmeleri — sadece giriş yapmış kullanıcılara */}
-            {user && (
-              <div className="flex items-center gap-1.5 px-3 py-2 border-t border-gray-100">
-                <button onClick={() => setGenderFilter("hepsi")}
-                  className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${genderFilter === "hepsi" ? "bg-[#E8460A] text-white border-[#E8460A]" : "border-gray-200 text-gray-500 hover:border-gray-400"}`}>
-                  Hepsi
+              {user && userGender === "kadin" && (
+                <button onClick={() => setGenderFilter(genderFilter === "kadin" ? "hepsi" : "kadin")}
+                  className={`flex-shrink-0 flex items-center gap-1 px-3 py-3 text-[11px] font-semibold whitespace-nowrap border-b-2 transition-all ${
+                    genderFilter === "kadin" ? "border-pink-500 text-pink-500" : "border-transparent text-gray-400 hover:text-gray-600"
+                  }`}>
+                  ♀ Kızakıza
                 </button>
-                {userGender === "kadin" && (
-                  <button onClick={() => setGenderFilter("kadin")}
-                    className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${genderFilter === "kadin" ? "bg-pink-500 text-white border-pink-500" : "border-pink-200 text-pink-500 hover:border-pink-400"}`}>
-                    ♀ Kızakıza
-                  </button>
-                )}
-                {userGender === "erkek" && (
-                  <button onClick={() => setGenderFilter("erkek")}
-                    className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${genderFilter === "erkek" ? "bg-blue-500 text-white border-blue-500" : "border-blue-200 text-blue-500 hover:border-blue-400"}`}>
-                    ♂ Erkek Özel
-                  </button>
-                )}
-              </div>
-            )}
+              )}
+              {user && userGender === "erkek" && (
+                <button onClick={() => setGenderFilter(genderFilter === "erkek" ? "hepsi" : "erkek")}
+                  className={`flex-shrink-0 flex items-center gap-1 px-3 py-3 text-[11px] font-semibold whitespace-nowrap border-b-2 transition-all ${
+                    genderFilter === "erkek" ? "border-blue-500 text-blue-500" : "border-transparent text-gray-400 hover:text-gray-600"
+                  }`}>
+                  ♂ Erkek Özel
+                </button>
+              )}
+            </div>
 
             {/* Butonlar — kategori barının altında */}
             <div className="flex items-center gap-2 px-3 py-2.5 border-t border-gray-100">
