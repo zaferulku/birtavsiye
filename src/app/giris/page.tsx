@@ -10,7 +10,7 @@ export default function GirisSayfasi() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [gender, setGender] = useState<"kadin" | "erkek" | "">("");
+  const [gender, setGender] = useState<"kadin" | "erkek" | "gizli" | "">("");
   const [ageRange, setAgeRange] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -119,19 +119,25 @@ export default function GirisSayfasi() {
             <>
               <div>
                 <p className="text-xs font-semibold text-gray-600 mb-2">Cinsiyetin</p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-3 py-2.5 mb-2.5 flex items-start gap-2">
+                  <span className="text-sm flex-shrink-0 mt-0.5">⚠️</span>
+                  <p className="text-xs text-yellow-800">Cinsiyet seçimi yalnızca bir kez yapılabilir ve daha sonra değiştirilemez.</p>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
                   {[
-                    { value: "kadin", label: "Kadın", emoji: "👩" },
-                    { value: "erkek", label: "Erkek", emoji: "👨" },
+                    { value: "kadin", label: "Kadın", emoji: "♀" },
+                    { value: "erkek", label: "Erkek", emoji: "♂" },
+                    { value: "gizli", label: "Belirtmek istemiyorum", emoji: "🔒" },
                   ].map((g) => (
                     <button key={g.value} type="button"
-                      onClick={() => setGender(g.value as "kadin" | "erkek")}
-                      className={`flex items-center justify-center gap-2 py-3 rounded-xl border-2 text-sm font-medium transition-all ${
+                      onClick={() => setGender(g.value as "kadin" | "erkek" | "gizli")}
+                      className={`flex flex-col items-center justify-center gap-1 py-2.5 px-1 rounded-xl border-2 text-xs font-medium transition-all ${
                         gender === g.value
                           ? "border-[#E8460A] bg-orange-50 text-[#E8460A]"
                           : "border-[#E8E4DF] text-gray-600 hover:border-[#E8460A]"
                       }`}>
-                      <span className="text-xl">{g.emoji}</span> {g.label}
+                      <span className="text-base">{g.emoji}</span>
+                      <span className="leading-tight text-center">{g.label}</span>
                     </button>
                   ))}
                 </div>

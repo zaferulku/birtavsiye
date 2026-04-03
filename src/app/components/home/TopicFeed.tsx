@@ -8,6 +8,7 @@ type Topic = {
   user_name: string; category: string;
   votes: number; answer_count: number; created_at: string;
   product_slug?: string | null; product_title?: string | null; product_brand?: string | null;
+  gender_filter?: string | null;
 };
 
 type Answer = {
@@ -79,6 +80,9 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
   const [selectedProduct, setSelectedProduct] = useState<{id:string;title:string;slug:string;brand:string} | null>(null);
   const productSearchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirst = useRef(true);
+  const [userGender, setUserGender] = useState<string>("");
+  const [genderFilter, setGenderFilter] = useState<"hepsi" | "kadin" | "erkek">("hepsi");
+  const [genderOnly, setGenderOnly] = useState(false);
 
   useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
@@ -87,6 +91,8 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
         const { data: v } = await supabase.from("topic_votes")
           .select("topic_id,vote").eq("user_id", data.user.id);
         if (v) setUserVotes(Object.fromEntries(v.map(x => [x.topic_id, x.vote])));
+        const { data: profile } = await supabase.from("profiles").select("gender").eq("id", data.user.id).maybeSingle();
+        setUserGender(profile?.gender || "");
       }
     });
     fetchTopics();
@@ -177,9 +183,11 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
     if (!titleVal.trim() || !user) return;
     setSubmitting(true);
     const finalCat = selectedProduct ? catVal : guessCatFromTitle(titleVal);
+    const gf = genderOnly && (userGender === "kadin" || userGender === "erkek") ? userGender : null;
     await supabase.from("topics").insert({
       user_id: user.id, user_name: getDisplay(user),
       title: titleVal, body: bodyVal, category: finalCat, votes: 0, answer_count: 0,
+      gender_filter: gf,
       ...(selectedProduct ? {
         product_id: selectedProduct.id,
         product_slug: selectedProduct.slug,
@@ -189,6 +197,7 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
     });
     setTitleVal(""); setBodyVal(""); setShowForm(false); setSubmitting(false);
     setSelectedProduct(null); setProductSearch(""); setProductResults([]);
+    setGenderOnly(false);
   };
 
   const handleVote = async (e: React.MouseEvent, t: Topic, val: 1 | -1) => {
@@ -227,9 +236,14 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
   const catFiltered = topics.filter(t =>
     activeCat === "Hepsi" || t.category === activeCat || normalize(t.category) === normalize(activeCat)
   );
+  const genderFiltered = catFiltered.filter(t => {
+    if (genderFilter === "kadin") return t.gender_filter === "kadin";
+    if (genderFilter === "erkek") return t.gender_filter === "erkek";
+    return !t.gender_filter; // "hepsi": sadece gender_filter null/undefined olanlar
+  });
   const filtered = searchQuery.trim()
-    ? catFiltered.map(t => ({ t, score: scoreSearch(t, searchQuery) })).filter(x => x.score > 0).sort((a, b) => b.score - a.score).map(x => x.t)
-    : catFiltered;
+    ? genderFiltered.map(t => ({ t, score: scoreSearch(t, searchQuery) })).filter(x => x.score > 0).sort((a, b) => b.score - a.score).map(x => x.t)
+    : genderFiltered;
 
   // Popüler sorular: oylarına göre sıralı top 8
   const popular = [...topics].sort((a, b) => (b.votes || 0) - (a.votes || 0)).slice(0, 8);
@@ -261,6 +275,28 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
             );
           })}
         </div>
+
+        {/* Gender filter sekmeleri — sadece giriş yapmış kullanıcılara */}
+        {user && (
+          <div className="flex items-center gap-1.5 px-1 py-1.5 border-t border-gray-100">
+            <button onClick={() => setGenderFilter("hepsi")}
+              className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${genderFilter === "hepsi" ? "bg-[#E8460A] text-white border-[#E8460A]" : "border-gray-200 text-gray-500 hover:border-gray-400"}`}>
+              Hepsi
+            </button>
+            {userGender === "kadin" && (
+              <button onClick={() => setGenderFilter("kadin")}
+                className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${genderFilter === "kadin" ? "bg-pink-500 text-white border-pink-500" : "border-pink-200 text-pink-500 hover:border-pink-400"}`}>
+                ♀ Kızakıza
+              </button>
+            )}
+            {userGender === "erkek" && (
+              <button onClick={() => setGenderFilter("erkek")}
+                className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${genderFilter === "erkek" ? "bg-blue-500 text-white border-blue-500" : "border-blue-200 text-blue-500 hover:border-blue-400"}`}>
+                ♂ Erkek Özel
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Butonlar — kategori barının altında */}
         <div className="flex items-center gap-2 px-1 py-2 border-t border-gray-100">
@@ -373,6 +409,16 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
               )}
             </div>
 
+            {(userGender === "kadin" || userGender === "erkek") && (
+              <label className="flex items-center gap-2 mb-2.5 cursor-pointer select-none">
+                <input type="checkbox" checked={genderOnly} onChange={e => setGenderOnly(e.target.checked)}
+                  className="w-3.5 h-3.5 accent-[#E8460A]" />
+                <span className="text-[11px] text-gray-600">
+                  Bu soruyu sadece {userGender === "kadin" ? "♀ kadınlarla" : "♂ erkeklerle"} paylaş
+                </span>
+              </label>
+            )}
+
             <div className="flex gap-2">
               {selectedProduct ? (
                 <div className="flex-1 flex items-center gap-1.5 text-xs border border-orange-200 rounded-xl px-3 py-2 bg-orange-50 text-orange-700 font-semibold">
@@ -438,6 +484,12 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
                             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cs.bg} ${cs.text} ${cs.border}`}>
                               {t.category}
                             </span>
+                          )}
+                          {t.gender_filter === "kadin" && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-pink-100 text-pink-600">♀</span>
+                          )}
+                          {t.gender_filter === "erkek" && (
+                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-600">♂</span>
                           )}
                           <span className="text-[10px] text-gray-300 ml-auto flex-shrink-0">{timeAgo(t.created_at)}</span>
                         </div>
