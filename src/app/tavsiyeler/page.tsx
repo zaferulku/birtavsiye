@@ -237,7 +237,7 @@ export default function TavsiyelerSayfasi() {
   const genderFiltered = catFiltered.filter(t => {
     if (genderFilter === "kadin") return t.gender_filter === "kadin";
     if (genderFilter === "erkek") return t.gender_filter === "erkek";
-    if (genderFilter === "tumu") return true;
+    if (genderFilter === "tumu") return t.gender_filter === "kadin" || t.gender_filter === "erkek";
     return !t.gender_filter;
   });
   const filtered = searchQuery.trim()
@@ -498,8 +498,11 @@ export default function TavsiyelerSayfasi() {
                     <div className="p-4">
                       {/* Meta */}
                       <div className="flex items-center gap-2 mb-2.5">
-                        <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${avatarGrad(t.user_name)} flex items-center justify-center text-white text-xs font-bold flex-shrink-0`}>
-                          {(t.user_name || "?")[0].toUpperCase()}
+                        <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${t.gender_filter === "kadin" ? "from-pink-400 to-rose-500" : t.gender_filter === "erkek" ? "from-blue-400 to-indigo-500" : avatarGrad(t.user_name)} flex items-center justify-center font-bold flex-shrink-0`}>
+                          {(t.gender_filter === "kadin" || t.gender_filter === "erkek")
+                            ? <GenderSymbol gender={t.gender_filter} size={15} white />
+                            : <span className="text-white text-xs">{(t.user_name || "?")[0].toUpperCase()}</span>
+                          }
                         </div>
                         <div>
                           <span className="text-xs font-semibold text-gray-700">{t.user_name}</span>
@@ -537,10 +540,13 @@ export default function TavsiyelerSayfasi() {
                         <div className="bg-gray-50 rounded-xl p-3 mb-3 space-y-2">
                           {topAnswers.map(a => (
                             <div key={a.id} className="flex items-start gap-2">
-                              <div className={`w-5 h-5 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center text-[9px] font-bold text-white ${
-                                a.gender === "kadin" ? "bg-gradient-to-br from-pink-400 to-rose-400" : "bg-gradient-to-br from-blue-400 to-indigo-400"
+                              <div className={`w-5 h-5 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center font-bold ${
+                                a.gender === "kadin" ? "bg-gradient-to-br from-pink-400 to-rose-400" : a.gender === "erkek" ? "bg-gradient-to-br from-blue-400 to-indigo-400" : "bg-gradient-to-br " + avatarGrad(a.user_name)
                               }`}>
-                                {(a.user_name || "?")[0].toUpperCase()}
+                                {(a.gender === "kadin" || a.gender === "erkek")
+                                  ? <GenderSymbol gender={a.gender} size={11} white />
+                                  : <span className="text-white text-[9px]">{(a.user_name || "?")[0].toUpperCase()}</span>
+                                }
                               </div>
                               <div className="flex-1 min-w-0">
                                 <span className="text-[11px] font-semibold text-gray-700">{a.user_name}: </span>

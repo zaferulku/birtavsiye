@@ -51,14 +51,14 @@ function Avatar({ gender, name, size = "md" }: { gender?: string; name: string; 
   const px = { xs: 14, sm: 18, md: 22, lg: 28 }[size];
   const s = { xs: "w-6 h-6", sm: "w-8 h-8", md: "w-10 h-10", lg: "w-12 h-12" }[size];
   const bg = gender === "kadin"
-    ? "from-pink-200 to-rose-300"
+    ? "from-pink-400 to-rose-500"
     : gender === "erkek"
-    ? "from-blue-200 to-indigo-300"
-    : "from-orange-300 to-amber-300";
+    ? "from-blue-400 to-indigo-500"
+    : "from-[#E8460A] to-orange-400";
   return (
     <div className={`${s} rounded-full bg-gradient-to-br ${bg} flex items-center justify-center font-bold flex-shrink-0 shadow`}>
       {gender === "kadin" || gender === "erkek"
-        ? <GenderSymbol gender={gender} size={px} />
+        ? <GenderSymbol gender={gender} size={px} white />
         : <span className="text-white">{(name || "?")[0].toUpperCase()}</span>
       }
     </div>

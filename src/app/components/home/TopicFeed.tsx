@@ -54,16 +54,16 @@ const GRADIENTS = [
 const avatarGrad = (name: string) => GRADIENTS[(name || "A").charCodeAt(0) % GRADIENTS.length];
 
 function TopicAvatar({ name, gender }: { name: string; gender?: string | null }) {
-  const bg = gender === "kadin"
-    ? "from-pink-200 to-rose-300"
-    : gender === "erkek"
-    ? "from-blue-200 to-indigo-300"
-    : `bg-gradient-to-br ${avatarGrad(name)}`;
   const isGender = gender === "kadin" || gender === "erkek";
+  const bg = gender === "kadin"
+    ? "from-pink-400 to-rose-500"
+    : gender === "erkek"
+    ? "from-blue-400 to-indigo-500"
+    : avatarGrad(name);
   return (
-    <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${isGender ? bg : avatarGrad(name)} flex items-center justify-center font-bold flex-shrink-0`}>
+    <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${bg} flex items-center justify-center font-bold flex-shrink-0`}>
       {isGender
-        ? <GenderSymbol gender={gender!} size={12} />
+        ? <GenderSymbol gender={gender!} size={12} white />
         : <span className="text-white text-[10px]">{(name || "?")[0].toUpperCase()}</span>
       }
     </div>
@@ -257,7 +257,7 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
   const genderFiltered = catFiltered.filter(t => {
     if (genderFilter === "kadin") return t.gender_filter === "kadin";
     if (genderFilter === "erkek") return t.gender_filter === "erkek";
-    if (genderFilter === "tumu") return true; // hepsi, cinsiyet filtreli dahil
+    if (genderFilter === "tumu") return t.gender_filter === "kadin" || t.gender_filter === "erkek";
     return !t.gender_filter; // "hepsi": sadece genel olanlar
   });
   const filtered = searchQuery.trim()
@@ -533,10 +533,13 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
                           <div className="mt-2 mb-2.5 space-y-1.5 border-t border-gray-50 pt-2">
                             {topAnswers.map(a => (
                               <div key={a.id} className="flex items-start gap-1.5">
-                                <div className={`w-4 h-4 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center text-[8px] font-bold text-white ${
-                                  a.gender === "kadin" ? "bg-gradient-to-br from-pink-400 to-rose-400" : "bg-gradient-to-br from-blue-400 to-indigo-400"
+                                <div className={`w-4 h-4 rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center font-bold ${
+                                  a.gender === "kadin" ? "bg-gradient-to-br from-pink-400 to-rose-400" : a.gender === "erkek" ? "bg-gradient-to-br from-blue-400 to-indigo-400" : "bg-gradient-to-br " + avatarGrad(a.user_name)
                                 }`}>
-                                  {(a.user_name || "?")[0].toUpperCase()}
+                                  {(a.gender === "kadin" || a.gender === "erkek")
+                                    ? <GenderSymbol gender={a.gender} size={9} white />
+                                    : <span className="text-white text-[8px]">{(a.user_name || "?")[0].toUpperCase()}</span>
+                                  }
                                 </div>
                                 <p className="text-[11px] text-gray-500 line-clamp-1 flex-1 leading-relaxed">
                                   <span className="font-semibold text-gray-600">{a.user_name}:</span>{" "}
