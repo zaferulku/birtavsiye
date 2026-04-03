@@ -293,8 +293,9 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
               </button>
             )}
             <button onClick={() => setGenderFilter(genderFilter === "tumu" ? "hepsi" : "tumu")}
-              className={`text-[11px] font-bold px-2.5 py-1 rounded-full border transition-all ${genderFilter === "tumu" ? "bg-purple-500 text-white border-purple-500" : "border-purple-300 text-purple-600 hover:border-purple-500"}`}>
-              ♀♂
+              className={`flex items-center gap-0.5 px-2 py-1 rounded-full border transition-all ${genderFilter === "tumu" ? "border-purple-400 bg-purple-50" : "border-gray-200 bg-white hover:border-purple-300"}`}>
+              <span className="w-5 h-5 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-white text-[11px] font-bold">♀</span>
+              <span className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-[11px] font-bold">♂</span>
             </button>
           </div>
         )}
