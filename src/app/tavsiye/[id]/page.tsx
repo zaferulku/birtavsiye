@@ -183,76 +183,79 @@ export default function TavsiyeDetay() {
     <main className="min-h-screen bg-[#F2F2F0]">
       <Header />
 
-      {/* ── Banner ── */}
-      <div className="bg-gradient-to-br from-[#E8460A] to-orange-500 relative overflow-hidden">
-        <div className="absolute inset-0 bg-black/15" />
-        <div className="absolute -right-20 -top-20 w-80 h-80 rounded-full bg-white/5" />
-        <div className="absolute left-1/3 bottom-0 w-48 h-48 rounded-full bg-black/10" />
-
-        <div className="max-w-[1100px] mx-auto px-4 pt-5 pb-0 relative z-10">
-          <Link href="/tavsiyeler" className="inline-flex items-center gap-1 text-white/60 hover:text-white text-xs mb-5 transition-colors">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
-            Sıcak Tavsiyeler
-          </Link>
-
-          <div className="max-w-2xl">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-[11px] font-bold text-white/60 bg-white/10 border border-white/20 px-2.5 py-1 rounded-full uppercase tracking-wide">
-                {topic.category}
-              </span>
-            </div>
-            <h1 className="text-2xl font-black text-white leading-tight mb-3" style={{ textShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>
-              {topic.title}
-            </h1>
-            {topic.body && (
-              <p className="text-sm text-white/75 leading-relaxed mb-4">{topic.body}</p>
-            )}
-          </div>
-
-          {/* Stats bar — sayfanın altına yapışık */}
-          <div className="flex items-center gap-4 bg-black/20 -mx-4 px-4 py-3 mt-4 flex-wrap">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center text-white text-xs font-bold">
-                {(topic.user_name || "?")[0].toUpperCase()}
-              </div>
-              <span className="text-sm font-semibold text-white">{topic.user_name}</span>
-            </div>
-            <span className="text-white/40">·</span>
-            <span className="text-xs text-white/60">{timeAgo(topic.created_at)}</span>
-            <div className="ml-auto flex items-center gap-4">
-              <span className="text-sm font-bold text-white/90">👍 {topic.votes || 0}</span>
-              <span className="text-sm font-bold text-white bg-white/20 px-3 py-1 rounded-full">
-                💬 {answers.length} yanıt
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-[1100px] mx-auto px-4 py-5 flex gap-5 items-start">
+      <div className="max-w-[1100px] mx-auto px-4 pt-5 pb-8 flex gap-5 items-start">
 
         {/* ── Ana İçerik ── */}
         <div className="flex-1 min-w-0">
 
-          {/* ── Bağlı Ürün ── */}
-          {topic.product_slug && (
-            <Link href={"/urun/" + topic.product_slug}>
-              <div className="flex items-center gap-3 bg-white border border-orange-200 rounded-2xl px-4 py-3 mb-4 shadow-sm hover:shadow-md hover:border-orange-300 transition-all group">
-                <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-xl flex-shrink-0">📦</div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-semibold text-orange-500 uppercase tracking-wide mb-0.5">Bağlı Ürün</p>
-                  <p className="text-sm font-bold text-gray-800 truncate group-hover:text-[#E8460A] transition-colors">
-                    {topic.product_brand} {topic.product_title}
-                  </p>
-                </div>
-                <svg className="w-4 h-4 text-gray-300 group-hover:text-[#E8460A] flex-shrink-0 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                </svg>
+          {/* Breadcrumb */}
+          <Link href="/tavsiyeler" className="inline-flex items-center gap-1 text-gray-400 hover:text-[#E8460A] text-xs mb-4 transition-colors">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+            Tavsiyeler
+          </Link>
+
+          {/* ── Soru Kartı ── */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4">
+            {/* Üst şerit — kategori rengi */}
+            <div className={`h-1 w-full bg-gradient-to-r ${cat.from} ${cat.to}`} />
+            <div className="p-5">
+              {/* Kategori badge + zaman */}
+              <div className="flex items-center gap-2 mb-3">
+                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${cat.light} ${cat.text} border border-current/20 uppercase tracking-wide`}>
+                  {topic.category}
+                </span>
+                <span className="text-[11px] text-gray-400 ml-auto">{timeAgo(topic.created_at)}</span>
               </div>
-            </Link>
-          )}
+
+              {/* Soru başlığı */}
+              <h1 className="text-xl font-black text-gray-900 leading-snug mb-2">
+                {topic.title}
+              </h1>
+
+              {/* Body */}
+              {topic.body && (
+                <p className="text-sm text-gray-500 leading-relaxed mb-4">{topic.body}</p>
+              )}
+
+              {/* Bağlı ürün */}
+              {topic.product_slug && (
+                <Link href={"/urun/" + topic.product_slug}>
+                  <div className="inline-flex items-center gap-2 mb-4 px-3 py-2 bg-orange-50 border border-orange-200 rounded-xl hover:bg-orange-100 transition-colors group">
+                    <span className="text-sm">📦</span>
+                    <span className="text-xs font-semibold text-orange-700 group-hover:text-[#E8460A] transition-colors">
+                      {topic.product_brand} {topic.product_title}
+                    </span>
+                    <svg className="w-3.5 h-3.5 text-orange-300 group-hover:text-[#E8460A] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </div>
+                </Link>
+              )}
+
+              {/* Alt satır: soru soran + istatistikler */}
+              <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
+                <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${cat.from} ${cat.to} flex items-center justify-center text-white text-xs font-black flex-shrink-0`}>
+                  {(topic.user_name || "?")[0].toUpperCase()}
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-gray-800">{topic.user_name}</p>
+                  <p className="text-[10px] text-gray-400">Soru soran</p>
+                </div>
+                <div className="ml-auto flex items-center gap-3">
+                  <div className="flex items-center gap-1 text-xs text-gray-400">
+                    <span>👍</span>
+                    <span className="font-semibold">{topic.votes || 0}</span>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-gray-400">
+                    <span>💬</span>
+                    <span className="font-semibold">{answers.length} yanıt</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* ── Öne Çıkan 2 Yanıt ── */}
           {topLevel.length > 0 && (() => {
@@ -492,7 +495,7 @@ export default function TavsiyeDetay() {
               </div>
             </Link>
           )}
-        </div>
+        </div>{/* ana içerik sonu */}
 
         {/* ── Sağ Sidebar ── */}
         <div className="w-72 flex-shrink-0 hidden lg:block">
@@ -535,7 +538,7 @@ export default function TavsiyeDetay() {
           </div>
         </div>
 
-      </div>
+      </div>{/* max-w-[1100px] sonu */}
       <Footer />
     </main>
   );
