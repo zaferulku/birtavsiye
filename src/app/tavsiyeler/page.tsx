@@ -81,7 +81,7 @@ export default function TavsiyelerSayfasi() {
   const productSearchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirst = useRef(true);
   const [userGender, setUserGender] = useState<string>("");
-  const [genderFilter, setGenderFilter] = useState<"hepsi" | "kadin" | "erkek">("hepsi");
+  const [genderFilter, setGenderFilter] = useState<"hepsi" | "kadin" | "erkek" | "tumu">("hepsi");
   const [genderOnly, setGenderOnly] = useState(false);
 
   useEffect(() => {
@@ -236,6 +236,7 @@ export default function TavsiyelerSayfasi() {
   const genderFiltered = catFiltered.filter(t => {
     if (genderFilter === "kadin") return t.gender_filter === "kadin";
     if (genderFilter === "erkek") return t.gender_filter === "erkek";
+    if (genderFilter === "tumu") return true;
     return !t.gender_filter;
   });
   const filtered = searchQuery.trim()
@@ -299,23 +300,33 @@ export default function TavsiyelerSayfasi() {
                   </button>
                 );
               })}
-              {user && userGender === "kadin" && (
-                <button onClick={() => setGenderFilter(genderFilter === "kadin" ? "hepsi" : "kadin")}
-                  className={`flex-shrink-0 flex items-center gap-1 px-3 py-3 text-[11px] font-semibold whitespace-nowrap border-b-2 transition-all ${
-                    genderFilter === "kadin" ? "border-pink-500 text-pink-500" : "border-transparent text-gray-400 hover:text-gray-600"
-                  }`}>
-                  ♀ Kızakıza
-                </button>
-              )}
-              {user && userGender === "erkek" && (
-                <button onClick={() => setGenderFilter(genderFilter === "erkek" ? "hepsi" : "erkek")}
-                  className={`flex-shrink-0 flex items-center gap-1 px-3 py-3 text-[11px] font-semibold whitespace-nowrap border-b-2 transition-all ${
-                    genderFilter === "erkek" ? "border-blue-500 text-blue-500" : "border-transparent text-gray-400 hover:text-gray-600"
-                  }`}>
-                  ♂ Erkek Özel
-                </button>
-              )}
             </div>
+
+            {/* Cinsiyet sekmeleri — ayrı satır */}
+            {user && (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 border-t border-gray-100">
+                <button onClick={() => setGenderFilter("hepsi")}
+                  className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${genderFilter === "hepsi" ? "bg-[#E8460A] text-white border-[#E8460A]" : "border-gray-200 text-gray-500 hover:border-gray-400"}`}>
+                  Hepsi
+                </button>
+                {userGender === "kadin" && (
+                  <button onClick={() => setGenderFilter("kadin")}
+                    className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${genderFilter === "kadin" ? "bg-pink-500 text-white border-pink-500" : "border-pink-200 text-pink-500 hover:border-pink-400"}`}>
+                    ♀ Kızakıza
+                  </button>
+                )}
+                {userGender === "erkek" && (
+                  <button onClick={() => setGenderFilter("erkek")}
+                    className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${genderFilter === "erkek" ? "bg-blue-500 text-white border-blue-500" : "border-blue-200 text-blue-500 hover:border-blue-400"}`}>
+                    ♂ Erkek Özel
+                  </button>
+                )}
+                <button onClick={() => setGenderFilter("tumu")}
+                  className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${genderFilter === "tumu" ? "bg-purple-500 text-white border-purple-500" : "border-gray-200 text-gray-500 hover:border-gray-400"}`}>
+                  ♀♂
+                </button>
+              </div>
+            )}
 
             {/* Butonlar — kategori barının altında */}
             <div className="flex items-center gap-2 px-3 py-2.5 border-t border-gray-100">
