@@ -238,22 +238,38 @@ export default function ProfilSayfasi() {
                     <div>
                       <div>
   <label className="text-xs font-medium text-gray-500 mb-1.5 block">Cinsiyet</label>
-  <div className="grid grid-cols-2 gap-2">
-    {[
-      { value: "kadin", label: "Kadın", emoji: "👩" },
-      { value: "erkek", label: "Erkek", emoji: "👨" },
-    ].map((g) => (
-      <button key={g.value} type="button"
-        onClick={() => setGender(g.value)}
-        className={`flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 text-sm font-medium transition-all ${
-          gender === g.value
-            ? "border-[#E8460A] bg-orange-50 text-[#E8460A]"
-            : "border-gray-200 text-gray-600 hover:border-[#E8460A]"
-        }`}>
-        <span>{g.emoji}</span> {g.label}
-      </button>
-    ))}
-  </div>
+  {gender ? (
+    <div className="flex items-center gap-2 px-4 py-3 rounded-xl border-2 border-gray-100 bg-gray-50">
+      <span className="text-sm font-medium text-gray-700">
+        {gender === "kadin" ? "👩 Kadın" : gender === "erkek" ? "👨 Erkek" : "🔒 Belirtmek istemiyorum"}
+      </span>
+      <span className="ml-auto text-[10px] text-gray-400 bg-gray-200 px-2 py-0.5 rounded-full">Değiştirilemez</span>
+    </div>
+  ) : (
+    <>
+      <div className="grid grid-cols-3 gap-2">
+        {[
+          { value: "kadin", label: "Kadın", emoji: "👩" },
+          { value: "erkek", label: "Erkek", emoji: "👨" },
+          { value: "gizli", label: "Belirtmek istemiyorum", emoji: "🔒" },
+        ].map((g) => (
+          <button key={g.value} type="button"
+            onClick={() => setGender(g.value)}
+            className={`flex flex-col items-center justify-center gap-1 py-2.5 rounded-xl border-2 text-xs font-medium transition-all ${
+              gender === g.value
+                ? "border-[#E8460A] bg-orange-50 text-[#E8460A]"
+                : "border-gray-200 text-gray-600 hover:border-[#E8460A]"
+            }`}>
+            <span className="text-lg">{g.emoji}</span>
+            <span>{g.label}</span>
+          </button>
+        ))}
+      </div>
+      <p className="text-[11px] text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2">
+        ⚠️ Cinsiyet seçimi kaydedildikten sonra değiştirilemez.
+      </p>
+    </>
+  )}
 </div>
 
                       <label className="text-xs font-medium text-gray-500 mb-1.5 block">Hakkinda</label>

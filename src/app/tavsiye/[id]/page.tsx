@@ -5,6 +5,7 @@ import { supabase } from "../../../lib/supabase";
 import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
 import Link from "next/link";
+import { GenderSymbol } from "../../components/ui/GenderIcon";
 
 type Topic = {
   id: string; title: string; body: string;
@@ -53,22 +54,15 @@ function Avatar({ gender, name, size = "md" }: { gender?: string; name: string; 
     : gender === "erkek"
     ? "from-blue-400 to-indigo-500"
     : "from-[#E8460A] to-orange-400";
-  const icon = gender === "kadin" ? "♀" : gender === "erkek" ? "♂" : (name || "?")[0].toUpperCase();
   return (
     <div className={`${s} rounded-full bg-gradient-to-br ${bg} flex items-center justify-center text-white font-bold flex-shrink-0 shadow`}>
-      {icon}
+      {(name || "?")[0].toUpperCase()}
     </div>
   );
 }
 
 function GenderPill({ gender }: { gender?: string }) {
-  if (gender === "kadin") return (
-    <span className="inline-flex items-center text-[11px] font-bold text-pink-500">♀</span>
-  );
-  if (gender === "erkek") return (
-    <span className="inline-flex items-center text-[11px] font-bold text-blue-500">♂</span>
-  );
-  return null;
+  return <GenderSymbol gender={gender} size={13} />;
 }
 
 export default function TavsiyeDetay() {

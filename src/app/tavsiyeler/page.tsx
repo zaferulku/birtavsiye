@@ -5,6 +5,7 @@ import { supabase } from "../../lib/supabase";
 import Link from "next/link";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
+import { GenderSymbol } from "../components/ui/GenderIcon";
 
 type Topic = {
   id: string; title: string; body: string;
@@ -504,11 +505,8 @@ export default function TavsiyelerSayfasi() {
                           <span className="text-xs font-semibold text-gray-700">{t.user_name}</span>
                           <span className="text-[10px] text-gray-400 ml-2">{timeAgo(t.created_at)}</span>
                         </div>
-                        {t.gender_filter === "kadin" && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-pink-100 text-pink-600">♀</span>
-                        )}
-                        {t.gender_filter === "erkek" && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-600">♂</span>
+                        {(t.gender_filter === "kadin" || t.gender_filter === "erkek") && (
+                          <GenderSymbol gender={t.gender_filter} size={13} />
                         )}
                         {cs && (
                           <span className={`ml-auto text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cs.bg} ${cs.text} ${cs.border}`}>

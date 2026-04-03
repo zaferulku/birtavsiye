@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "../../../lib/supabase";
 import Link from "next/link";
+import { GenderSymbol } from "../ui/GenderIcon";
 
 type Topic = {
   id: string; title: string; body: string;
@@ -487,11 +488,8 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
                               {t.category}
                             </span>
                           )}
-                          {t.gender_filter === "kadin" && (
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-pink-100 text-pink-600">♀</span>
-                          )}
-                          {t.gender_filter === "erkek" && (
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-blue-100 text-blue-600">♂</span>
+                          {(t.gender_filter === "kadin" || t.gender_filter === "erkek") && (
+                            <GenderSymbol gender={t.gender_filter} size={13} />
                           )}
                           <span className="text-[10px] text-gray-300 ml-auto flex-shrink-0">{timeAgo(t.created_at)}</span>
                         </div>
