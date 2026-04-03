@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../../../lib/supabase";
 import Link from "next/link";
 
-const tabs = ["Yorumlar", "Teknik Özellikler", "Benzer Ürünler"];
+const tabs = ["Yorumlar", "Teknik Özellikler", "Benzer Ürünler", "Tavsiyeler"];
 
 type Post = {
   id: string;
@@ -14,6 +14,12 @@ type Post = {
   votes: number;
   downvotes: number;
   rating?: number;
+};
+
+type LinkedTopic = {
+  id: string; title: string; body: string;
+  user_name: string; category: string;
+  votes: number; answer_count: number; created_at: string;
 };
 
 type SimilarProduct = {
@@ -118,6 +124,7 @@ export default function CommunitySection({
   const [sortBy, setSortBy] = useState("onerilen");
   const [searchQuery, setSearchQuery] = useState("");
   const [similarProducts, setSimilarProducts] = useState<SimilarProduct[]>([]);
+  const [linkedTopics, setLinkedTopics] = useState<LinkedTopic[]>([]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -136,6 +143,14 @@ export default function CommunitySection({
       .limit(8)
       .then(({ data }) => { if (data) setSimilarProducts(data as unknown as SimilarProduct[]); });
   }, [categoryId, productId]);
+
+  useEffect(() => {
+    supabase.from("topics")
+      .select("id,title,body,user_name,category,votes,answer_count,created_at")
+      .eq("product_id", productId)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => { if (data) setLinkedTopics(data); });
+  }, [productId]);
 
   const loadUserVotes = async (userId: string) => {
     const { data } = await supabase.from("post_votes").select("post_id, vote_type").eq("user_id", userId);
@@ -297,6 +312,7 @@ export default function CommunitySection({
             {i === 0 && ` (${topPosts.length})`}
             {i === 1 && specEntries.length > 0 && ` (${specEntries.length})`}
             {i === 2 && similarProducts.length > 0 && ` (${similarProducts.length})`}
+            {i === 3 && linkedTopics.length > 0 && ` (${linkedTopics.length})`}
           </button>
         ))}
       </div>
@@ -504,6 +520,50 @@ export default function CommunitySection({
                   </Link>
                 );
               })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Tavsiyeler */}
+      {activeTab === 3 && (
+        <div id="tavsiyeler">
+          {linkedTopics.length === 0 ? (
+            <div className="text-center py-16 bg-gray-50 rounded-2xl">
+              <div className="text-3xl mb-3">💬</div>
+              <div className="text-sm font-medium text-gray-600 mb-1">Bu ürün için henüz soru sorulmamış</div>
+              <div className="text-xs text-gray-400 mb-4">Soru sor butonuyla bu ürünü bir soruya bağlayabilirsin</div>
+              <Link href="/tavsiyeler" className="inline-block px-5 py-2 bg-[#E8460A] text-white text-sm font-bold rounded-xl hover:bg-[#C93A08] transition-all">
+                Soru Sor
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {linkedTopics.map(t => (
+                <Link href={"/tavsiye/" + t.id} key={t.id}>
+                  <div className="bg-white border border-gray-100 rounded-2xl p-4 hover:shadow-md hover:border-[#E8460A]/30 transition-all group cursor-pointer">
+                    <div className="flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-full bg-[#E8460A]/10 flex items-center justify-center text-[#E8460A] font-bold text-sm flex-shrink-0">
+                        {(t.user_name || "?")[0].toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-gray-900 group-hover:text-[#E8460A] transition-colors leading-snug mb-1 line-clamp-2">
+                          {t.title}
+                        </p>
+                        {t.body && <p className="text-xs text-gray-400 line-clamp-1 mb-2">{t.body}</p>}
+                        <div className="flex items-center gap-3 text-[11px] text-gray-400">
+                          <span className="font-medium text-gray-600">{t.user_name}</span>
+                          <span>👍 {t.votes || 0}</span>
+                          <span>💬 {t.answer_count} yanıt</span>
+                        </div>
+                      </div>
+                      <svg className="w-4 h-4 text-gray-300 group-hover:text-[#E8460A] flex-shrink-0 mt-1 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                      </svg>
+                    </div>
+                  </div>
+                </Link>
+              ))}
             </div>
           )}
         </div>

@@ -7,6 +7,7 @@ type Topic = {
   id: string; title: string; body: string;
   user_name: string; category: string;
   votes: number; answer_count: number; created_at: string;
+  product_slug?: string | null; product_title?: string | null; product_brand?: string | null;
 };
 
 type Answer = {
@@ -73,6 +74,10 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const searchRef = useRef<HTMLInputElement>(null);
+  const [productSearch, setProductSearch] = useState("");
+  const [productResults, setProductResults] = useState<{id:string;title:string;slug:string;brand:string;image_url:string|null;category_slug:string|null}[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<{id:string;title:string;slug:string;brand:string} | null>(null);
+  const productSearchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirst = useRef(true);
 
   useEffect(() => {
@@ -127,14 +132,49 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
   const getDisplay = (u: any) =>
     u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "Kullanıcı";
 
+  const slugToTopicCat = (slug?: string | null): string => {
+    if (!slug) return "Elektronik";
+    const s = slug.toLowerCase();
+    const elec = ["akilli-telefon","bilgisayar-laptop","tablet","tv","ses-kulaklik","akilli-saat","fotograf-kamera","oyun-konsol","yazici-tarayici","networking","telefon-aksesuar","bilgisayar-bilesenleri","ofis-elektronigi","arac-elektronigi"];
+    const kozm = ["cilt-bakimi","makyaj","sac-bakimi","parfum","erkek-bakimi","kisisel-hijyen","agiz-dis"];
+    const evya = ["beyaz-esya","kucuk-ev-aletleri","mobilya-dekorasyon","mutfak-sofra","ev-tekstili","aydinlatma","bahce-balkon","yapi-market","temizlik","banyo"];
+    const spor = ["spor-giyim","fitness","outdoor-kamp","bisiklet","su-sporlari","takim-sporlari","yoga","outdoor-giyim"];
+    const hediye = ["oyuncak","koleksiyon","masa-oyunu","hobi-sanat","bebek-bakim","bebek-giyim","bebek-arabasi"];
+    if (elec.includes(s)) return "Elektronik";
+    if (kozm.includes(s)) return "Kozmetik";
+    if (evya.includes(s)) return "Ev & Yaşam";
+    if (spor.includes(s)) return "Spor";
+    if (hediye.includes(s)) return "Hediye";
+    return "Diğer";
+  };
+
+  const searchProducts = (q: string) => {
+    if (productSearchTimeout.current) clearTimeout(productSearchTimeout.current);
+    if (!q.trim()) { setProductResults([]); return; }
+    productSearchTimeout.current = setTimeout(async () => {
+      const { data } = await supabase.from("products")
+        .select("id,title,slug,brand,image_url,categories(slug)")
+        .or(`title.ilike.%${q}%,brand.ilike.%${q}%`)
+        .limit(6);
+      setProductResults((data || []).map((p: any) => ({ ...p, category_slug: p.categories?.slug ?? null })));
+    }, 300);
+  };
+
   const handleSubmit = async () => {
     if (!titleVal.trim() || !user) return;
     setSubmitting(true);
     await supabase.from("topics").insert({
       user_id: user.id, user_name: getDisplay(user),
       title: titleVal, body: bodyVal, category: catVal, votes: 0, answer_count: 0,
+      ...(selectedProduct ? {
+        product_id: selectedProduct.id,
+        product_slug: selectedProduct.slug,
+        product_title: selectedProduct.title,
+        product_brand: selectedProduct.brand,
+      } : {}),
     });
     setTitleVal(""); setBodyVal(""); setShowForm(false); setSubmitting(false);
+    setSelectedProduct(null); setProductSearch(""); setProductResults([]);
   };
 
   const handleVote = async (e: React.MouseEvent, t: Topic, val: 1 | -1) => {
@@ -277,6 +317,48 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
             <textarea value={bodyVal} onChange={e => setBodyVal(e.target.value)}
               placeholder="Detay ekleyin (isteğe bağlı)" rows={2}
               className="w-full text-xs border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-[#E8460A] resize-none mb-2.5 transition-all text-gray-700" />
+
+            {/* Ürün bağla */}
+            <div className="mb-2.5">
+              {selectedProduct ? (
+                <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-xl px-3 py-2">
+                  <span className="text-[11px] font-semibold text-orange-700 flex-1 truncate">
+                    📦 {selectedProduct.brand} {selectedProduct.title}
+                  </span>
+                  <button onClick={() => { setSelectedProduct(null); setProductSearch(""); setProductResults([]); }}
+                    className="text-orange-400 hover:text-orange-600 text-sm font-bold flex-shrink-0">✕</button>
+                </div>
+              ) : (
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={productSearch}
+                    onChange={e => { setProductSearch(e.target.value); searchProducts(e.target.value); }}
+                    placeholder="Ürün bağla (isteğe bağlı, örn: iPhone 16)"
+                    className="w-full text-xs border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-[#E8460A] transition-all"
+                  />
+                  {productResults.length > 0 && (
+                    <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+                      {productResults.map(p => (
+                        <button key={p.id} onClick={() => { setSelectedProduct(p); setCatVal(slugToTopicCat(p.category_slug)); setProductSearch(""); setProductResults([]); }}
+                          className="w-full flex items-center gap-2 px-3 py-2 hover:bg-orange-50 transition-colors text-left border-b border-gray-50 last:border-0">
+                          {p.image_url ? (
+                            <img src={p.image_url} alt={p.title} className="w-7 h-7 rounded object-cover flex-shrink-0" />
+                          ) : (
+                            <div className="w-7 h-7 rounded bg-gray-100 flex items-center justify-center text-[10px] text-gray-400 flex-shrink-0">📦</div>
+                          )}
+                          <div className="min-w-0">
+                            <p className="text-[11px] font-semibold text-gray-800 truncate">{p.title}</p>
+                            <p className="text-[10px] text-gray-400">{p.brand}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="flex gap-2">
               <select value={catVal} onChange={e => setCatVal(e.target.value)}
                 className="flex-1 text-xs border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-[#E8460A] bg-white text-gray-700">
@@ -347,6 +429,15 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
                         {/* Body önizleme */}
                         {t.body && (
                           <p className="text-xs text-gray-400 line-clamp-1 mb-2 leading-relaxed">{t.body}</p>
+                        )}
+
+                        {/* Bağlı ürün */}
+                        {t.product_slug && (
+                          <Link href={"/urun/" + t.product_slug} onClick={e => e.stopPropagation()}
+                            className="inline-flex items-center gap-1.5 mb-2 px-2.5 py-1 bg-orange-50 border border-orange-200 rounded-lg text-[11px] font-semibold text-orange-700 hover:bg-orange-100 transition-colors">
+                            <span>📦</span>
+                            <span className="truncate max-w-[180px]">{t.product_brand} {t.product_title}</span>
+                          </Link>
                         )}
 
                         {/* Top 2 cevap önizlemesi */}

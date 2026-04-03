@@ -10,6 +10,7 @@ type Topic = {
   id: string; title: string; body: string;
   user_name: string; category: string;
   votes: number; answer_count: number; created_at: string;
+  product_slug?: string | null; product_title?: string | null; product_brand?: string | null; product_id?: string | null;
 };
 
 type Answer = {
@@ -234,6 +235,24 @@ export default function TavsiyeDetay() {
 
         {/* ── Ana İçerik ── */}
         <div className="flex-1 min-w-0">
+
+          {/* ── Bağlı Ürün ── */}
+          {topic.product_slug && (
+            <Link href={"/urun/" + topic.product_slug}>
+              <div className="flex items-center gap-3 bg-white border border-orange-200 rounded-2xl px-4 py-3 mb-4 shadow-sm hover:shadow-md hover:border-orange-300 transition-all group">
+                <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-xl flex-shrink-0">📦</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-semibold text-orange-500 uppercase tracking-wide mb-0.5">Bağlı Ürün</p>
+                  <p className="text-sm font-bold text-gray-800 truncate group-hover:text-[#E8460A] transition-colors">
+                    {topic.product_brand} {topic.product_title}
+                  </p>
+                </div>
+                <svg className="w-4 h-4 text-gray-300 group-hover:text-[#E8460A] flex-shrink-0 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                </svg>
+              </div>
+            </Link>
+          )}
 
           {/* ── Öne Çıkan 2 Yanıt ── */}
           {topLevel.length > 0 && (() => {
