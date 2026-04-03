@@ -82,6 +82,7 @@ export default function TavsiyeDetay() {
   const [answerText, setAnswerText] = useState("");
   const [loading, setLoading] = useState(false);
   const [userVotes, setUserVotes] = useState<Record<string, number>>({});
+  const [topicVote, setTopicVote] = useState<number>(0);
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
   const [replyOpen, setReplyOpen] = useState<Record<string, boolean>>({});
   const [replyLoading, setReplyLoading] = useState<Record<string, boolean>>({});
@@ -99,6 +100,8 @@ export default function TavsiyeDetay() {
       setUserGender(profile?.gender || "");
       const { data: votes } = await supabase.from("topic_answer_votes").select("answer_id, vote").eq("user_id", data.user.id);
       if (votes) setUserVotes(Object.fromEntries(votes.map(v => [v.answer_id, v.vote])));
+      const { data: tv } = await supabase.from("topic_votes").select("vote").eq("topic_id", id).eq("user_id", data.user.id).maybeSingle();
+      if (tv) setTopicVote(tv.vote);
     });
 
     const channel = supabase.channel(`answers-${id}`)
@@ -141,6 +144,19 @@ export default function TavsiyeDetay() {
     setReplyOpen(prev => ({ ...prev, [parentId]: false }));
     setReplyLoading(prev => ({ ...prev, [parentId]: false }));
     await fetchAll();
+  };
+
+  const handleTopicVote = async (voteValue: 1 | -1) => {
+    if (!user || !topic) { window.location.href = "/giris"; return; }
+    const cur = topicVote;
+    const diff = cur === voteValue ? -voteValue : cur === 0 ? voteValue : voteValue * 2;
+    const nv = cur === voteValue ? 0 : voteValue;
+    if (cur === voteValue) await supabase.from("topic_votes").delete().eq("topic_id", id).eq("user_id", user.id);
+    else await supabase.from("topic_votes").upsert({ topic_id: id, user_id: user.id, vote: nv }, { onConflict: "topic_id,user_id" });
+    const newTotal = (topic.votes || 0) + diff;
+    await supabase.from("topics").update({ votes: newTotal }).eq("id", id);
+    setTopic(prev => prev ? { ...prev, votes: newTotal } : prev);
+    setTopicVote(nv);
   };
 
   const handleVote = async (answer: Answer, voteValue: 1 | -1) => {
@@ -247,8 +263,19 @@ export default function TavsiyeDetay() {
 
               {/* Alt: istatistikler + yanıtla butonu */}
               <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
-                <div className="flex items-center gap-3">
-                  <span className="flex items-center gap-1 text-xs text-gray-400">👍 <span className="font-semibold">{topic.votes || 0}</span></span>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => handleTopicVote(1)}
+                    className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-bold border transition-all ${
+                      topicVote === 1 ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white border-gray-200 text-gray-400 hover:border-emerald-300 hover:text-emerald-600"
+                    }`}>
+                    👍 <span>{topic.votes > 0 ? topic.votes : 0}</span>
+                  </button>
+                  <button onClick={() => handleTopicVote(-1)}
+                    className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-bold border transition-all ${
+                      topicVote === -1 ? "bg-red-500 border-red-500 text-white" : "bg-white border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500"
+                    }`}>
+                    👎
+                  </button>
                   <span className="flex items-center gap-1 text-xs text-gray-400">💬 <span className="font-semibold">{answers.length} yanıt</span></span>
                 </div>
                 <button
