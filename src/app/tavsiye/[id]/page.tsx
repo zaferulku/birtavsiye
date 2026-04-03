@@ -48,7 +48,8 @@ const timeAgo = (date: string) => {
 };
 
 function Avatar({ gender, name, size = "md" }: { gender?: string; name: string; size?: "xs" | "sm" | "md" | "lg" }) {
-  const s = { xs: "w-6 h-6 text-xs", sm: "w-8 h-8 text-sm", md: "w-10 h-10 text-base", lg: "w-12 h-12 text-lg" }[size];
+  const px = { xs: 14, sm: 18, md: 22, lg: 28 }[size];
+  const s = { xs: "w-6 h-6", sm: "w-8 h-8", md: "w-10 h-10", lg: "w-12 h-12" }[size];
   const bg = gender === "kadin"
     ? "from-pink-400 to-rose-500"
     : gender === "erkek"
@@ -56,7 +57,10 @@ function Avatar({ gender, name, size = "md" }: { gender?: string; name: string; 
     : "from-[#E8460A] to-orange-400";
   return (
     <div className={`${s} rounded-full bg-gradient-to-br ${bg} flex items-center justify-center text-white font-bold flex-shrink-0 shadow`}>
-      {(name || "?")[0].toUpperCase()}
+      {gender === "kadin" || gender === "erkek"
+        ? <GenderSymbol gender={gender} size={px} />
+        : (name || "?")[0].toUpperCase()
+      }
     </div>
   );
 }
