@@ -63,14 +63,10 @@ function Avatar({ gender, name, size = "md" }: { gender?: string; name: string; 
 
 function GenderPill({ gender }: { gender?: string }) {
   if (gender === "kadin") return (
-    <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-pink-600 bg-pink-100 border border-pink-200 px-2 py-0.5 rounded-full">
-      ♀ Kadın
-    </span>
+    <span className="inline-flex items-center text-[11px] font-bold text-pink-500">♀</span>
   );
   if (gender === "erkek") return (
-    <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-blue-600 bg-blue-100 border border-blue-200 px-2 py-0.5 rounded-full">
-      ♂ Erkek
-    </span>
+    <span className="inline-flex items-center text-[11px] font-bold text-blue-500">♂</span>
   );
   return null;
 }
@@ -318,22 +314,40 @@ export default function TavsiyeDetay() {
                   <span className="text-[10px] text-gray-400 ml-auto">{topLevel.length} yanıtın en iyileri</span>
                 </div>
                 <div className="divide-y divide-gray-50">
-                  {top2.map(a => (
-                    <a key={a.id} href={`#answer-${a.id}`} className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer group block">
-                      <Avatar gender={a.gender} name={a.user_name} size="sm" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <span className="text-xs font-bold text-gray-800">{a.user_name}</span>
-                          <GenderPill gender={a.gender} />
-                          {a.votes > 0 && <span className="ml-auto text-[11px] text-emerald-600 font-bold">👍 {a.votes}</span>}
+                  {top2.map(a => {
+                    const myVote = userVotes[a.id] || 0;
+                    return (
+                      <div key={a.id} className="px-4 py-3 hover:bg-gray-50 transition-colors group">
+                        <a href={`#answer-${a.id}`} className="flex items-start gap-3 mb-2.5 cursor-pointer block">
+                          <Avatar gender={a.gender} name={a.user_name} size="sm" />
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span className="text-xs font-bold text-gray-800">{a.user_name}</span>
+                              <GenderPill gender={a.gender} />
+                            </div>
+                            <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed group-hover:text-gray-800 transition-colors">{a.body}</p>
+                          </div>
+                        </a>
+                        <div className="flex items-center gap-2 pl-9">
+                          <button onClick={() => handleVote(a, 1)} disabled={!user}
+                            className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-bold border transition-all ${
+                              myVote === 1 ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white border-gray-200 text-gray-400 hover:border-emerald-300 hover:text-emerald-600"
+                            }`}>
+                            👍 {a.votes > 0 ? a.votes : 0}
+                          </button>
+                          <button onClick={() => handleVote(a, -1)} disabled={!user}
+                            className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-bold border transition-all ${
+                              myVote === -1 ? "bg-red-500 border-red-500 text-white" : "bg-white border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500"
+                            }`}>
+                            👎
+                          </button>
+                          <a href={`#answer-${a.id}`} className="ml-auto text-[11px] text-[#E8460A] font-semibold hover:underline">
+                            Yanıtla →
+                          </a>
                         </div>
-                        <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed group-hover:text-gray-800 transition-colors">{a.body}</p>
                       </div>
-                      <svg className="w-3.5 h-3.5 text-gray-300 group-hover:text-[#E8460A] flex-shrink-0 mt-1 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
-                      </svg>
-                    </a>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             );
