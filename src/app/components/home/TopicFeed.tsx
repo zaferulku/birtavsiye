@@ -148,6 +148,19 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
     return "Diğer";
   };
 
+  const guessCatFromTitle = (title: string): string => {
+    const n = normalize(title);
+    const m = (words: string[]) => words.some(w => n.includes(w));
+    if (m(["telefon","iphone","samsung","galaxy","xiaomi","huawei","oneplus","pixel","akilli"])) return "Elektronik";
+    if (m(["laptop","bilgisayar","notebook","macbook","dell","asus","hp","lenovo","pc","tablet","ipad","monitor","klavye","mouse","kulaklık","kulaklik","airpods","bluetooth","speaker","hoparlor","kamera","fotoğraf","fotograf","drone","oyun","konsol","playstation","xbox","nintendo","tv","televizyon","router","modem","şarj","sarj","powerbank"])) return "Elektronik";
+    if (m(["krem","serum","makyaj","ruj","rimel","maskara","parfum","deodorant","saç","sac","şampuan","sampuan","losyon","yüz","yuz","cilt","fondoten"])) return "Kozmetik";
+    if (m(["mobilya","koltuk","masa","sandalye","yatak","nevresim","havlu","mutfak","tencere","tava","blender","çamaşır","camasir","bulaşık","bulasik","süpürge","supurge","temizlik","deterjan","lamba","avize","hali","halı","perde","bahçe","bahce"])) return "Ev & Yaşam";
+    if (m(["spor","koşu","kossu","nike","adidas","puma","fitness","dumbbell","protein","yoga","bisiklet","kamp","çadır","cadir","outdoor","futbol","basketbol","tenis","yüzme","yuzme","dağcılık"])) return "Spor";
+    if (m(["oyuncak","lego","bebek","puzzle","bulmaca","hediye","doğum günü","dogum gunu","çocuk","cocuk"])) return "Hediye";
+    if (m(["kitap","roman","dergi"])) return "Diğer";
+    return "Elektronik";
+  };
+
   const searchProducts = (q: string) => {
     if (productSearchTimeout.current) clearTimeout(productSearchTimeout.current);
     if (!q.trim()) { setProductResults([]); return; }
@@ -163,9 +176,10 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
   const handleSubmit = async () => {
     if (!titleVal.trim() || !user) return;
     setSubmitting(true);
+    const finalCat = selectedProduct ? catVal : guessCatFromTitle(titleVal);
     await supabase.from("topics").insert({
       user_id: user.id, user_name: getDisplay(user),
-      title: titleVal, body: bodyVal, category: catVal, votes: 0, answer_count: 0,
+      title: titleVal, body: bodyVal, category: finalCat, votes: 0, answer_count: 0,
       ...(selectedProduct ? {
         product_id: selectedProduct.id,
         product_slug: selectedProduct.slug,
@@ -360,10 +374,17 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
             </div>
 
             <div className="flex gap-2">
-              <select value={catVal} onChange={e => setCatVal(e.target.value)}
-                className="flex-1 text-xs border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-[#E8460A] bg-white text-gray-700">
-                {CATS.filter(c => c !== "Hepsi").map(c => <option key={c}>{c}</option>)}
-              </select>
+              {selectedProduct ? (
+                <div className="flex-1 flex items-center gap-1.5 text-xs border border-orange-200 rounded-xl px-3 py-2 bg-orange-50 text-orange-700 font-semibold">
+                  <svg className="w-3 h-3 text-orange-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" /></svg>
+                  {catVal}
+                </div>
+              ) : (
+                <select value={catVal} onChange={e => setCatVal(e.target.value)}
+                  className="flex-1 text-xs border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-[#E8460A] bg-white text-gray-700">
+                  {CATS.filter(c => c !== "Hepsi").map(c => <option key={c}>{c}</option>)}
+                </select>
+              )}
               <button onClick={handleSubmit} disabled={submitting || !titleVal.trim()}
                 className="px-5 py-2 bg-[#E8460A] text-white text-xs font-bold rounded-xl hover:bg-[#C93A08] disabled:opacity-40 transition-all">
                 {submitting ? "..." : "Gönder"}
