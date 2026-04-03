@@ -198,15 +198,34 @@ export default function TavsiyeDetay() {
 
           {/* ── Soru Kartı ── */}
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4">
-            {/* Üst şerit — kategori rengi */}
             <div className={`h-1 w-full bg-gradient-to-r ${cat.from} ${cat.to}`} />
             <div className="p-5">
-              {/* Kategori badge + zaman */}
-              <div className="flex items-center gap-2 mb-3">
-                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${cat.light} ${cat.text} border border-current/20 uppercase tracking-wide`}>
+
+              {/* Kategori + bağlı ürün + zaman — tek satır */}
+              <div className="flex items-center gap-2 mb-3 flex-wrap">
+                <span className={`text-[10px] font-bold px-2.5 py-1 rounded-full ${cat.light} ${cat.text} border border-current/20 uppercase tracking-wide flex-shrink-0`}>
                   {topic.category}
                 </span>
-                <span className="text-[11px] text-gray-400 ml-auto">{timeAgo(topic.created_at)}</span>
+                {topic.product_slug && (() => {
+                  const fullLabel = `${topic.product_brand || ""} ${topic.product_title || ""}`.trim();
+                  const words = fullLabel.split(" ");
+                  const shortLabel = words.slice(0, 3).join(" ");
+                  const isTruncated = words.length > 3;
+                  return (
+                    <Link href={"/urun/" + topic.product_slug} className="relative group/tooltip flex-shrink-0">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-orange-50 border border-orange-200 rounded-full text-[10px] font-semibold text-orange-700 hover:bg-orange-100 transition-colors">
+                        <span>📦</span>
+                        <span>{shortLabel}{isTruncated ? "…" : ""}</span>
+                      </span>
+                      {isTruncated && (
+                        <span className="pointer-events-none absolute left-0 top-full mt-1 z-50 whitespace-nowrap bg-gray-900 text-white text-[11px] px-2.5 py-1.5 opacity-0 group-hover/tooltip:opacity-100 transition-opacity" style={{ borderRadius: 4 }}>
+                          {fullLabel}
+                        </span>
+                      )}
+                    </Link>
+                  );
+                })()}
+                <span className="text-[11px] text-gray-400 ml-auto flex-shrink-0">{timeAgo(topic.created_at)}</span>
               </div>
 
               {/* Soru başlığı */}
@@ -214,80 +233,43 @@ export default function TavsiyeDetay() {
                 {topic.title}
               </h1>
 
+              {/* Soru soran — başlığın hemen altında */}
+              <div className="flex items-center gap-2 mb-3">
+                <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${cat.from} ${cat.to} flex items-center justify-center text-white flex-shrink-0`}>
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
+                  </svg>
+                </div>
+                <span className="text-xs font-semibold text-gray-600">{topic.user_name}</span>
+                <span className="text-[10px] text-gray-400">· Soru soran</span>
+              </div>
+
               {/* Body */}
               {topic.body && (
                 <p className="text-sm text-gray-500 leading-relaxed mb-4">{topic.body}</p>
               )}
 
-              {/* Bağlı ürün */}
-              {topic.product_slug && (
-                <Link href={"/urun/" + topic.product_slug}>
-                  <div className="inline-flex items-center gap-2 mb-4 px-3 py-2 bg-orange-50 border border-orange-200 rounded-xl hover:bg-orange-100 transition-colors group">
-                    <span className="text-sm">📦</span>
-                    <span className="text-xs font-semibold text-orange-700 group-hover:text-[#E8460A] transition-colors">
-                      {topic.product_brand} {topic.product_title}
-                    </span>
-                    <svg className="w-3.5 h-3.5 text-orange-300 group-hover:text-[#E8460A] transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                    </svg>
-                  </div>
-                </Link>
-              )}
-
-              {/* Alt satır: soru soran + istatistikler */}
+              {/* Alt: istatistikler + yanıtla butonu */}
               <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
-                <div className={`w-8 h-8 rounded-full bg-gradient-to-br ${cat.from} ${cat.to} flex items-center justify-center text-white text-xs font-black flex-shrink-0`}>
-                  {(topic.user_name || "?")[0].toUpperCase()}
+                <div className="flex items-center gap-3">
+                  <span className="flex items-center gap-1 text-xs text-gray-400">👍 <span className="font-semibold">{topic.votes || 0}</span></span>
+                  <span className="flex items-center gap-1 text-xs text-gray-400">💬 <span className="font-semibold">{answers.length} yanıt</span></span>
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-gray-800">{topic.user_name}</p>
-                  <p className="text-[10px] text-gray-400">Soru soran</p>
-                </div>
-                <div className="ml-auto flex items-center gap-3">
-                  <div className="flex items-center gap-1 text-xs text-gray-400">
-                    <span>👍</span>
-                    <span className="font-semibold">{topic.votes || 0}</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-xs text-gray-400">
-                    <span>💬</span>
-                    <span className="font-semibold">{answers.length} yanıt</span>
-                  </div>
-                </div>
+                <button
+                  onClick={() => mainReplyRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+                  className="ml-auto flex items-center gap-1.5 text-xs font-bold px-4 py-2 bg-[#E8460A] text-white rounded-xl hover:bg-[#C93A08] transition-all">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                  </svg>
+                  Yanıtla
+                </button>
               </div>
             </div>
           </div>
 
-          {/* ── Öne Çıkan 2 Yanıt ── */}
-          {topLevel.length > 0 && (() => {
-            const top2 = [...topLevel].sort((a, b) => (b.votes || 0) - (a.votes || 0)).slice(0, 2);
-            return (
-              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4">
-                <div className="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
-                  <span className="text-xs font-black text-gray-700">⭐ Öne Çıkan Yanıtlar</span>
-                  <span className="text-[10px] text-gray-400 ml-auto">{topLevel.length} yanıtın en iyileri</span>
-                </div>
-                <div className="divide-y divide-gray-50">
-                  {top2.map(a => (
-                    <div key={a.id} className="flex items-start gap-3 px-4 py-3">
-                      <Avatar gender={a.gender} name={a.user_name} size="sm" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <span className="text-xs font-bold text-gray-800">{a.user_name}</span>
-                          <GenderPill gender={a.gender} />
-                          {a.votes > 0 && <span className="ml-auto text-[11px] text-emerald-600 font-bold">👍 {a.votes}</span>}
-                        </div>
-                        <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed">{a.body}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })()}
-
           {/* ── Yanıt Yaz ── */}
           {user ? (
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-5">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-4">
               <div className="flex items-center gap-3 px-4 pt-4 pb-3 border-b border-gray-100">
                 <Avatar gender={userGender} name={userName} size="sm" />
                 <div className="flex-1">
@@ -313,18 +295,49 @@ export default function TavsiyeDetay() {
                     className="px-6 py-2.5 text-sm font-bold rounded-xl transition-all flex items-center gap-2 bg-gradient-to-r from-[#E8460A] to-orange-400 text-white disabled:opacity-30 hover:shadow-lg hover:shadow-orange-200 hover:-translate-y-0.5 disabled:hover:translate-y-0 disabled:hover:shadow-none">
                     {loading
                       ? <><div className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin" /> Gönderiliyor</>
-                      : <>💬 Yanıtla</>}
+                      : <>💬 Gönder</>}
                   </button>
                 </div>
               </div>
             </div>
           ) : (
             <Link href="/giris">
-              <div className={`bg-gradient-to-r ${cat.from} ${cat.to} rounded-2xl p-5 text-center text-white font-bold hover:shadow-lg transition-all cursor-pointer mb-5 text-sm`}>
-                Yanıt vermek için giriş yap →
+              <div className="bg-white rounded-2xl border-2 border-dashed border-gray-200 p-4 text-center hover:border-[#E8460A]/40 hover:bg-orange-50 transition-all cursor-pointer mb-4">
+                <span className="text-sm font-bold text-gray-500">Yanıt vermek için <span className="text-[#E8460A]">giriş yap →</span></span>
               </div>
             </Link>
           )}
+
+          {/* ── Öne Çıkan 2 Yanıt ── */}
+          {topLevel.length > 0 && (() => {
+            const top2 = [...topLevel].sort((a, b) => (b.votes || 0) - (a.votes || 0)).slice(0, 2);
+            return (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4">
+                <div className="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
+                  <span className="text-xs font-black text-gray-700">⭐ Öne Çıkan Yanıtlar</span>
+                  <span className="text-[10px] text-gray-400 ml-auto">{topLevel.length} yanıtın en iyileri</span>
+                </div>
+                <div className="divide-y divide-gray-50">
+                  {top2.map(a => (
+                    <a key={a.id} href={`#answer-${a.id}`} className="flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer group block">
+                      <Avatar gender={a.gender} name={a.user_name} size="sm" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="text-xs font-bold text-gray-800">{a.user_name}</span>
+                          <GenderPill gender={a.gender} />
+                          {a.votes > 0 && <span className="ml-auto text-[11px] text-emerald-600 font-bold">👍 {a.votes}</span>}
+                        </div>
+                        <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed group-hover:text-gray-800 transition-colors">{a.body}</p>
+                      </div>
+                      <svg className="w-3.5 h-3.5 text-gray-300 group-hover:text-[#E8460A] flex-shrink-0 mt-1 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 13.5L12 21m0 0l-7.5-7.5M12 21V3" />
+                      </svg>
+                    </a>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
 
           {/* ── Yanıtlar ── */}
           {topLevel.length > 0 && (
@@ -352,7 +365,7 @@ export default function TavsiyeDetay() {
                 const dividerColor = "border-gray-100";
 
                 return (
-                  <div key={a.id}>
+                  <div key={a.id} id={`answer-${a.id}`}>
                     <div className={`rounded-2xl border border-gray-100 border-l-4 ${genderBorder} bg-white shadow-sm overflow-hidden`}>
 
                       {isBest && (
