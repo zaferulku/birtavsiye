@@ -133,8 +133,8 @@ export default function ProfilSayfasi() {
   return (
     <main className="bg-gray-50 min-h-screen">
       <Header />
-      <div className="max-w-[1400px] mx-auto px-8 py-8">
-        <div className="grid grid-cols-4 gap-6">
+      <div className="max-w-[1400px] mx-auto px-3 md:px-8 py-4 md:py-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">
 
           {/* Sol Menü */}
           <div className="col-span-1">
@@ -178,7 +178,7 @@ export default function ProfilSayfasi() {
           <div className="col-span-3">
 
             {activeMenu === "bilgiler" && (
-              <div className="grid grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 {/* Üyelik Bilgileri */}
                 <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
                   <h2 className="font-bold text-base text-[#E8460A] mb-5">Uyelik Bilgilerim</h2>

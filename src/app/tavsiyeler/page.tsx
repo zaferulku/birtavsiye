@@ -273,7 +273,7 @@ export default function TavsiyelerSayfasi() {
         </div>
       </div>
 
-      <div className="max-w-[1100px] mx-auto px-6 py-5 flex gap-6">
+      <div className="max-w-[1100px] mx-auto px-3 md:px-6 py-4 md:py-5 flex gap-6">
 
         {/* ── Orta: Ana Feed ── */}
         <div className="flex-1 min-w-0">

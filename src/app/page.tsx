@@ -37,11 +37,11 @@ export default function Home() {
       </div>
 
       {/* İkili görünüm */}
-      <div className="flex" style={{ minHeight: "calc(100vh - 132px)" }}>
-        <div className="flex-1 min-w-0 bg-white border-r border-gray-200 overflow-y-auto">
+      <div className="flex flex-col md:flex-row" style={{ minHeight: "calc(100vh - 132px)" }}>
+        <div className="w-full md:flex-1 min-w-0 bg-white md:border-r border-gray-200 overflow-y-auto">
           <FeaturedProducts />
         </div>
-        <div className="flex-1 min-w-0 bg-[#FAFAF8] overflow-y-auto">
+        <div className="w-full md:flex-1 min-w-0 bg-[#FAFAF8] overflow-y-auto">
           <TopicFeed compact />
         </div>
       </div>

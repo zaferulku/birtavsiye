@@ -9,9 +9,10 @@ import { GenderSymbol } from "../../components/ui/GenderIcon";
 
 type Topic = {
   id: string; title: string; body: string;
-  user_name: string; category: string;
+  user_id?: string | null; user_name: string; category: string;
   votes: number; answer_count: number; created_at: string;
   product_slug?: string | null; product_title?: string | null; product_brand?: string | null; product_id?: string | null;
+  author_gender?: string | null;
 };
 
 type Answer = {
@@ -109,7 +110,16 @@ export default function TavsiyeDetay() {
 
   const fetchAll = async () => {
     const { data: t } = await supabase.from("topics").select("*").eq("id", id).maybeSingle();
-    setTopic(t);
+    if (t) {
+      let authorGender: string | null = null;
+      if (t.user_id) {
+        const { data: p } = await supabase.from("profiles").select("gender").eq("id", t.user_id).maybeSingle();
+        authorGender = p?.gender || null;
+      }
+      setTopic({ ...t, author_gender: authorGender });
+    } else {
+      setTopic(t);
+    }
     const { data: a } = await supabase.from("topic_answers").select("*").eq("topic_id", id).order("created_at", { ascending: true });
     setAnswers(a || []);
   };
@@ -190,7 +200,7 @@ export default function TavsiyeDetay() {
     <main className="min-h-screen bg-[#F2F2F0]">
       <Header />
 
-      <div className="max-w-[1100px] mx-auto px-4 pt-5 pb-8 flex gap-5 items-start">
+      <div className="max-w-[1100px] mx-auto px-3 md:px-4 pt-4 md:pt-5 pb-8 flex flex-col md:flex-row gap-5 items-start">
 
         {/* ── Ana İçerik ── */}
         <div className="flex-1 min-w-0">
@@ -242,11 +252,7 @@ export default function TavsiyeDetay() {
 
               {/* Soru soran — başlığın hemen altında */}
               <div className="flex items-center gap-2 mb-3">
-                <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${cat.from} ${cat.to} flex items-center justify-center text-white flex-shrink-0`}>
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/>
-                  </svg>
-                </div>
+                <Avatar gender={topic.author_gender || undefined} name={topic.user_name} size="xs" />
                 <span className="text-xs font-semibold text-gray-600">{topic.user_name}</span>
                 <span className="text-[10px] text-gray-400">· Soru soran</span>
               </div>
