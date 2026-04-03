@@ -27,20 +27,20 @@ function ProductCard({ p }: { p: Product }) {
 
   return (
     <Link href={"/urun/" + p.slug}>
-      <div className="flex-shrink-0 w-44 bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md hover:border-gray-200 transition-all group cursor-pointer">
+      <div className="flex-shrink-0 w-28 sm:w-36 md:w-44 bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md hover:border-gray-200 transition-all group cursor-pointer">
         <div className="w-full aspect-square bg-gray-50 overflow-hidden">
           {p.image_url
             ? <img src={p.image_url} alt={p.title} className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300" />
             : <div className="w-full h-full flex items-center justify-center text-4xl">📦</div>
           }
         </div>
-        <div className="p-3">
-          <div className="text-[10px] font-bold text-[#E8460A] uppercase tracking-wide mb-1 truncate">{p.brand}</div>
-          <div className="text-xs font-medium text-gray-800 line-clamp-2 leading-snug min-h-[2.5rem] mb-2">{p.title}</div>
+        <div className="p-2 sm:p-3">
+          <div className="text-[9px] sm:text-[10px] font-bold text-[#E8460A] uppercase tracking-wide mb-0.5 truncate">{p.brand}</div>
+          <div className="text-[10px] sm:text-xs font-medium text-gray-800 line-clamp-2 leading-snug mb-1 sm:mb-2">{p.title}</div>
           {lowest ? (
-            <div className="text-sm font-bold text-gray-900">{lowest.price.toLocaleString("tr-TR")} <span className="text-xs font-normal text-gray-400">₺</span></div>
+            <div className="text-xs sm:text-sm font-bold text-gray-900">{lowest.price.toLocaleString("tr-TR")} <span className="text-[10px] font-normal text-gray-400">₺</span></div>
           ) : (
-            <div className="text-xs text-[#E8460A] font-semibold">Fiyatları Gör →</div>
+            <div className="text-[10px] sm:text-xs text-[#E8460A] font-semibold">Fiyatları Gör →</div>
           )}
         </div>
       </div>
@@ -51,8 +51,8 @@ function ProductCard({ p }: { p: Product }) {
 function Section({ label, icon, accent, products }: { label: string; icon: string; accent: string; products: Product[] }) {
   if (products.length === 0) return null;
   return (
-    <div className="mb-6">
-      <div className="flex items-center justify-between px-5 mb-3">
+    <div className="mb-4 sm:mb-6">
+      <div className="flex items-center justify-between px-2 sm:px-5 mb-2 sm:mb-3">
         <div className="flex items-center gap-2">
           <span className="text-base">{icon}</span>
           <span className="font-bold text-sm text-gray-900">{label}</span>
@@ -62,7 +62,7 @@ function Section({ label, icon, accent, products }: { label: string; icon: strin
           Tümünü gör →
         </Link>
       </div>
-      <div className="flex gap-3 overflow-x-auto px-5 pb-1" style={{ scrollbarWidth: "none" }}>
+      <div className="flex gap-2 sm:gap-3 overflow-x-auto px-2 sm:px-5 pb-1" style={{ scrollbarWidth: "none" }}>
         {products.map(p => <ProductCard key={p.id + label} p={p} />)}
       </div>
     </div>
@@ -115,7 +115,7 @@ export default function FeaturedProducts() {
   );
 
   return (
-    <div className="py-5">
+    <div className="py-3 sm:py-5">
       {SECTIONS.map(s => (
         <Section
           key={s.key}
