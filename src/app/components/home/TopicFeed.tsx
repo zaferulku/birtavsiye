@@ -53,6 +53,23 @@ const GRADIENTS = [
 ];
 const avatarGrad = (name: string) => GRADIENTS[(name || "A").charCodeAt(0) % GRADIENTS.length];
 
+function TopicAvatar({ name, gender }: { name: string; gender?: string | null }) {
+  const bg = gender === "kadin"
+    ? "from-pink-200 to-rose-300"
+    : gender === "erkek"
+    ? "from-blue-200 to-indigo-300"
+    : `bg-gradient-to-br ${avatarGrad(name)}`;
+  const isGender = gender === "kadin" || gender === "erkek";
+  return (
+    <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${isGender ? bg : avatarGrad(name)} flex items-center justify-center font-bold flex-shrink-0`}>
+      {isGender
+        ? <GenderSymbol gender={gender!} size={12} />
+        : <span className="text-white text-[10px]">{(name || "?")[0].toUpperCase()}</span>
+      }
+    </div>
+  );
+}
+
 const timeAgo = (d: string) => {
   const s = Math.floor((Date.now() - new Date(d).getTime()) / 1000);
   if (s < 60) return "şimdi";
@@ -479,9 +496,7 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
                       <div className="p-3.5">
                         {/* Üst satır: avatar + isim + kategori + zaman */}
                         <div className="flex items-center gap-2 mb-2">
-                          <div className={`w-7 h-7 rounded-full bg-gradient-to-br ${avatarGrad(t.user_name)} flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0`}>
-                            {(t.user_name || "?")[0].toUpperCase()}
-                          </div>
+                          <TopicAvatar name={t.user_name} gender={t.gender_filter} />
                           <span className="text-xs font-semibold text-gray-700 truncate max-w-[80px]">{t.user_name}</span>
                           {cs && (
                             <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${cs.bg} ${cs.text} ${cs.border}`}>

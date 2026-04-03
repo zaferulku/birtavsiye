@@ -51,23 +51,20 @@ function Avatar({ gender, name, size = "md" }: { gender?: string; name: string; 
   const px = { xs: 14, sm: 18, md: 22, lg: 28 }[size];
   const s = { xs: "w-6 h-6", sm: "w-8 h-8", md: "w-10 h-10", lg: "w-12 h-12" }[size];
   const bg = gender === "kadin"
-    ? "from-pink-400 to-rose-500"
+    ? "from-pink-200 to-rose-300"
     : gender === "erkek"
-    ? "from-blue-400 to-indigo-500"
-    : "from-[#E8460A] to-orange-400";
+    ? "from-blue-200 to-indigo-300"
+    : "from-orange-300 to-amber-300";
   return (
-    <div className={`${s} rounded-full bg-gradient-to-br ${bg} flex items-center justify-center text-white font-bold flex-shrink-0 shadow`}>
+    <div className={`${s} rounded-full bg-gradient-to-br ${bg} flex items-center justify-center font-bold flex-shrink-0 shadow`}>
       {gender === "kadin" || gender === "erkek"
         ? <GenderSymbol gender={gender} size={px} />
-        : (name || "?")[0].toUpperCase()
+        : <span className="text-white">{(name || "?")[0].toUpperCase()}</span>
       }
     </div>
   );
 }
 
-function GenderPill({ gender }: { gender?: string }) {
-  return <GenderSymbol gender={gender} size={13} />;
-}
 
 export default function TavsiyeDetay() {
   const { id } = useParams<{ id: string }>();
@@ -295,7 +292,6 @@ export default function TavsiyeDetay() {
                 <Avatar gender={userGender} name={userName} size="sm" />
                 <div className="flex-1">
                   <span className="text-xs font-bold text-gray-900">{userName}</span>
-                  <div className="mt-0.5"><GenderPill gender={userGender} /></div>
                 </div>
                 <span className="text-[11px] text-gray-400">Tavsiyeni paylaş</span>
               </div>
@@ -348,7 +344,6 @@ export default function TavsiyeDetay() {
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 mb-1">
                               <span className="text-xs font-bold text-gray-800">{a.user_name}</span>
-                              <GenderPill gender={a.gender} />
                             </div>
                             <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed group-hover:text-gray-800 transition-colors">{a.body}</p>
                           </div>
@@ -425,7 +420,6 @@ export default function TavsiyeDetay() {
                             {/* İsim + cinsiyet + zaman */}
                             <div className="flex items-center gap-2 flex-wrap mb-2.5">
                               <span className="text-sm font-black text-gray-900">{a.user_name}</span>
-                              <GenderPill gender={a.gender} />
                               <span className="text-[11px] text-gray-400 ml-auto">{timeAgo(a.created_at)}</span>
                             </div>
                             {/* Yanıt metni */}
@@ -512,7 +506,6 @@ export default function TavsiyeDetay() {
                                 <div className="flex-1">
                                   <div className="flex items-center gap-2 flex-wrap mb-1.5">
                                     <span className="text-xs font-black text-gray-800">{r.user_name}</span>
-                                    <GenderPill gender={r.gender} />
                                     <span className="text-[10px] text-gray-400 ml-auto">{timeAgo(r.created_at)}</span>
                                   </div>
                                   <p className="text-sm text-gray-700 leading-relaxed mb-2">{r.body}</p>
