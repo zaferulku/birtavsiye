@@ -28,13 +28,7 @@ function isRateLimited(key: string): boolean {
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl
 
-  // Güvenlik header'ları — tüm yanıtlara ekle
   const res = NextResponse.next()
-  res.headers.set('X-Content-Type-Options', 'nosniff')
-  res.headers.set('X-Frame-Options', 'DENY')
-  res.headers.set('X-XSS-Protection', '1; mode=block')
-  res.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-  res.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
 
   // API route'larına rate limiting uygula
   if (pathname.startsWith('/api/')) {

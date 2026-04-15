@@ -5,6 +5,33 @@ import Footer from "../../components/layout/Footer";
 import ProductGallery from "../../components/urun/ProductGallery";
 import ProductInfo from "../../components/urun/ProductInfo";
 import CommunitySection from "../../components/urun/CommunitySection";
+import type { Metadata } from "next";
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ slug: string }> }
+): Promise<Metadata> {
+  const { slug } = await params;
+  const { data: product } = await supabase
+    .from("products").select("title, description, brand, image_url").eq("slug", slug).maybeSingle();
+
+  if (!product) return { title: "Ürün Bulunamadı" };
+
+  const title = `${product.title}${product.brand ? ` - ${product.brand}` : ""}`;
+  const description = product.description
+    ? product.description.slice(0, 155)
+    : `${title} fiyatları, özellikleri ve kullanıcı tavsiyeleri`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "article",
+      images: product.image_url ? [{ url: product.image_url }] : undefined,
+    },
+  };
+}
 
 export default async function UrunDetay({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
