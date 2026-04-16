@@ -1,68 +1,116 @@
 import { NextRequest, NextResponse } from "next/server";
 
-// Trendyol'un kendi sitesinin kullandığı public search API
-// Kategori slug'ı ve sayfa numarası alır, ürün listesi döner
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const slug = searchParams.get("slug");   // örn: "akilli-telefon-x-c103498"
-  const page = searchParams.get("page") || "1";
-  const q    = searchParams.get("q");      // arama sorgusu (slug yerine)
+const SCRAPER_API_KEY = process.env.SCRAPER_API_KEY;
+const TRENDYOL_BASE   = "https://www.trendyol.com";
 
-  if (!slug && !q) {
-    return NextResponse.json({ error: "slug veya q parametresi gerekli" }, { status: 400 });
+function scraperUrl(targetUrl: string): string {
+  const encoded = encodeURIComponent(targetUrl);
+  return `http://api.scraperapi.com?api_key=${SCRAPER_API_KEY}&url=${encoded}&country_code=tr&render=true&premium=true`;
+}
+
+interface ParsedProduct {
+  name:  string;
+  url:   string;
+  image: string;
+  price: number;
+}
+
+function parseTLPrice(raw: string): number {
+  return parseFloat(raw.trim().replace(/\./g, "").replace(",", ".").replace(/[^0-9.]/g, "")) || 0;
+}
+
+// HTML'den ürün listesini product-card bloklarına bölerek çıkar
+function parseProducts(html: string): ParsedProduct[] {
+  // Preload edilen gerçek ürün resimleri (ilk 4 ürün için)
+  const preloadImages: string[] = [];
+  const preloadMatch = html.match(/"__single-search-result_preload-images__PROPS"\]=(\{[^<]+\})/);
+  if (preloadMatch) {
+    try {
+      const decoded = preloadMatch[1].replace(/\\u002F/g, "/");
+      const parsed  = JSON.parse(decoded) as { images: string[] };
+      preloadImages.push(...(parsed.images || []));
+    } catch { /* ignore */ }
   }
 
-  const headers = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    "Accept": "application/json, text/plain, */*",
-    "Accept-Language": "tr-TR,tr;q=0.9",
-    "Origin": "https://www.trendyol.com",
-    "Referer": "https://www.trendyol.com/",
-  };
+  // HTML'i product-card bloklarına böl
+  const chunks = html.split('data-testid="product-card"').slice(1);
+
+  const seen    = new Set<string>();
+  const results: ParsedProduct[] = [];
+
+  for (const chunk of chunks) {
+    if (results.length >= 24) break;
+
+    // Ürün adı: data-testid="image-img" alt="..."
+    const nameMatch = chunk.match(/data-testid="image-img"[^>]*alt="([^"]+)"/);
+    if (!nameMatch) continue;
+    const name = nameMatch[1].trim();
+
+    // Ürün URL: href="/brand/slug-p-12345"
+    const urlMatch = chunk.match(/href="(\/[^"]*-p-\d+)/);
+    if (!urlMatch) continue;
+    const url = `${TRENDYOL_BASE}${urlMatch[1]}`;
+    if (seen.has(url)) continue;
+    seen.add(url);
+
+    // Fiyat: price-section veya single-price
+    const priceMatch =
+      chunk.match(/data-testid="price-section"[^>]*>([^<]+)/) ??
+      chunk.match(/data-testid="single-price"[^>]*>([^<]+)/)  ??
+      chunk.match(/data-testid="price-value"[^>]*>([^<]+)/);
+    const price = priceMatch ? parseTLPrice(priceMatch[1]) : 0;
+
+    // Resim: preload listesinden veya CDN URL
+    const imgMatch = chunk.match(/https:\/\/cdn\.dsmcdn\.com\/mnresize\/400\/-\/[^"\\]+/);
+    const image    = preloadImages[results.length] ?? imgMatch?.[0] ?? "";
+
+    results.push({ name, url, image, price });
+  }
+
+  return results;
+}
+
+// GET /api/trendyol?q=laptop&page=1
+export async function GET(request: NextRequest) {
+  if (!SCRAPER_API_KEY) {
+    return NextResponse.json(
+      { error: "SCRAPER_API_KEY yapılandırılmamış" },
+      { status: 500 }
+    );
+  }
+
+  const { searchParams } = new URL(request.url);
+  const q    = searchParams.get("q");
+  const page = searchParams.get("page") || "1";
+
+  if (!q) {
+    return NextResponse.json({ error: "q parametresi gerekli" }, { status: 400 });
+  }
+
+  const targetUrl = `${TRENDYOL_BASE}/sr?q=${encodeURIComponent(q)}&pi=${page}`;
 
   try {
-    let apiUrl: string;
-
-    if (q) {
-      // Arama sorgusu
-      apiUrl = `https://public.trendyol.com/discovery-web-searchgw-service/api/filter/sr?q=${encodeURIComponent(q)}&pi=${page}&culture=tr-TR&userGenderId=1&pId=0&scoringAlgorithmId=2&channelId=1`;
-    } else {
-      // Kategori slug
-      apiUrl = `https://public.trendyol.com/discovery-web-searchgw-service/api/filter/${slug}?pi=${page}&culture=tr-TR&userGenderId=1&pId=0&scoringAlgorithmId=2&channelId=1`;
-    }
-
-    const res = await fetch(apiUrl, { headers });
+    const res = await fetch(scraperUrl(targetUrl), {
+      next: { revalidate: 300 },
+    });
 
     if (!res.ok) {
-      return NextResponse.json({ error: `Trendyol API hatası: ${res.status}` }, { status: res.status });
+      return NextResponse.json(
+        { error: `ScraperAPI hatası: ${res.status}` },
+        { status: res.status }
+      );
     }
 
-    const data = await res.json();
-
-    // Sadece ihtiyacımız olan alanları döndür
-    const products = (data?.result?.products || []).map((p: any) => ({
-      id:          p.id,
-      contentId:   p.contentId,
-      name:        p.name,
-      brand:       p.brand?.name || "",
-      price:       p.price?.sellingPrice || p.price?.originalPrice || 0,
-      image:       p.images?.[0] ? `https://cdn.dsmcdn.com${p.images[0]}` : "",
-      images:      (p.images || []).map((img: string) => `https://cdn.dsmcdn.com${img}`),
-      url:         `https://www.trendyol.com${p.url || ""}`,
-      description: p.description || "",
-      category:    p.categoryName || "",
-      ratingScore: p.ratingScore || 0,
-      totalRatings:p.totalRatingCount || 0,
-    }));
+    const html     = await res.text();
+    const products = parseProducts(html);
 
     return NextResponse.json({
       products,
-      totalCount: data?.result?.totalCount || 0,
-      pageCount:  Math.ceil((data?.result?.totalCount || 0) / 24),
-      page: parseInt(page),
+      totalCount: products.length,
+      page:       parseInt(page),
+      source:     "trendyol",
     });
-
-  } catch (err) {
+  } catch {
     return NextResponse.json({ error: "Bağlantı hatası" }, { status: 500 });
   }
 }
