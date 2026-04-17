@@ -103,6 +103,7 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
   const productSearchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isFirst = useRef(true);
   const [userGender, setUserGender] = useState<string>("");
+  const [userUsername, setUserUsername] = useState<string>("");
   const [genderFilter, setGenderFilter] = useState<"hepsi" | "kadin" | "erkek" | "tumu">("hepsi");
   const [genderOnly, setGenderOnly] = useState(false);
 
@@ -113,8 +114,9 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
         const { data: v } = await supabase.from("topic_votes")
           .select("topic_id,vote").eq("user_id", data.user.id);
         if (v) setUserVotes(Object.fromEntries(v.map(x => [x.topic_id, x.vote])));
-        const { data: profile } = await supabase.from("profiles").select("gender").eq("id", data.user.id).maybeSingle();
+        const { data: profile } = await supabase.from("profiles").select("gender,username").eq("id", data.user.id).maybeSingle();
         setUserGender(profile?.gender || "");
+        setUserUsername(profile?.username || "");
       }
     });
     fetchTopics();
@@ -158,7 +160,7 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
   };
 
   const getDisplay = (u: any) =>
-    u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "Kullanıcı";
+    userUsername || u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split("@")[0] || "Kullanıcı";
 
   const slugToTopicCat = (slug?: string | null): string => {
     if (!slug) return "Elektronik";

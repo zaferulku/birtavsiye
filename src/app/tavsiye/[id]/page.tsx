@@ -82,6 +82,9 @@ export default function TavsiyeDetay() {
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
   const [replyOpen, setReplyOpen] = useState<Record<string, boolean>>({});
   const [replyLoading, setReplyLoading] = useState<Record<string, boolean>>({});
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
   const mainReplyRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -90,10 +93,10 @@ export default function TavsiyeDetay() {
     supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) return;
       setUser(data.user);
-      const n = data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email?.split("@")[0] || "Kullanıcı";
-      setUserName(n);
-      const { data: profile } = await supabase.from("profiles").select("gender").eq("id", data.user.id).maybeSingle();
+      const { data: profile } = await supabase.from("profiles").select("gender,username").eq("id", data.user.id).maybeSingle();
       setUserGender(profile?.gender || "");
+      const n = profile?.username || data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email?.split("@")[0] || "Kullanıcı";
+      setUserName(n);
       const { data: votes } = await supabase.from("topic_answer_votes").select("answer_id, vote").eq("user_id", data.user.id);
       if (votes) setUserVotes(Object.fromEntries(votes.map(v => [v.answer_id, v.vote])));
       const { data: tv } = await supabase.from("topic_votes").select("vote").eq("topic_id", id).eq("user_id", data.user.id).maybeSingle();
@@ -137,6 +140,26 @@ export default function TavsiyeDetay() {
     await supabase.from("topics").update({ answer_count: (topic?.answer_count || 0) + 1 }).eq("id", id);
     setAnswerText(""); setLoading(false);
     await fetchAll();
+  };
+
+  const handleEdit = async (answerId: string) => {
+    if (!editText.trim()) return;
+    setEditLoading(true);
+    await supabase.from("topic_answers").update({ body: editText }).eq("id", answerId);
+    setAnswers(prev => prev.map(a => a.id === answerId ? { ...a, body: editText } : a));
+    setEditingId(null);
+    setEditText("");
+    setEditLoading(false);
+  };
+
+  const handleDelete = async (answerId: string, parentId?: string | null) => {
+    if (!confirm("Bu yorumu silmek istediğine emin misin?")) return;
+    await supabase.from("topic_answers").delete().eq("id", answerId);
+    setAnswers(prev => prev.filter(a => a.id !== answerId));
+    const newCount = Math.max((topic?.answer_count || 1) - 1, 0);
+    await supabase.from("topics").update({ answer_count: newCount }).eq("id", id);
+    setTopic(prev => prev ? { ...prev, answer_count: newCount } : prev);
+    if (!parentId) setEditingId(null);
   };
 
   const handleReply = async (parentId: string) => {
@@ -453,14 +476,30 @@ export default function TavsiyeDetay() {
                           </button>
 
                           {user && (
-                            <button
-                              onClick={() => setReplyOpen(prev => ({ ...prev, [a.id]: !isOpen }))}
-                              className="ml-auto text-xs text-gray-400 hover:text-[#E8460A] font-semibold transition-colors">
-                              {isOpen ? "Vazgeç" : "💬 Yanıtla"}
-                              {nested.length > 0 && !isOpen && (
-                                <span className="ml-1 text-[10px] bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded-full">{nested.length}</span>
+                            <div className="ml-auto flex items-center gap-2">
+                              {user.id === a.user_id && (
+                                <>
+                                  <button
+                                    onClick={() => { setEditingId(a.id); setEditText(a.body); setReplyOpen(prev => ({ ...prev, [a.id]: false })); }}
+                                    className="text-xs text-gray-400 hover:text-blue-500 font-semibold transition-colors">
+                                    ✏️ Düzenle
+                                  </button>
+                                  <button
+                                    onClick={() => handleDelete(a.id, null)}
+                                    className="text-xs text-gray-400 hover:text-red-500 font-semibold transition-colors">
+                                    🗑️ Sil
+                                  </button>
+                                </>
                               )}
-                            </button>
+                              <button
+                                onClick={() => setReplyOpen(prev => ({ ...prev, [a.id]: !isOpen }))}
+                                className="text-xs text-gray-400 hover:text-[#E8460A] font-semibold transition-colors">
+                                {isOpen ? "Vazgeç" : "💬 Yanıtla"}
+                                {nested.length > 0 && !isOpen && (
+                                  <span className="ml-1 text-[10px] bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded-full">{nested.length}</span>
+                                )}
+                              </button>
+                            </div>
                           )}
                           {!user && nested.length > 0 && (
                             <span className="ml-auto text-[11px] text-gray-400">{nested.length} yanıt</span>
@@ -468,8 +507,32 @@ export default function TavsiyeDetay() {
                         </div>
                       </div>
 
+                      {/* İnline düzenleme kutusu */}
+                      {editingId === a.id && (
+                        <div className="border-t border-gray-100 bg-blue-50/40 px-4 py-3">
+                          <textarea
+                            value={editText}
+                            onChange={e => setEditText(e.target.value)}
+                            rows={3}
+                            autoFocus
+                            className="w-full border border-blue-200 bg-white rounded-xl px-3 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 resize-none transition-all"
+                          />
+                          <div className="flex justify-end gap-2 mt-2">
+                            <button onClick={() => { setEditingId(null); setEditText(""); }}
+                              className="text-xs text-gray-400 hover:text-gray-600 px-3 py-1.5 rounded-lg border border-gray-200 bg-white transition-colors">
+                              Vazgeç
+                            </button>
+                            <button onClick={() => handleEdit(a.id)}
+                              disabled={editLoading || !editText.trim()}
+                              className="text-xs text-white bg-blue-500 hover:bg-blue-600 px-4 py-1.5 rounded-lg font-bold disabled:opacity-40 transition-all">
+                              {editLoading ? "..." : "Kaydet"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
                       {/* İnline yanıt kutusu */}
-                      {isOpen && user && (
+                      {isOpen && user && editingId !== a.id && (
                         <div className={`border-t ${dividerColor} bg-white/50 px-4 py-3`}>
                           <div className="flex items-start gap-2">
                             <Avatar gender={userGender} name={userName} size="xs" />
@@ -515,7 +578,7 @@ export default function TavsiyeDetay() {
                                     <span className="text-[10px] text-gray-400 ml-auto">{timeAgo(r.created_at)}</span>
                                   </div>
                                   <p className="text-sm text-gray-700 leading-relaxed mb-2">{r.body}</p>
-                                  <div className="flex items-center gap-1.5">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
                                     <button onClick={() => handleVote(r, 1)} disabled={!user}
                                       className={`flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-bold border transition-all ${rv === 1 ? "bg-emerald-500 border-emerald-500 text-white" : "bg-white border-gray-200 text-gray-400 hover:border-emerald-300 hover:text-emerald-600"}`}>
                                       👍 {r.votes > 0 ? r.votes : 0}
@@ -524,7 +587,41 @@ export default function TavsiyeDetay() {
                                       className={`flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-bold border transition-all ${rv === -1 ? "bg-red-500 border-red-500 text-white" : "bg-white border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500"}`}>
                                       👎 {r.votes < 0 ? Math.abs(r.votes) : 0}
                                     </button>
+                                    {user?.id === r.user_id && (
+                                      <>
+                                        <button onClick={() => { setEditingId(r.id); setEditText(r.body); }}
+                                          className="text-[11px] text-gray-400 hover:text-blue-500 font-semibold transition-colors">
+                                          ✏️
+                                        </button>
+                                        <button onClick={() => handleDelete(r.id, r.parent_id)}
+                                          className="text-[11px] text-gray-400 hover:text-red-500 font-semibold transition-colors">
+                                          🗑️
+                                        </button>
+                                      </>
+                                    )}
                                   </div>
+                                  {editingId === r.id && (
+                                    <div className="mt-2">
+                                      <textarea
+                                        value={editText}
+                                        onChange={e => setEditText(e.target.value)}
+                                        rows={2}
+                                        autoFocus
+                                        className="w-full border border-blue-200 bg-white rounded-xl px-3 py-2 text-sm outline-none focus:border-blue-400 resize-none transition-all"
+                                      />
+                                      <div className="flex justify-end gap-2 mt-1.5">
+                                        <button onClick={() => { setEditingId(null); setEditText(""); }}
+                                          className="text-xs text-gray-400 hover:text-gray-600 px-2.5 py-1 rounded-lg border border-gray-200 transition-colors">
+                                          Vazgeç
+                                        </button>
+                                        <button onClick={() => handleEdit(r.id)}
+                                          disabled={editLoading || !editText.trim()}
+                                          className="text-xs text-white bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded-lg font-bold disabled:opacity-40 transition-all">
+                                          {editLoading ? "..." : "Kaydet"}
+                                        </button>
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>

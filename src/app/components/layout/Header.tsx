@@ -577,6 +577,7 @@ export default function Header() {
   const [activeCat, setActiveCat] = useState<string | null>(null);
   const profileTimer = useRef<NodeJS.Timeout | null>(null);
   const groupTimer = useRef<NodeJS.Timeout | null>(null);
+  const groupOpenTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setUser(data.user));
@@ -601,10 +602,22 @@ export default function Header() {
 
   const openGroup = (title: string) => {
     if (groupTimer.current) clearTimeout(groupTimer.current);
-    setActiveGroup(title);
-    setActiveCat(null);
+    if (groupOpenTimer.current) clearTimeout(groupOpenTimer.current);
+    // Zaten bir dropdown açıksa anında geç, değilse 300ms bekle
+    if (activeGroup) {
+      setActiveGroup(title);
+      setActiveCat(null);
+    } else {
+      groupOpenTimer.current = setTimeout(() => {
+        setActiveGroup(title);
+        setActiveCat(null);
+      }, 300);
+    }
   };
-  const closeGroup = () => { groupTimer.current = setTimeout(() => setActiveGroup(null), 150); };
+  const closeGroup = () => {
+    if (groupOpenTimer.current) clearTimeout(groupOpenTimer.current);
+    groupTimer.current = setTimeout(() => setActiveGroup(null), 150);
+  };
 
   const activeGroupData = NAV.find(g => g.title === activeGroup);
   const displayCat = activeGroupData?.cats.find(c => c.label === activeCat) ?? activeGroupData?.cats[0];
