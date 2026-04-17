@@ -112,11 +112,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
   }
 
-  const { source, query, page = 1, category_id } = await request.json() as {
-    source:      "trendyol" | "hepsiburada" | "mediamarkt" | "pttavm";
-    query:       string;
-    page?:       number;
-    category_id?: string;
+  const { source, query, page = 1, category_id, title_filter } = await request.json() as {
+    source:        "trendyol" | "hepsiburada" | "mediamarkt" | "pttavm";
+    query:         string;
+    page?:         number;
+    category_id?:  string;
+    title_filter?: string[]; // en az biri eşleşmeli, yoksa ürün atlanır
   };
 
   if (!source || !query) {
@@ -131,7 +132,18 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: `Scraper hatası: ${scraperRes.status}` }, { status: 502 });
   }
 
-  const { products = [] } = await scraperRes.json() as { products: ScrapedProduct[] };
+  let { products = [] } = await scraperRes.json() as { products: ScrapedProduct[] };
+
+  if (title_filter && title_filter.length > 0) {
+    const before = products.length;
+    products = products.filter(p =>
+      title_filter.some(kw => p.name.toLowerCase().includes(kw.toLowerCase()))
+    );
+    if (products.length < before) {
+      console.log(`[title_filter] ${before} → ${products.length} ürün (${before - products.length} atlandı)`);
+    }
+  }
+
   const storeName = source === "trendyol" ? "Trendyol"
     : source === "mediamarkt" ? "MediaMarkt"
     : source === "pttavm" ? "PttAVM"

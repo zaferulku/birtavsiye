@@ -17,6 +17,54 @@ const ELEKTRONIK_KATEGORILER = [
   "Networking & Modem", "Telefon Aksesuar", "Saç Bakımı",
 ];
 
+// Kategori bazlı başlık filtresi — en az bir keyword eşleşmeli
+// yoksa ürün o kategoriye eklenmez
+const CATEGORY_TITLE_FILTERS = {
+  "Akıllı Telefon": [
+    "iphone", "samsung galaxy", "xiaomi", "huawei", "redmi", "realme",
+    "oppo", "nokia", "motorola", "poco", "oneplus", "google pixel",
+    "akıllı telefon", "smartphone", "telefon", "honor",
+  ],
+  "Bilgisayar & Laptop": [
+    "laptop", "notebook", "macbook", "dizüstü", "gaming pc", "bilgisayar",
+    "asus", "lenovo", "hp ", "dell ", "msi ", "casper", "monster",
+  ],
+  "Tablet": [
+    "ipad", "tablet", "galaxy tab", "lenovo tab", "xiaomi pad",
+    "huawei matepad", "redmi pad",
+  ],
+  "TV & Projeksiyon": [
+    "tv", "televizyon", "oled", "qled", "4k", "smart tv", "projeksiyon",
+  ],
+  "Beyaz Eşya": [
+    "buzdolabı", "çamaşır makinesi", "bulaşık makinesi", "fırın",
+    "klima", "donduruculu", "no frost", "inverter",
+  ],
+  "Küçük Ev Aletleri": [
+    "süpürge", "kahve", "blender", "tost", "air fryer", "fritöz",
+    "elektrikli", "ütü", "mikser", "robot süpürge",
+  ],
+  "Bilgisayar Bileşenleri": [
+    "ekran kartı", "ram", "ssd", "nvme", "işlemci", "anakart",
+    "rtx", "rx ", "ddr", "m.2", "pcie",
+  ],
+  "Ses & Kulaklık": [
+    "kulaklık", "airpods", "earbuds", "tws", "hoparlör", "soundbar",
+    "headset", "headphone", "galaxy buds",
+  ],
+  "Akıllı Saat": [
+    "watch", "saat", "garmin", "smartwatch", "band ", "mi band",
+    "fitness tracker",
+  ],
+};
+
+function titleMatchesCategory(title, categoryName) {
+  const keywords = CATEGORY_TITLE_FILTERS[categoryName];
+  if (!keywords) return true; // filtre tanımlı değilse geçir
+  const t = title.toLowerCase();
+  return keywords.some(kw => t.includes(kw.toLowerCase()));
+}
+
 const CATEGORIES = [
   {
     id: "9f8b9ba9-ec64-4254-9e2c-b7d795d31ab7", name: "Akıllı Telefon",
@@ -176,13 +224,17 @@ const CATEGORIES = [
 
 async function syncOne(source, query, page, categoryId, categoryName) {
   try {
+    const titleFilter = CATEGORY_TITLE_FILTERS[categoryName] ?? null;
     const res = await fetch(`${BASE}/api/sync`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "x-internal-secret": SECRET,
       },
-      body: JSON.stringify({ source, query, page, category_id: categoryId }),
+      body: JSON.stringify({
+        source, query, page, category_id: categoryId,
+        ...(titleFilter ? { title_filter: titleFilter } : {}),
+      }),
     });
     const data = await res.json();
     const tag = `[${categoryName}][${source}] q="${query}" p${page}`;
