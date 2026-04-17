@@ -38,8 +38,9 @@ function parseProducts(html: string): ParsedProduct[] {
   const seen    = new Set<string>();
   const results: ParsedProduct[] = [];
 
-  for (const chunk of chunks) {
+  for (let chunkIdx = 0; chunkIdx < chunks.length; chunkIdx++) {
     if (results.length >= 24) break;
+    const chunk = chunks[chunkIdx];
 
     // Ürün adı: data-testid="image-img" alt="..."
     const nameMatch = chunk.match(/data-testid="image-img"[^>]*alt="([^"]+)"/);
@@ -63,9 +64,9 @@ function parseProducts(html: string): ParsedProduct[] {
     // Alakasız ürünleri filtrele (çıkartma, aksesuar vb. düşük fiyatlılar)
     if (price > 0 && price < 1000) continue;
 
-    // Resim: preload listesinden veya CDN URL (tüm boyutları yakala)
+    // Resim: chunkIdx ile preload eşle (filtrelemeden etkilenmez), fallback CDN
     const imgMatch = chunk.match(/https:\/\/cdn\.dsmcdn\.com\/[^"\\]+\.jpg/);
-    const image    = preloadImages[results.length] ?? imgMatch?.[0] ?? "";
+    const image    = preloadImages[chunkIdx] ?? imgMatch?.[0] ?? "";
 
     results.push({ name, url, image, price });
   }

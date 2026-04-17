@@ -27,7 +27,7 @@ const CATEGORIES = [
   { id: "3ad0b1db-0340-4760-9e85-18a699abc69b", name: "Kadın Giyim",           query: "kadın elbise bluz etek" },
 ];
 
-const SOURCES = ["trendyol", "hepsiburada"];
+const SOURCES = ["trendyol", "hepsiburada", "mediamarkt"];
 
 async function syncOne(source, query, categoryId, categoryName) {
   try {
