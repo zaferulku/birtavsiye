@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET;
 const BASE_URL        = process.env.NEXTAUTH_URL || "http://localhost:3000";
+
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+}
 
 interface ScrapedProduct {
   name:  string;
@@ -40,7 +42,8 @@ function extractBrand(name: string): string {
 }
 
 async function getStoreId(storeName: string): Promise<string | null> {
-  const { data } = await supabase
+  const sb = getSupabase();
+  const { data } = await sb
     .from("stores")
     .select("id")
     .ilike("name", storeName)
@@ -49,8 +52,9 @@ async function getStoreId(storeName: string): Promise<string | null> {
 }
 
 async function syncProducts(products: ScrapedProduct[], storeName: string, categoryId?: string) {
+  const sb = getSupabase();
   const storeId = await getStoreId(storeName);
-  if (!storeId) return { inserted: 0, errors: 1 };
+  if (!storeId) return { inserted: 0, errors: 1, firstError: [] };
 
   let inserted = 0, errors = 0;
   const firstError: string[] = [];
@@ -68,7 +72,7 @@ async function syncProducts(products: ScrapedProduct[], storeName: string, categ
     if (categoryId) productData.category_id = categoryId;
     if (p.specs && Object.keys(p.specs).length > 0) productData.specs = p.specs;
 
-    const { data: product, error: productError } = await supabase
+    const { data: product, error: productError } = await sb
       .from("products")
       .upsert(productData, { onConflict: "slug" })
       .select("id")
@@ -80,7 +84,7 @@ async function syncProducts(products: ScrapedProduct[], storeName: string, categ
       continue;
     }
 
-    const { error: priceError } = await supabase
+    const { error: priceError } = await sb
       .from("prices")
       .upsert(
         { product_id: product.id, store_id: storeId,
