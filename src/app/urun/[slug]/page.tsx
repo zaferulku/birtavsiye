@@ -4,6 +4,7 @@ import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
 import ProductGallery from "../../components/urun/ProductGallery";
 import ProductInfo from "../../components/urun/ProductInfo";
+import SpecsTable from "../../components/urun/SpecsTable";
 import CommunitySection from "../../components/urun/CommunitySection";
 import type { Metadata } from "next";
 
@@ -128,6 +129,9 @@ export default async function UrunDetay({ params }: { params: Promise<{ slug: st
             </div>
           </div>
         </div>
+
+        {/* Teknik Özellikler */}
+        <SpecsTable specs={product.specs ?? null} />
 
         {/* Yorumlar Bölümü - tam genişlik */}
         <div className="bg-white rounded-2xl p-6 shadow-sm">

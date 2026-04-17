@@ -14,6 +14,7 @@ interface ScrapedProduct {
   url:   string;
   image: string;
   price: number;
+  specs?: Record<string, string>;
 }
 
 function toSlug(text: string): string {
@@ -64,6 +65,7 @@ async function syncProducts(products: ScrapedProduct[], storeName: string, categ
       source: storeName.toLowerCase(), source_url: p.url,
     };
     if (categoryId) productData.category_id = categoryId;
+    if (p.specs && Object.keys(p.specs).length > 0) productData.specs = p.specs;
 
     const { data: product, error: productError } = await supabase
       .from("products")

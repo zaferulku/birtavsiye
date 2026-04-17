@@ -13,6 +13,69 @@ interface ParsedProduct {
   url:   string;
   image: string;
   price: number;
+  specs: Record<string, string>;
+}
+
+function parseSpecsFromTitle(name: string): Record<string, string> {
+  const specs: Record<string, string> = {};
+  const n = name;
+
+  // İşlemci
+  const cpu =
+    n.match(/Intel[®\s]+Core[™\s]+(?:i[3579]|Ultra\s*\d+|5|7|9)[^\s,/|]*/i)?.[0]?.trim() ??
+    n.match(/Intel[®\s]+Celeron[^\s,/|]*/i)?.[0]?.trim() ??
+    n.match(/Intel[®\s]+Pentium[^\s,/|]*/i)?.[0]?.trim() ??
+    n.match(/AMD\s+Ryzen\s+[^\s,/|]+/i)?.[0]?.trim() ??
+    n.match(/Apple\s+M\d+[^\s,/|]*/i)?.[0]?.trim() ??
+    n.match(/Snapdragon\s+\d+[^\s,/|]*/i)?.[0]?.trim();
+  if (cpu) specs["İşlemci"] = cpu.replace(/[®™]/g, "").trim();
+
+  // RAM
+  const ram = n.match(/(\d+)\s*GB\s+RAM/i)?.[0]?.trim() ??
+    n.match(/(\d+)\s*GB\s+(?:LPDDR|DDR)\d*/i)?.[0]?.trim();
+  if (ram) specs["RAM"] = ram.replace(/RAM/i, "").trim() + " RAM";
+
+  // Depolama
+  const storage = n.match(/(\d+)\s*(?:GB|TB)\s+SSD/i)?.[0]?.trim() ??
+    n.match(/(\d+)\s*TB\s+(?:HDD|Disk)?/i)?.[0]?.trim() ??
+    n.match(/(\d+)\s*GB\s+(?:eMMC|Flash|Depolama)/i)?.[0]?.trim();
+  if (storage) specs["Depolama"] = storage;
+
+  // Ekran boyutu
+  const screen = n.match(/(\d+[,.]?\d*)\s*(?:inç|inch|''|")\b/i)?.[0]?.trim() ??
+    n.match(/(\d+)['']\s/)?.[0]?.trim();
+  if (screen) specs["Ekran"] = screen.replace(/inch/i, "inç");
+
+  // Çözünürlük
+  const res = n.match(/\b(4K|UHD|FHD|Full\s*HD|HD|WUXGA|WQHD|QHD|QLED|OLED|AMOLED)\b/i)?.[0];
+  if (res) specs["Çözünürlük"] = res.toUpperCase().replace("FULL HD", "FHD");
+
+  // Ekran kartı
+  const gpu = n.match(/(?:NVIDIA\s+)?(?:GeForce\s+)?RTX\s*\d+\w*/i)?.[0]?.trim() ??
+    n.match(/(?:NVIDIA\s+)?(?:GeForce\s+)?GTX\s*\d+\w*/i)?.[0]?.trim() ??
+    n.match(/Radeon\s+[^\s,/|]+/i)?.[0]?.trim();
+  if (gpu) specs["Ekran Kartı"] = gpu;
+
+  // İşletim sistemi
+  const os = n.match(/Windows\s+\d+[^\s,/|]*/i)?.[0]?.trim() ??
+    n.match(/\bFreeDOS\b/i)?.[0]?.trim() ??
+    n.match(/\bmacOS\b/i)?.[0]?.trim() ??
+    n.match(/Android\s+\d+[^\s,/|]*/i)?.[0]?.trim();
+  if (os) specs["İşletim Sistemi"] = os;
+
+  // Yenile Hızı (Hz)
+  const hz = n.match(/(\d+)\s*Hz/i)?.[0];
+  if (hz) specs["Yenileme Hızı"] = hz;
+
+  // Pil (mAh)
+  const mah = n.match(/(\d{3,5})\s*mAh/i)?.[0];
+  if (mah) specs["Batarya"] = mah;
+
+  // Kamera
+  const mp = n.match(/(\d+)\s*MP/i)?.[0];
+  if (mp) specs["Kamera"] = mp;
+
+  return specs;
 }
 
 function parseProducts(html: string): ParsedProduct[] {
@@ -33,6 +96,7 @@ function parseProducts(html: string): ParsedProduct[] {
       url,
       image: image.startsWith("http") ? image : `${MM_BASE}${image}`,
       price: parseInt(priceStr, 10),
+      specs: parseSpecsFromTitle(name),
     });
   }
 

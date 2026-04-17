@@ -60,6 +60,10 @@ CREATE POLICY "prices_admin_update" ON prices FOR UPDATE
 CREATE POLICY "prices_admin_delete" ON prices FOR DELETE
   USING (EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND is_admin = true));
 
+-- UNIQUE constraint eksikse ekle
+ALTER TABLE stores DROP CONSTRAINT IF EXISTS stores_name_key;
+ALTER TABLE stores ADD CONSTRAINT stores_name_key UNIQUE (name);
+
 -- Örnek mağaza verileri
 INSERT INTO stores (name, url) VALUES
   ('Trendyol', 'https://www.trendyol.com'),
