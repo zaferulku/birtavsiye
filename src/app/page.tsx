@@ -37,11 +37,10 @@ export default function Home() {
         </div>
       </div>
 
-      <HomeBanner />
-
       {/* İkili görünüm */}
       <div className="flex" style={{ minHeight: "calc(100vh - 132px)" }}>
         <div className="flex-1 min-w-0 bg-white border-r border-gray-200 overflow-y-auto">
+          <HomeBanner />
           <FeaturedProducts />
         </div>
         <div className="flex-1 min-w-0 bg-[#FAFAF8] overflow-y-auto">

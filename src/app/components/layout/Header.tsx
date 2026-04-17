@@ -629,7 +629,7 @@ export default function Header() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input type="text" value={query} onChange={e => setQuery(e.target.value)}
-              placeholder="En uygun fiyatı bul — ürün, marka veya kategori ara"
+              placeholder="Ne Arıyorsun? Hemen aradığın ürünün en uygunu nerede gör"
               className="flex-1 bg-transparent text-sm outline-none text-gray-800 placeholder:text-gray-400" />
             {query && (
               <button type="button" onClick={() => setQuery("")} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
