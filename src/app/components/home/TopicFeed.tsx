@@ -299,28 +299,32 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
           })}
         </div>
 
-        {/* Cinsiyet sekmeleri — sadece giriş yapan kendi cinsiyetini görür */}
-        {user && (
-          <div className="flex items-center gap-1.5 px-1 py-1.5 border-t border-gray-100">
-            {userGender === "kadin" && (
-              <button onClick={() => setGenderFilter(genderFilter === "kadin" ? "hepsi" : "kadin")}
-                className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${genderFilter === "kadin" ? "bg-pink-500 text-white border-pink-500" : "border-pink-300 text-pink-600 hover:border-pink-500"}`}>
-                ♀ Kadınlara Özel
-              </button>
-            )}
-            {userGender === "erkek" && (
-              <button onClick={() => setGenderFilter(genderFilter === "erkek" ? "hepsi" : "erkek")}
-                className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${genderFilter === "erkek" ? "bg-blue-500 text-white border-blue-500" : "border-blue-300 text-blue-600 hover:border-blue-500"}`}>
-                ♂ Erkeklere Özel
-              </button>
-            )}
+        {/* Cinsiyet sekmeleri — butonlar herkese görünür, içerik sadece giriş yapana */}
+        <div className="flex items-center gap-1.5 px-1 py-1.5 border-t border-gray-100">
+          <button
+            onClick={() => {
+              if (!user) { window.location.href = "/giris"; return; }
+              setGenderFilter(genderFilter === "kadin" ? "hepsi" : "kadin");
+            }}
+            className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${genderFilter === "kadin" ? "bg-pink-500 text-white border-pink-500" : "border-pink-300 text-pink-600 hover:border-pink-500"}`}>
+            ♀ Kadınlara Özel
+          </button>
+          <button
+            onClick={() => {
+              if (!user) { window.location.href = "/giris"; return; }
+              setGenderFilter(genderFilter === "erkek" ? "hepsi" : "erkek");
+            }}
+            className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${genderFilter === "erkek" ? "bg-blue-500 text-white border-blue-500" : "border-blue-300 text-blue-600 hover:border-blue-500"}`}>
+            ♂ Erkeklere Özel
+          </button>
+          {user && (
             <button onClick={() => setGenderFilter(genderFilter === "tumu" ? "hepsi" : "tumu")}
               className={`flex items-center gap-0.5 px-2 py-1 rounded-full border transition-all ${genderFilter === "tumu" ? "border-purple-400 bg-purple-50" : "border-gray-200 bg-white hover:border-purple-300"}`}>
               <span className="w-5 h-5 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-white text-[11px] font-bold">♀</span>
               <span className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-[11px] font-bold">♂</span>
             </button>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Butonlar — kategori barının altında */}
         <div className="flex items-center gap-2 px-1 py-2 border-t border-gray-100">
