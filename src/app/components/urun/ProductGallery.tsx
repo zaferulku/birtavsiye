@@ -24,7 +24,7 @@ export default function ProductGallery({ imageUrl }: { imageUrl?: string }) {
       {/* Thumbnail */}
       <div
         className="bg-white border border-gray-100 rounded-2xl overflow-hidden relative cursor-zoom-in group"
-        style={{ height: "520px" }}
+        style={{ height: "380px" }}
         onClick={() => setLightbox(true)}
       >
         <img
