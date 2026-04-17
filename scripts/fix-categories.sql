@@ -179,8 +179,19 @@ WHERE (
   OR title ILIKE '%huawei nova%'
   OR title ILIKE '%akıllı telefon%'
 )
-AND category_id != (SELECT id FROM categories WHERE slug = 'telefon-aksesuar' LIMIT 1)
-AND category_id != (SELECT id FROM categories WHERE slug = 'akilli-saat' LIMIT 1);
+-- Aksesuar/kılıf başlıkları kesinlikle dışla
+AND title NOT ILIKE '%kılıf%'
+AND title NOT ILIKE '%ekran koruyucu%'
+AND title NOT ILIKE '%koruyucu nano%'
+AND title NOT ILIKE '%temperli cam%'
+AND title NOT ILIKE '%kamera lens koruyucu%'
+AND title NOT ILIKE '%darbe korumalı%'
+AND title NOT ILIKE '%şeffaf%'
+AND title NOT ILIKE '%silikon%'
+AND title NOT ILIKE '%cüzdan%'
+AND title NOT ILIKE '%powerbank%'
+AND title NOT ILIKE '%şarj%'
+AND title NOT ILIKE '%kablo%';
 
 -- BİLGİSAYAR & LAPTOP
 UPDATE products SET category_id = (SELECT id FROM categories WHERE slug = 'bilgisayar-laptop' LIMIT 1)
