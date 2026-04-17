@@ -293,13 +293,13 @@ export default function TavsiyeDetay() {
               <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
                 <div className="flex items-center gap-2">
                   <button onClick={() => handleTopicVote(1)}
-                    className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-bold border transition-all ${
+                    className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-semibold border transition-all ${
                       topicVote === 1 ? "bg-stone-100 border-stone-300 text-stone-600" : "bg-white border-gray-200 text-gray-400 hover:border-emerald-300 hover:text-emerald-600"
                     }`}>
                     👍 <span>{topic.votes > 0 ? topic.votes : 0}</span>
                   </button>
                   <button onClick={() => handleTopicVote(-1)}
-                    className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-bold border transition-all ${
+                    className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-semibold border transition-all ${
                       topicVote === -1 ? "bg-stone-100 border-stone-300 text-stone-600" : "bg-white border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500"
                     }`}>
                     👎
@@ -464,7 +464,7 @@ export default function TavsiyeDetay() {
                         {/* Aksiyonlar */}
                         <div className={`flex items-center gap-2 mt-3 pt-3 border-t ${dividerColor}`}>
                           <button onClick={() => handleVote(a, 1)} disabled={!user}
-                            className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-bold transition-all ${
+                            className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-semibold border transition-all ${
                               myVote === 1
                                 ? "bg-stone-100 border-stone-300 text-stone-600 shadow"
                                 : "bg-white/60 border border-gray-200 text-gray-500 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-600"
@@ -472,7 +472,7 @@ export default function TavsiyeDetay() {
                             👍 {a.votes > 0 ? a.votes : 0}
                           </button>
                           <button onClick={() => handleVote(a, -1)} disabled={!user}
-                            className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-bold transition-all ${
+                            className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-semibold border transition-all ${
                               myVote === -1
                                 ? "bg-stone-100 border-stone-300 text-stone-600 shadow"
                                 : "bg-white/60 border border-gray-200 text-gray-500 hover:bg-red-50 hover:border-red-300 hover:text-red-500"
@@ -585,11 +585,11 @@ export default function TavsiyeDetay() {
                                   <p className="text-sm text-gray-700 leading-relaxed mb-2">{r.body}</p>
                                   <div className="flex items-center gap-1.5 flex-wrap">
                                     <button onClick={() => handleVote(r, 1)} disabled={!user}
-                                      className={`flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-bold border transition-all ${rv === 1 ? "bg-stone-100 border-stone-300 text-stone-600" : "bg-white border-gray-200 text-gray-400 hover:border-emerald-300 hover:text-emerald-600"}`}>
+                                      className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-semibold border transition-all ${rv === 1 ? "bg-stone-100 border-stone-300 text-stone-600" : "bg-white border-gray-200 text-gray-400 hover:border-emerald-300 hover:text-emerald-600"}`}>
                                       👍 {r.votes > 0 ? r.votes : 0}
                                     </button>
                                     <button onClick={() => handleVote(r, -1)} disabled={!user}
-                                      className={`flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-bold border transition-all ${rv === -1 ? "bg-stone-100 border-stone-300 text-stone-600" : "bg-white border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500"}`}>
+                                      className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-semibold border transition-all ${rv === -1 ? "bg-stone-100 border-stone-300 text-stone-600" : "bg-white border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500"}`}>
                                       👎 {r.votes < 0 ? Math.abs(r.votes) : 0}
                                     </button>
                                     {user?.id === r.user_id && (
