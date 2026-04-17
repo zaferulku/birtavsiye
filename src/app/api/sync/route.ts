@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
   }
 
   const { source, query, page = 1, category_id } = await request.json() as {
-    source:      "trendyol" | "hepsiburada" | "mediamarkt";
+    source:      "trendyol" | "hepsiburada" | "mediamarkt" | "pttavm";
     query:       string;
     page?:       number;
     category_id?: string;
@@ -119,7 +119,10 @@ export async function POST(request: NextRequest) {
   }
 
   const { products = [] } = await scraperRes.json() as { products: ScrapedProduct[] };
-  const storeName = source === "trendyol" ? "Trendyol" : source === "mediamarkt" ? "MediaMarkt" : "Hepsiburada";
+  const storeName = source === "trendyol" ? "Trendyol"
+    : source === "mediamarkt" ? "MediaMarkt"
+    : source === "pttavm" ? "PttAVM"
+    : "Hepsiburada";
   const stats     = await syncProducts(products, storeName, category_id);
 
   return NextResponse.json({ source, query, page, fetched: products.length, ...stats });
