@@ -45,21 +45,6 @@ const QUICK_CATS = [
 export default function HomeBanner() {
   return (
     <div className="w-full bg-white border-b border-gray-100">
-      {/* Hızlı kategori şeridi — banner üstü */}
-      <div className="flex items-center gap-0.5 px-3 py-1.5 overflow-x-auto border-b border-gray-100" style={{ scrollbarWidth: "none" }}>
-        {QUICK_CATS.map(cat => (
-          <Link key={cat.href} href={cat.href}
-            className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-all">
-            <span className="text-sm">{cat.icon}</span>
-            {cat.label}
-          </Link>
-        ))}
-        <Link href="/urunler"
-          className="flex-shrink-0 ml-auto text-xs font-semibold text-[#E8460A] hover:underline px-3 whitespace-nowrap">
-          Tüm Kategoriler →
-        </Link>
-      </div>
-
       {/* Ana banner — Hepsiburada stili */}
       <div className="flex gap-3 p-3">
         {/* Sol: Ana kampanya kartı */}
