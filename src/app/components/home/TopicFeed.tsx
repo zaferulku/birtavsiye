@@ -17,28 +17,32 @@ type Answer = {
   body: string; votes: number; gender: string;
 };
 
-const CATS = ["Hepsi", "Elektronik", "Kozmetik", "Ev & Yaşam", "Spor", "Hediye", "Diğer"];
+const CATS = ["Hepsi", "Elektronik", "Kozmetik", "Ev & Yaşam", "Spor", "Seyahat", "Motorsiklet", "Hediye", "Diğer"];
 
 const CAT_STYLE: Record<string, { bg: string; text: string; border: string; dot: string }> = {
-  Elektronik:   { bg: "bg-blue-50",    text: "text-blue-700",    border: "border-blue-200",   dot: "bg-blue-400" },
-  Kozmetik:     { bg: "bg-pink-50",    text: "text-pink-700",    border: "border-pink-200",   dot: "bg-pink-400" },
-  "Ev & Yaşam": { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200",dot: "bg-emerald-400" },
-  "Ev & Yasam": { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200",dot: "bg-emerald-400" },
-  Spor:         { bg: "bg-orange-50",  text: "text-orange-700",  border: "border-orange-200", dot: "bg-orange-400" },
-  Hediye:       { bg: "bg-purple-50",  text: "text-purple-700",  border: "border-purple-200", dot: "bg-purple-400" },
-  Diğer:        { bg: "bg-gray-100",   text: "text-gray-600",    border: "border-gray-200",   dot: "bg-gray-400" },
-  Diger:        { bg: "bg-gray-100",   text: "text-gray-600",    border: "border-gray-200",   dot: "bg-gray-400" },
+  Elektronik:   { bg: "bg-gray-100", text: "text-gray-500", border: "border-gray-200", dot: "bg-gray-300" },
+  Kozmetik:     { bg: "bg-gray-100", text: "text-gray-500", border: "border-gray-200", dot: "bg-gray-300" },
+  "Ev & Yaşam": { bg: "bg-gray-100", text: "text-gray-500", border: "border-gray-200", dot: "bg-gray-300" },
+  "Ev & Yasam": { bg: "bg-gray-100", text: "text-gray-500", border: "border-gray-200", dot: "bg-gray-300" },
+  Spor:         { bg: "bg-gray-100", text: "text-gray-500", border: "border-gray-200", dot: "bg-gray-300" },
+  Seyahat:      { bg: "bg-gray-100", text: "text-gray-500", border: "border-gray-200", dot: "bg-gray-300" },
+  Motorsiklet:  { bg: "bg-gray-100", text: "text-gray-500", border: "border-gray-200", dot: "bg-gray-300" },
+  Hediye:       { bg: "bg-gray-100", text: "text-gray-500", border: "border-gray-200", dot: "bg-gray-300" },
+  Diğer:        { bg: "bg-gray-100", text: "text-gray-500", border: "border-gray-200", dot: "bg-gray-300" },
+  Diger:        { bg: "bg-gray-100", text: "text-gray-500", border: "border-gray-200", dot: "bg-gray-300" },
 };
 
 const CAT_LEFT_BORDER: Record<string, string> = {
-  Elektronik:   "border-l-blue-400",
-  Kozmetik:     "border-l-pink-400",
-  "Ev & Yaşam": "border-l-emerald-400",
-  "Ev & Yasam": "border-l-emerald-400",
-  Spor:         "border-l-orange-400",
-  Hediye:       "border-l-purple-400",
-  Diğer:        "border-l-gray-300",
-  Diger:        "border-l-gray-300",
+  Elektronik:   "border-l-gray-200",
+  Kozmetik:     "border-l-gray-200",
+  "Ev & Yaşam": "border-l-gray-200",
+  "Ev & Yasam": "border-l-gray-200",
+  Spor:         "border-l-gray-200",
+  Seyahat:      "border-l-gray-200",
+  Motorsiklet:  "border-l-gray-200",
+  Hediye:       "border-l-gray-200",
+  Diğer:        "border-l-gray-200",
+  Diger:        "border-l-gray-200",
 };
 
 const GRADIENTS = [
@@ -285,7 +289,7 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
             const isActive = activeCat === c && genderFilter === "hepsi";
             return (
               <button key={c} onClick={() => { setActiveCat(c); setGenderFilter("hepsi"); }}
-                className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-2.5 text-[11px] font-semibold whitespace-nowrap border-b-2 transition-all ${
+                className={`flex-shrink-0 flex items-center gap-1 px-2 py-2.5 text-[11px] font-semibold whitespace-nowrap border-b-2 transition-all ${
                   isActive ? "border-[#E8460A] text-[#E8460A]" : "border-transparent text-gray-400 hover:text-gray-600"
                 }`}>
                 {style && !isActive && <span className={`w-1.5 h-1.5 rounded-full ${style.dot}`} />}
@@ -602,7 +606,7 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
         </div>
 
         {/* ── Popüler Sorular Sidebar ── */}
-        <div className="w-[220px] flex-shrink-0 border-l border-gray-100 bg-white overflow-y-auto">
+        <div className="w-[280px] flex-shrink-0 border-l border-gray-100 bg-white overflow-y-auto">
           <div className="px-3 pt-3 pb-2 border-b border-gray-100">
             <div className="flex items-center gap-1.5">
               <span className="text-sm">🔥</span>

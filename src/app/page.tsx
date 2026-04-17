@@ -4,6 +4,7 @@ import Header from "./components/layout/Header";
 import Footer from "./components/layout/Footer";
 import FeaturedProducts from "./components/home/FeaturedProducts";
 import TopicFeed from "./components/home/TopicFeed";
+import HomeBanner from "./components/home/HomeBanner";
 
 export default function Home() {
   const router = useRouter();
@@ -35,6 +36,8 @@ export default function Home() {
           </button>
         </div>
       </div>
+
+      <HomeBanner />
 
       {/* İkili görünüm */}
       <div className="flex" style={{ minHeight: "calc(100vh - 132px)" }}>
