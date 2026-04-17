@@ -29,7 +29,8 @@ function parseProducts(html: string): ParsedProduct[] {
     if (seen.has(url)) continue;
     seen.add(url);
 
-    const price = parseFloat(priceStr.replace(/\./g, "").replace(",", ".")) || 0;
+    // PttAVM fiyatlar ondalıklı gelir: "97498.99644999999" → 97499 TL
+    const price = Math.round(parseFloat(priceStr)) || 0;
 
     results.push({
       name,

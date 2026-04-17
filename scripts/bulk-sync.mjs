@@ -1,12 +1,21 @@
 // Tüm kategoriler için bulk sync — MediaMarkt + PttAVM + Trendyol + Hepsiburada
-// node scripts/bulk-sync.mjs               (hepsi)
-// node scripts/bulk-sync.mjs mediamarkt    (sadece mediamarkt)
-// node scripts/bulk-sync.mjs pttavm        (sadece pttavm)
-// node scripts/bulk-sync.mjs trendyol      (sadece trendyol)
+// node scripts/bulk-sync.mjs                          (hepsi)
+// node scripts/bulk-sync.mjs mediamarkt               (sadece mediamarkt)
+// node scripts/bulk-sync.mjs pttavm                   (sadece pttavm)
+// node scripts/bulk-sync.mjs pttavm elektronik        (pttavm, sadece elektronik kategoriler)
+// node scripts/bulk-sync.mjs mediamarkt elektronik    (mediamarkt, sadece elektronik)
+// node scripts/bulk-sync.mjs "" elektronik            (tüm source'lar, sadece elektronik)
 
 const SECRET = "JtLDp2X7yemVzBQk/DZdHxUyElFqb8JJqA8r7VtpxfI=";
 const BASE   = "http://localhost:3000";
-const PAGES  = [1, 2, 3, 4, 5];
+const PAGES  = [1, 2, 3, 4, 5, 6, 7, 8];
+
+const ELEKTRONIK_KATEGORILER = [
+  "Akıllı Telefon", "Bilgisayar & Laptop", "Tablet", "TV & Projeksiyon",
+  "Ses & Kulaklık", "Akıllı Saat", "Oyun & Konsol", "Fotoğraf & Kamera",
+  "Beyaz Eşya", "Küçük Ev Aletleri", "Bilgisayar Bileşenleri",
+  "Networking & Modem", "Telefon Aksesuar", "Saç Bakımı",
+];
 
 const CATEGORIES = [
   {
@@ -116,14 +125,14 @@ const CATEGORIES = [
   {
     id: "54d7fe6e-3be9-4a61-a46d-6e87c9a344e2", name: "Makyaj",
     sources: [
-      { source: "pttavm",   queries: ["ruj", "maskara", "fondöten", "göz farı", "allık"] },
+      { source: "pttavm",   queries: ["ruj", "maskara", "fondöten", "göz farı", "allık", "eyeliner", "dudak kalemi", "bronzer", "highlighter", "setting spray"] },
       { source: "trendyol", queries: ["mac ruj", "nars fondöten", "maybelline maskara"] },
     ],
   },
   {
     id: "43791592-affa-479f-b5a2-d6310a08cf53", name: "Cilt Bakımı",
     sources: [
-      { source: "pttavm",   queries: ["yüz kremi", "nemlendirici", "güneş kremi", "serum", "tonik"] },
+      { source: "pttavm",   queries: ["yüz kremi", "nemlendirici", "güneş kremi", "serum", "tonik", "göz kremi", "temizleyici jel", "maske", "retinol", "vitamin c serum"] },
       { source: "trendyol", queries: ["cerave nemlendirici", "the ordinary serum", "neutrogena"] },
     ],
   },
@@ -131,35 +140,35 @@ const CATEGORIES = [
     id: "dc4dd384-c710-4a85-84d6-5c1679b7043a", name: "Saç Bakımı",
     sources: [
       { source: "mediamarkt", queries: ["saç kurutma", "saç düzleştirici"] },
-      { source: "pttavm",     queries: ["saç kurutma makinesi", "saç düzleştirici", "saç maşası", "philips saç"] },
+      { source: "pttavm",     queries: ["saç kurutma makinesi", "saç düzleştirici", "saç maşası", "philips saç", "saç boyası", "şampuan", "saç maskesi", "saç serumu"] },
       { source: "trendyol",   queries: ["dyson airwrap", "ghd saç", "babyliss"] },
     ],
   },
   {
     id: "265b4d29-52bb-4b1d-b64d-eecf9cea9d82", name: "Fitness",
     sources: [
-      { source: "pttavm",   queries: ["dambıl", "koşu bandı", "spor aleti", "yoga matı", "bisiklet"] },
+      { source: "pttavm",   queries: ["dambıl", "koşu bandı", "spor aleti", "yoga matı", "bisiklet", "halter", "protein tozu", "spor çantası", "fitness eldiveni", "kettlebell"] },
       { source: "trendyol", queries: ["garmin forerunner", "xiaomi treadmill", "dambıl seti"] },
     ],
   },
   {
     id: "86dbdcb7-6d56-43ed-a152-710088e6d271", name: "Outdoor & Kamp",
     sources: [
-      { source: "pttavm",   queries: ["kamp çadırı", "uyku tulumu", "kamp malzemesi", "outdoor"] },
+      { source: "pttavm",   queries: ["kamp çadırı", "uyku tulumu", "kamp malzemesi", "outdoor", "termos", "trekking ayakkabı", "kamp lambası", "hiking"] },
       { source: "trendyol", queries: ["kamp çadırı", "termos stanley", "north face"] },
     ],
   },
   {
     id: "f032ca3f-0679-4d1d-9b59-a2285745ee31", name: "Erkek Giyim",
     sources: [
-      { source: "pttavm",   queries: ["erkek mont", "erkek ayakkabı", "erkek tişört", "erkek pantolon", "erkek spor"] },
+      { source: "pttavm",   queries: ["erkek mont", "erkek ayakkabı", "erkek tişört", "erkek pantolon", "erkek spor", "erkek gömlek", "erkek ceket", "erkek sweatshirt", "erkek bot", "erkek eşofman"] },
       { source: "trendyol", queries: ["nike erkek", "adidas erkek", "erkek mont"] },
     ],
   },
   {
     id: "3ad0b1db-0340-4760-9e85-18a699abc69b", name: "Kadın Giyim",
     sources: [
-      { source: "pttavm",   queries: ["kadın mont", "kadın elbise", "kadın ayakkabı", "kadın çanta", "kadın spor"] },
+      { source: "pttavm",   queries: ["kadın mont", "kadın elbise", "kadın ayakkabı", "kadın çanta", "kadın spor", "kadın bluz", "kadın pantolon", "kadın ceket", "kadın bot", "kadın etek"] },
       { source: "trendyol", queries: ["nike kadın", "adidas kadın", "kadın mont"] },
     ],
   },
@@ -178,35 +187,39 @@ async function syncOne(source, query, page, categoryId, categoryName) {
     const data = await res.json();
     const tag = `[${categoryName}][${source}] q="${query}" p${page}`;
     console.log(`${tag}: fetched=${data.fetched ?? 0} inserted=${data.inserted ?? 0} errors=${data.errors ?? 0}`);
-    return data.fetched ?? 0;
+    return { fetched: data.fetched ?? 0, inserted: data.inserted ?? 0 };
   } catch (e) {
     console.error(`[${categoryName}][${source}] q="${query}" p${page}: HATA - ${e.message}`);
-    return 0;
+    return { fetched: 0, inserted: 0 };
   }
 }
 
 async function main() {
-  const filterSource = process.argv[2];
+  const filterSource   = process.argv[2] || "";
+  const filterCategory = process.argv[3] || "";
   let totalFetched = 0;
   let totalInserted = 0;
 
   for (const cat of CATEGORIES) {
+    if (filterCategory === "elektronik" && !ELEKTRONIK_KATEGORILER.includes(cat.name)) continue;
+
     for (const { source, queries } of cat.sources) {
       if (filterSource && source !== filterSource) continue;
 
       for (const query of queries) {
         for (const page of PAGES) {
-          const fetched = await syncOne(source, query, page, cat.id, cat.name);
+          const { fetched, inserted } = await syncOne(source, query, page, cat.id, cat.name);
           if (fetched === 0) break;
           totalFetched += fetched;
-          await new Promise(r => setTimeout(r, 1500));
+          totalInserted += inserted;
+          await new Promise(r => setTimeout(r, 1200));
         }
-        await new Promise(r => setTimeout(r, 500));
+        await new Promise(r => setTimeout(r, 400));
       }
     }
   }
 
-  console.log(`\nTamamlandı. Toplam çekilen: ${totalFetched}`);
+  console.log(`\nTamamlandı. Toplam çekilen: ${totalFetched} | Toplam eklenen/güncellenen: ${totalInserted}`);
 }
 
 main();

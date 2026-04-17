@@ -53,6 +53,7 @@ async function syncProducts(products: ScrapedProduct[], storeName: string, categ
   if (!storeId) return { inserted: 0, errors: 1 };
 
   let inserted = 0, errors = 0;
+  const firstError: string[] = [];
 
   for (const p of products) {
     if (!p.name || !p.url) continue;
@@ -73,7 +74,11 @@ async function syncProducts(products: ScrapedProduct[], storeName: string, categ
       .select("id")
       .single();
 
-    if (productError || !product) { errors++; continue; }
+    if (productError || !product) {
+      if (firstError.length < 3) firstError.push(`product:${productError?.code}:${productError?.message}:slug=${slug}`);
+      errors++;
+      continue;
+    }
 
     const { error: priceError } = await supabase
       .from("prices")
@@ -83,11 +88,15 @@ async function syncProducts(products: ScrapedProduct[], storeName: string, categ
         { onConflict: "product_id,store_id" }
       );
 
-    if (priceError) { errors++; continue; }
+    if (priceError) {
+      if (firstError.length < 3) firstError.push(`price:${priceError?.code}:${priceError?.message}`);
+      errors++;
+      continue;
+    }
     inserted++;
   }
 
-  return { inserted, errors };
+  return { inserted, errors, firstError };
 }
 
 // POST /api/sync
