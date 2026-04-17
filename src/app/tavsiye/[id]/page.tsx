@@ -82,6 +82,7 @@ export default function TavsiyeDetay() {
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
   const [replyOpen, setReplyOpen] = useState<Record<string, boolean>>({});
   const [replyLoading, setReplyLoading] = useState<Record<string, boolean>>({});
+  const [top2Ids, setTop2Ids] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editText, setEditText] = useState("");
   const [editLoading, setEditLoading] = useState(false);
@@ -125,6 +126,9 @@ export default function TavsiyeDetay() {
     }
     const { data: a } = await supabase.from("topic_answers").select("*").eq("topic_id", id).order("created_at", { ascending: true });
     setAnswers(a || []);
+    const topLevel = (a || []).filter((x: any) => !x.parent_id);
+    const sorted2 = [...topLevel].sort((x: any, y: any) => (y.votes || 0) - (x.votes || 0)).slice(0, 2);
+    setTop2Ids(sorted2.map((x: any) => x.id));
   };
 
   const fetchPopular = async () => {
@@ -355,8 +359,8 @@ export default function TavsiyeDetay() {
           )}
 
           {/* ── Öne Çıkan 2 Yanıt ── */}
-          {topLevel.length > 0 && (() => {
-            const top2 = [...topLevel].sort((a, b) => (b.votes || 0) - (a.votes || 0)).slice(0, 2);
+          {top2Ids.length > 0 && (() => {
+            const top2 = top2Ids.map(tid => answers.find(a => a.id === tid)).filter(Boolean) as Answer[];
             return (
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-4">
                 <div className="px-4 py-2.5 border-b border-gray-100 flex items-center gap-2">
@@ -366,6 +370,7 @@ export default function TavsiyeDetay() {
                 <div className="divide-y divide-gray-50">
                   {top2.map(a => {
                     const myVote = userVotes[a.id] || 0;
+                    const netVotes = a.votes || 0;
                     return (
                       <div key={a.id} className="px-4 py-3 hover:bg-gray-50 transition-colors group">
                         <a href={`#answer-${a.id}`} className="flex items-start gap-3 mb-2.5 cursor-pointer block">
@@ -377,18 +382,18 @@ export default function TavsiyeDetay() {
                             <p className="text-sm text-gray-600 line-clamp-2 leading-relaxed group-hover:text-gray-800 transition-colors">{a.body}</p>
                           </div>
                         </a>
-                        <div className="flex items-center gap-2 pl-9">
+                        <div className="flex items-center gap-1.5 pl-9">
                           <button onClick={() => handleVote(a, 1)} disabled={!user}
-                            className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-bold border transition-all ${
+                            className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-semibold border transition-all ${
                               myVote === 1 ? "bg-stone-100 border-stone-300 text-stone-600" : "bg-white border-gray-200 text-gray-400 hover:border-emerald-300 hover:text-emerald-600"
                             }`}>
-                            👍 {a.votes > 0 ? a.votes : 0}
+                            👍 {netVotes > 0 ? netVotes : 0}
                           </button>
                           <button onClick={() => handleVote(a, -1)} disabled={!user}
-                            className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-bold border transition-all ${
+                            className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-semibold border transition-all ${
                               myVote === -1 ? "bg-stone-100 border-stone-300 text-stone-600" : "bg-white border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500"
                             }`}>
-                            👎
+                            👎 {netVotes < 0 ? Math.abs(netVotes) : 0}
                           </button>
                           <a href={`#answer-${a.id}`} className="ml-auto text-[11px] text-[#E8460A] font-semibold hover:underline">
                             Yanıtla →
