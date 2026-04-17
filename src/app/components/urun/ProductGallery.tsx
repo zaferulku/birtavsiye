@@ -33,9 +33,6 @@ export default function ProductGallery({ imageUrl }: { imageUrl?: string }) {
           className="max-h-full max-w-full object-contain p-6 transition-transform duration-200 group-hover:scale-105"
           style={{ maxHeight: "240px" }}
         />
-        <div className="absolute bottom-2 right-2 bg-black/40 text-white text-xs px-2 py-1 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity">
-          🔍 Büyüt
-        </div>
       </div>
 
       {/* Lightbox */}
