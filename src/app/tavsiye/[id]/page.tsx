@@ -290,13 +290,13 @@ export default function TavsiyeDetay() {
                 <div className="flex items-center gap-2">
                   <button onClick={() => handleTopicVote(1)}
                     className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-bold border transition-all ${
-                      topicVote === 1 ? "bg-gray-600 border-gray-600 text-white" : "bg-white border-gray-200 text-gray-400 hover:border-emerald-300 hover:text-emerald-600"
+                      topicVote === 1 ? "bg-stone-100 border-stone-300 text-stone-600" : "bg-white border-gray-200 text-gray-400 hover:border-emerald-300 hover:text-emerald-600"
                     }`}>
                     👍 <span>{topic.votes > 0 ? topic.votes : 0}</span>
                   </button>
                   <button onClick={() => handleTopicVote(-1)}
                     className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-bold border transition-all ${
-                      topicVote === -1 ? "bg-gray-600 border-gray-600 text-white" : "bg-white border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500"
+                      topicVote === -1 ? "bg-stone-100 border-stone-300 text-stone-600" : "bg-white border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500"
                     }`}>
                     👎
                   </button>
@@ -380,13 +380,13 @@ export default function TavsiyeDetay() {
                         <div className="flex items-center gap-2 pl-9">
                           <button onClick={() => handleVote(a, 1)} disabled={!user}
                             className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-bold border transition-all ${
-                              myVote === 1 ? "bg-gray-600 border-gray-600 text-white" : "bg-white border-gray-200 text-gray-400 hover:border-emerald-300 hover:text-emerald-600"
+                              myVote === 1 ? "bg-stone-100 border-stone-300 text-stone-600" : "bg-white border-gray-200 text-gray-400 hover:border-emerald-300 hover:text-emerald-600"
                             }`}>
                             👍 {a.votes > 0 ? a.votes : 0}
                           </button>
                           <button onClick={() => handleVote(a, -1)} disabled={!user}
                             className={`flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-bold border transition-all ${
-                              myVote === -1 ? "bg-gray-600 border-gray-600 text-white" : "bg-white border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500"
+                              myVote === -1 ? "bg-stone-100 border-stone-300 text-stone-600" : "bg-white border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500"
                             }`}>
                             👎
                           </button>
@@ -461,7 +461,7 @@ export default function TavsiyeDetay() {
                           <button onClick={() => handleVote(a, 1)} disabled={!user}
                             className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-bold transition-all ${
                               myVote === 1
-                                ? "bg-gray-600 text-white shadow"
+                                ? "bg-stone-100 border-stone-300 text-stone-600 shadow"
                                 : "bg-white/60 border border-gray-200 text-gray-500 hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-600"
                             }`}>
                             👍 {a.votes > 0 ? a.votes : 0}
@@ -469,7 +469,7 @@ export default function TavsiyeDetay() {
                           <button onClick={() => handleVote(a, -1)} disabled={!user}
                             className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-bold transition-all ${
                               myVote === -1
-                                ? "bg-gray-600 text-white shadow"
+                                ? "bg-stone-100 border-stone-300 text-stone-600 shadow"
                                 : "bg-white/60 border border-gray-200 text-gray-500 hover:bg-red-50 hover:border-red-300 hover:text-red-500"
                             }`}>
                             👎 {a.votes < 0 ? Math.abs(a.votes) : 0}
@@ -481,19 +481,19 @@ export default function TavsiyeDetay() {
                                 <>
                                   <button
                                     onClick={() => { setEditingId(a.id); setEditText(a.body); setReplyOpen(prev => ({ ...prev, [a.id]: false })); }}
-                                    className="text-xs text-gray-400 hover:text-blue-500 font-semibold transition-colors cursor-finger">
+                                    className="text-xs text-gray-400 hover:text-blue-500 font-semibold transition-colors cursor-pointer">
                                     ✏️ Düzenle
                                   </button>
                                   <button
                                     onClick={() => handleDelete(a.id, null)}
-                                    className="text-xs text-gray-400 hover:text-red-500 font-semibold transition-colors cursor-finger">
+                                    className="text-xs text-gray-400 hover:text-red-500 font-semibold transition-colors cursor-pointer">
                                     🗑️ Sil
                                   </button>
                                 </>
                               )}
                               <button
                                 onClick={() => setReplyOpen(prev => ({ ...prev, [a.id]: !isOpen }))}
-                                className="text-xs text-gray-400 hover:text-[#E8460A] font-semibold transition-colors cursor-finger">
+                                className="text-xs text-gray-400 hover:text-[#E8460A] font-semibold transition-colors cursor-pointer">
                                 {isOpen ? "Vazgeç" : "💬 Yanıtla"}
                                 {nested.length > 0 && !isOpen && (
                                   <span className="ml-1 text-[10px] bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded-full">{nested.length}</span>
@@ -580,21 +580,21 @@ export default function TavsiyeDetay() {
                                   <p className="text-sm text-gray-700 leading-relaxed mb-2">{r.body}</p>
                                   <div className="flex items-center gap-1.5 flex-wrap">
                                     <button onClick={() => handleVote(r, 1)} disabled={!user}
-                                      className={`flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-bold border transition-all ${rv === 1 ? "bg-gray-600 border-gray-600 text-white" : "bg-white border-gray-200 text-gray-400 hover:border-emerald-300 hover:text-emerald-600"}`}>
+                                      className={`flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-bold border transition-all ${rv === 1 ? "bg-stone-100 border-stone-300 text-stone-600" : "bg-white border-gray-200 text-gray-400 hover:border-emerald-300 hover:text-emerald-600"}`}>
                                       👍 {r.votes > 0 ? r.votes : 0}
                                     </button>
                                     <button onClick={() => handleVote(r, -1)} disabled={!user}
-                                      className={`flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-bold border transition-all ${rv === -1 ? "bg-gray-600 border-gray-600 text-white" : "bg-white border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500"}`}>
+                                      className={`flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-full font-bold border transition-all ${rv === -1 ? "bg-stone-100 border-stone-300 text-stone-600" : "bg-white border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500"}`}>
                                       👎 {r.votes < 0 ? Math.abs(r.votes) : 0}
                                     </button>
                                     {user?.id === r.user_id && (
                                       <>
                                         <button onClick={() => { setEditingId(r.id); setEditText(r.body); }}
-                                          className="text-[11px] text-gray-400 hover:text-blue-500 font-semibold transition-colors cursor-finger">
+                                          className="text-[11px] text-gray-400 hover:text-blue-500 font-semibold transition-colors cursor-pointer">
                                           ✏️
                                         </button>
                                         <button onClick={() => handleDelete(r.id, r.parent_id)}
-                                          className="text-[11px] text-gray-400 hover:text-red-500 font-semibold transition-colors cursor-finger">
+                                          className="text-[11px] text-gray-400 hover:text-red-500 font-semibold transition-colors cursor-pointer">
                                           🗑️
                                         </button>
                                       </>
