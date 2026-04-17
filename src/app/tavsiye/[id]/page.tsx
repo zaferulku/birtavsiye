@@ -481,19 +481,19 @@ export default function TavsiyeDetay() {
                                 <>
                                   <button
                                     onClick={() => { setEditingId(a.id); setEditText(a.body); setReplyOpen(prev => ({ ...prev, [a.id]: false })); }}
-                                    className="text-xs text-gray-400 hover:text-blue-500 font-semibold transition-colors">
+                                    className="text-xs text-gray-400 hover:text-blue-500 font-semibold transition-colors cursor-pointer">
                                     ✏️ Düzenle
                                   </button>
                                   <button
                                     onClick={() => handleDelete(a.id, null)}
-                                    className="text-xs text-gray-400 hover:text-red-500 font-semibold transition-colors">
+                                    className="text-xs text-gray-400 hover:text-red-500 font-semibold transition-colors cursor-pointer">
                                     🗑️ Sil
                                   </button>
                                 </>
                               )}
                               <button
                                 onClick={() => setReplyOpen(prev => ({ ...prev, [a.id]: !isOpen }))}
-                                className="text-xs text-gray-400 hover:text-[#E8460A] font-semibold transition-colors">
+                                className="text-xs text-gray-400 hover:text-[#E8460A] font-semibold transition-colors cursor-pointer">
                                 {isOpen ? "Vazgeç" : "💬 Yanıtla"}
                                 {nested.length > 0 && !isOpen && (
                                   <span className="ml-1 text-[10px] bg-gray-200 text-gray-500 px-1.5 py-0.5 rounded-full">{nested.length}</span>
@@ -590,11 +590,11 @@ export default function TavsiyeDetay() {
                                     {user?.id === r.user_id && (
                                       <>
                                         <button onClick={() => { setEditingId(r.id); setEditText(r.body); }}
-                                          className="text-[11px] text-gray-400 hover:text-blue-500 font-semibold transition-colors">
+                                          className="text-[11px] text-gray-400 hover:text-blue-500 font-semibold transition-colors cursor-pointer">
                                           ✏️
                                         </button>
                                         <button onClick={() => handleDelete(r.id, r.parent_id)}
-                                          className="text-[11px] text-gray-400 hover:text-red-500 font-semibold transition-colors">
+                                          className="text-[11px] text-gray-400 hover:text-red-500 font-semibold transition-colors cursor-pointer">
                                           🗑️
                                         </button>
                                       </>
