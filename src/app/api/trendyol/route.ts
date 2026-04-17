@@ -60,8 +60,11 @@ function parseProducts(html: string): ParsedProduct[] {
       chunk.match(/data-testid="price-value"[^>]*>([^<]+)/);
     const price = priceMatch ? parseTLPrice(priceMatch[1]) : 0;
 
-    // Resim: preload listesinden veya CDN URL
-    const imgMatch = chunk.match(/https:\/\/cdn\.dsmcdn\.com\/mnresize\/400\/-\/[^"\\]+/);
+    // Alakasız ürünleri filtrele (çıkartma, aksesuar vb. düşük fiyatlılar)
+    if (price > 0 && price < 1000) continue;
+
+    // Resim: preload listesinden veya CDN URL (tüm boyutları yakala)
+    const imgMatch = chunk.match(/https:\/\/cdn\.dsmcdn\.com\/[^"\\]+\.jpg/);
     const image    = preloadImages[results.length] ?? imgMatch?.[0] ?? "";
 
     results.push({ name, url, image, price });

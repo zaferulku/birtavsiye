@@ -47,7 +47,7 @@ async function getStoreId(storeName: string): Promise<string | null> {
   return data?.id ?? null;
 }
 
-async function syncProducts(products: ScrapedProduct[], storeName: string) {
+async function syncProducts(products: ScrapedProduct[], storeName: string, categoryId?: string) {
   const storeId = await getStoreId(storeName);
   if (!storeId) return { inserted: 0, errors: 1 };
 
@@ -59,13 +59,15 @@ async function syncProducts(products: ScrapedProduct[], storeName: string) {
     const slug  = toSlug(p.name);
     const brand = extractBrand(p.name);
 
+    const productData: Record<string, unknown> = {
+      title: p.name, slug, brand, image_url: p.image || null,
+      source: storeName.toLowerCase(), source_url: p.url,
+    };
+    if (categoryId) productData.category_id = categoryId;
+
     const { data: product, error: productError } = await supabase
       .from("products")
-      .upsert(
-        { title: p.name, slug, brand, image_url: p.image || null,
-          source: storeName.toLowerCase(), source_url: p.url },
-        { onConflict: "slug" }
-      )
+      .upsert(productData, { onConflict: "slug" })
       .select("id")
       .single();
 
@@ -95,10 +97,11 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
   }
 
-  const { source, query, page = 1 } = await request.json() as {
-    source: "trendyol" | "hepsiburada";
-    query:  string;
-    page?:  number;
+  const { source, query, page = 1, category_id } = await request.json() as {
+    source:      "trendyol" | "hepsiburada";
+    query:       string;
+    page?:       number;
+    category_id?: string;
   };
 
   if (!source || !query) {
@@ -115,7 +118,7 @@ export async function POST(request: NextRequest) {
 
   const { products = [] } = await scraperRes.json() as { products: ScrapedProduct[] };
   const storeName = source === "trendyol" ? "Trendyol" : "Hepsiburada";
-  const stats     = await syncProducts(products, storeName);
+  const stats     = await syncProducts(products, storeName, category_id);
 
   return NextResponse.json({ source, query, page, fetched: products.length, ...stats });
 }
