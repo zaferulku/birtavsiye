@@ -24,14 +24,13 @@ export default function ProductGallery({ imageUrl }: { imageUrl?: string }) {
       {/* Thumbnail */}
       <div
         className="bg-white border border-gray-100 rounded-2xl flex items-center justify-center overflow-hidden relative cursor-zoom-in group"
-        style={{ height: "540px" }}
+        style={{ height: "460px" }}
         onClick={() => setLightbox(true)}
       >
         <img
           src={imageUrl}
           alt="Ürün görseli"
-          className="max-h-full max-w-full object-contain p-4 transition-transform duration-200 group-hover:scale-105"
-          style={{ maxHeight: "500px" }}
+          className="w-full h-full object-contain p-1 transition-transform duration-200 group-hover:scale-105"
         />
       </div>
 
