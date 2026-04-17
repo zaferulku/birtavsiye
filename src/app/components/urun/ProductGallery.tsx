@@ -9,7 +9,7 @@ export default function ProductGallery({ imageUrl }: { imageUrl?: string }) {
           <img
             src={imageUrl}
             alt="Ürün görseli"
-            className="w-full h-full object-cover rounded-2xl"
+            className="w-full h-full object-contain p-4"
           />
         ) : (
           <span className="text-8xl">📱</span>

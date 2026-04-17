@@ -153,7 +153,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                       : null;
                     return (
                       <div className="bg-white border border-[#E8E4DF] rounded-2xl overflow-hidden hover:shadow-lg hover:border-[#E8460A]/30 transition-all group">
-                        <div className="h-44 bg-[#F8F6F2] flex items-center justify-center overflow-hidden">
+                        <div className="h-44 bg-white flex items-center justify-center overflow-hidden">
                           {p.image_url
                             ? <img src={p.image_url} alt={p.title} className="h-full w-full object-contain p-4 group-hover:scale-105 transition-transform duration-300" />
                             : <span className="text-5xl">{category.icon}</span>

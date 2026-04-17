@@ -28,7 +28,7 @@ function ProductCard({ p }: { p: Product }) {
   return (
     <Link href={"/urun/" + p.slug}>
       <div className="flex-shrink-0 w-28 sm:w-36 md:w-44 bg-white rounded-2xl border border-gray-100 overflow-hidden hover:shadow-md hover:border-gray-200 transition-all group cursor-pointer">
-        <div className="w-full aspect-square bg-gray-50 overflow-hidden">
+        <div className="w-full aspect-square bg-white overflow-hidden">
           {p.image_url
             ? <img src={p.image_url} alt={p.title} className="w-full h-full object-contain p-3 group-hover:scale-105 transition-transform duration-300" />
             : <div className="w-full h-full flex items-center justify-center text-4xl">📦</div>
