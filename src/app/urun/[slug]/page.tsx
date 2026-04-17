@@ -84,7 +84,7 @@ export default async function UrunDetay({ params }: { params: Promise<{ slug: st
 
         {/* Üst Bölüm: Resim + Bilgi + Fiyat */}
         <div className="bg-white rounded-2xl p-6 mb-6 shadow-sm">
-          <div className="grid gap-8" style={{ gridTemplateColumns: "2fr 3fr 2fr" }}>
+          <div className="grid gap-8" style={{ gridTemplateColumns: "1.5fr 3fr 2fr" }}>
             <ProductGallery imageUrl={product.image_url} />
             <ProductInfo product={product} avgRating={avgRating} reviewCount={reviewCount} />
             <div className="sticky top-20">
