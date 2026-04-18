@@ -8,6 +8,7 @@ import SpecsTable from "../../components/urun/SpecsTable";
 import CommunitySection from "../../components/urun/CommunitySection";
 import StoreLogo from "../../components/ui/StoreLogo";
 import PriceHistoryChart from "../../components/urun/PriceHistoryChart";
+import PriceAlertModal from "../../components/urun/PriceAlertModal";
 import type { Metadata } from "next";
 
 export async function generateMetadata(
@@ -134,9 +135,7 @@ export default async function UrunDetay({ params }: { params: Promise<{ slug: st
                     </div>
                   ))}
                 </div>
-                <div className="bg-amber-50 border-t border-amber-100 px-4 py-3 text-xs text-amber-700 cursor-pointer hover:bg-amber-100 transition-all font-medium">
-                  🔔 Fiyat duşunce haber ver — Alarm kur
-                </div>
+                <PriceAlertModal productId={product.id} currentPrice={minPrice} />
               </div>
             </div>
           </div>

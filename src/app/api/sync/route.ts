@@ -107,6 +107,18 @@ async function syncProducts(products: ScrapedProduct[], storeName: string, categ
       price:      p.price,
     });
 
+    const { data: alerts } = await sb
+      .from("price_alerts")
+      .select("id, email, target_price")
+      .eq("product_id", product.id)
+      .eq("is_triggered", false)
+      .lte("target_price", p.price);
+
+    if (alerts && alerts.length > 0) {
+      const ids = alerts.map((a: { id: string }) => a.id);
+      await sb.from("price_alerts").update({ is_triggered: true }).in("id", ids);
+    }
+
     inserted++;
   }
 
