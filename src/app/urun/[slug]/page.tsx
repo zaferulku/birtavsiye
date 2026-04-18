@@ -9,6 +9,7 @@ import CommunitySection from "../../components/urun/CommunitySection";
 import StoreLogo from "../../components/ui/StoreLogo";
 import PriceHistoryChart from "../../components/urun/PriceHistoryChart";
 import PriceAlertModal from "../../components/urun/PriceAlertModal";
+import PriceRefresher from "../../components/urun/PriceRefresher";
 import type { Metadata } from "next";
 
 export async function generateMetadata(
@@ -161,6 +162,7 @@ export default async function UrunDetay({ params }: { params: Promise<{ slug: st
         </div>
 
       </div>
+      <PriceRefresher productId={product.id} />
       <Footer />
     </main>
   );
