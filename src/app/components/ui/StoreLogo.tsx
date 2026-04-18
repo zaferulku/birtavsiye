@@ -1,3 +1,5 @@
+"use client";
+
 const STORE_DOMAINS: Record<string, string> = {
   "Trendyol":         "trendyol.com",
   "Hepsiburada":      "hepsiburada.com",
