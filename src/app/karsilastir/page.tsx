@@ -1,19 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { supabase } from "../../lib/supabase";
 import Link from "next/link";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
-
-type Product = {
-  id: string;
-  title: string;
-  slug: string;
-  brand: string;
-  description: string;
-  image_url?: string;
-  specs?: Record<string, string>;
-};
 
 type Price = {
   id: string;
@@ -22,322 +12,249 @@ type Price = {
   stores: { name: string; url: string };
 };
 
-const MAX = 4;
-
-const colClass: Record<number, string> = {
-  1: "grid-cols-1",
-  2: "grid-cols-2",
-  3: "grid-cols-3",
-  4: "grid-cols-4",
+type Product = {
+  id: string;
+  title: string;
+  slug: string;
+  brand: string;
+  image_url?: string;
+  prices: Price[];
 };
 
+const STORE_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
+  Trendyol:    { bg: "bg-orange-50",  text: "text-orange-700",  dot: "bg-orange-400" },
+  MediaMarkt:  { bg: "bg-red-50",     text: "text-red-700",     dot: "bg-red-500" },
+  PttAVM:      { bg: "bg-yellow-50",  text: "text-yellow-700",  dot: "bg-yellow-500" },
+  Hepsiburada: { bg: "bg-orange-50",  text: "text-orange-800",  dot: "bg-orange-500" },
+};
+
+const SORT_OPTIONS = [
+  { value: "ucuz",   label: "En Ucuz" },
+  { value: "pahali", label: "En Pahalı" },
+  { value: "magaza", label: "Çok Mağaza" },
+];
+
 export default function KarsilastirSayfasi() {
-  const [search, setSearch] = useState("");
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
-  const [selected, setSelected] = useState<Product[]>([]);
-  const [prices, setPrices] = useState<Record<string, Price[]>>({});
-  const [activeSearch, setActiveSearch] = useState(false);
-  const [loadingId, setLoadingId] = useState<string | null>(null);
+  const [query, setQuery]       = useState("");
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading]   = useState(false);
+  const [searched, setSearched] = useState(false);
+  const [sort, setSort]         = useState("ucuz");
+  const [minP, setMinP]         = useState("");
+  const [maxP, setMaxP]         = useState("");
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const searchProducts = async (q: string) => {
-    if (!q.trim()) { setSearchResults([]); return; }
-    const { data } = await supabase.from("products")
-      .select("id, title, slug, brand, description, image_url, specs")
+  const search = useCallback(async (q: string) => {
+    if (!q.trim()) { setProducts([]); setSearched(false); return; }
+    setLoading(true);
+    setSearched(true);
+    const { data } = await supabase
+      .from("products")
+      .select("id,title,slug,brand,image_url,prices(id,price,affiliate_url,stores(name,url))")
       .or(`title.ilike.%${q}%,brand.ilike.%${q}%`)
-      .limit(8);
-    if (data) setSearchResults(data.filter(p => !selected.find(s => s.id === p.id)));
+      .limit(48);
+
+    if (data) {
+      const enriched: Product[] = (data as any[]).map(p => ({
+        ...p,
+        prices: (p.prices || [])
+          .filter((pr: any) => pr.price > 0)
+          .sort((a: any, b: any) => a.price - b.price),
+      })).filter(p => p.prices.length > 0);
+      setProducts(enriched);
+    }
+    setLoading(false);
+  }, []);
+
+  const handleInput = (val: string) => {
+    setQuery(val);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => search(val), 400);
   };
 
-  const addProduct = async (product: Product) => {
-    if (selected.length >= MAX) return;
-    if (selected.find(p => p.id === product.id)) return;
-    setSelected(prev => [...prev, product]);
-    setSearch("");
-    setSearchResults([]);
-    setActiveSearch(false);
-    setLoadingId(product.id);
-    const { data } = await supabase.from("prices")
-      .select("id, price, affiliate_url, stores(name, url)")
-      .eq("product_id", product.id)
-      .order("price", { ascending: true });
-    if (data) setPrices(prev => ({ ...prev, [product.id]: data as any }));
-    setLoadingId(null);
-  };
-
-  const removeProduct = (id: string) => {
-    setSelected(prev => prev.filter(p => p.id !== id));
-    setPrices(prev => { const n = { ...prev }; delete n[id]; return n; });
-  };
-
-  const allSpecKeys = [...new Set(
-    selected.flatMap(p => p.specs ? Object.keys(p.specs) : [])
-  )];
-
-  const cols = colClass[selected.length] || "grid-cols-1";
-  const colsWithSlot = colClass[Math.min(selected.length + 1, MAX)] || colClass[MAX];
+  const filtered = products
+    .filter(p => {
+      const cheap = p.prices[0]?.price ?? 0;
+      if (minP && cheap < Number(minP)) return false;
+      if (maxP && cheap > Number(maxP)) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      if (sort === "ucuz")   return (a.prices[0]?.price ?? Infinity) - (b.prices[0]?.price ?? Infinity);
+      if (sort === "pahali") return (b.prices[0]?.price ?? 0) - (a.prices[0]?.price ?? 0);
+      if (sort === "magaza") return b.prices.length - a.prices.length;
+      return 0;
+    });
 
   return (
     <main className="bg-[#F5F4F0] min-h-screen">
       <Header />
 
-      <div className="max-w-[1400px] mx-auto px-6 py-6">
-
-        {/* Sayfa başlığı */}
-        <div className="mb-5">
-          <h1 className="font-bold text-xl text-gray-900">Ürün Karşılaştır</h1>
-          <p className="text-sm text-gray-500 mt-0.5">En fazla {MAX} ürünü yan yana karşılaştırın</p>
+      {/* Arama hero */}
+      <div className="bg-white border-b border-gray-100">
+        <div className="max-w-3xl mx-auto px-6 py-10">
+          <h1 className="text-2xl font-extrabold text-gray-900 mb-1 text-center">Fiyat Karşılaştır</h1>
+          <p className="text-sm text-gray-400 text-center mb-6">
+            Tüm mağazaların fiyatlarını tek ekranda gör
+          </p>
+          <div className="flex items-center gap-3 bg-[#F5F4F0] rounded-2xl px-4 py-3 border border-gray-200 focus-within:border-[#E8460A] focus-within:ring-2 focus-within:ring-[#E8460A]/10 transition-all">
+            <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              value={query}
+              onChange={e => handleInput(e.target.value)}
+              placeholder="Ürün adı veya marka girin… (örn: iPhone 15, Samsung TV)"
+              className="flex-1 bg-transparent text-sm outline-none text-gray-800 placeholder:text-gray-400"
+              autoFocus
+            />
+            {query && (
+              <button onClick={() => { setQuery(""); setProducts([]); setSearched(false); }}
+                className="text-gray-300 hover:text-gray-500 transition-colors text-lg leading-none">✕</button>
+            )}
+          </div>
         </div>
+      </div>
 
-        {/* Ürün seçim alanı */}
-        <div className={`grid ${selected.length < MAX ? colsWithSlot : cols} gap-4 mb-5`}>
-          {selected.map((p) => (
-            <div key={p.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-              <div className="relative">
-                <div className="h-44 bg-gray-50 flex items-center justify-center overflow-hidden">
-                  {p.image_url
-                    ? <img src={p.image_url} alt={p.title} className="h-full w-full object-contain p-4" />
-                    : <div className="text-5xl">📦</div>
-                  }
-                </div>
-                <button
-                  onClick={() => removeProduct(p.id)}
-                  className="absolute top-2 right-2 w-7 h-7 bg-white border border-gray-200 text-gray-400 rounded-full text-sm flex items-center justify-center hover:bg-red-50 hover:text-red-500 hover:border-red-200 transition-all shadow-sm">
-                  ✕
+      <div className="max-w-[1200px] mx-auto px-6 py-6">
+
+        {/* Filtre + sıralama */}
+        {searched && (
+          <div className="flex flex-wrap items-center gap-3 mb-5">
+            <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs">
+              <span className="text-gray-400 font-medium mr-1">Sırala:</span>
+              {SORT_OPTIONS.map(o => (
+                <button key={o.value} onClick={() => setSort(o.value)}
+                  className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${sort === o.value ? "bg-[#E8460A] text-white" : "text-gray-500 hover:bg-gray-50"}`}>
+                  {o.label}
                 </button>
-                {loadingId === p.id && (
-                  <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
-                    <div className="w-6 h-6 border-2 border-[#E8460A] border-t-transparent rounded-full animate-spin" />
-                  </div>
-                )}
-              </div>
-              <div className="p-3.5">
-                <div className="text-[10px] font-bold text-[#E8460A] uppercase tracking-wider mb-1">{p.brand}</div>
-                <Link href={"/urun/" + p.slug}>
-                  <div className="text-sm font-semibold text-gray-800 hover:text-[#E8460A] transition-colors line-clamp-2 leading-snug cursor-pointer">
-                    {p.title}
-                  </div>
-                </Link>
-              </div>
+              ))}
             </div>
-          ))}
-
-          {/* Ürün ekle slot */}
-          {selected.length < MAX && (
-            <div className="relative">
-              <div
-                onClick={() => setActiveSearch(true)}
-                className="bg-white rounded-2xl border-2 border-dashed border-gray-200 h-full min-h-[240px] flex flex-col items-center justify-center cursor-pointer hover:border-[#E8460A] hover:bg-orange-50/30 transition-all group">
-                <div className="w-12 h-12 rounded-full bg-gray-100 group-hover:bg-[#E8460A]/10 flex items-center justify-center text-2xl text-gray-400 group-hover:text-[#E8460A] mb-2.5 transition-all">+</div>
-                <div className="text-sm font-semibold text-gray-400 group-hover:text-[#E8460A] transition-colors">Ürün Ekle</div>
-                <div className="text-xs text-gray-300 mt-1">{selected.length}/{MAX} ürün</div>
-              </div>
-
-              {activeSearch && (
-                <div className="absolute top-0 left-0 right-0 z-20 bg-white rounded-2xl border border-gray-200 shadow-xl overflow-hidden">
-                  <div className="p-3 border-b border-gray-100">
-                    <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 h-10">
-                      <svg className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                      </svg>
-                      <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => { setSearch(e.target.value); searchProducts(e.target.value); }}
-                        placeholder="Ürün adı veya marka ara..."
-                        className="flex-1 bg-transparent text-sm outline-none text-gray-700 placeholder:text-gray-400"
-                        autoFocus
-                      />
-                    </div>
-                  </div>
-                  {searchResults.length > 0 ? (
-                    <div className="max-h-56 overflow-y-auto divide-y divide-gray-50">
-                      {searchResults.map((p) => (
-                        <button key={p.id} onClick={() => addProduct(p)}
-                          className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-orange-50 transition-all text-left">
-                          <div className="w-9 h-9 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                            {p.image_url
-                              ? <img src={p.image_url} alt="" className="w-full h-full object-contain p-1" />
-                              : <div className="w-full h-full flex items-center justify-center text-sm">📦</div>
-                            }
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <div className="text-xs font-semibold text-gray-800 truncate">{p.title}</div>
-                            <div className="text-[10px] text-gray-400 font-medium">{p.brand}</div>
-                          </div>
-                          <div className="text-[10px] text-[#E8460A] font-semibold flex-shrink-0">Ekle →</div>
-                        </button>
-                      ))}
-                    </div>
-                  ) : search.length > 0 ? (
-                    <div className="px-3 py-6 text-center text-xs text-gray-400">Sonuç bulunamadı</div>
-                  ) : (
-                    <div className="px-3 py-6 text-center text-xs text-gray-400">Aramak istediğiniz ürünü yazın</div>
-                  )}
-                  <div className="p-2 border-t border-gray-100">
-                    <button onClick={() => { setActiveSearch(false); setSearch(""); setSearchResults([]); }}
-                      className="w-full py-2 text-xs text-gray-400 hover:text-gray-600 transition-all rounded-lg hover:bg-gray-50">
-                      Kapat
-                    </button>
-                  </div>
-                </div>
-              )}
+            <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs">
+              <span className="text-gray-400 font-medium">Fiyat:</span>
+              <input type="number" placeholder="Min ₺" value={minP} onChange={e => setMinP(e.target.value)}
+                className="w-20 outline-none text-gray-700 placeholder:text-gray-300 text-xs" />
+              <span className="text-gray-300">—</span>
+              <input type="number" placeholder="Max ₺" value={maxP} onChange={e => setMaxP(e.target.value)}
+                className="w-20 outline-none text-gray-700 placeholder:text-gray-300 text-xs" />
             </div>
-          )}
-        </div>
-
-        {/* Boş durum */}
-        {selected.length === 0 && (
-          <div className="bg-white rounded-2xl border border-gray-200 py-20 text-center shadow-sm">
-            <div className="text-5xl mb-4">⚖️</div>
-            <div className="text-base font-bold text-gray-700 mb-2">Ürünleri Karşılaştır</div>
-            <div className="text-sm text-gray-400 mb-6">Yukarıdan ürün ekleyerek karşılaştırmaya başlayın</div>
-            <Link href="/ara?q=" className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#E8460A] text-white text-sm font-bold rounded-xl hover:bg-[#C93A08] transition-all">
-              Ürün Ara →
-            </Link>
+            {!loading && (
+              <span className="ml-auto text-xs text-gray-400 font-medium">{filtered.length} ürün</span>
+            )}
           </div>
         )}
 
-        {selected.length > 0 && (
-          <div className="space-y-4">
+        {/* Spinner */}
+        {loading && (
+          <div className="flex items-center justify-center py-24">
+            <div className="w-8 h-8 border-2 border-[#E8460A] border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
 
-            {/* Fiyat Karşılaştırma */}
-            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-gray-100">
-                <span className="text-base">💰</span>
-                <h2 className="font-bold text-sm text-gray-900">Fiyat Karşılaştırma</h2>
-              </div>
-              <div className={`grid ${cols} divide-x divide-gray-100`}>
-                {selected.map((p) => {
-                  const pList = prices[p.id] || [];
-                  const cheapest = pList[0];
-                  return (
-                    <div key={p.id} className="p-4">
-                      {loadingId === p.id ? (
-                        <div className="h-16 flex items-center justify-center">
-                          <div className="w-5 h-5 border-2 border-[#E8460A] border-t-transparent rounded-full animate-spin" />
-                        </div>
-                      ) : cheapest ? (
-                        <>
-                          <div className="text-2xl font-extrabold text-gray-900 mb-0.5">
-                            {Number(cheapest.price).toLocaleString("tr-TR")}
-                            <span className="text-sm font-normal text-gray-400 ml-1">₺</span>
-                          </div>
-                          <div className="text-xs text-emerald-600 font-semibold mb-1">En ucuz fiyat</div>
-                          <div className="text-xs text-gray-400 mb-3">{cheapest.stores?.name}</div>
-                          <a href={cheapest.affiliate_url || cheapest.stores?.url || "#"}
-                            target="_blank" rel="nofollow sponsored"
-                            className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#E8460A] text-white text-xs font-bold rounded-lg hover:bg-[#C93A08] transition-all">
-                            Siteye Git →
-                          </a>
-                          {pList.length > 1 && (
-                            <div className="mt-3 space-y-1.5">
-                              {pList.slice(1).map((pr) => (
-                                <div key={pr.id} className="flex items-center justify-between text-xs">
-                                  <span className="text-gray-500">{pr.stores?.name}</span>
-                                  <span className="font-semibold text-gray-700">
-                                    {Number(pr.price).toLocaleString("tr-TR")} ₺
-                                    <span className="text-red-400 font-normal ml-1">
-                                      (+{(Number(pr.price) - Number(cheapest.price)).toLocaleString("tr-TR")})
-                                    </span>
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <div className="text-sm text-gray-300 py-4">Fiyat bulunamadı</div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
+        {/* Sonuç yok */}
+        {!loading && searched && filtered.length === 0 && (
+          <div className="bg-white rounded-2xl border border-gray-200 py-20 text-center">
+            <div className="text-4xl mb-3">🔍</div>
+            <div className="text-sm font-semibold text-gray-600 mb-1">Sonuç bulunamadı</div>
+            <div className="text-xs text-gray-400">Farklı anahtar kelimeler deneyin</div>
+          </div>
+        )}
+
+        {/* Boş başlangıç */}
+        {!loading && !searched && (
+          <div className="bg-white rounded-2xl border border-gray-200 py-24 text-center">
+            <div className="text-5xl mb-4">💰</div>
+            <div className="text-base font-bold text-gray-700 mb-2">En İyi Fiyatı Bul</div>
+            <div className="text-sm text-gray-400 mb-5">
+              Ürün adını yukarıya yazın, tüm mağaza fiyatlarını karşılaştırın
             </div>
-
-            {/* Genel Bilgiler */}
-            <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-              <div className="flex items-center gap-2 px-5 py-3.5 border-b border-gray-100">
-                <span className="text-base">📋</span>
-                <h2 className="font-bold text-sm text-gray-900">Genel Bilgiler</h2>
-              </div>
-              {[
-                { label: "Marka", getValue: (p: Product) => p.brand },
-                { label: "Açıklama", getValue: (p: Product) => p.description?.slice(0, 100) ? p.description.slice(0, 100) + (p.description.length > 100 ? "…" : "") : "—" },
-              ].map((row) => (
-                <div key={row.label} className={`grid ${cols} border-b border-gray-50 last:border-0`}>
-                  <div className={`col-span-full bg-gray-50 px-5 py-2 text-xs font-bold text-gray-500 uppercase tracking-wide border-b border-gray-100`}>
-                    {row.label}
-                  </div>
-                  {selected.map((p) => (
-                    <div key={p.id} className="px-5 py-3 text-sm text-gray-700 border-r border-gray-50 last:border-0">
-                      {row.getValue(p)}
-                    </div>
-                  ))}
-                </div>
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              {["iPhone 15", "Samsung Galaxy", "MacBook", "Dyson", "AirPods"].map(s => (
+                <button key={s} onClick={() => { setQuery(s); search(s); }}
+                  className="px-3 py-1.5 bg-gray-100 hover:bg-orange-50 hover:text-[#E8460A] text-gray-600 text-xs font-semibold rounded-xl transition-all">
+                  {s}
+                </button>
               ))}
             </div>
+          </div>
+        )}
 
-            {/* Teknik Özellikler */}
-            {allSpecKeys.length > 0 && (
-              <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden shadow-sm">
-                <div className="flex items-center gap-2 px-5 py-3.5 border-b border-gray-100">
-                  <span className="text-base">⚙️</span>
-                  <h2 className="font-bold text-sm text-gray-900">Teknik Özellikler</h2>
-                </div>
-                {allSpecKeys.map((key, i) => (
-                  <div key={key} className={`grid ${cols} border-b border-gray-50 last:border-0 ${i % 2 === 0 ? "bg-white" : "bg-gray-50/30"}`}>
-                    <div className="col-span-full bg-gray-50 px-5 py-2 text-xs font-bold text-gray-500 uppercase tracking-wide border-b border-gray-100">
-                      {key}
+        {/* Ürün listesi */}
+        {!loading && filtered.length > 0 && (
+          <div className="space-y-3">
+            {filtered.map(p => {
+              const cheapest = p.prices[0];
+              const cheapestPrice = cheapest?.price ?? 0;
+              return (
+                <div key={p.id} className="bg-white rounded-2xl border border-gray-100 hover:shadow-md transition-all overflow-hidden">
+                  <div className="flex items-center gap-4 p-4">
+
+                    {/* Ürün resmi */}
+                    <Link href={"/urun/" + p.slug} className="flex-shrink-0">
+                      <div className="w-20 h-20 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 flex items-center justify-center">
+                        {p.image_url
+                          ? <img src={p.image_url} alt={p.title} className="w-full h-full object-contain p-2" />
+                          : <span className="text-3xl">📦</span>}
+                      </div>
+                    </Link>
+
+                    {/* Başlık + fiyat rozetleri */}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-[10px] font-bold text-[#E8460A] uppercase tracking-wider mb-0.5">{p.brand}</div>
+                      <Link href={"/urun/" + p.slug}>
+                        <h2 className="text-sm font-bold text-gray-900 hover:text-[#E8460A] transition-colors line-clamp-2 leading-snug mb-2.5 cursor-pointer">
+                          {p.title}
+                        </h2>
+                      </Link>
+
+                      {/* Mağaza fiyat rozetleri */}
+                      <div className="flex flex-wrap gap-1.5">
+                        {p.prices.map((pr, i) => {
+                          const sc = STORE_COLORS[pr.stores?.name] ?? { bg: "bg-gray-50", text: "text-gray-600", dot: "bg-gray-300" };
+                          const diff = i > 0 ? pr.price - cheapestPrice : 0;
+                          return (
+                            <a key={pr.id}
+                              href={pr.affiliate_url || pr.stores?.url || "#"}
+                              target="_blank" rel="nofollow sponsored"
+                              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all hover:shadow-sm ${sc.bg} ${sc.text} ${i === 0 ? "border-emerald-200 ring-1 ring-emerald-100" : "border-gray-100"}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${sc.dot}`} />
+                              <span>{pr.stores?.name}</span>
+                              <span className={`font-extrabold ${i === 0 ? "text-emerald-700" : ""}`}>
+                                {Number(pr.price).toLocaleString("tr-TR")} ₺
+                              </span>
+                              {i === 0 && <span className="text-[9px] text-emerald-600 font-bold bg-emerald-50 border border-emerald-200 px-1 rounded">EN UCUZ</span>}
+                              {i > 0 && diff > 0 && <span className="text-[10px] text-red-400">+{diff.toLocaleString("tr-TR")}</span>}
+                            </a>
+                          );
+                        })}
+                      </div>
                     </div>
-                    {selected.map((p) => {
-                      const val = p.specs?.[key];
-                      return (
-                        <div key={p.id} className="px-5 py-3 text-sm text-gray-700 border-r border-gray-50 last:border-0">
-                          {val || <span className="text-gray-300">—</span>}
-                        </div>
-                      );
-                    })}
+
+                    {/* Sağ: fiyat + CTA */}
+                    <div className="flex-shrink-0 text-right pl-2 border-l border-gray-100 ml-2">
+                      <div className="text-2xl font-extrabold text-gray-900 leading-none">
+                        {Number(cheapestPrice).toLocaleString("tr-TR")}
+                        <span className="text-sm font-normal text-gray-400 ml-0.5">₺</span>
+                      </div>
+                      <div className="text-[10px] text-emerald-600 font-semibold mb-2.5">{cheapest.stores?.name}</div>
+                      <a href={cheapest.affiliate_url || cheapest.stores?.url || "#"}
+                        target="_blank" rel="nofollow sponsored"
+                        className="inline-flex items-center gap-1 px-3.5 py-2 bg-[#E8460A] text-white text-xs font-bold rounded-xl hover:bg-[#C93A08] transition-all shadow-sm">
+                        Siteye Git →
+                      </a>
+                      <div className="mt-1.5">
+                        <Link href={"/urun/" + p.slug}
+                          className="text-[10px] text-gray-400 hover:text-[#E8460A] transition-colors font-medium">
+                          Detay & Yorumlar
+                        </Link>
+                      </div>
+                    </div>
+
                   </div>
-                ))}
-              </div>
-            )}
-
-            {/* Özet / Kazanan */}
-            {selected.length >= 2 && (
-              <div className="bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl border border-orange-100 p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-lg">🏆</span>
-                  <h2 className="font-bold text-sm text-gray-900">Fiyat Açısından Kazanan</h2>
                 </div>
-                {(() => {
-                  const withPrice = selected.filter(p => prices[p.id]?.length > 0);
-                  if (!withPrice.length) return <p className="text-sm text-gray-400">Fiyat verisi yükleniyor...</p>;
-                  const cheapest = withPrice.reduce((best, p) => {
-                    const bPrice = prices[best.id]?.[0]?.price ?? Infinity;
-                    const cPrice = prices[p.id]?.[0]?.price ?? Infinity;
-                    return cPrice < bPrice ? p : best;
-                  });
-                  const cheapestPrice = prices[cheapest.id]?.[0]?.price;
-                  return (
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-white rounded-xl overflow-hidden border border-orange-100 flex-shrink-0">
-                        {cheapest.image_url
-                          ? <img src={cheapest.image_url} alt="" className="w-full h-full object-contain p-1" />
-                          : <div className="w-full h-full flex items-center justify-center text-lg">📦</div>
-                        }
-                      </div>
-                      <div>
-                        <div className="text-sm font-bold text-gray-900 line-clamp-1">{cheapest.title}</div>
-                        <div className="text-xs text-emerald-600 font-semibold">
-                          {Number(cheapestPrice).toLocaleString("tr-TR")} ₺ — En uygun fiyat
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-            )}
-
+              );
+            })}
           </div>
         )}
       </div>
