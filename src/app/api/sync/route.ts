@@ -111,10 +111,11 @@ async function getStoreId(storeName: string): Promise<string | null> {
 async function syncProducts(products: ScrapedProduct[], storeName: string, categoryId?: string) {
   const sb = getSupabase();
   const storeId = await getStoreId(storeName);
-  if (!storeId) return { inserted: 0, errors: 1, firstError: [] };
+  if (!storeId) return { inserted: 0, errors: 1, firstError: [], newProductIds: [] };
 
   let inserted = 0, errors = 0;
   const firstError: string[] = [];
+  const newProductIds: string[] = [];
 
   const SECONDHAND = /ikinci\s*el|2\.\s*el|kullan[iı]lm[iı][sş]|te[sş]hir|hasarl[iı]|defolu|a[cç][iı]k kutu|open box/i;
 
@@ -139,6 +140,14 @@ async function syncProducts(products: ScrapedProduct[], storeName: string, categ
     }
 
     if (!product) {
+      // Detect new vs existing by slug (so we only fire webhook for genuinely new products)
+      const { data: existingBySlug } = await sb
+        .from("products")
+        .select("id")
+        .eq("slug", slug)
+        .maybeSingle();
+      const isNew = !existingBySlug;
+
       const productData: Record<string, unknown> = {
         title: p.name, slug, brand, image_url: p.image || null,
         source: storeName.toLowerCase(), source_url: p.url,
@@ -159,6 +168,7 @@ async function syncProducts(products: ScrapedProduct[], storeName: string, categ
         continue;
       }
       product = upserted;
+      if (isNew) newProductIds.push(upserted.id);
     }
 
     const { error: priceError } = await sb
@@ -196,7 +206,30 @@ async function syncProducts(products: ScrapedProduct[], storeName: string, categ
     inserted++;
   }
 
-  return { inserted, errors, firstError };
+  return { inserted, errors, firstError, newProductIds };
+}
+
+// Fire-and-forget: send each new product ID to the webhook for agent validation + categorization.
+// Runs async without awaiting so sync response stays fast. Rate-limited to stay within Gemini free tier (15 RPM).
+async function triggerAgentValidation(productIds: string[]): Promise<void> {
+  if (productIds.length === 0) return;
+  const RATE_LIMIT_MS = 4500; // ~13 RPM, safe margin under Gemini 15 RPM
+  for (const id of productIds) {
+    try {
+      // Don't await — fire-and-forget per product, but space them out
+      fetch(`${BASE_URL}/api/webhook/product/new`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-internal-secret": INTERNAL_SECRET ?? "",
+        },
+        body: JSON.stringify({ product_id: id }),
+      }).catch(err => console.error(`[agent-validate] product=${id} fetch failed: ${err.message}`));
+    } catch (err) {
+      console.error(`[agent-validate] product=${id} error: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    await new Promise(resolve => setTimeout(resolve, RATE_LIMIT_MS));
+  }
 }
 
 // POST /api/sync
@@ -246,5 +279,23 @@ export async function POST(request: NextRequest) {
     : "Hepsiburada";
   const stats     = await syncProducts(products, storeName, category_id);
 
-  return NextResponse.json({ source, query, page, fetched: products.length, ...stats });
+  // Fire-and-forget agent validation for NEW products only (respects Gemini rate limit)
+  if (stats.newProductIds.length > 0) {
+    console.log(`[sync] ${stats.newProductIds.length} new product(s) → agent validation queued`);
+    // Don't await — let it run in background while we return
+    triggerAgentValidation(stats.newProductIds).catch(err =>
+      console.error(`[sync] triggerAgentValidation failed: ${err.message}`)
+    );
+  }
+
+  return NextResponse.json({
+    source,
+    query,
+    page,
+    fetched: products.length,
+    inserted: stats.inserted,
+    errors: stats.errors,
+    firstError: stats.firstError,
+    newProducts: stats.newProductIds.length,
+  });
 }
