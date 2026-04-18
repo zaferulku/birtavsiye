@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const SCRAPER_API_KEY = process.env.SCRAPER_API_KEY;
-const TRENDYOL_BASE   = "https://www.trendyol.com";
+const TRENDYOL_BASE = "https://www.trendyol.com";
 
-function scraperUrl(targetUrl: string): string {
-  const encoded = encodeURIComponent(targetUrl);
-  return `http://api.scraperapi.com?api_key=${SCRAPER_API_KEY}&url=${encoded}&country_code=tr&render=true&premium=true`;
-}
+const FETCH_HEADERS = {
+  "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+  "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  "Accept-Language": "tr-TR,tr;q=0.9,en;q=0.8",
+  "Accept-Encoding": "gzip, deflate, br",
+  "Connection": "keep-alive",
+};
 
 interface ParsedProduct {
   name:  string;
@@ -32,8 +34,8 @@ function parseProducts(html: string): ParsedProduct[] {
     } catch { /* ignore */ }
   }
 
-  // HTML'i product-card bloklarına böl
-  const chunks = html.split('data-testid="product-card"').slice(1);
+  // HTML'i product-card bloklarına böl (split delimiter <a class="product-card" öncesi — href sonrada kalsın)
+  const chunks = html.split('class="product-card"').slice(1);
 
   const seen    = new Set<string>();
   const results: ParsedProduct[] = [];
@@ -76,13 +78,6 @@ function parseProducts(html: string): ParsedProduct[] {
 
 // GET /api/trendyol?q=laptop&page=1
 export async function GET(request: NextRequest) {
-  if (!SCRAPER_API_KEY) {
-    return NextResponse.json(
-      { error: "SCRAPER_API_KEY yapılandırılmamış" },
-      { status: 500 }
-    );
-  }
-
   const { searchParams } = new URL(request.url);
   const q    = searchParams.get("q");
   const page = searchParams.get("page") || "1";
@@ -94,13 +89,14 @@ export async function GET(request: NextRequest) {
   const targetUrl = `${TRENDYOL_BASE}/sr?q=${encodeURIComponent(q)}&pi=${page}`;
 
   try {
-    const res = await fetch(scraperUrl(targetUrl), {
+    const res = await fetch(targetUrl, {
+      headers: FETCH_HEADERS,
       next: { revalidate: 300 },
     });
 
     if (!res.ok) {
       return NextResponse.json(
-        { error: `ScraperAPI hatası: ${res.status}` },
+        { error: `Trendyol hatası: ${res.status}` },
         { status: res.status }
       );
     }
