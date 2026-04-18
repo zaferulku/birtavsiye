@@ -1,0 +1,36 @@
+import { NextResponse } from "next/server";
+import { runAgent } from "@/lib/agentRunner";
+import { shouldRun } from "@/lib/agentScheduler";
+
+const MIN_INTERVAL_MS = 55 * 60 * 1000;
+
+function verifyCron(req: Request): boolean {
+  return req.headers.get("authorization") === `Bearer ${process.env.CRON_SECRET}`;
+}
+
+export async function GET(req: Request) {
+  if (!verifyCron(req)) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const start = Date.now();
+
+  if (!(await shouldRun("review-sentiment-analyzer", MIN_INTERVAL_MS))) {
+    return NextResponse.json({ success: true, agent: "review-sentiment-analyzer", skipped: true, duration: 0 });
+  }
+
+  console.log(`[${new Date().toISOString()}] CRON /api/cron/sentiment started`);
+
+  const result = await runAgent(
+    "review-sentiment-analyzer",
+    "Analyze sentiment of new comments and reviews submitted in the last 60 minutes",
+    { window_minutes: 60, timestamp: new Date().toISOString() }
+  );
+
+  return NextResponse.json({
+    success: result.success,
+    agent: "review-sentiment-analyzer",
+    duration: Date.now() - start,
+    error: result.error,
+  });
+}
