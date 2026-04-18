@@ -14,7 +14,7 @@ export default function Home() {
       <Header />
 
       {/* Toggle bar */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="bg-white border-b border-gray-200 sticky top-[88px] z-40">
         <div className="flex items-center justify-center gap-1.5 py-2">
           <button onClick={() => router.push("/urunler")} title="Ürünler"
             className="flex items-center justify-center w-8 h-8 rounded-lg transition-all text-gray-300 hover:bg-gray-100 hover:text-gray-500">
