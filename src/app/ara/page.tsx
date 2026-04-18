@@ -83,25 +83,25 @@ function AramaIcerik() {
     });
 
   return (
-    <div className="max-w-[1400px] mx-auto px-8 py-6">
+    <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-6">
 
       {/* Arama Formu */}
-      <form onSubmit={handleSearch} className="flex gap-3 mb-6">
-        <div className="flex-1 flex items-center bg-white border-2 border-gray-200 rounded-xl px-4 gap-3 h-12 focus-within:border-[#E8460A] transition-all">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <form onSubmit={handleSearch} className="flex gap-2 sm:gap-3 mb-4 md:mb-6">
+        <div className="flex-1 flex items-center bg-white border-2 border-gray-200 rounded-xl px-3 sm:px-4 gap-2 sm:gap-3 h-12 focus-within:border-[#E8460A] transition-all min-w-0">
+          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input type="text" value={query} onChange={(e) => setQuery(e.target.value)}
-            placeholder="Urun, kategori veya marka ara..."
-            className="flex-1 bg-transparent text-sm outline-none text-gray-800 placeholder:text-gray-400"
+            placeholder="Ürün, kategori veya marka ara..."
+            className="flex-1 bg-transparent text-sm outline-none text-gray-800 placeholder:text-gray-400 min-w-0"
             autoFocus />
           {query && (
             <button type="button" onClick={() => { setQuery(""); router.push("/ara?q="); }}
-              className="text-gray-400 hover:text-gray-600 text-lg">×</button>
+              className="text-gray-400 hover:text-gray-600 text-lg flex-shrink-0 min-w-11 min-h-11 flex items-center justify-center">×</button>
           )}
         </div>
         <button type="submit"
-          className="bg-[#E8460A] text-white px-8 h-12 rounded-xl text-sm font-bold hover:bg-[#C93A08] transition-all">
+          className="bg-[#E8460A] text-white px-4 sm:px-8 h-12 rounded-xl text-sm font-bold hover:bg-[#C93A08] transition-all flex-shrink-0">
           Ara
         </button>
       </form>
@@ -152,10 +152,10 @@ function AramaIcerik() {
 
       {/* Sonuçlar */}
       {!loading && filteredResults.length > 0 && (
-        <div className="flex gap-6">
+        <div className="flex flex-col md:flex-row gap-4 md:gap-6">
 
           {/* Sol - Filtreler */}
-          <div className="w-56 flex-shrink-0">
+          <div className="w-full md:w-56 flex-shrink-0">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sticky top-24">
               <h3 className="font-bold text-sm text-gray-900 mb-4">Filtrele</h3>
 
@@ -208,7 +208,7 @@ function AramaIcerik() {
               </div>
             </div>
 
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
               {filteredResults.map((p) => {
                 const minPrice = p.prices?.length
                   ? p.prices.reduce((m, x) => x.price < m.price ? x : m, p.prices[0])

@@ -14,3 +14,5 @@ Next.js 16 + Supabase + Tailwind v4 Türk ürün öneri platformu.
 - Hero.tsx, QuickLinks.tsx, BlogSection.tsx kasıtlı kaldırıldı — yeniden ekleme
 - Bir özelliği uygulamadan önce git log'da revert var mı kontrol et
 - Commit mesajları `feat:/fix:/redesign:/security:` + Türkçe açıklama
+- Birden fazla dosyaya dokunan büyük değişikliklerden önce kullanıcıya `npm run backup` öner — otomatik çalıştırma, onay iste (allowlist: `src scripts public .claude/agents`)
+- Geri alma: `npm run undo` (soft reset, değişiklikler staged kalır); `npm run history` son 20 commit; `npm run status` kısa durum

@@ -42,10 +42,10 @@ export default function PriceAlertModal({ productId, currentPrice }: Props) {
 
       {open && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm"
           onClick={() => setOpen(false)}
         >
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full max-w-sm p-5 sm:p-6 max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
 
             {status === "ok" ? (
               <div className="text-center py-4">

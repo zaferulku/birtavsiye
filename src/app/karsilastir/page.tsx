@@ -93,12 +93,12 @@ export default function KarsilastirSayfasi() {
 
       {/* Arama hero */}
       <div className="bg-white border-b border-gray-100">
-        <div className="max-w-3xl mx-auto px-6 py-10">
-          <h1 className="text-2xl font-extrabold text-gray-900 mb-1 text-center">Fiyat Karşılaştır</h1>
-          <p className="text-sm text-gray-400 text-center mb-6">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
+          <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 mb-1 text-center">Fiyat Karşılaştır</h1>
+          <p className="text-xs sm:text-sm text-gray-400 text-center mb-4 sm:mb-6">
             Tüm mağazaların fiyatlarını tek ekranda gör
           </p>
-          <div className="flex items-center gap-3 bg-[#F5F4F0] rounded-2xl px-4 py-3 border border-gray-200 focus-within:border-[#E8460A] focus-within:ring-2 focus-within:ring-[#E8460A]/10 transition-all">
+          <div className="flex items-center gap-2 sm:gap-3 bg-[#F5F4F0] rounded-2xl px-3 sm:px-4 py-3 border border-gray-200 focus-within:border-[#E8460A] focus-within:ring-2 focus-within:ring-[#E8460A]/10 transition-all">
             <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
@@ -118,7 +118,7 @@ export default function KarsilastirSayfasi() {
         </div>
       </div>
 
-      <div className="max-w-[1200px] mx-auto px-6 py-6">
+      <div className="max-w-[1200px] mx-auto px-3 sm:px-6 py-4 sm:py-6">
 
         {/* Filtre + sıralama */}
         {searched && (
@@ -189,25 +189,43 @@ export default function KarsilastirSayfasi() {
               const cheapestPrice = cheapest?.price ?? 0;
               return (
                 <div key={p.id} className="bg-white rounded-2xl border border-gray-100 hover:shadow-md transition-all overflow-hidden">
-                  <div className="flex items-center gap-4 p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 sm:p-4">
 
-                    {/* Ürün resmi */}
-                    <Link href={"/urun/" + p.slug} className="flex-shrink-0">
-                      <div className="w-20 h-20 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 flex items-center justify-center">
-                        {p.image_url
-                          ? <img src={p.image_url} alt={p.title} className="w-full h-full object-contain p-2" />
-                          : <span className="text-3xl">📦</span>}
-                      </div>
-                    </Link>
-
-                    {/* Başlık + fiyat rozetleri */}
-                    <div className="flex-1 min-w-0">
-                      <div className="text-[10px] font-bold text-[#E8460A] uppercase tracking-wider mb-0.5">{p.brand}</div>
-                      <Link href={"/urun/" + p.slug}>
-                        <h2 className="text-sm font-bold text-gray-900 hover:text-[#E8460A] transition-colors line-clamp-2 leading-snug mb-2.5 cursor-pointer">
-                          {p.title}
-                        </h2>
+                    {/* Üst: resim + başlık (mobile) / sol (desktop) */}
+                    <div className="flex items-start gap-3 sm:contents">
+                      <Link href={"/urun/" + p.slug} className="flex-shrink-0">
+                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 flex items-center justify-center">
+                          {p.image_url
+                            ? <img src={p.image_url} alt={p.title} className="w-full h-full object-contain p-2" />
+                            : <span className="text-2xl sm:text-3xl">📦</span>}
+                        </div>
                       </Link>
+
+                      <div className="flex-1 min-w-0 sm:hidden">
+                        <div className="text-[10px] font-bold text-[#E8460A] uppercase tracking-wider mb-0.5">{p.brand}</div>
+                        <Link href={"/urun/" + p.slug}>
+                          <h2 className="text-sm font-bold text-gray-900 hover:text-[#E8460A] transition-colors line-clamp-2 leading-snug cursor-pointer">
+                            {p.title}
+                          </h2>
+                        </Link>
+                        <div className="mt-1 text-xl font-extrabold text-gray-900 leading-none">
+                          {Number(cheapestPrice).toLocaleString("tr-TR")}
+                          <span className="text-xs font-normal text-gray-400 ml-0.5">₺</span>
+                          <span className="ml-2 text-[10px] text-emerald-600 font-semibold">{cheapest.stores?.name}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Orta: Başlık + fiyat rozetleri */}
+                    <div className="flex-1 min-w-0">
+                      <div className="hidden sm:block">
+                        <div className="text-[10px] font-bold text-[#E8460A] uppercase tracking-wider mb-0.5">{p.brand}</div>
+                        <Link href={"/urun/" + p.slug}>
+                          <h2 className="text-sm font-bold text-gray-900 hover:text-[#E8460A] transition-colors line-clamp-2 leading-snug mb-2.5 cursor-pointer">
+                            {p.title}
+                          </h2>
+                        </Link>
+                      </div>
 
                       {/* Mağaza fiyat rozetleri */}
                       <div className="flex flex-wrap gap-1.5">
@@ -218,7 +236,7 @@ export default function KarsilastirSayfasi() {
                             <a key={pr.id}
                               href={pr.affiliate_url || pr.stores?.url || "#"}
                               target="_blank" rel="nofollow sponsored"
-                              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all hover:shadow-sm ${sc.bg} ${sc.text} ${i === 0 ? "border-emerald-200 ring-1 ring-emerald-100" : "border-gray-100"}`}>
+                              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all hover:shadow-sm min-h-11 ${sc.bg} ${sc.text} ${i === 0 ? "border-emerald-200 ring-1 ring-emerald-100" : "border-gray-100"}`}>
                               <StoreLogo name={pr.stores?.name} size={14} />
                               <span>{pr.stores?.name}</span>
                               <span className={`font-extrabold ${i === 0 ? "text-emerald-700" : ""}`}>
@@ -232,8 +250,8 @@ export default function KarsilastirSayfasi() {
                       </div>
                     </div>
 
-                    {/* Sağ: fiyat + CTA */}
-                    <div className="flex-shrink-0 text-right pl-2 border-l border-gray-100 ml-2">
+                    {/* Sağ: fiyat + CTA (desktop only) - mobile'da alt CTA */}
+                    <div className="hidden sm:block flex-shrink-0 text-right pl-2 border-l border-gray-100 ml-2">
                       <div className="text-2xl font-extrabold text-gray-900 leading-none">
                         {Number(cheapestPrice).toLocaleString("tr-TR")}
                         <span className="text-sm font-normal text-gray-400 ml-0.5">₺</span>
@@ -241,7 +259,7 @@ export default function KarsilastirSayfasi() {
                       <div className="text-[10px] text-emerald-600 font-semibold mb-2.5">{cheapest.stores?.name}</div>
                       <a href={cheapest.affiliate_url || cheapest.stores?.url || "#"}
                         target="_blank" rel="nofollow sponsored"
-                        className="inline-flex items-center gap-1 px-3.5 py-2 bg-[#E8460A] text-white text-xs font-bold rounded-xl hover:bg-[#C93A08] transition-all shadow-sm">
+                        className="inline-flex items-center gap-1 px-3.5 py-2 bg-[#E8460A] text-white text-xs font-bold rounded-xl hover:bg-[#C93A08] transition-all shadow-sm min-h-11">
                         Siteye Git →
                       </a>
                       <div className="mt-1.5">
@@ -252,6 +270,12 @@ export default function KarsilastirSayfasi() {
                       </div>
                     </div>
 
+                    {/* Mobile CTA (full-width buton) */}
+                    <a href={cheapest.affiliate_url || cheapest.stores?.url || "#"}
+                      target="_blank" rel="nofollow sponsored"
+                      className="sm:hidden flex items-center justify-center gap-1 w-full px-3.5 py-3 bg-[#E8460A] text-white text-sm font-bold rounded-xl hover:bg-[#C93A08] transition-all shadow-sm min-h-11">
+                      {cheapest.stores?.name} sitesine git →
+                    </a>
                   </div>
                 </div>
               );

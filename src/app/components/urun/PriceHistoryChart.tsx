@@ -58,38 +58,40 @@ export default function PriceHistoryChart({ history }: Props) {
   const { data, stores } = buildChartData(history);
 
   return (
-    <div className="mt-6">
-      <h3 className="text-sm font-bold text-gray-700 mb-3">Fiyat Geçmişi</h3>
-      <ResponsiveContainer width="100%" height={240}>
-        <LineChart data={data} margin={{ top: 4, right: 12, left: 0, bottom: 4 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis dataKey="date" tick={{ fontSize: 11 }} tickLine={false} />
-          <YAxis
-            tick={{ fontSize: 11 }}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={(v: number) => `${Number(v).toLocaleString("tr-TR")} ₺`}
-            width={90}
-          />
-          <Tooltip
-            formatter={(v) => `${Number(v).toLocaleString("tr-TR")} ₺`}
-            labelStyle={{ fontSize: 12 }}
-            contentStyle={{ fontSize: 12, borderRadius: 8 }}
-          />
-          <Legend wrapperStyle={{ fontSize: 12 }} />
-          {stores.map(s => (
-            <Line
-              key={s}
-              type="monotone"
-              dataKey={s}
-              stroke={STORE_COLORS[s] ?? "#888"}
-              strokeWidth={2}
-              dot={false}
-              connectNulls
+    <div className="mt-4 md:mt-6 w-full">
+      <h3 className="text-sm font-bold text-gray-700 mb-2 md:mb-3">Fiyat Geçmişi</h3>
+      <div className="w-full" style={{ minWidth: 0 }}>
+        <ResponsiveContainer width="100%" height={220}>
+          <LineChart data={data} margin={{ top: 4, right: 8, left: 0, bottom: 4 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis dataKey="date" tick={{ fontSize: 10 }} tickLine={false} minTickGap={20} />
+            <YAxis
+              tick={{ fontSize: 10 }}
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={(v: number) => `${Number(v).toLocaleString("tr-TR")}`}
+              width={60}
             />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
+            <Tooltip
+              formatter={(v) => `${Number(v).toLocaleString("tr-TR")} ₺`}
+              labelStyle={{ fontSize: 11 }}
+              contentStyle={{ fontSize: 11, borderRadius: 8 }}
+            />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
+            {stores.map(s => (
+              <Line
+                key={s}
+                type="monotone"
+                dataKey={s}
+                stroke={STORE_COLORS[s] ?? "#888"}
+                strokeWidth={2}
+                dot={false}
+                connectNulls
+              />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }

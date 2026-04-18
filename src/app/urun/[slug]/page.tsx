@@ -84,21 +84,21 @@ export default async function UrunDetay({ params }: { params: Promise<{ slug: st
   return (
     <main className="bg-gray-50 min-h-screen">
       <Header />
-      <div className="max-w-[1400px] mx-auto px-8 py-6">
+      <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-6">
 
         {/* Breadcrumb */}
-        <div className="flex gap-2 text-sm text-gray-400 mb-5">
-          <Link href="/" className="hover:text-[#E8460A]">Anasayfa</Link>
-          <span>/</span>
-          <span className="text-gray-700">{product.title}</span>
+        <div className="flex gap-2 text-xs md:text-sm text-gray-400 mb-4 md:mb-5 overflow-hidden">
+          <Link href="/" className="hover:text-[#E8460A] flex-shrink-0">Anasayfa</Link>
+          <span className="flex-shrink-0">/</span>
+          <span className="text-gray-700 truncate">{product.title}</span>
         </div>
 
         {/* Üst Bölüm: Resim + Bilgi + Fiyat */}
-        <div className="bg-white rounded-2xl p-6 mb-6 shadow-sm">
-          <div className="grid gap-8" style={{ gridTemplateColumns: "2fr 3fr 2fr" }}>
+        <div className="bg-white rounded-2xl p-3 sm:p-5 md:p-6 mb-4 md:mb-6 shadow-sm">
+          <div className="grid gap-5 md:gap-6 lg:gap-8 grid-cols-1 md:grid-cols-2 lg:[grid-template-columns:2fr_3fr_2fr]">
             <ProductGallery imageUrl={product.image_url} />
             <ProductInfo product={product} avgRating={avgRating} reviewCount={reviewCount} />
-            <div className="sticky top-20">
+            <div className="lg:sticky lg:top-20 md:col-span-2 lg:col-span-1">
               <div className="bg-white border-2 border-gray-100 rounded-2xl overflow-hidden shadow-sm">
                 <div className="bg-gray-900 px-5 py-5">
                   <div className="text-xs text-gray-400 mb-1">En ucuz fiyat{cheapestStore ? ` - ${cheapestStore}` : ""}</div>
@@ -114,23 +114,23 @@ export default async function UrunDetay({ params }: { params: Promise<{ slug: st
                 )}
                 <div>
                   {prices?.map((p, i) => (
-                    <div key={p.id} className={`flex items-center gap-3 px-4 py-3 border-b border-gray-50 last:border-0 ${i % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
+                    <div key={p.id} className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 border-b border-gray-50 last:border-0 ${i % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${i === 0 ? "bg-yellow-100 text-yellow-700" : i === 1 ? "bg-gray-100 text-gray-500" : "bg-orange-50 text-orange-600"}`}>
                         {i + 1}
                       </div>
-                      <div className="flex items-center gap-2 flex-1">
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
                         <StoreLogo name={p.stores?.name ?? ""} size={18} />
-                        <span className="text-sm font-medium text-gray-800">{p.stores?.name}</span>
+                        <span className="text-xs sm:text-sm font-medium text-gray-800 truncate">{p.stores?.name}</span>
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold text-sm">{Number(p.price).toLocaleString("tr-TR")} TL</div>
-                        {i === 0 && <div className="text-xs text-green-600 font-medium">En ucuz</div>}
+                      <div className="text-right flex-shrink-0">
+                        <div className="font-bold text-xs sm:text-sm whitespace-nowrap">{Number(p.price).toLocaleString("tr-TR")} TL</div>
+                        {i === 0 && <div className="text-[10px] sm:text-xs text-green-600 font-medium">En ucuz</div>}
                         {i > 0 && minPrice && (
-                          <div className="text-xs text-red-400">+{(Number(p.price) - Number(minPrice)).toLocaleString("tr-TR")} TL</div>
+                          <div className="text-[10px] sm:text-xs text-red-400">+{(Number(p.price) - Number(minPrice)).toLocaleString("tr-TR")} TL</div>
                         )}
                       </div>
                       <a href={p.affiliate_url || p.stores?.url || "#"} target="_blank" rel="nofollow sponsored"
-                        className="bg-orange-50 text-[#E8460A] text-xs px-3 py-1.5 rounded-lg font-semibold hover:bg-[#E8460A] hover:text-white transition-all">
+                        className="bg-orange-50 text-[#E8460A] text-xs px-3 py-2 rounded-lg font-semibold hover:bg-[#E8460A] hover:text-white transition-all flex-shrink-0 min-h-11 min-w-11 flex items-center justify-center">
                         Git
                       </a>
                     </div>
@@ -147,13 +147,13 @@ export default async function UrunDetay({ params }: { params: Promise<{ slug: st
 
         {/* Fiyat Geçmişi */}
         {history && history.length > 0 && (
-          <div className="bg-white rounded-2xl p-6 mb-6 shadow-sm">
+          <div className="bg-white rounded-2xl p-3 sm:p-5 md:p-6 mb-4 md:mb-6 shadow-sm overflow-hidden">
             <PriceHistoryChart history={history as any} />
           </div>
         )}
 
         {/* Yorumlar Bölümü - tam genişlik */}
-        <div className="bg-white rounded-2xl p-6 shadow-sm">
+        <div className="bg-white rounded-2xl p-3 sm:p-5 md:p-6 shadow-sm">
           <CommunitySection
             productId={product.id}
             specs={product.specs}

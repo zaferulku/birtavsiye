@@ -62,31 +62,32 @@ export default async function KategoriSayfasi({ params, searchParams }: {
       <Header />
 
       {/* Hero */}
-      <div className="bg-[#0F0E0D] text-white px-6 py-6">
+      <div className="bg-[#0F0E0D] text-white px-3 sm:px-6 py-4 sm:py-6">
         <div className="max-w-[1400px] mx-auto">
-          <div className="flex gap-2 text-sm text-[#666] mb-2">
-            <Link href="/" className="hover:text-white transition-colors">Anasayfa</Link>
-            <span>/</span>
-            <span className="text-white">{category.name}</span>
+          <div className="flex gap-2 text-xs sm:text-sm text-[#666] mb-2 overflow-hidden">
+            <Link href="/" className="hover:text-white transition-colors flex-shrink-0">Anasayfa</Link>
+            <span className="flex-shrink-0">/</span>
+            <span className="text-white truncate">{category.name}</span>
           </div>
-          <div className="flex items-center justify-between">
-            <h1 className="font-extrabold text-2xl flex items-center gap-2">
-              <span>{category.icon}</span>{category.name}
+          <div className="flex items-center justify-between gap-3">
+            <h1 className="font-extrabold text-lg sm:text-2xl flex items-center gap-2 min-w-0">
+              <span className="flex-shrink-0">{category.icon}</span>
+              <span className="truncate">{category.name}</span>
             </h1>
-            <span className="text-sm text-[#888]">{count || 0} ürün</span>
+            <span className="text-xs sm:text-sm text-[#888] flex-shrink-0">{count || 0} ürün</span>
           </div>
         </div>
       </div>
 
-      <div className="max-w-[1400px] mx-auto px-6 py-6 flex gap-6">
+      <div className="max-w-[1400px] mx-auto px-3 sm:px-6 py-4 sm:py-6 flex flex-col md:flex-row gap-4 md:gap-6">
 
         {/* Sol: Marka filtresi sidebar */}
-        <aside className="w-52 flex-shrink-0">
-          <div className="bg-white rounded-2xl border border-[#E8E4DF] overflow-hidden sticky top-24">
+        <aside className="w-full md:w-52 flex-shrink-0">
+          <div className="bg-white rounded-2xl border border-[#E8E4DF] overflow-hidden md:sticky md:top-24">
             <div className="px-4 py-3 border-b border-[#E8E4DF]">
               <div className="font-bold text-sm text-gray-800">Marka</div>
             </div>
-            <div className="py-2 max-h-96 overflow-y-auto">
+            <div className="py-2 max-h-52 md:max-h-96 overflow-y-auto">
               <Link href={"/kategori/" + slug + (siralama ? "?siralama=" + siralama : "")}>
                 <div className={`flex items-center justify-between px-4 py-2 text-sm cursor-pointer transition-colors ${!marka ? "text-[#E8460A] font-semibold bg-orange-50" : "text-gray-700 hover:bg-gray-50"}`}>
                   <span>Tümü</span>
@@ -143,7 +144,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
               {products.map((p) => (
                 <Link href={"/urun/" + p.slug} key={p.id}>
                   {(() => {
