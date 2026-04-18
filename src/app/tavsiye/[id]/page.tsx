@@ -117,7 +117,7 @@ export default function TavsiyeDetay() {
     if (t) {
       let authorGender: string | null = null;
       if (t.user_id) {
-        const { data: p } = await supabase.from("profiles").select("gender").eq("id", t.user_id).maybeSingle();
+        const { data: p } = await supabase.from("public_profiles").select("gender").eq("id", t.user_id).maybeSingle();
         authorGender = p?.gender || null;
       }
       setTopic({ ...t, author_gender: authorGender });
