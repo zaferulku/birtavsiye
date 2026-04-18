@@ -577,18 +577,18 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
                             <button onClick={e => handleVote(e, t, 1)}
                               className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg border transition-all ${
                                 myVote === 1
-                                  ? "bg-emerald-50 border-emerald-300 text-emerald-600 font-bold"
-                                  : "border-gray-200 text-gray-400 hover:border-emerald-200 hover:text-emerald-500 hover:bg-emerald-50"
+                                  ? "bg-stone-100 border-stone-300 text-stone-600 font-bold"
+                                  : "border-gray-200 text-gray-400 hover:border-emerald-300 hover:text-emerald-600 hover:bg-emerald-50"
                               }`}>
                               👍 <span className="font-semibold">{netVotes > 0 ? netVotes : 0}</span>
                             </button>
                             <button onClick={e => handleVote(e, t, -1)}
-                              className={`flex items-center text-[11px] px-2 py-1 rounded-lg border transition-all ${
+                              className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg border transition-all ${
                                 myVote === -1
-                                  ? "bg-red-50 border-red-300 text-red-500"
-                                  : "border-gray-200 text-gray-300 hover:border-red-200 hover:text-red-400 hover:bg-red-50"
+                                  ? "bg-stone-100 border-stone-300 text-stone-600"
+                                  : "border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500 hover:bg-red-50"
                               }`}>
-                              👎
+                              👎 <span className="font-semibold">{netVotes < 0 ? Math.abs(netVotes) : 0}</span>
                             </button>
                           </div>
                         </div>
