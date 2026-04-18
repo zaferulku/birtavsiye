@@ -104,6 +104,8 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
   const isFirst = useRef(true);
   const [userGender, setUserGender] = useState<string>("");
   const [userUsername, setUserUsername] = useState<string>("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [userLoaded, setUserLoaded] = useState(false);
   const [genderFilter, setGenderFilter] = useState<"hepsi" | "kadin" | "erkek" | "tumu">("hepsi");
   const [genderOnly, setGenderOnly] = useState(false);
 
@@ -114,13 +116,17 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
         const { data: v } = await supabase.from("topic_votes")
           .select("topic_id,vote").eq("user_id", data.user.id);
         if (v) setUserVotes(Object.fromEntries(v.map(x => [x.topic_id, x.vote])));
-        const { data: profile } = await supabase.from("profiles").select("gender,username").eq("id", data.user.id).maybeSingle();
+        const { data: profile } = await supabase.from("profiles").select("gender,username,is_admin").eq("id", data.user.id).maybeSingle();
         setUserGender(profile?.gender || "");
         setUserUsername(profile?.username || "");
-        if (profile?.gender === "kadin" || profile?.gender === "erkek") {
-          setGenderFilter(profile.gender as "kadin" | "erkek");
+        setIsAdmin(!!profile?.is_admin);
+        if (!profile?.is_admin) {
+          if (profile?.gender === "kadin" || profile?.gender === "erkek") {
+            setGenderFilter(profile.gender as "kadin" | "erkek");
+          }
         }
       }
+      setUserLoaded(true);
     });
     fetchTopics();
     const ch = supabase.channel("topics-rt3")
@@ -264,7 +270,9 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
     activeCat === "Hepsi" || t.category === activeCat || normalize(t.category) === normalize(activeCat)
   );
   const genderFiltered = catFiltered.filter(t => {
-    if (!user) return true; // giriş yapmamış: hepsini göster (kart kilitli)
+    if (!userLoaded) return !t.gender_filter; // yükleniyor: sadece genel
+    if (isAdmin) return true; // admin hepsini görür
+    if (!user) return true; // misafir: hepsini göster (kart kilitli)
     if (genderFilter === "kadin") return t.gender_filter === "kadin" || !t.gender_filter;
     if (genderFilter === "erkek") return t.gender_filter === "erkek" || !t.gender_filter;
     if (genderFilter === "tumu") return t.gender_filter === "kadin" || t.gender_filter === "erkek";
@@ -504,9 +512,9 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
                 const netVotes = t.votes || 0;
                 const topAnswers = [...(answers[t.id] || [])].sort((a, b) => (b.votes || 0) - (a.votes || 0)).slice(0, 2);
 
-                const isLocked = !user && !!t.gender_filter;
+                const isLocked = userLoaded && !user && !!t.gender_filter;
                 return (
-                  <Link href={isLocked ? "/giris" : "/tavsiye/" + t.id} key={t.id}>
+                  <Link href={"/tavsiye/" + t.id} key={t.id} onClick={isLocked ? (e) => { e.preventDefault(); window.location.href = "/giris"; } : undefined}>
                     <div className={`relative bg-white rounded-xl border border-gray-100 border-l-4 ${leftBorder} hover:shadow-md hover:border-gray-200 transition-all cursor-pointer group overflow-hidden`}>
                       {isLocked && (
                         <div className="absolute inset-0 z-10 backdrop-blur-sm bg-white/60 flex flex-col items-center justify-center gap-2">
