@@ -59,8 +59,11 @@ async function syncProducts(products: ScrapedProduct[], storeName: string, categ
   let inserted = 0, errors = 0;
   const firstError: string[] = [];
 
+  const SECONDHAND = /ikinci\s*el|2\.\s*el|kullan[iı]lm[iı][sş]|te[sş]hir|hasarl[iı]|defolu|a[cç][iı]k kutu|open box/i;
+
   for (const p of products) {
     if (!p.name || !p.url) continue;
+    if (SECONDHAND.test(p.name)) continue;
 
     const slug  = toSlug(p.name);
     const brand = extractBrand(p.name);
