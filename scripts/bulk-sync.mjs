@@ -206,20 +206,15 @@ const CATEGORIES = [
       { source: "trendyol", queries: ["kamp çadırı", "termos stanley", "north face"] },
     ],
   },
-  {
-    id: "f032ca3f-0679-4d1d-9b59-a2285745ee31", name: "Erkek Giyim",
-    sources: [
-      { source: "pttavm",   queries: ["erkek mont", "erkek ayakkabı", "erkek tişört", "erkek pantolon", "erkek spor", "erkek gömlek", "erkek ceket", "erkek sweatshirt", "erkek bot", "erkek eşofman"] },
-      { source: "trendyol", queries: ["nike erkek", "adidas erkek", "erkek mont"] },
-    ],
-  },
-  {
-    id: "3ad0b1db-0340-4760-9e85-18a699abc69b", name: "Kadın Giyim",
-    sources: [
-      { source: "pttavm",   queries: ["kadın mont", "kadın elbise", "kadın ayakkabı", "kadın çanta", "kadın spor", "kadın bluz", "kadın pantolon", "kadın ceket", "kadın bot", "kadın etek"] },
-      { source: "trendyol", queries: ["nike kadın", "adidas kadın", "kadın mont"] },
-    ],
-  },
+  // Giyim: şimdilik durduruldu, markalar netleşince açılacak
+  // { id: "f032ca3f-0679-4d1d-9b59-a2285745ee31", name: "Erkek Giyim", sources: [
+  //   { source: "pttavm",   queries: ["erkek mont","erkek ayakkabı","erkek tişört","erkek pantolon","erkek spor","erkek gömlek","erkek ceket","erkek sweatshirt","erkek bot","erkek eşofman"] },
+  //   { source: "trendyol", queries: ["nike erkek","adidas erkek","erkek mont"] },
+  // ]},
+  // { id: "3ad0b1db-0340-4760-9e85-18a699abc69b", name: "Kadın Giyim", sources: [
+  //   { source: "pttavm",   queries: ["kadın mont","kadın elbise","kadın ayakkabı","kadın çanta","kadın spor","kadın bluz","kadın pantolon","kadın ceket","kadın bot","kadın etek"] },
+  //   { source: "trendyol", queries: ["nike kadın","adidas kadın","kadın mont"] },
+  // ]},
 ];
 
 async function syncOne(source, query, page, categoryId, categoryName) {
