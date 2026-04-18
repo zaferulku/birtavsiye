@@ -21,15 +21,18 @@ interface ScrapedProduct {
 
 function normalizeTitle(name: string): string {
   return name
-    .replace(/(\d+)\s+(gb|mb|tb)/gi, "$1$2")       // "256 GB" → "256GB"
+    .replace(/(\d+)\s+(gb|mb|tb)/gi, "$1$2")        // "256 GB" → "256GB"
+    .replace(/\b[A-Z]{2,5}[0-9]{2,}[A-Z0-9/]{0,6}\b/g, "")  // model kodları sil (MTP43TU/A, SM-S928B vb)
     .replace(/\bakıllı\s+telefon\b/gi, "")
     .replace(/\bsmartphone\b/gi, "")
     .replace(/\btelefon\b/gi, "")
+    .replace(/\b(4|6|8|12|16)\s*gb\s+(ram\s+)?(?=\d)/gi, "") // RAM bilgisi sil (8 GB 256 GB → 256 GB)
     .replace(/\bnotebook\b/gi, "laptop")
     .replace(/\bdizüstü\b/gi, "laptop")
     .replace(/\bonyx\s+black\b/gi, "siyah")
     .replace(/\bphantom\s+black\b/gi, "siyah")
     .replace(/\btitanium\b/gi, "titanyum")
+    .replace(/\(.*?\)/g, "")                         // parantez içini sil (garantili, ithalatçı vb)
     .replace(/\s+/g, " ")
     .trim();
 }
