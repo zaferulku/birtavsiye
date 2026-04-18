@@ -117,6 +117,9 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
         const { data: profile } = await supabase.from("profiles").select("gender,username").eq("id", data.user.id).maybeSingle();
         setUserGender(profile?.gender || "");
         setUserUsername(profile?.username || "");
+        if (profile?.gender === "kadin" || profile?.gender === "erkek") {
+          setGenderFilter(profile.gender as "kadin" | "erkek");
+        }
       }
     });
     fetchTopics();
@@ -261,10 +264,11 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
     activeCat === "Hepsi" || t.category === activeCat || normalize(t.category) === normalize(activeCat)
   );
   const genderFiltered = catFiltered.filter(t => {
-    if (genderFilter === "kadin") return t.gender_filter === "kadin";
-    if (genderFilter === "erkek") return t.gender_filter === "erkek";
+    if (!user) return true; // giriş yapmamış: hepsini göster (kart kilitli)
+    if (genderFilter === "kadin") return t.gender_filter === "kadin" || !t.gender_filter;
+    if (genderFilter === "erkek") return t.gender_filter === "erkek" || !t.gender_filter;
     if (genderFilter === "tumu") return t.gender_filter === "kadin" || t.gender_filter === "erkek";
-    return !t.gender_filter; // "hepsi": sadece genel olanlar
+    return !t.gender_filter;
   });
   const filtered = searchQuery.trim()
     ? genderFiltered.map(t => ({ t, score: scoreSearch(t, searchQuery) })).filter(x => x.score > 0).sort((a, b) => b.score - a.score).map(x => x.t)
@@ -500,10 +504,20 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
                 const netVotes = t.votes || 0;
                 const topAnswers = [...(answers[t.id] || [])].sort((a, b) => (b.votes || 0) - (a.votes || 0)).slice(0, 2);
 
+                const isLocked = !user && !!t.gender_filter;
                 return (
-                  <Link href={"/tavsiye/" + t.id} key={t.id}>
-                    <div className={`bg-white rounded-xl border border-gray-100 border-l-4 ${leftBorder} hover:shadow-md hover:border-gray-200 transition-all cursor-pointer group overflow-hidden`}>
-                      <div className="p-3.5">
+                  <Link href={isLocked ? "/giris" : "/tavsiye/" + t.id} key={t.id}>
+                    <div className={`relative bg-white rounded-xl border border-gray-100 border-l-4 ${leftBorder} hover:shadow-md hover:border-gray-200 transition-all cursor-pointer group overflow-hidden`}>
+                      {isLocked && (
+                        <div className="absolute inset-0 z-10 backdrop-blur-sm bg-white/60 flex flex-col items-center justify-center gap-2">
+                          <span className="text-2xl">{t.gender_filter === "kadin" ? "♀️" : "♂️"}</span>
+                          <span className="text-xs font-bold text-gray-600">
+                            {t.gender_filter === "kadin" ? "Kadınlara özel" : "Erkeklere özel"}
+                          </span>
+                          <span className="text-[11px] px-3 py-1 bg-[#E8460A] text-white rounded-full font-semibold">Giriş yap</span>
+                        </div>
+                      )}
+                      <div className={`p-3.5 ${isLocked ? "select-none pointer-events-none" : ""}`}>
                         {/* Üst satır: avatar + isim + kategori + zaman */}
                         <div className="flex items-center gap-2 mb-2">
                           <TopicAvatar name={t.user_name} gender={t.gender_filter} />
