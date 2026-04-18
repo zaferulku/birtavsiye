@@ -72,6 +72,7 @@ const CATEGORIES = [
       { source: "mediamarkt", queries: ["samsung", "huawei", "xiaomi", "apple iphone"] },
       { source: "pttavm",     queries: ["iphone 15", "iphone 16", "samsung galaxy s24", "samsung galaxy a55", "xiaomi 14", "huawei pura"] },
       { source: "trendyol",   queries: ["iphone 15", "samsung galaxy s24", "xiaomi redmi note 13"] },
+      { source: "vatan",      queries: ["iphone", "samsung galaxy", "xiaomi redmi"] },
     ],
   },
   {
@@ -80,6 +81,7 @@ const CATEGORIES = [
       { source: "mediamarkt", queries: ["laptop", "notebook"] },
       { source: "pttavm",     queries: ["laptop", "notebook", "gaming laptop", "asus laptop", "lenovo laptop", "hp laptop", "dell laptop"] },
       { source: "trendyol",   queries: ["macbook", "asus vivobook", "lenovo thinkpad"] },
+      { source: "vatan",      queries: ["laptop", "macbook", "asus", "lenovo", "gaming laptop"] },
     ],
   },
   {
@@ -96,6 +98,7 @@ const CATEGORIES = [
       { source: "mediamarkt", queries: ["televizyon", "samsung tv", "lg tv"] },
       { source: "pttavm",     queries: ["televizyon", "smart tv", "samsung tv", "lg tv", "4k tv"] },
       { source: "trendyol",   queries: ["samsung 55 tv", "lg oled tv"] },
+      { source: "vatan",      queries: ["televizyon", "samsung tv", "lg tv", "smart tv"] },
     ],
   },
   {
@@ -152,6 +155,7 @@ const CATEGORIES = [
       { source: "mediamarkt", queries: ["ekran kartı", "ram", "ssd"] },
       { source: "pttavm",     queries: ["ekran kartı", "ram bellek", "ssd", "işlemci", "anakart", "rtx", "ddr5"] },
       { source: "trendyol",   queries: ["rtx 4070", "ddr5 ram", "nvme ssd"] },
+      { source: "vatan",      queries: ["ekran kartı", "işlemci", "ssd", "ram", "anakart"] },
     ],
   },
   {
@@ -245,8 +249,9 @@ async function syncOne(source, query, page, categoryId, categoryName) {
 const SOURCE_CONFIG = {
   mediamarkt: { concurrency: 1, pageDelay: 1500, queryDelay: 2000 },
   pttavm:     { concurrency: 3, pageDelay: 300,  queryDelay: 0 },
-  trendyol:   { concurrency: 3, pageDelay: 300,  queryDelay: 0 },
+  trendyol:   { concurrency: 1, pageDelay: 3000, queryDelay: 3000 }, // anti-bot agresif
   hepsiburada:{ concurrency: 3, pageDelay: 300,  queryDelay: 0 },
+  vatan:      { concurrency: 2, pageDelay: 800,  queryDelay: 500 },
 };
 const DEFAULT_CONFIG = { concurrency: 2, pageDelay: 500, queryDelay: 0 };
 

@@ -242,7 +242,7 @@ export async function POST(request: NextRequest) {
   }
 
   const { source, query, page = 1, category_id, title_filter } = await request.json() as {
-    source:        "trendyol" | "hepsiburada" | "mediamarkt" | "pttavm";
+    source:        "trendyol" | "hepsiburada" | "mediamarkt" | "pttavm" | "vatan";
     query:         string;
     page?:         number;
     category_id?:  string;
@@ -276,6 +276,7 @@ export async function POST(request: NextRequest) {
   const storeName = source === "trendyol" ? "Trendyol"
     : source === "mediamarkt" ? "MediaMarkt"
     : source === "pttavm" ? "PttAVM"
+    : source === "vatan" ? "Vatan Bilgisayar"
     : "Hepsiburada";
   const stats     = await syncProducts(products, storeName, category_id);
 
