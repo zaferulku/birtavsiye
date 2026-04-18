@@ -246,11 +246,60 @@ async function syncOne(source, query, page, categoryId, categoryName) {
   }
 }
 
+// MediaMarkt IP hız limiti var — ayrı ayar
+const SOURCE_CONFIG = {
+  mediamarkt: { concurrency: 1, pageDelay: 1500, queryDelay: 2000 },
+  pttavm:     { concurrency: 3, pageDelay: 300,  queryDelay: 0 },
+  trendyol:   { concurrency: 3, pageDelay: 300,  queryDelay: 0 },
+  hepsiburada:{ concurrency: 3, pageDelay: 300,  queryDelay: 0 },
+};
+const DEFAULT_CONFIG = { concurrency: 2, pageDelay: 500, queryDelay: 0 };
+
+async function runPool(tasks, concurrency) {
+  let i = 0;
+  let totalFetched = 0;
+  let totalInserted = 0;
+
+  async function worker() {
+    while (i < tasks.length) {
+      const task = tasks[i++];
+      const r = await task();
+      totalFetched  += r.fetched;
+      totalInserted += r.inserted;
+    }
+  }
+
+  await Promise.all(Array.from({ length: concurrency }, worker));
+  return { totalFetched, totalInserted };
+}
+
+async function syncSource(source, queries, catId, catName) {
+  const cfg = SOURCE_CONFIG[source] ?? DEFAULT_CONFIG;
+  let fetched = 0, inserted = 0;
+
+  const tasks = queries.map(query => async () => {
+    let qFetched = 0, qInserted = 0;
+    for (const page of PAGES) {
+      const r = await syncOne(source, query, page, catId, catName);
+      if (r.fetched === 0) break;
+      qFetched  += r.fetched;
+      qInserted += r.inserted;
+      if (cfg.pageDelay > 0) await new Promise(res => setTimeout(res, cfg.pageDelay));
+    }
+    if (cfg.queryDelay > 0) await new Promise(res => setTimeout(res, cfg.queryDelay));
+    return { fetched: qFetched, inserted: qInserted };
+  });
+
+  const result = await runPool(tasks, cfg.concurrency);
+  fetched  += result.totalFetched;
+  inserted += result.totalInserted;
+  return { fetched, inserted };
+}
+
 async function main() {
   const filterSource   = process.argv[2] || "";
   const filterCategory = process.argv[3] || "";
-  let totalFetched = 0;
-  let totalInserted = 0;
+  let totalFetched = 0, totalInserted = 0;
 
   for (const cat of CATEGORIES) {
     if (filterCategory === "elektronik" && !ELEKTRONIK_KATEGORILER.includes(cat.name)) continue;
@@ -258,16 +307,11 @@ async function main() {
     for (const { source, queries } of cat.sources) {
       if (filterSource && source !== filterSource) continue;
 
-      for (const query of queries) {
-        for (const page of PAGES) {
-          const { fetched, inserted } = await syncOne(source, query, page, cat.id, cat.name);
-          if (fetched === 0) break;
-          totalFetched += fetched;
-          totalInserted += inserted;
-          await new Promise(r => setTimeout(r, 1200));
-        }
-        await new Promise(r => setTimeout(r, 400));
-      }
+      const cfg = SOURCE_CONFIG[source] ?? DEFAULT_CONFIG;
+      console.log(`\n[${cat.name}][${source}] — concurrency=${cfg.concurrency}, pageDelay=${cfg.pageDelay}ms`);
+      const r = await syncSource(source, queries, cat.id, cat.name);
+      totalFetched  += r.fetched;
+      totalInserted += r.inserted;
     }
   }
 

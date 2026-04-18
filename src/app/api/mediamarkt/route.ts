@@ -74,21 +74,41 @@ function parseProducts(html: string): ParsedProduct[] {
   const results: ParsedProduct[] = [];
   const seen = new Set<string>();
 
-  for (const raw of html.matchAll(
-    /"@type"\s*:\s*"Product","name"\s*:\s*"([^"]+)","image"\s*:\s*"([^"]+)","offers"\s*:\s*\{"@type"\s*:\s*"Offer","price"\s*:\s*(\d+)[^}]*\}[^}]*"url"\s*:\s*"([^"]+)"/gs
-  )) {
-    if (results.length >= 48) break;
-    const [, name, image, priceStr, url] = raw;
-    if (seen.has(url)) continue;
-    seen.add(url);
+  // JSON-LD script bloklarını parse et (MediaMarkt, ItemList içinde Product kullanıyor)
+  const scriptMatches = html.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g);
+  for (const scriptMatch of scriptMatches) {
+    try {
+      const json = JSON.parse(scriptMatch[1]);
+      const items: Record<string, unknown>[] =
+        json["@type"] === "ItemList"
+          ? (json.itemListElement ?? []).map((el: Record<string, unknown>) => el.item as Record<string, unknown>)
+          : json["@type"] === "Product"
+          ? [json]
+          : [];
 
-    results.push({
-      name,
-      url,
-      image: image.startsWith("http") ? image : `${MM_BASE}${image}`,
-      price: parseInt(priceStr, 10),
-      specs: parseSpecsFromTitle(name),
-    });
+      for (const item of items) {
+        if (!item || item["@type"] !== "Product") continue;
+        const name  = item.name as string;
+        const url   = item.url as string;
+        const image = item.image as string;
+        const price = (item.offers as Record<string, unknown>)?.price as number;
+        if (!name || !url) continue;
+        if (seen.has(url)) continue;
+        seen.add(url);
+
+        results.push({
+          name,
+          url,
+          image: image
+            ? (image.startsWith("http") ? image : `${MM_BASE}${image}`)
+            : "",
+          price: price ?? 0,
+          specs: parseSpecsFromTitle(name),
+        });
+      }
+    } catch {
+      // parse hatası — bu script bloğunu atla
+    }
   }
 
   return results;
