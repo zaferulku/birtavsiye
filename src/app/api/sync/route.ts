@@ -41,6 +41,17 @@ function extractBrand(name: string): string {
   return name.split(" ")[0];
 }
 
+function extractModelCode(name: string): string | null {
+  const tokens = name.split(/\s+/);
+  for (const t of tokens) {
+    // Must contain both letters and digits, at least 5 chars (e.g. 43VQ80F2FA, RTX4080, SM-G996B)
+    if (t.length >= 5 && /[A-Z]/.test(t) && /[0-9]/.test(t) && /^[A-Z0-9-]+$/i.test(t)) {
+      return t.toUpperCase();
+    }
+  }
+  return null;
+}
+
 async function getStoreId(storeName: string): Promise<string | null> {
   const sb = getSupabase();
   const { data } = await sb
@@ -65,26 +76,43 @@ async function syncProducts(products: ScrapedProduct[], storeName: string, categ
     if (!p.name || !p.url) continue;
     if (SECONDHAND.test(p.name)) continue;
 
-    const slug  = toSlug(p.name);
-    const brand = extractBrand(p.name);
+    const slug       = toSlug(p.name);
+    const brand      = extractBrand(p.name);
+    const modelCode  = extractModelCode(p.name);
 
-    const productData: Record<string, unknown> = {
-      title: p.name, slug, brand, image_url: p.image || null,
-      source: storeName.toLowerCase(), source_url: p.url,
-    };
-    if (categoryId) productData.category_id = categoryId;
-    if (p.specs && Object.keys(p.specs).length > 0) productData.specs = p.specs;
+    // Try to find existing product by brand+model_code first (cross-store safe match)
+    let product: { id: string } | null = null;
+    if (modelCode) {
+      const { data: existing } = await sb
+        .from("products")
+        .select("id")
+        .ilike("brand", brand)
+        .eq("model_code", modelCode)
+        .maybeSingle();
+      if (existing) product = existing;
+    }
 
-    const { data: product, error: productError } = await sb
-      .from("products")
-      .upsert(productData, { onConflict: "slug" })
-      .select("id")
-      .single();
+    if (!product) {
+      const productData: Record<string, unknown> = {
+        title: p.name, slug, brand, image_url: p.image || null,
+        source: storeName.toLowerCase(), source_url: p.url,
+      };
+      if (modelCode) productData.model_code = modelCode;
+      if (categoryId) productData.category_id = categoryId;
+      if (p.specs && Object.keys(p.specs).length > 0) productData.specs = p.specs;
 
-    if (productError || !product) {
-      if (firstError.length < 3) firstError.push(`product:${productError?.code}:${productError?.message}:slug=${slug}`);
-      errors++;
-      continue;
+      const { data: upserted, error: productError } = await sb
+        .from("products")
+        .upsert(productData, { onConflict: "slug" })
+        .select("id")
+        .single();
+
+      if (productError || !upserted) {
+        if (firstError.length < 3) firstError.push(`product:${productError?.code}:${productError?.message}:slug=${slug}`);
+        errors++;
+        continue;
+      }
+      product = upserted;
     }
 
     const { error: priceError } = await sb
