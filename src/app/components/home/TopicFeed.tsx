@@ -573,8 +573,8 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
                             {t.answer_count > 0 && <span className="text-[10px] text-[#E8460A]/60">({t.answer_count})</span>}
                           </Link>
 
-                          <div className="ml-auto flex items-center gap-1">
-                            <button onClick={e => handleVote(e, t, 1)}
+                          <div className="ml-auto flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                            <button type="button" onClick={e => handleVote(e, t, 1)}
                               className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg border transition-all ${
                                 myVote === 1
                                   ? "bg-stone-100 border-stone-300 text-stone-600 font-bold"
@@ -582,7 +582,7 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
                               }`}>
                               👍 <span className="font-semibold">{netVotes > 0 ? netVotes : 0}</span>
                             </button>
-                            <button onClick={e => handleVote(e, t, -1)}
+                            <button type="button" onClick={e => handleVote(e, t, -1)}
                               className={`flex items-center gap-1 text-[11px] px-2 py-1 rounded-lg border transition-all ${
                                 myVote === -1
                                   ? "bg-stone-100 border-stone-300 text-stone-600"
