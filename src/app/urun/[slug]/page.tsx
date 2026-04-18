@@ -7,6 +7,7 @@ import ProductInfo from "../../components/urun/ProductInfo";
 import SpecsTable from "../../components/urun/SpecsTable";
 import CommunitySection from "../../components/urun/CommunitySection";
 import StoreLogo from "../../components/ui/StoreLogo";
+import PriceHistoryChart from "../../components/urun/PriceHistoryChart";
 import type { Metadata } from "next";
 
 export async function generateMetadata(
@@ -44,6 +45,13 @@ export default async function UrunDetay({ params }: { params: Promise<{ slug: st
   const { data: prices } = await supabase
     .from("prices").select("*, stores(name, url)")
     .eq("product_id", product?.id).order("price", { ascending: true });
+
+  const { data: history } = await supabase
+    .from("price_history")
+    .select("recorded_at, price, stores(name)")
+    .eq("product_id", product?.id)
+    .order("recorded_at", { ascending: true })
+    .limit(300);
 
   const { data: reviews } = await supabase
     .from("community_posts").select("rating")
@@ -136,6 +144,13 @@ export default async function UrunDetay({ params }: { params: Promise<{ slug: st
 
         {/* Teknik Özellikler */}
         <SpecsTable specs={product.specs ?? null} />
+
+        {/* Fiyat Geçmişi */}
+        {history && history.length > 0 && (
+          <div className="bg-white rounded-2xl p-6 mb-6 shadow-sm">
+            <PriceHistoryChart history={history as any} />
+          </div>
+        )}
 
         {/* Yorumlar Bölümü - tam genişlik */}
         <div className="bg-white rounded-2xl p-6 shadow-sm">

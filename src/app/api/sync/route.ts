@@ -100,6 +100,13 @@ async function syncProducts(products: ScrapedProduct[], storeName: string, categ
       errors++;
       continue;
     }
+
+    await sb.from("price_history").insert({
+      product_id: product.id,
+      store_id:   storeId,
+      price:      p.price,
+    });
+
     inserted++;
   }
 
