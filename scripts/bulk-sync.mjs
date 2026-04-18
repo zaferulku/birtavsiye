@@ -70,7 +70,7 @@ const CATEGORIES = [
     id: "9f8b9ba9-ec64-4254-9e2c-b7d795d31ab7", name: "Akıllı Telefon",
     sources: [
       { source: "mediamarkt", queries: ["samsung", "huawei", "xiaomi", "apple iphone"] },
-      { source: "pttavm",     queries: ["iphone", "samsung galaxy", "xiaomi telefon", "huawei telefon", "akıllı telefon"] },
+      { source: "pttavm",     queries: ["iphone 15", "iphone 16", "samsung galaxy s24", "samsung galaxy a55", "xiaomi 14", "huawei pura"] },
       { source: "trendyol",   queries: ["iphone 15", "samsung galaxy s24", "xiaomi redmi note 13"] },
     ],
   },

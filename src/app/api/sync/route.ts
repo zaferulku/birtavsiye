@@ -19,8 +19,23 @@ interface ScrapedProduct {
   specs?: Record<string, string>;
 }
 
+function normalizeTitle(name: string): string {
+  return name
+    .replace(/(\d+)\s+(gb|mb|tb)/gi, "$1$2")       // "256 GB" → "256GB"
+    .replace(/\bakıllı\s+telefon\b/gi, "")
+    .replace(/\bsmartphone\b/gi, "")
+    .replace(/\btelefon\b/gi, "")
+    .replace(/\bnotebook\b/gi, "laptop")
+    .replace(/\bdizüstü\b/gi, "laptop")
+    .replace(/\bonyx\s+black\b/gi, "siyah")
+    .replace(/\bphantom\s+black\b/gi, "siyah")
+    .replace(/\btitanium\b/gi, "titanyum")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function toSlug(text: string): string {
-  return text
+  return normalizeTitle(text)
     .toLowerCase()
     .replace(/ğ/g, "g").replace(/ü/g, "u").replace(/ş/g, "s")
     .replace(/ı/g, "i").replace(/ö/g, "o").replace(/ç/g, "c")
