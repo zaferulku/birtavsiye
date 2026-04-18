@@ -6,6 +6,7 @@ import ProductGallery from "../../components/urun/ProductGallery";
 import ProductInfo from "../../components/urun/ProductInfo";
 import SpecsTable from "../../components/urun/SpecsTable";
 import CommunitySection from "../../components/urun/CommunitySection";
+import StoreLogo from "../../components/ui/StoreLogo";
 import type { Metadata } from "next";
 
 export async function generateMetadata(
@@ -107,7 +108,10 @@ export default async function UrunDetay({ params }: { params: Promise<{ slug: st
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${i === 0 ? "bg-yellow-100 text-yellow-700" : i === 1 ? "bg-gray-100 text-gray-500" : "bg-orange-50 text-orange-600"}`}>
                         {i + 1}
                       </div>
-                      <div className="flex-1 text-sm font-medium text-gray-800">{p.stores?.name}</div>
+                      <div className="flex items-center gap-2 flex-1">
+                        <StoreLogo name={p.stores?.name ?? ""} size={18} />
+                        <span className="text-sm font-medium text-gray-800">{p.stores?.name}</span>
+                      </div>
                       <div className="text-right">
                         <div className="font-bold text-sm">{Number(p.price).toLocaleString("tr-TR")} TL</div>
                         {i === 0 && <div className="text-xs text-green-600 font-medium">En ucuz</div>}

@@ -4,6 +4,7 @@ import { supabase } from "../../lib/supabase";
 import Link from "next/link";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
+import StoreLogo from "../components/ui/StoreLogo";
 
 type Price = {
   id: string;
@@ -218,7 +219,7 @@ export default function KarsilastirSayfasi() {
                               href={pr.affiliate_url || pr.stores?.url || "#"}
                               target="_blank" rel="nofollow sponsored"
                               className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all hover:shadow-sm ${sc.bg} ${sc.text} ${i === 0 ? "border-emerald-200 ring-1 ring-emerald-100" : "border-gray-100"}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${sc.dot}`} />
+                              <StoreLogo name={pr.stores?.name} size={14} />
                               <span>{pr.stores?.name}</span>
                               <span className={`font-extrabold ${i === 0 ? "text-emerald-700" : ""}`}>
                                 {Number(pr.price).toLocaleString("tr-TR")} ₺
