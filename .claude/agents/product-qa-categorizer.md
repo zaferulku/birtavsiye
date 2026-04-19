@@ -100,16 +100,64 @@ Even if title mentions phone brand/model, screen/touch replacement parts go here
 - "Allen Carr", known author names + product title being a phrase
 
 ### Learned edge cases (do NOT put in akilli-telefon)
+
+**Aksesuar yanılgıları:**
 - "Xiaomi Mi Cordless Tornavida" → `yapi-market`
 - "Xiaomi Düdüklü Tencere" → `mutfak-sofra`
 - "Samsung Galaxy Buds3 Pro" → `ses-kulaklik` (buds, not phone)
-- "Samsung Galaxy Tab" → `tablet`
+- "Samsung Galaxy Tab" / "Xiaomi Pad 7 Pro" / "Matepad" → `tablet`
 - "Apple iPhone XX Kamera Lens" → `telefon-aksesuar` (part, not phone)
 - "Apple iPhone 16 Pro ... - Outlet" → `reject`
 - "Yenilenmiş Samsung Galaxy S24 ... A/C Kalite" → `reject`
 - "THREESTEP ... Telefon Toz Temizleyici" → `telefon-aksesuar`
 - "Akıllı Telefon Aptal Telefon - Allen Carr" → `kitap` (self-help book)
 - "acer Predator GP30 Harici SSD" → `bilgisayar-bilesenleri`
+- "Nubia/General Mobile/Tecno + brand + GB" → `akilli-telefon` (real but lesser-known phone brands)
+
+**Kesinlikle telefon değil:**
+- "HUAWEI Band 10 Akıllı Bileklik" → `akilli-saat` (bileklik = band)
+- "XIAOMI Mi Band 7" / "Smart Band" → `akilli-saat`
+- "XIAOMI Robot Vacuum" / "Robot Süpürge" → `kucuk-ev-aletleri`
+- "XIAOMI Smart Air Purifier" / "Hava Temizleme" → `kucuk-ev-aletleri`
+- "XIAOMI Smart Humidifier" / "Hava Nemlendirici" → `kucuk-ev-aletleri`
+- "XIAOMI Electric Glass Su Isıtıcısı" → `kucuk-ev-aletleri`
+- "XIAOMI Smart Heater" / "Seramik Isıtıcı" → `kucuk-ev-aletleri`
+- "XIAOMI Air Fryer" / "Fritöz" → `kucuk-ev-aletleri`
+- "XIAOMI Meyve Sıkacağı" → `kucuk-ev-aletleri`
+- "XIAOMI Saç Kurutma Makinesi" → `sac-bakimi`
+- "XIAOMI IPL Lazer Epilasyon Aleti" → `kucuk-ev-aletleri`
+- "XIAOMI Mijia Masa Lambası" → `aydinlatma`
+- "XIAOMI Akıllı Kamera" / "Güvenlik Kamerası" → `fotograf-kamera`
+- "XIAOMI C500 Dual EU Güvenlik Kamerası" → `fotograf-kamera`
+- "XIAOMI TV Stick Kumanda" → `tv` (TV aksesuarı)
+- "XIAOMI Akıllı Priz" / "Smart Plug" → `telefon-aksesuar` (veya aydınlatma)
+- "XIAOMI Mi Router" / "WiFi Mesh" / "Range Extender" → `networking`
+- "HUAWEI AC650 Switch" / "Access Point" → `networking`
+- "HUAWEI WiFi Mesh X3" → `networking`
+- "XIAOMI Mi Kapı ve Pencere Sensör" → `networking` (akıllı ev)
+- "XIAOMI Faucet Water Purifier / Su Arıtıcı" → `kucuk-ev-aletleri`
+- "RENPHO Vücut Kompozisyon Terazisi" / "Dijital Tartı" → `kucuk-ev-aletleri`
+- "XIAOMI Mi Rmmnt27nf Monitör" → `bilgisayar-bilesenleri`
+- "Instax Sq Link Akıllı Telefon Yazıcısı" / "telefon yazıcı" → `yazici-tarayici`
+- "XIAOMI Bluetooth Hoparlör" → `ses-kulaklik`
+- "Testo Anemometre" / "İnfrared Termometre" → `yapi-market` (ölçüm aleti)
+- "Bisiklet Telefon Çantası" → `canta-cuzdan`
+- "Samsung Galaxy S24 S Pen Kalem" → `telefon-aksesuar` (kalem aksesuar)
+- "Samsung Galaxy A50 Yan Tuşlar Takımı" → `telefon-aksesuar` (yedek parça)
+- "Samsung Galaxy A50 Sim Çekmecesi" → `telefon-aksesuar`
+- "Samsung Galaxy A72 Ön/Arka Kamera (Orjinal)" → `telefon-aksesuar`
+- "Samsung Galaxy A72 Ara Film Flex" → `telefon-aksesuar`
+- "JM-Z13 Akıllı Telefon Tamir Tutacağı" → `yapi-market` (veya `telefon-aksesuar`)
+- "S-link SL-M4 Şarj Adaptör" → `telefon-aksesuar`
+- "SANDISK Ultra Dual Drive USB" → `bilgisayar-bilesenleri`
+- "DARK USB OTG kablosu" → `bilgisayar-bilesenleri`
+- "Fisher-Price Kaydır ve Öğren Akıllı Telefon Oyuncak" → `oyuncak`
+- "TECNO SPARK 10 AY TUTULMASI AKILLI TELEFON" → `akilli-telefon` (gerçek telefon, "Ay Tutulması" model adı)
+- "Video Işığı Akıllı Telefon için" → `fotograf-kamera`
+- "Yaka Mikrofonu Akıllı Telefon İçin" → `fotograf-kamera`
+- "PİRANHA Akıllı Telefon Ekran Yansıtıcı" → `telefon-aksesuar`
+
+**Kural**: "Akıllı Telefon ile Kullanılabilen/İçin/Uyumlu/Kontrollü" ifadelerini gören ürünler AKSESUAR'dır, telefon değildir.
 
 **Türkçe kullanılmış/defolu/yenilenmiş indicators** → `reject` (delete):
 - "İkinci El", "İKİNCİ EL", "i̇kinci el" (Turkish dotted capital İ variant)
