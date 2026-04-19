@@ -34,27 +34,97 @@ You MUST pick `suggested_category_slug` from `available_categories`. If nothing 
 
 ## Classification Rules
 
-**Telefon kılıfı / kapak / ekran koruyucu / şarj cihazı / kablo / tutucu / stand / soğutucu** → `telefon-aksesuar` (NOT akilli-telefon).
+Rules are ordered by priority — earliest match wins.
 
-**"Cep Telefonu", "Akıllı Telefon", "Smartphone"** + brand + model + GB → `akilli-telefon`. Must look like an actual phone SKU.
+### 1. Reject FIRST (before categorization)
+Always apply reject keywords list above before trying to categorize.
+A phone titled "Apple iPhone 16 Pro - Outlet" → `reject`, NOT `akilli-telefon`.
 
-**Earbuds, Buds, kulaklık, kulakiçi, headphone** → `ses-kulaklik`.
+### 2. Phone accessories → `telefon-aksesuar`
+- "kılıf", "Kapak - <color>", " kapak " (with space-pad to avoid "kapaklı")
+- "ekran koruyucu", "cam koruyucu", "nano cam", "tamperli cam", "seramik esnek"
+- "şarj aleti", "şarj cihazı", "şarj kablosu", "hızlı şarj", "kablosuz şarj", "şarj soketi"
+- "powerbank", "power bank"
+- "telefon tutucu", "telefon standı", "motosiklet tutucu"
+- "telefon soğutma", "soğutucu", "fanlı"
+- "arka koruyucu", "full body", "tamperli"
+- "lcd ekran", "dokunmatik", "yedek parça", "tamir seti", "onarım"
+- "usb hub", "splitter", "adapter" (telefon context)
+- "toz temizleyici"
 
-**Tab, Tablet, iPad** → `tablet`.
+### 3. Real smartphones → `akilli-telefon`
+Must match this pattern:
+- `<Brand> <Model> <GB>GB <Color>` OR
+- Includes "Cep Telefonu", "Akıllı Telefon", "Smartphone" as standalone word
+- Known phone brands: Apple iPhone, Samsung Galaxy S/A/Note/Z, Xiaomi (Mi/Redmi/Poco), Huawei (Mate/P/Nova/Pura), Honor, Realme, Oppo, OnePlus, Google Pixel, Nokia, Motorola, Nubia, General Mobile
+- Must NOT match any reject keyword (see §1)
 
-**Gimbal, stabilizer** → `fotograf-kamera`.
+### 4. Smart watches → `akilli-saat`
+- "apple watch", "galaxy watch", "huawei watch", "fitbit", "garmin" (models)
+- "akıllı saat", "smartwatch"
+- "xiaomi band", "mi band", "smart band"
+- standalone " watch " (padded) with tech brand
 
-**SSD, NVMe, RAM, işlemci, anakart, ekran kartı, RTX** → `bilgisayar-bilesenleri`.
+### 5. Headphones/audio → `ses-kulaklik`
+- "kulaklık", "kulak içi", "kulak üstü", "headphone", "headset"
+- "airpods", "galaxy buds", "buds pro", "earbuds", "tws"
+- "bluetooth hoparlör", "soundbar", "hoparlör"
 
-**LCD ekran, dokunmatik, yedek parça, onarım seti** → `telefon-aksesuar`.
+### 6. Camera/photo → `fotograf-kamera`
+- "kamera lens", " lens " (photography context)
+- "gimbal", "stabilizer", "stabilizatör"
+- "tripod", "selfie çubuğu"
+- "dslr", "aynasız kamera", "fotoğraf makinesi"
+- "gopro", "insta360"
 
-**Tornavida, anahtar takımı, el aleti** → `yapi-market`.
+### 7. Tablets → `tablet`
+- "ipad", "galaxy tab", "lenovo tab", "xiaomi pad", "huawei matepad", "redmi pad"
+- standalone "tablet"
 
-**Kitap (yazar adı + roman/dizi), Allen Carr vb.** → `kitap`.
+### 8. Computer components → `bilgisayar-bilesenleri`
+- "ssd", "nvme", "m.2", "hdd" (with size like TB/GB)
+- "ram bellek", "ddr4", "ddr5"
+- "işlemci", "cpu", "intel core", "ryzen", "amd"
+- "anakart", "motherboard"
+- "ekran kartı", "rtx", "rx ", "gtx"
 
-**Türkçe kullanılmış/defolu indicators** → reject:
-- "İkinci El", "2. El", "Kullanılmış", "Defolu", "Hasarlı", "Açık Kutu", "Open Box", "Teşhir", "Outlet", "Yenilenmiş"
-- Also reject duplicate listings, placeholder text, or titles under 10 chars.
+### 9. Phone repair parts → `telefon-aksesuar`
+Even if title mentions phone brand/model, screen/touch replacement parts go here.
+
+### 10. Hand tools → `yapi-market`
+- "tornavida seti", "anahtar takımı", "el aleti"
+- "matkap", "delici" (without phone context)
+
+### 11. Books → `kitap`
+- Author name + book title pattern
+- "Allen Carr", known author names + product title being a phrase
+
+### Learned edge cases (do NOT put in akilli-telefon)
+- "Xiaomi Mi Cordless Tornavida" → `yapi-market`
+- "Xiaomi Düdüklü Tencere" → `mutfak-sofra`
+- "Samsung Galaxy Buds3 Pro" → `ses-kulaklik` (buds, not phone)
+- "Samsung Galaxy Tab" → `tablet`
+- "Apple iPhone XX Kamera Lens" → `telefon-aksesuar` (part, not phone)
+- "Apple iPhone 16 Pro ... - Outlet" → `reject`
+- "Yenilenmiş Samsung Galaxy S24 ... A/C Kalite" → `reject`
+- "THREESTEP ... Telefon Toz Temizleyici" → `telefon-aksesuar`
+- "Akıllı Telefon Aptal Telefon - Allen Carr" → `kitap` (self-help book)
+- "acer Predator GP30 Harici SSD" → `bilgisayar-bilesenleri`
+
+**Türkçe kullanılmış/defolu/yenilenmiş indicators** → `reject` (delete):
+- "İkinci El", "İKİNCİ EL", "i̇kinci el" (Turkish dotted capital İ variant)
+- "2. El", "2.el"
+- "Kullanılmış"
+- "Defolu", "Hasarlı"
+- "Açık Kutu", "Open Box"
+- "Teşhir" (display model)
+- "Outlet" (especially titles ending in "- Outlet")
+- "Yenilenmiş", "Refurbished", "Rebox" (renewed — even with "A Kalite / B Kalite / C Kalite" suffix)
+- "C Kalite", "D Kalite" when combined with above keywords
+- Also reject: duplicate listings, placeholder text, titles under 10 chars, single-word titles.
+
+**Important**: Case matters for Turkish characters. `İ` (dotted capital) ≠ `I` in some comparisons.
+Treat `İkinci`, `ikinci`, `İKİNCİ` as the same reject keyword.
 
 **Accessory-looking title even in akilli-telefon context** → move to `telefon-aksesuar`.
 
