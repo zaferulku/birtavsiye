@@ -25,9 +25,9 @@ export async function GET(req: Request) {
   const since = new Date(Date.now() - 35 * 60 * 1000).toISOString();
   const { data: recentPrices } = await supabaseAdmin
     .from("price_history")
-    .select("product_id, price, created_at")
-    .gte("created_at", since)
-    .order("created_at", { ascending: false })
+    .select("product_id, price, recorded_at")
+    .gte("recorded_at", since)
+    .order("recorded_at", { ascending: false })
     .limit(200);
 
   const result = await runAgent(
