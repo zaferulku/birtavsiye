@@ -182,6 +182,16 @@ Bu markalar telefon ÜRETMİYOR, sadece aksesuar yapıyor. Title "Akıllı Telef
 - `BMW`, `ST-29`, `Borofone`, `Smcase`, `S-link`, `Mokamika` (stant/tutucu/VR)
 - `NEWFACE`, `corcishop`, `Teknonet`, `Zore`, `Vexor`, `Gpack`, `HERŞEYTREND`, `USLUCAN`, `BUKREM`, `Apec` (kılıf/kapak)
 - `Targus`, `Dragos` (laptop çantası veya PC aksesuar)
+- `Gpack Apple`, `Gpack Samsung`, `Gpack Garmin`, `GPACK` (saat kordon / kılıf, akıllı saat değil — aksesuar)
+
+**Yedek parça markaları / batarya:**
+- `Orjinal` + "Batarya/Pil" → `telefon-aksesuar` veya `bilgisayar-bilesenleri`
+- `RETRO` + "Notebook Bataryası" → `bilgisayar-bilesenleri` (laptop yedek pili)
+- `Notebook` (marka adı olarak) → `telefon-aksesuar` (çanta)
+- `Akıllı` brand + "kordon/kayış" → `telefon-aksesuar`
+
+**TV/mobilya askı markaları → `mobilya-dekorasyon`:**
+- `NEWFACE`, `Clk`, `Nurer`, `Televizyon` (TV standı/askı brand'i gibi görünüyor ama üretim yok — stand/askı)
 
 **Oyuncak markaları → `oyuncak`:**
 - `Baby`, `Clementoni`, `Fisher-Price`, `Eğitici`, `Işıklı`
