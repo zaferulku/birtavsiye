@@ -159,6 +159,55 @@ Even if title mentions phone brand/model, screen/touch replacement parts go here
 
 **Kural**: "Akıllı Telefon ile Kullanılabilen/İçin/Uyumlu/Kontrollü" ifadelerini gören ürünler AKSESUAR'dır, telefon değildir.
 
+## Marka normalizasyonu (aynı şirket için tek yazım)
+
+Output'ta brand field'ını kanonik yazımla doldur:
+- `iPhone`, `İphone`, `İPHONE`, `IPHONE` → `Apple`
+- `iPad`, `İpad`, `IPAD` → `Apple`
+- `Airpods`, `AirPods`, `AIRPODS` → `Apple`
+- `Ps5`, `PS5`, `Playstation` → `Sony`
+- `Jbl` → `JBL`
+- `GIGABYTE` → `Gigabyte`, `Pny` → `PNY`, `CORSAIR` → `Corsair`, `KINGSTON` → `Kingston`
+- `VIVO`, `vivo` → `Vivo`, `OPPO` → `Oppo`, `TECNO` → `Tecno`, `NUBIA` → `Nubia`
+- `SAMSUNG`, `Samsung Samsung`, `samsung` → `Samsung`
+- `APPLE`, `apple` → `Apple`
+- `XIAOMI`, `Xiaomi Xiaomi` → `Xiaomi`
+
+## Gerçek telefon MARKASI OLMAYANLAR
+
+Bu markalar telefon ÜRETMİYOR, sadece aksesuar yapıyor. Title "Akıllı Telefon" geçiyorsa bile kategori telefon değildir:
+
+**Aksesuar markaları → `telefon-aksesuar`:**
+- `PDX`, `Renksan`, `Ulanzi`, `Celestron`, `Andoer` (ışık/adaptör/teçhizat)
+- `BMW`, `ST-29`, `Borofone`, `Smcase`, `S-link`, `Mokamika` (stant/tutucu/VR)
+- `NEWFACE`, `corcishop`, `Teknonet`, `Zore`, `Vexor`, `Gpack`, `HERŞEYTREND`, `USLUCAN`, `BUKREM`, `Apec` (kılıf/kapak)
+- `Targus`, `Dragos` (laptop çantası veya PC aksesuar)
+
+**Oyuncak markaları → `oyuncak`:**
+- `Baby`, `Clementoni`, `Fisher-Price`, `Eğitici`, `Işıklı`
+
+**Kitap yayıncıları → `kitap`:**
+- `Keskin`, `Tatlı`, `Bağlan`, `Doğan Kitap`, `Allen Carr`
+
+**Ölçüm aletleri / termal → `yapi-market` veya `fotograf-kamera`:**
+- `Uti120Ms`, `Uti720M`, `Ayt`, `Noyafa` (termal görüntüleyici → foto)
+- `Testo` (anemometre → yapı market)
+- `JM-Z13` (tamir aleti → yapı market)
+
+**Müzik aleti → `muzik-aleti`:**
+- `Laney` (elektro gitar amfisi)
+
+## Gerçek telefon markaları (telefon üreticisi)
+
+Bu markalar telefon ÜRETİYOR, GB/TB formatı varsa `akilli-telefon`:
+- **Büyük:** Apple, Samsung, Xiaomi, Huawei, Honor, Redmi, Poco, Realme, Oppo, Vivo, OnePlus, Google Pixel, Motorola, Nokia
+- **Orta:** Nubia, Infinix, Tecno, Blackview, Umidigi, General Mobile, Omix
+- **Küçük/Çin markaları:** Hiking, Trident, Mipo, Doogee (GB varsa telefon kabul et)
+
+Bilinmeyen bir marka görürsen:
+- Title'da brand + model + GB/TB + color varsa → `akilli-telefon`
+- Title'da "için", "uyumlu", "ile" varsa → `telefon-aksesuar`
+
 **Türkçe kullanılmış/defolu/yenilenmiş indicators** → `reject` (delete):
 - "İkinci El", "İKİNCİ EL", "i̇kinci el" (Turkish dotted capital İ variant)
 - "2. El", "2.el"
