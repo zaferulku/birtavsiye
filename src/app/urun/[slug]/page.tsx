@@ -10,6 +10,7 @@ import StoreLogo from "../../components/ui/StoreLogo";
 import PriceHistoryChart from "../../components/urun/PriceHistoryChart";
 import PriceAlertModal from "../../components/urun/PriceAlertModal";
 import PriceRefresher from "../../components/urun/PriceRefresher";
+import VariantSwitcher from "../../components/urun/VariantSwitcher";
 import type { Metadata } from "next";
 
 export async function generateMetadata(
@@ -38,20 +39,93 @@ export async function generateMetadata(
   };
 }
 
-export default async function UrunDetay({ params }: { params: Promise<{ slug: string }> }) {
+export default async function UrunDetay({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>;
+  searchParams: Promise<{ s?: string; c?: string }>;
+}) {
   const { slug } = await params;
+  const { s: storageParam, c: colorParam } = await searchParams;
 
-  const { data: product } = await supabase
+  const { data: baseProduct } = await supabase
     .from("products").select("*").eq("slug", slug).maybeSingle();
 
-  const { data: prices } = await supabase
-    .from("prices").select("*, stores(name, url)")
-    .eq("product_id", product?.id).order("price", { ascending: true });
+  // Aynı brand+model_family tüm variant satırları
+  let siblings = baseProduct ? [baseProduct] : [];
+  if (baseProduct?.brand && baseProduct?.model_family) {
+    const { data } = await supabase
+      .from("products")
+      .select("id, slug, title, brand, image_url, specs, category_id, model_family, variant_storage, variant_color")
+      .eq("brand", baseProduct.brand)
+      .eq("model_family", baseProduct.model_family);
+    if (data?.length) siblings = data;
+  }
+
+  // Variant matrix: (storage, color) -> product row[]
+  const variantMap = new Map<string, typeof siblings>();
+  for (const s of siblings) {
+    const key = `${s.variant_storage ?? ""}|${s.variant_color ?? ""}`;
+    const arr = variantMap.get(key) ?? [];
+    arr.push(s);
+    variantMap.set(key, arr);
+  }
+
+  const storages = [...new Set(siblings.map(s => s.variant_storage).filter(Boolean) as string[])]
+    .sort((a, b) => {
+      const na = parseInt(a, 10);
+      const nb = parseInt(b, 10);
+      const unitA = a.toUpperCase().includes("TB") ? 1000 : 1;
+      const unitB = b.toUpperCase().includes("TB") ? 1000 : 1;
+      return (na * unitA) - (nb * unitB);
+    });
+  const colors = [...new Set(siblings.map(s => s.variant_color).filter(Boolean) as string[])].sort();
+
+  // Seçili variant
+  const selectedStorage = storageParam ?? baseProduct?.variant_storage ?? storages[0] ?? null;
+  const selectedColor = colorParam ?? baseProduct?.variant_color ?? colors[0] ?? null;
+  const selectedKey = `${selectedStorage ?? ""}|${selectedColor ?? ""}`;
+  const selectedProducts = variantMap.get(selectedKey) ?? (baseProduct ? [baseProduct] : []);
+  const product = selectedProducts[0] ?? baseProduct;
+
+  // Variants meta (her variant'ın min fiyatı için count lazım — basit count yeterli)
+  const variants = [...variantMap.entries()].map(([key, arr]) => {
+    const [st, col] = key.split("|");
+    return {
+      storage: st || null,
+      color: col || null,
+      count: arr.length,
+      minPrice: null as number | null,
+      anyInStock: true,
+    };
+  });
+
+  // Seçili variant'ın tüm product id'lerinden fiyatlar
+  const variantIds = selectedProducts.map(p => p.id).filter(Boolean);
+  type PriceRow = { id: string; price: number; affiliate_url: string | null; store_id: string; stores: { name: string; url: string | null } | null };
+  let pricesRaw: PriceRow[] = [];
+  if (variantIds.length > 0) {
+    const { data } = await supabase
+      .from("prices").select("*, stores(name, url)")
+      .in("product_id", variantIds)
+      .order("price", { ascending: true });
+    pricesRaw = (data ?? []) as PriceRow[];
+  }
+
+  // Aynı mağazada birden fazla fiyat varsa en düşüğünü tut
+  const pricesByStore = new Map<string, PriceRow>();
+  for (const p of pricesRaw) {
+    const key = p.stores?.name ?? p.store_id;
+    const existing = pricesByStore.get(key);
+    if (!existing || p.price < existing.price) pricesByStore.set(key, p);
+  }
+  const prices = [...pricesByStore.values()].sort((a, b) => a.price - b.price);
 
   const { data: history } = await supabase
     .from("price_history")
     .select("recorded_at, price, stores(name)")
-    .eq("product_id", product?.id)
+    .in("product_id", variantIds.length > 0 ? variantIds : [product?.id])
     .order("recorded_at", { ascending: true })
     .limit(300);
 
@@ -97,7 +171,21 @@ export default async function UrunDetay({ params }: { params: Promise<{ slug: st
         <div className="bg-white rounded-2xl p-3 sm:p-5 md:p-6 mb-4 md:mb-6 shadow-sm">
           <div className="grid gap-5 md:gap-6 lg:gap-8 grid-cols-1 md:grid-cols-2 lg:[grid-template-columns:2fr_3fr_2fr]">
             <ProductGallery imageUrl={product.image_url} />
-            <ProductInfo product={product} avgRating={avgRating} reviewCount={reviewCount} />
+            <div className="space-y-5">
+              <ProductInfo product={product} avgRating={avgRating} reviewCount={reviewCount} />
+              {(storages.length > 1 || colors.length > 1) && (
+                <div className="border-t border-gray-100 pt-4">
+                  <VariantSwitcher
+                    slug={slug}
+                    storages={storages}
+                    colors={colors}
+                    selectedStorage={selectedStorage}
+                    selectedColor={selectedColor}
+                    variants={variants}
+                  />
+                </div>
+              )}
+            </div>
             <div className="lg:sticky lg:top-20 md:col-span-2 lg:col-span-1">
               <div className="bg-white border-2 border-gray-100 rounded-2xl overflow-hidden shadow-sm">
                 <div className="bg-gray-900 px-5 py-5">
