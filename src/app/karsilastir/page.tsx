@@ -88,7 +88,7 @@ export default function KarsilastirSayfasi() {
     });
 
   return (
-    <main className="bg-[#F5F4F0] min-h-screen">
+    <main className="bg-white min-h-screen">
       <Header />
 
       {/* Arama hero */}

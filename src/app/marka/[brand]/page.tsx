@@ -41,7 +41,7 @@ export default async function MarkaPage({ params }: { params: Promise<{ brand: s
 
   if (rows.length === 0) {
     return (
-      <main className="bg-gray-50 min-h-screen">
+      <main className="bg-white min-h-screen">
         <Header />
         <div className="max-w-6xl mx-auto px-6 py-20 text-center">
           <h1 className="font-bold text-2xl mb-4">Marka bulunamadı</h1>
@@ -75,7 +75,7 @@ export default async function MarkaPage({ params }: { params: Promise<{ brand: s
   const models = [...groups.entries()].sort((a, b) => a[1].minPrice - b[1].minPrice);
 
   return (
-    <main className="bg-gray-50 min-h-screen">
+    <main className="bg-white min-h-screen">
       <Header />
       <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-6">
         <div className="flex gap-2 text-xs md:text-sm text-gray-400 mb-4 md:mb-5">

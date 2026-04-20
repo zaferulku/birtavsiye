@@ -161,7 +161,7 @@ export default async function UrunDetay({
   const categoryPath = await fetchCategoryPath(product.category_id ?? null);
 
   return (
-    <main className="bg-gray-50 min-h-screen">
+    <main className="bg-white min-h-screen">
       <Header />
       <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-6">
 

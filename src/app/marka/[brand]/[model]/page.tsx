@@ -26,7 +26,7 @@ export default async function ModelPage({
 
   if (rows.length === 0) {
     return (
-      <main className="bg-gray-50 min-h-screen">
+      <main className="bg-white min-h-screen">
         <Header />
         <div className="max-w-6xl mx-auto px-6 py-20 text-center">
           <h1 className="font-bold text-2xl mb-4">Model bulunamadı</h1>

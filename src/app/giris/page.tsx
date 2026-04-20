@@ -59,7 +59,7 @@ export default function GirisSayfasi() {
   };
 
   return (
-    <main className="min-h-screen bg-[#F8F6F2] flex items-center justify-center px-4">
+    <main className="min-h-screen bg-white flex items-center justify-center px-4">
       <div className="bg-white border border-[#E8E4DF] rounded-2xl p-8 w-full max-w-md">
         <div className="text-center mb-6">
           <Link href="/">

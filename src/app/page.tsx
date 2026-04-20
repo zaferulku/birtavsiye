@@ -10,7 +10,7 @@ export default function Home() {
   const router = useRouter();
 
   return (
-    <main className="min-h-screen bg-[#F5F4F0]">
+    <main className="min-h-screen bg-white">
       <Header />
 
       {/* Toggle bar */}
@@ -43,7 +43,7 @@ export default function Home() {
           <HomeBanner />
           <FeaturedProducts />
         </div>
-        <div className="flex-1 min-w-0 bg-[#FAFAF8] overflow-y-auto">
+        <div className="flex-1 min-w-0 bg-white overflow-y-auto">
           <TopicFeed compact />
         </div>
       </div>

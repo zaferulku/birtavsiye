@@ -160,7 +160,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   }
 
   return (
-    <main className="bg-[#F8F6F2] min-h-screen">
+    <main className="bg-white min-h-screen">
       <Header />
 
       {/* Hero */}

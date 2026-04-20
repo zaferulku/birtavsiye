@@ -246,7 +246,7 @@ export default function TavsiyelerSayfasi() {
   const popular = [...topics].sort((a, b) => (b.votes || 0) - (a.votes || 0)).slice(0, 12);
 
   return (
-    <main className="min-h-screen bg-[#F5F4F0]">
+    <main className="min-h-screen bg-white">
       <Header />
 
       {/* Toggle bar */}

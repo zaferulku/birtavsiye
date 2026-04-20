@@ -131,7 +131,7 @@ export default function ProfilSayfasi() {
   if (!user) return null;
 
   return (
-    <main className="bg-gray-50 min-h-screen">
+    <main className="bg-white min-h-screen">
       <Header />
       <div className="max-w-[1400px] mx-auto px-3 md:px-8 py-4 md:py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 md:gap-6">

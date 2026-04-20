@@ -284,7 +284,7 @@ function AramaIcerik() {
 
 export default function AramaSayfasi() {
   return (
-    <main className="bg-gray-50 min-h-screen">
+    <main className="bg-white min-h-screen">
       <Header />
       <Suspense fallback={<div className="text-center py-20 text-gray-400">Yukleniyor...</div>}>
         <AramaIcerik />

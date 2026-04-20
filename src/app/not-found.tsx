@@ -4,7 +4,7 @@ import Footer from "./components/layout/Footer";
 
 export default function NotFound() {
   return (
-    <main className="bg-gray-50 min-h-screen">
+    <main className="bg-white min-h-screen">
       <Header />
       <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-12 sm:py-20 flex flex-col items-center justify-center text-center">
 
