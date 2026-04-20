@@ -135,6 +135,51 @@ const PTTAVM_MAP = {
   "Dambıl": "fitness",
   "Koşu Bandı": "fitness",
   "Bisiklet": "bisiklet",
+
+  // Toplu audit'ten keşfedilen yeni kategoriler
+  "Pantolon ve Kapri": "kadin-giyim",
+  "Günlük Pantolon": "kadin-giyim",
+  "Pantolon": "kadin-giyim",
+  "Şort": "erkek-giyim",
+  "Pileli Etek": "kadin-giyim",
+  "Uzun Etek": "kadin-giyim",
+  "Büyük Beden Etek": "kadin-giyim",
+  "Eşofman Altı": "erkek-giyim",
+  "Eşofman Üstü": "erkek-giyim",
+  "Tayt ve Leggings": "kadin-giyim",
+  "Günlük Ceket": "erkek-giyim",
+  "Montlar ve Ceketler": "erkek-giyim",
+  "Mont": "erkek-giyim",
+  "Sweatshirt": "erkek-giyim",
+
+  "Maske ve Şnorkeller": "su-sporlari",
+  "Maskeler": "su-sporlari",
+
+  "Dizüstü Bilgisayarlar": "bilgisayar-laptop",
+  "Bellek (RAM)": "bilgisayar-bilesenleri",
+  "Buzdolapları": "beyaz-esya",
+  "Çamaşır Makineleri": "beyaz-esya",
+  "Bulaşık Makineleri": "beyaz-esya",
+  "Tost Makineleri": "kucuk-ev-aletleri",
+  "Tabletler": "tablet",
+  "Aksiyon Kameralar": "fotograf-kamera",
+  "Analog Fotoğraf Makineleri": "fotograf-kamera",
+  "Test Cihazları": "yapi-market",
+  "Taşınabilir Disk Aksesuarları": "bilgisayar-bilesenleri",
+  "Taşınabilir Şarj Cihazları": "telefon-aksesuar",
+  "Güvenlik Kamerası": "fotograf-kamera",
+  "Yedek Parçalar": "telefon-aksesuar",
+  "Aksesuarlar": "telefon-aksesuar",
+
+  "Yüz Temizleme Cihazları": "cilt-bakimi",
+  "Yüz Temizleyici": "cilt-bakimi",
+  "Yüz Kremi": "cilt-bakimi",
+  "Nemlendirici": "cilt-bakimi",
+  "Güneş Kremi": "cilt-bakimi",
+  "Serum": "cilt-bakimi",
+
+  "Okul Çantası": "kirtasiye",
+  "Kırtasiye": "kirtasiye",
 };
 
 const MEDIAMARKT_MAP = {

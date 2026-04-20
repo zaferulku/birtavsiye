@@ -16,10 +16,10 @@ export default async function KategoriSayfasi({ params, searchParams }: {
     .eq("slug", slug)
     .maybeSingle();
 
-  // Tüm ürünleri çek (marka filtresi için)
+  // Variant dedup için daha geniş bir havuz çekip in-memory birleştiriyoruz
   let query = supabase
     .from("products")
-    .select("id, title, slug, brand, description, image_url, prices(price)", { count: "exact" })
+    .select("id, title, slug, brand, description, image_url, model_family, variant_storage, variant_color, prices(price)", { count: "exact" })
     .eq("category_id", category?.id);
 
   if (marka) query = query.eq("brand", marka);
@@ -28,7 +28,36 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   else if (siralama === "za") query = query.order("title", { ascending: false });
   else query = query.order("created_at", { ascending: false });
 
-  const { data: products, count } = await query.limit(96);
+  const { data: rawProducts, count } = await query.limit(300);
+
+  // Aynı (brand, model_family) birden fazla kayıt varsa sadece en ucuzunu listele
+  type Row = NonNullable<typeof rawProducts>[number];
+  const familyGroups = new Map<string, Row[]>();
+  const singletons: Row[] = [];
+  for (const p of rawProducts ?? []) {
+    if (p.brand && p.model_family) {
+      const key = `${p.brand}|${p.model_family}`;
+      const arr = familyGroups.get(key) ?? [];
+      arr.push(p);
+      familyGroups.set(key, arr);
+    } else {
+      singletons.push(p);
+    }
+  }
+
+  const minPriceOf = (p: Row): number => {
+    const list = (p.prices as { price: number }[] | undefined) ?? [];
+    return list.length > 0 ? Math.min(...list.map(x => x.price)) : Infinity;
+  };
+
+  const dedupedRepresentatives: (Row & { _variantCount?: number })[] = [];
+  for (const arr of familyGroups.values()) {
+    const sorted = arr.slice().sort((a, b) => minPriceOf(a) - minPriceOf(b));
+    const rep = { ...sorted[0], _variantCount: arr.length };
+    dedupedRepresentatives.push(rep);
+  }
+
+  const products = [...dedupedRepresentatives, ...singletons].slice(0, 96);
 
   // Markalar listesi (filtre için)
   const { data: allProducts } = await supabase
@@ -162,9 +191,20 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                         </div>
                         <div className="p-3 pb-2">
                           <div className="text-[10px] font-bold text-[#E8460A] uppercase tracking-wider mb-0.5">{p.brand}</div>
-                          <div className="text-xs font-medium text-gray-800 leading-snug line-clamp-2 min-h-[2.5rem] mb-2">{p.title}</div>
+                          <div className="text-xs font-medium text-gray-800 leading-snug line-clamp-2 min-h-[2.5rem] mb-2">
+                            {(p as any).model_family && (p as any).brand
+                              ? `${(p as any).brand} ${(p as any).model_family}`
+                              : p.title}
+                          </div>
                           {minPrice ? (
-                            <div className="text-sm font-bold text-gray-900">{Number(minPrice.price).toLocaleString("tr-TR")} <span className="text-xs font-normal text-gray-400">₺</span></div>
+                            <div className="flex items-baseline justify-between gap-2">
+                              <div className="text-sm font-bold text-gray-900">{Number(minPrice.price).toLocaleString("tr-TR")} <span className="text-xs font-normal text-gray-400">₺</span></div>
+                              {(p as any)._variantCount > 1 && (
+                                <span className="text-[9px] text-gray-500 font-medium bg-gray-100 rounded-full px-1.5 py-0.5">
+                                  {(p as any)._variantCount} seçenek
+                                </span>
+                              )}
+                            </div>
                           ) : (
                             <div className="text-xs text-[#E8460A] font-semibold">Fiyatları Karşılaştır →</div>
                           )}
