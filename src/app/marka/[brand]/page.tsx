@@ -3,7 +3,7 @@ import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
 import Link from "next/link";
 import Image from "next/image";
-import { modelFamilyToSlug } from "../../../lib/categoryTree";
+import { modelFamilyToSlug, fetchCategoryPath } from "../../../lib/categoryTree";
 import type { Metadata } from "next";
 
 export const revalidate = 120;
@@ -29,12 +29,13 @@ export default async function MarkaPage({ params }: { params: Promise<{ brand: s
     brand: string | null;
     model_family: string | null;
     image_url: string | null;
+    category_id: string | null;
     prices: { price: number }[] | null;
   };
 
   const { data: products } = await supabase
     .from("products")
-    .select("id, slug, brand, model_family, image_url, prices(price)")
+    .select("id, slug, brand, model_family, image_url, category_id, prices(price)")
     .ilike("brand", brandGuess)
     .not("model_family", "is", null)
     .limit(1000);
@@ -55,6 +56,14 @@ export default async function MarkaPage({ params }: { params: Promise<{ brand: s
   }
 
   const actualBrand = rows[0].brand ?? brandGuess;
+
+  // Dominant kategori (en çok ürünün olduğu) üzerinden breadcrumb chain çıkar
+  const catCounts = new Map<string, number>();
+  for (const r of rows) {
+    if (r.category_id) catCounts.set(r.category_id, (catCounts.get(r.category_id) ?? 0) + 1);
+  }
+  const dominantCatId = [...catCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  const categoryPath = dominantCatId ? await fetchCategoryPath(dominantCatId) : [];
 
   type Group = { rep: Row; count: number; minPrice: number };
   const groups = new Map<string, Group>();
@@ -80,11 +89,19 @@ export default async function MarkaPage({ params }: { params: Promise<{ brand: s
     <main className="bg-white min-h-screen">
       <Header />
       <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-6">
-        <div className="flex gap-2 text-xs md:text-sm text-gray-400 mb-4 md:mb-5">
-          <Link href="/" className="hover:text-[#E8460A]">Anasayfa</Link>
-          <span>/</span>
-          <span className="text-gray-700">{actualBrand}</span>
-        </div>
+        <nav aria-label="Breadcrumb" className="flex flex-wrap gap-2 text-xs md:text-sm text-gray-500 mb-4 md:mb-5">
+          <Link href="/" className="hover:text-[#E8460A] flex-shrink-0">Anasayfa</Link>
+          {categoryPath.map((c) => (
+            <span key={c.id} className="flex gap-2">
+              <span className="flex-shrink-0">/</span>
+              <Link href={`/kategori/${c.slug}`} className="hover:text-[#E8460A] flex-shrink-0">{c.name}</Link>
+            </span>
+          ))}
+          <span className="flex gap-2">
+            <span className="flex-shrink-0">/</span>
+            <span className="text-gray-800 font-semibold">{actualBrand}</span>
+          </span>
+        </nav>
         <h1 className="text-2xl md:text-3xl font-bold mb-6">{actualBrand} Modelleri</h1>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {models.map(([mf, info]) => (

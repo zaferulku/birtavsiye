@@ -3,6 +3,7 @@ import Header from "../../../components/layout/Header";
 import Footer from "../../../components/layout/Footer";
 import Link from "next/link";
 import Image from "next/image";
+import { fetchCategoryPath } from "../../../../lib/categoryTree";
 
 export const revalidate = 120;
 
@@ -24,13 +25,14 @@ export default async function ModelPage({
     image_url: string | null;
     variant_storage: string | null;
     variant_color: string | null;
+    category_id: string | null;
     specs: Record<string, unknown> | null;
     prices: PriceRow[] | null;
   };
 
   const { data } = await supabase
     .from("products")
-    .select("id, slug, title, brand, image_url, variant_storage, variant_color, specs, prices(price)")
+    .select("id, slug, title, brand, image_url, variant_storage, variant_color, category_id, specs, prices(price)")
     .ilike("brand", brandGuess)
     .ilike("model_family", modelGuess)
     .limit(200);
@@ -52,6 +54,13 @@ export default async function ModelPage({
 
   const actualBrand = rows[0].brand ?? brandGuess;
   const actualModel = modelGuess.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+
+  const catCounts = new Map<string, number>();
+  for (const r of rows) {
+    if (r.category_id) catCounts.set(r.category_id, (catCounts.get(r.category_id) ?? 0) + 1);
+  }
+  const dominantCatId = [...catCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
+  const categoryPath = dominantCatId ? await fetchCategoryPath(dominantCatId) : [];
 
   const minPriceOf = (r: Row): number => {
     const list = r.prices ?? [];
@@ -81,11 +90,21 @@ export default async function ModelPage({
       <Header />
       <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-6">
         <nav aria-label="Breadcrumb" className="flex flex-wrap gap-2 text-xs md:text-sm text-gray-500 mb-5">
-          <Link href="/" className="hover:text-[#E8460A]">Anasayfa</Link>
-          <span>/</span>
-          <Link href={`/marka/${brand}`} className="hover:text-[#E8460A]">{actualBrand}</Link>
-          <span>/</span>
-          <span className="text-gray-800">{actualModel}</span>
+          <Link href="/" className="hover:text-[#E8460A] flex-shrink-0">Anasayfa</Link>
+          {categoryPath.map((c) => (
+            <span key={c.id} className="flex gap-2">
+              <span className="flex-shrink-0">/</span>
+              <Link href={`/kategori/${c.slug}`} className="hover:text-[#E8460A] flex-shrink-0">{c.name}</Link>
+            </span>
+          ))}
+          <span className="flex gap-2">
+            <span className="flex-shrink-0">/</span>
+            <Link href={`/marka/${brand}`} className="hover:text-[#E8460A] flex-shrink-0">{actualBrand}</Link>
+          </span>
+          <span className="flex gap-2 min-w-0">
+            <span className="flex-shrink-0">/</span>
+            <span className="text-gray-800 font-semibold truncate">{actualModel}</span>
+          </span>
         </nav>
 
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
