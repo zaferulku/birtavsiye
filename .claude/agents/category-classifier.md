@@ -37,6 +37,11 @@ Enforces accurate product categorization on the birtavsiye platform using a
 multi-signal scoring system. Prevents the shallow single-keyword mistakes
 (e.g., "maske" matching both skincare masks and diving masks).
 
+**Authoritative reference:** [docs/CATEGORIZATION_STANDARDS.md](../../docs/CATEGORIZATION_STANDARDS.md)
+— aligned with [Google Product Taxonomy](https://www.google.com/basepages/producttype/taxonomy.en-US.txt)
+and [Google Merchant Center classification guide](https://support.google.com/merchants/answer/6324436).
+All new rules MUST be consistent with this standard.
+
 ## Core Philosophy
 
 **Never classify from a single keyword.** Always combine:
