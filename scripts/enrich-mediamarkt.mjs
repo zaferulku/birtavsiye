@@ -90,13 +90,13 @@ async function processOne(p) {
 }
 
 (async () => {
-  // Ya mediamarkt_category yok ya da Ekran Boyutu (yeni specs) yok — ikisini birden enrich et
+  // specs->Ürün Tipi yoksa re-enrich et (yeni tech specs extraction)
   const { data: products, error } = await sb
     .from("products")
     .select("id, title, source_url, specs")
     .eq("source", "mediamarkt")
     .not("source_url", "is", null)
-    .or("specs->mediamarkt_category.is.null,specs->>Ekran Boyutu (inç).is.null")
+    .is("specs->Ürün Tipi", null)
     .limit(limit);
 
   if (error) { console.error("ERR:", error.message); process.exit(1); }
