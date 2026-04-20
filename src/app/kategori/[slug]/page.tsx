@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { fetchCategoryPath, fetchChildCategories, fetchDescendantIds } from "../../../lib/categoryTree";
 import SortDropdown from "../../components/kategori/SortDropdown";
+import { CATEGORY_IMAGE_OVERRIDES } from "../../../lib/categoryImageOverrides";
 
 export const revalidate = 60;
 
@@ -227,7 +228,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
         <div className="max-w-[1400px] mx-auto px-3 sm:px-6 pt-4">
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3">
             {children.map((c) => {
-              const img = childImageMap.get(c.id);
+              const img = CATEGORY_IMAGE_OVERRIDES[c.slug] ?? childImageMap.get(c.id);
               return (
                 <Link
                   key={c.id}
