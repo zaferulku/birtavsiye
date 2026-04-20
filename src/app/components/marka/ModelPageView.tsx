@@ -87,16 +87,18 @@ export default async function ModelPageView({ brand, model }: { brand: string; m
     return list.length > 0 ? Math.min(...list.map(x => x.price)) : Infinity;
   };
 
-  const legitByTitle = rows.filter(r => !isAccessoryTitle(r.title));
+  const legitByTitleInitial = rows.filter(r => !isAccessoryTitle(r.title));
+  const legitByTitle = legitByTitleInitial.length > 0 ? legitByTitleInitial : rows;
   const allMinPrices = legitByTitle.map(minPriceOf).filter(p => isFinite(p) && p > 0).sort((a, b) => a - b);
   const medianPrice = allMinPrices.length > 0 ? allMinPrices[Math.floor(allMinPrices.length / 2)] : 0;
   const minValidPrice = medianPrice > 1000 ? medianPrice * 0.6 : 0;
 
-  const legitRows = legitByTitle.filter(r => {
+  const legitRowsFiltered = legitByTitle.filter(r => {
     const mp = minPriceOf(r);
     if (!isFinite(mp)) return true;
     return mp >= minValidPrice;
   });
+  const legitRows = legitRowsFiltered.length > 0 ? legitRowsFiltered : legitByTitle;
 
   type VariantGroup = { rep: Row; minPrice: number; count: number; image: string | null };
   const groups = new Map<string, VariantGroup>();

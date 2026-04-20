@@ -172,27 +172,24 @@ export default async function KategoriSayfasi({ params, searchParams }: {
       <Header />
 
       {/* Hero */}
-      <div className="bg-[#0F0E0D] text-white px-3 sm:px-6 py-4 sm:py-6">
+      <div className="bg-white text-gray-900 px-3 sm:px-6 py-4 sm:py-6 border-b border-gray-100">
         <div className="max-w-[1400px] mx-auto">
-          <nav aria-label="Breadcrumb" className="flex flex-wrap gap-2 text-xs sm:text-sm text-[#666] mb-2">
-            <Link href="/" className="hover:text-white transition-colors flex-shrink-0">Anasayfa</Link>
+          <nav aria-label="Breadcrumb" className="flex flex-wrap gap-2 text-xs sm:text-sm text-gray-500 mb-2">
+            <Link href="/" className="hover:text-[#E8460A] transition-colors flex-shrink-0">Anasayfa</Link>
             {ancestors.map((c) => (
               <span key={c.id} className="flex gap-2">
                 <span className="flex-shrink-0">/</span>
-                <Link href={`/anasayfa/${ancestors.slice(0, ancestors.indexOf(c) + 1).map(x => x.slug).join("/")}`} className="hover:text-white transition-colors flex-shrink-0">{c.name}</Link>
+                <Link href={`/anasayfa/${ancestors.slice(0, ancestors.indexOf(c) + 1).map(x => x.slug).join("/")}`} className="hover:text-[#E8460A] transition-colors flex-shrink-0">{c.name}</Link>
               </span>
             ))}
             <span className="flex gap-2 min-w-0">
               <span className="flex-shrink-0">/</span>
-              <span className="text-white truncate">{category.name}</span>
+              <span className="text-gray-800 truncate">{category.name}</span>
             </span>
           </nav>
           <div className="flex items-center justify-between gap-3">
-            <h1 className="font-extrabold text-lg sm:text-2xl flex items-center gap-2 min-w-0">
-              <span className="flex-shrink-0">{category.icon}</span>
-              <span className="truncate">{category.name}</span>
-            </h1>
-            <span className="text-xs sm:text-sm text-[#888] flex-shrink-0">{count || 0} ürün</span>
+            <h1 className="font-extrabold text-lg sm:text-2xl text-gray-900 min-w-0 truncate">{category.name}</h1>
+            <span className="text-xs sm:text-sm text-gray-500 flex-shrink-0">{count || 0} ürün</span>
           </div>
         </div>
       </div>

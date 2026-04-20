@@ -24,7 +24,8 @@
       "Bash(curl -s 'https://www.ciceksepeti.com/arama?q=laptop' -H 'User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36' --max-time 10)",
       "Bash(curl -s \"https://www.ciceksepeti.com/arama?q=laptop\" -H \"User-Agent: Mozilla/5.0\" --max-time 10)",
       "Bash(curl -s 'https://www.incle.com/arama?q=laptop' -H 'User-Agent: Mozilla/5.0 \\(Windows NT 10.0; Win64; x64\\) AppleWebKit/537.36' --max-time 10)",
-      "Bash(curl -s \"https://www.incle.com/arama?q=laptop\" -H \"User-Agent: Mozilla/5.0\" --max-time 10)"
+      "Bash(curl -s \"https://www.incle.com/arama?q=laptop\" -H \"User-Agent: Mozilla/5.0\" --max-time 10)",
+      "Bash(node --env-file=.env.local -e ' *)"
     ]
   }
 }
