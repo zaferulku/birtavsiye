@@ -34,6 +34,39 @@ function extractCategory(html) {
   return null;
 }
 
+function extractSpecs(html) {
+  const specs = {};
+  const re = /<tr[^>]*><td[^>]*><p[^>]*>([^<]+)<\/p><\/td><td[^>]*><p[^>]*>([^<]+)<\/p><\/td><\/tr>/g;
+  let m;
+  while ((m = re.exec(html)) !== null) {
+    const key = m[1].trim();
+    const val = m[2].trim();
+    if (key && val && val.length < 200) specs[key] = val;
+  }
+  const KEEP = [
+    "Ekran Boyutu (inç)",
+    "Ekran boyutu cm / inç",
+    "Mobil Telefon Standardı",
+    "İşlemci",
+    "Bellek Kapasitesi",
+    "Pil Kapasitesi",
+    "RAM Kapasitesi",
+    "Arka Kamera",
+    "Ön Kamera",
+    "İşletim Sistemi",
+    "Çıkış Tarihi",
+    "Ağırlık",
+    "SIM-kart boyutu",
+    "Çift SİM",
+    "WİFİ",
+    "Renk (Üreticiye Göre)",
+    "Ürün Tipi",
+  ];
+  const filtered = {};
+  for (const k of KEEP) if (specs[k]) filtered[k] = specs[k];
+  return filtered;
+}
+
 async function processOne(p) {
   const res = await fetch(p.source_url, {
     headers: HEADERS,
@@ -43,23 +76,27 @@ async function processOne(p) {
 
   const html = await res.text();
   const data = extractCategory(html);
-  if (!data) return { status: "no-breadcrumb" };
+  const techSpecs = extractSpecs(html);
+
+  if (!data && Object.keys(techSpecs).length === 0) return { status: "no-breadcrumb" };
 
   const specs = { ...(p.specs || {}) };
-  specs.mediamarkt_category = data.category;
-  specs.mediamarkt_path = data.path;
+  if (data?.category) specs.mediamarkt_category = data.category;
+  if (data?.path) specs.mediamarkt_path = data.path;
+  Object.assign(specs, techSpecs);
 
   await sb.from("products").update({ specs }).eq("id", p.id);
-  return { status: "ok", category: data.category };
+  return { status: "ok", category: data?.category, specsCount: Object.keys(techSpecs).length };
 }
 
 (async () => {
+  // Ya mediamarkt_category yok ya da Ekran Boyutu (yeni specs) yok — ikisini birden enrich et
   const { data: products, error } = await sb
     .from("products")
     .select("id, title, source_url, specs")
     .eq("source", "mediamarkt")
     .not("source_url", "is", null)
-    .is("specs->mediamarkt_category", null)
+    .or("specs->mediamarkt_category.is.null,specs->>Ekran Boyutu (inç).is.null")
     .limit(limit);
 
   if (error) { console.error("ERR:", error.message); process.exit(1); }
