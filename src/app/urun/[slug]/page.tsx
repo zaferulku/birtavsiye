@@ -103,7 +103,7 @@ export default async function UrunDetay({
 
   // Seçili variant'ın tüm product id'lerinden fiyatlar
   const variantIds = selectedProducts.map(p => p.id).filter(Boolean);
-  type PriceRow = { id: string; price: number; affiliate_url: string | null; store_id: string; stores: { name: string; url: string | null } | null };
+  type PriceRow = { id: string; product_id: string; price: number; affiliate_url: string | null; store_id: string; stores: { name: string; url: string | null } | null };
   let pricesRaw: PriceRow[] = [];
   if (variantIds.length > 0) {
     const { data } = await supabase
@@ -113,14 +113,16 @@ export default async function UrunDetay({
     pricesRaw = (data ?? []) as PriceRow[];
   }
 
-  // Aynı mağazada birden fazla fiyat varsa en düşüğünü tut
-  const pricesByStore = new Map<string, PriceRow>();
+  // Aynı product_id'de birden fazla fiyat varsa en düşüğünü tut
+  // (ama PttAVM gibi marketplace'ler aynı ürünü farklı merchant'larla satıyor —
+  // her listing farklı product_id → hepsini göster, sadece 1 row/product_id/store)
+  const pricesByProd = new Map<string, PriceRow>();
   for (const p of pricesRaw) {
-    const key = p.stores?.name ?? p.store_id;
-    const existing = pricesByStore.get(key);
-    if (!existing || p.price < existing.price) pricesByStore.set(key, p);
+    const key = `${p.product_id}|${p.stores?.name ?? p.store_id}`;
+    const existing = pricesByProd.get(key);
+    if (!existing || p.price < existing.price) pricesByProd.set(key, p);
   }
-  const prices = [...pricesByStore.values()].sort((a, b) => a.price - b.price);
+  const prices = [...pricesByProd.values()].sort((a, b) => a.price - b.price);
 
   const { data: history } = await supabase
     .from("price_history")
