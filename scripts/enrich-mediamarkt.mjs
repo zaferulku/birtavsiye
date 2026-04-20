@@ -16,6 +16,23 @@ const HEADERS = {
 
 const limit = parseInt(process.argv[2] || "50", 10);
 
+const ELEKTRONIK_IDS = [
+  "9f8b9ba9-ec64-4254-9e2c-b7d795d31ab7", // akilli-telefon
+  "f373d503-4637-425f-a9b8-3ecbe9637065", // akilli-saat
+  "1a988f7b-0510-4fee-bb03-a7cfa5e5c1dc", // bilgisayar-laptop
+  "f7465a62-ac44-4614-a65b-36b51c87fc85", // bilgisayar-bilesenleri
+  "0f421871-f3db-438d-ab3f-2104daf88b2a", // tablet
+  "2044ca2d-8b30-40e3-89bb-545018c35fa3", // tv
+  "32faf798-439a-4fcc-a63f-134ad11161a0", // ses-kulaklik
+  "778d77ff-006f-428e-82be-c584adfa6c60", // oyun-konsol
+  "5bb18bbb-8fe8-4ecf-9aab-655d5637206f", // fotograf-kamera
+  "89f22c9f-6622-46e8-b672-cfdfcc0a10c3", // ofis-elektronigi
+  "5e53d648-7ce3-48e3-89aa-81330694747b", // yazici-tarayici
+  "9def2d42-3d49-4bcd-a398-7c80d9cae043", // networking
+  "97af4bfd-ed08-44b6-8f28-09131ae7920f", // telefon-aksesuar
+  "5609a1ba-bfe8-4d08-b1ee-cc3a76f35cbf", // navigasyon
+];
+
 function extractCategory(html) {
   const re = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/g;
   let m;
@@ -97,6 +114,7 @@ async function processOne(p) {
     .eq("source", "mediamarkt")
     .not("source_url", "is", null)
     .is("specs->Ürün Tipi", null)
+    .in("category_id", ELEKTRONIK_IDS)
     .limit(limit);
 
   if (error) { console.error("ERR:", error.message); process.exit(1); }

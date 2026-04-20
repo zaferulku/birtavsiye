@@ -11,6 +11,7 @@ import PriceHistoryChart from "../../components/urun/PriceHistoryChart";
 import PriceAlertModal from "../../components/urun/PriceAlertModal";
 import PriceRefresher from "../../components/urun/PriceRefresher";
 import VariantSwitcher from "../../components/urun/VariantSwitcher";
+import { fetchCategoryPath, brandToSlug, modelFamilyToSlug } from "../../../lib/categoryTree";
 import type { Metadata } from "next";
 
 export async function generateMetadata(
@@ -157,17 +158,44 @@ export default async function UrunDetay({
   const minPrice = prices && prices.length > 0 ? prices[0].price : null;
   const cheapestStore = prices && prices.length > 0 ? prices[0].stores?.name : null;
 
+  const categoryPath = await fetchCategoryPath(product.category_id ?? null);
+
   return (
     <main className="bg-gray-50 min-h-screen">
       <Header />
       <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-6">
 
         {/* Breadcrumb */}
-        <div className="flex gap-2 text-xs md:text-sm text-gray-400 mb-4 md:mb-5 overflow-hidden">
+        <nav aria-label="Breadcrumb" className="flex flex-wrap gap-2 text-xs md:text-sm text-gray-400 mb-4 md:mb-5">
           <Link href="/" className="hover:text-[#E8460A] flex-shrink-0">Anasayfa</Link>
-          <span className="flex-shrink-0">/</span>
-          <span className="text-gray-700 truncate">{product.title}</span>
-        </div>
+          {categoryPath.map((c) => (
+            <span key={c.id} className="flex gap-2">
+              <span className="flex-shrink-0">/</span>
+              <Link href={`/kategori/${c.slug}`} className="hover:text-[#E8460A] flex-shrink-0">{c.name}</Link>
+            </span>
+          ))}
+          {product.brand && (
+            <span className="flex gap-2">
+              <span className="flex-shrink-0">/</span>
+              <Link href={`/marka/${brandToSlug(product.brand)}`} className="hover:text-[#E8460A] flex-shrink-0">{product.brand}</Link>
+            </span>
+          )}
+          {product.brand && product.model_family && (
+            <span className="flex gap-2">
+              <span className="flex-shrink-0">/</span>
+              <Link
+                href={`/marka/${brandToSlug(product.brand)}/${modelFamilyToSlug(product.model_family)}`}
+                className="hover:text-[#E8460A] flex-shrink-0"
+              >
+                {product.model_family}
+              </Link>
+            </span>
+          )}
+          <span className="flex gap-2 min-w-0">
+            <span className="flex-shrink-0">/</span>
+            <span className="text-gray-700 truncate">{product.title}</span>
+          </span>
+        </nav>
 
         {/* Üst Bölüm: Resim + Bilgi + Fiyat */}
         <div className="bg-white rounded-2xl p-3 sm:p-5 md:p-6 mb-4 md:mb-6 shadow-sm">

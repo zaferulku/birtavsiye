@@ -2,6 +2,7 @@ import { supabase } from "../../../lib/supabase";
 import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
 import Link from "next/link";
+import { fetchCategoryPath, fetchChildCategories, fetchDescendantIds } from "../../../lib/categoryTree";
 
 export default async function KategoriSayfasi({ params, searchParams }: {
   params: Promise<{ slug: string }>;
@@ -16,11 +17,18 @@ export default async function KategoriSayfasi({ params, searchParams }: {
     .eq("slug", slug)
     .maybeSingle();
 
+  // Parent chain for breadcrumb (root → this category's parent)
+  const ancestors = category?.parent_id ? await fetchCategoryPath(category.parent_id) : [];
+
+  // Child categories + all descendant IDs (so parent-cat pages include descendant products)
+  const children = category?.id ? await fetchChildCategories(category.id) : [];
+  const descendantIds = category?.id ? await fetchDescendantIds(category.id) : [];
+
   // Variant dedup için daha geniş bir havuz çekip in-memory birleştiriyoruz
   let query = supabase
     .from("products")
     .select("id, title, slug, brand, description, image_url, model_family, variant_storage, variant_color, prices(price)", { count: "exact" })
-    .eq("category_id", category?.id);
+    .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""]);
 
   if (marka) query = query.eq("brand", marka);
 
@@ -133,11 +141,19 @@ export default async function KategoriSayfasi({ params, searchParams }: {
       {/* Hero */}
       <div className="bg-[#0F0E0D] text-white px-3 sm:px-6 py-4 sm:py-6">
         <div className="max-w-[1400px] mx-auto">
-          <div className="flex gap-2 text-xs sm:text-sm text-[#666] mb-2 overflow-hidden">
+          <nav aria-label="Breadcrumb" className="flex flex-wrap gap-2 text-xs sm:text-sm text-[#666] mb-2">
             <Link href="/" className="hover:text-white transition-colors flex-shrink-0">Anasayfa</Link>
-            <span className="flex-shrink-0">/</span>
-            <span className="text-white truncate">{category.name}</span>
-          </div>
+            {ancestors.map((c) => (
+              <span key={c.id} className="flex gap-2">
+                <span className="flex-shrink-0">/</span>
+                <Link href={`/kategori/${c.slug}`} className="hover:text-white transition-colors flex-shrink-0">{c.name}</Link>
+              </span>
+            ))}
+            <span className="flex gap-2 min-w-0">
+              <span className="flex-shrink-0">/</span>
+              <span className="text-white truncate">{category.name}</span>
+            </span>
+          </nav>
           <div className="flex items-center justify-between gap-3">
             <h1 className="font-extrabold text-lg sm:text-2xl flex items-center gap-2 min-w-0">
               <span className="flex-shrink-0">{category.icon}</span>
@@ -147,6 +163,24 @@ export default async function KategoriSayfasi({ params, searchParams }: {
           </div>
         </div>
       </div>
+
+      {/* Alt kategoriler (varsa) */}
+      {children.length > 0 && (
+        <div className="max-w-[1400px] mx-auto px-3 sm:px-6 pt-4">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3">
+            {children.map((c) => (
+              <Link
+                key={c.id}
+                href={`/kategori/${c.slug}`}
+                className="bg-white rounded-xl px-3 py-3 text-center shadow-sm hover:shadow-md hover:border-[#E8460A] border border-transparent transition"
+              >
+                <div className="text-2xl mb-1">{c.icon ?? "📦"}</div>
+                <div className="text-xs font-semibold text-gray-800 line-clamp-2">{c.name}</div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="max-w-[1400px] mx-auto px-3 sm:px-6 py-4 sm:py-6 flex flex-col md:flex-row gap-4 md:gap-6">
 

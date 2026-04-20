@@ -1,0 +1,113 @@
+import { supabase } from "../../../lib/supabase";
+import Header from "../../components/layout/Header";
+import Footer from "../../components/layout/Footer";
+import Link from "next/link";
+import Image from "next/image";
+import { modelFamilyToSlug } from "../../../lib/categoryTree";
+import type { Metadata } from "next";
+
+export async function generateMetadata(
+  { params }: { params: Promise<{ brand: string }> }
+): Promise<Metadata> {
+  const { brand } = await params;
+  const name = brand.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+  return {
+    title: `${name} Modelleri - Fiyat Karşılaştırması`,
+    description: `${name} tüm modelleri ve en ucuz fiyatları birtavsiye.net'te.`,
+  };
+}
+
+export default async function MarkaPage({ params }: { params: Promise<{ brand: string }> }) {
+  const { brand: brandSlug } = await params;
+  const brandGuess = brandSlug.replace(/-/g, " ");
+
+  type Row = {
+    id: string;
+    slug: string;
+    brand: string | null;
+    model_family: string | null;
+    image_url: string | null;
+    prices: { price: number }[] | null;
+  };
+
+  const { data: products } = await supabase
+    .from("products")
+    .select("id, slug, brand, model_family, image_url, prices(price)")
+    .ilike("brand", brandGuess)
+    .not("model_family", "is", null)
+    .limit(1000);
+
+  const rows = (products ?? []) as Row[];
+
+  if (rows.length === 0) {
+    return (
+      <main className="bg-gray-50 min-h-screen">
+        <Header />
+        <div className="max-w-6xl mx-auto px-6 py-20 text-center">
+          <h1 className="font-bold text-2xl mb-4">Marka bulunamadı</h1>
+          <Link href="/" className="text-[#E8460A]">Anasayfaya dön</Link>
+        </div>
+        <Footer />
+      </main>
+    );
+  }
+
+  const actualBrand = rows[0].brand ?? brandGuess;
+
+  type Group = { rep: Row; count: number; minPrice: number };
+  const groups = new Map<string, Group>();
+  for (const p of rows) {
+    const mf = p.model_family!;
+    const priceList = p.prices ?? [];
+    const minP = priceList.length > 0 ? Math.min(...priceList.map(x => x.price)) : Infinity;
+    const existing = groups.get(mf);
+    if (!existing) {
+      groups.set(mf, { rep: p, count: 1, minPrice: minP });
+    } else {
+      existing.count += 1;
+      if (minP < existing.minPrice) {
+        existing.rep = p;
+        existing.minPrice = minP;
+      }
+    }
+  }
+
+  const models = [...groups.entries()].sort((a, b) => a[1].minPrice - b[1].minPrice);
+
+  return (
+    <main className="bg-gray-50 min-h-screen">
+      <Header />
+      <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-6">
+        <div className="flex gap-2 text-xs md:text-sm text-gray-400 mb-4 md:mb-5">
+          <Link href="/" className="hover:text-[#E8460A]">Anasayfa</Link>
+          <span>/</span>
+          <span className="text-gray-700">{actualBrand}</span>
+        </div>
+        <h1 className="text-2xl md:text-3xl font-bold mb-6">{actualBrand} Modelleri</h1>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {models.map(([mf, info]) => (
+            <Link
+              key={mf}
+              href={`/marka/${brandSlug}/${modelFamilyToSlug(mf)}`}
+              className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition flex flex-col"
+            >
+              <div className="relative w-full h-40 flex items-center justify-center">
+                {info.rep.image_url ? (
+                  <Image src={info.rep.image_url} alt={mf} fill className="object-contain" sizes="(max-width: 768px) 50vw, 25vw" />
+                ) : (
+                  <div className="text-gray-300 text-4xl">📦</div>
+                )}
+              </div>
+              <div className="font-semibold text-sm mt-3 line-clamp-2">{mf}</div>
+              <div className="text-xs text-gray-500 mt-1">{info.count} seçenek</div>
+              {isFinite(info.minPrice) && (
+                <div className="text-[#E8460A] font-bold mt-1">{info.minPrice.toLocaleString("tr-TR")} TL&apos;den</div>
+              )}
+            </Link>
+          ))}
+        </div>
+      </div>
+      <Footer />
+    </main>
+  );
+}
