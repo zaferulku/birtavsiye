@@ -38,21 +38,44 @@ const ELEKTRONIK_IDS = [
   "5609a1ba-bfe8-4d08-b1ee-cc3a76f35cbf", // navigasyon
 ];
 
+function extractMetaContent(html, pattern) {
+  const m = html.match(pattern);
+  if (!m) return null;
+  return m[1]
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .trim();
+}
+
 function extractFromHtml(html) {
+  let category = null, description = null, brand = null, sku = null, mpn = null;
+
   const ld = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
-  if (!ld) return null;
-  try {
-    const j = JSON.parse(ld[1]);
-    return {
-      category: j.category || null,
-      description: j.description || null,
-      brand: j.brand?.name || null,
-      sku: j.sku || null,
-      mpn: j.mpn || null,
-    };
-  } catch {
-    return null;
+  if (ld) {
+    try {
+      const j = JSON.parse(ld[1]);
+      category = j.category || null;
+      description = j.description || null;
+      brand = j.brand?.name || null;
+      sku = j.sku || null;
+      mpn = j.mpn || null;
+    } catch { /* ignore */ }
   }
+
+  // HTML fallbacks for description
+  if (!description || description.length < 10) {
+    description =
+      extractMetaContent(html, /<meta\s+property=["']og:description["']\s+content=["']([^"']+)["']/i) ||
+      extractMetaContent(html, /<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i) ||
+      description;
+  }
+
+  if (!category && !description) return null;
+  return { category, description, brand, sku, mpn };
 }
 
 async function processOne(p) {
