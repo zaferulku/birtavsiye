@@ -29,7 +29,9 @@ const BRAND_EXCLUSIVE = [
   { pattern: /^ASUS$/i, cats: ["bilgisayar-laptop", "bilgisayar-bilesenleri", "tv"], score: 60 },
   { pattern: /^(CeraVe|La\s*Roche[- ]?Posay|Vichy|Bioderma|Eucerin|Cetaphil|Neutrogena|Olay|Nivea|Avene|Garnier)$/i, cats: ["cilt-bakimi"], score: 95 },
   { pattern: /^(Maybelline|L'Oreal|Loreal|NYX|MAC|Nars|Urban\s*Decay|Revlon|Essence|Catrice|Flormar|Gabrini|Golden\s*Rose|Avon|Farmasi|Oriflame)$/i, cats: ["makyaj", "cilt-bakimi"], score: 80 },
-  { pattern: /^(Schwarzkopf|Wella|Pantene|Head\s*&\s*Shoulders|Elseve|Elvive|TRESemmé|Palmolive)$/i, cats: ["sac-bakimi"], score: 95 },
+  { pattern: /^(Schwarzkopf|Wella|Pantene|Head\s*&\s*Shoulders|Elseve|Elvive|TRESemmé|Palmolive|Kerastase|Kérastase)$/i, cats: ["sac-bakimi"], score: 100 },
+  { pattern: /^(Hiking)$/i, cats: ["akilli-telefon"], score: 95 },
+  { pattern: /^(Anker|Soundcore|Baseus|Ugreen|Spigen)$/i, cats: ["telefon-aksesuar"], score: 70 },
   { pattern: /^(JBL|Bose|Beats|Sennheiser|AKG|Marshall|Harman\s*Kardon|Boltune|Edifier|Soundcore|Anker|Creative|Yamaha|Nothing|HyperX|SteelSeries)$/i, cats: ["ses-kulaklik"], score: 90 },
   { pattern: /^(Nike|Adidas|Puma|Reebok|Asics|New\s*Balance|Converse|Vans|Skechers|Timberland|Under\s*Armour|Fila|Kappa|Superga|Geox)$/i, cats: ["erkek-ayakkabi", "kadin-ayakkabi", "spor-giyim", "erkek-giyim", "kadin-giyim"], score: 50 },
   { pattern: /^(Sony|Microsoft|Nintendo)$/i, cats: ["oyun-konsol", "tv", "ses-kulaklik", "fotograf-kamera"], score: 40 },
@@ -71,7 +73,17 @@ const TITLE_RULES = [
   { cat: "parfum", score: 90, pattern: /\b(parf[uü]m|\bedp\b|\bedt\b|eau\s*de|kolonya|cologne|deodorant|antiperspirant)\b/i },
   { cat: "cilt-bakimi", score: 85, pattern: /\b(nemlendirici|retinol|vitamin\s*c\s*serum|g[uü]ne[sş]\s*kremi|spf\s*\d+|ceramide|hyaluronic|peeling|tonik|temizleme\s*jel|y[uü]z\s*kremi)\b/i },
   { cat: "sac-bakimi", score: 90, pattern: /\b(şampuan|saç\s*kremi|saç\s*serumu|saç\s*boyası|saç\s*kurutma|sa[çc]\s*d[uü]zle[sş]tirici|sa[çc]\s*ma[sş]a)\b/i },
-  { cat: "telefon-aksesuar", score: 80, pattern: /\b(powerbank|power\s*bank|ta[sş][ıi]nab[ıi]l[ıi]r\s*[sş]arj|h[ıi]zl[ıi]\s*[sş]arj)\b/i },
+  { cat: "telefon-aksesuar", score: 95, pattern: /\b(powerbank|power\s*bank|powercore|maggo|magsafe|ta[sş][ıi]nab[ıi]l[ıi]r\s*[sş]arj|h[ıi]zl[ıi]\s*[sş]arj\s*(cihaz)?)\b/i },
+  // Phone-specific accessory (iPhone 15 Pro Kılıf Flip Cover — stronger than akilli-telefon)
+  { cat: "telefon-aksesuar", score: 95, pattern: /\b(iphone|galaxy|redmi|xiaomi|huawei|samsung|honor|oppo)\s*([a-z]+\s*)?(\d+\s*)?(pro|plus|ultra|max|mini|fe|se)?\s*(k[ıi]l[ıi]f|case|cover|silikon|kapak|flip|kamera\s*lens|cam\s*koruyucu|ekran\s*koruyucu|raze|harvel|bilvis|optimum)\b/i },
+  // Saç kurutma makinesi (yüksek skor — kucuk-ev-aletleri'ni override eder)
+  { cat: "sac-bakimi", score: 98, pattern: /\b(sa[çc]\s*kurutma\s*mak|sa[çc]\s*kurutucu|sa[çc]\s*d[uü]zle[sş]tir|sa[çc]\s*ma[sş]a|sa[çc]\s*[sş]ekillen|bigudi)\b/i },
+  // Gaming mouse / oyuncu donanım
+  { cat: "bilgisayar-bilesenleri", score: 90, pattern: /\b(oyuncu\s*mouse|gaming\s*mouse|pulsefire|deathadder|mx\s*master|g502|viper|basilisk|logitech\s*g|razer\s*(mouse|klavye|keyboard)|mekanik\s*klavye|oyuncu\s*klavye)\b/i },
+  // VGA/HDMI/AV/DisplayPort kablo → bilgisayar-bilesenleri (bilgisayar aksesuarı)
+  { cat: "bilgisayar-bilesenleri", score: 85, pattern: /\b(vga\s*kablo|hdmi\s*kablo|display\s*port|dp\s*kablo|av\s*kablo|d[- ]?sub\s*kablo|bilgisayar.*kablo|monit[oö]r\s*kablo)\b/i },
+  // Laptop adaptörü / bataryası → bilgisayar-laptop (bileşen değil aksesuar ama laptop'a ait)
+  { cat: "bilgisayar-laptop", score: 80, pattern: /\b(laptop\s*adapt[oö]r|notebook\s*adapt[oö]r|laptop\s*batarya|notebook\s*batarya|dell\s*laptop\s*pil|asus\s*laptop\s*pil|hp\s*laptop\s*pil|notebook\s*klavye)\b/i },
   { cat: "akilli-saat", score: 90, pattern: /\b(apple\s*watch|galaxy\s*watch|mi\s*band|amazfit|huawei\s*watch|akıllı\s*saat|smart\s*watch|fitness\s*tracker)\b/i },
   { cat: "oyun-konsol", score: 90, pattern: /\b(playstation|ps[45]|xbox\s*series|nintendo\s*switch|dualsense|dualshock|gamepad|oyun\s*kol)\b/i },
   { cat: "tablet", score: 90, pattern: /\b(ipad\s*(pro|air|mini)?|galaxy\s*tab|huawei\s*matepad|android\s*tablet|tablet\s*bilgisayar)\b/i },
