@@ -109,11 +109,16 @@ export default async function UrunDetay({
 
   // Seçili variant'ın tüm product id'lerinden fiyatlar + history + reviews paralel
   const variantIds = selectedProducts.map(p => p.id).filter(Boolean);
-  type PriceRow = { id: string; product_id: string; price: number; affiliate_url: string | null; store_id: string; stores: { name: string; url: string | null } | null };
+  type PriceRow = {
+    id: string; product_id: string; price: number;
+    affiliate_url: string | null; store_id: string;
+    stores: { name: string; url: string | null } | null;
+    products: { specs: Record<string, unknown> | null } | null;
+  };
 
   const historyIds = variantIds.length > 0 ? variantIds : (product?.id ? [product.id] : []);
   const pricesPromise = variantIds.length > 0
-    ? supabase.from("prices").select("*, stores(name, url)").in("product_id", variantIds).order("price", { ascending: true }).then(r => r.data)
+    ? supabase.from("prices").select("*, stores(name, url), products(specs)").in("product_id", variantIds).order("price", { ascending: true }).then(r => r.data)
     : Promise.resolve([]);
   const historyPromise = historyIds.length > 0
     ? supabase.from("price_history").select("recorded_at, price, stores(name)").in("product_id", historyIds).order("recorded_at", { ascending: true }).limit(300).then(r => r.data)
@@ -128,9 +133,20 @@ export default async function UrunDetay({
   // Aynı product_id'de birden fazla fiyat varsa en düşüğünü tut
   // (ama PttAVM gibi marketplace'ler aynı ürünü farklı merchant'larla satıyor —
   // her listing farklı product_id → hepsini göster, sadece 1 row/product_id/store)
+  // Store name hesaplama (PttAVM → merchant name ile göster)
+  const storeDisplayName = (p: PriceRow): string => {
+    const base = p.stores?.name ?? "";
+    const merchant = (p.products?.specs as Record<string, unknown> | null)?.merchant;
+    if (base === "PttAVM" && typeof merchant === "string" && merchant.length > 0) {
+      return `${merchant} (PttAVM)`;
+    }
+    return base;
+  };
+
+  // (product_id, effective store display) bazında dedup — her merchant ayrı listelenir
   const pricesByProd = new Map<string, PriceRow>();
   for (const p of pricesRaw) {
-    const key = `${p.product_id}|${p.stores?.name ?? p.store_id}`;
+    const key = `${p.product_id}|${storeDisplayName(p) || p.store_id}`;
     const existing = pricesByProd.get(key);
     if (!existing || p.price < existing.price) pricesByProd.set(key, p);
   }
@@ -157,7 +173,7 @@ export default async function UrunDetay({
   }
 
   const minPrice = prices && prices.length > 0 ? prices[0].price : null;
-  const cheapestStore = prices && prices.length > 0 ? prices[0].stores?.name : null;
+  const cheapestStore = prices && prices.length > 0 ? storeDisplayName(prices[0]) : null;
 
   return (
     <main className="bg-white min-h-screen">
@@ -237,7 +253,7 @@ export default async function UrunDetay({
                       </div>
                       <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
                         <StoreLogo name={p.stores?.name ?? ""} size={18} />
-                        <span className="text-xs sm:text-sm font-medium text-gray-800 truncate">{p.stores?.name}</span>
+                        <span className="text-xs sm:text-sm font-medium text-gray-800 truncate">{storeDisplayName(p)}</span>
                       </div>
                       <div className="text-right flex-shrink-0">
                         <div className="font-bold text-xs sm:text-sm whitespace-nowrap">{Number(p.price).toLocaleString("tr-TR")} TL</div>

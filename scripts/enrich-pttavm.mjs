@@ -52,7 +52,7 @@ function extractMetaContent(html, pattern) {
 }
 
 function extractFromHtml(html) {
-  let category = null, description = null, brand = null, sku = null, mpn = null;
+  let category = null, description = null, brand = null, sku = null, mpn = null, merchant = null;
 
   const ld = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
   if (ld) {
@@ -63,10 +63,10 @@ function extractFromHtml(html) {
       brand = j.brand?.name || null;
       sku = j.sku || null;
       mpn = j.mpn || null;
+      merchant = j.offers?.seller?.name || null;
     } catch { /* ignore */ }
   }
 
-  // HTML fallbacks for description
   if (!description || description.length < 10) {
     description =
       extractMetaContent(html, /<meta\s+property=["']og:description["']\s+content=["']([^"']+)["']/i) ||
@@ -74,8 +74,8 @@ function extractFromHtml(html) {
       description;
   }
 
-  if (!category && !description) return null;
-  return { category, description, brand, sku, mpn };
+  if (!category && !description && !merchant) return null;
+  return { category, description, brand, sku, mpn, merchant };
 }
 
 async function processOne(p) {
@@ -93,6 +93,7 @@ async function processOne(p) {
   if (data.category) specs.pttavm_category = data.category;
   if (data.mpn) specs.mpn = data.mpn;
   if (data.sku) specs.sku = data.sku;
+  if (data.merchant) specs.merchant = data.merchant;
 
   const update = { specs };
   if (data.description && data.description.length > 10) {
@@ -104,13 +105,14 @@ async function processOne(p) {
 }
 
 (async () => {
+  // Backfill: elektronik + (merchant yok OR description yok)
   const { data: products, error } = await sb
     .from("products")
     .select("id, title, source_url, description, specs")
     .eq("source", "pttavm")
     .not("source_url", "is", null)
-    .is("description", null)
     .in("category_id", ELEKTRONIK_IDS)
+    .or("description.is.null,specs->>merchant.is.null")
     .limit(limit);
 
   if (error) { console.error("ERR:", error.message); process.exit(1); }
