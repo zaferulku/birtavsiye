@@ -63,6 +63,7 @@ export default async function ModelPage({
   const dominantCatId = [...catCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
   const categoryPath = dominantCatId ? await fetchCategoryPath(dominantCatId) : [];
 
+
   const minPriceOf = (r: Row): number => {
     const list = r.prices ?? [];
     return list.length > 0 ? Math.min(...list.map(x => x.price)) : Infinity;

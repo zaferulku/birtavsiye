@@ -128,7 +128,9 @@ export default async function MarkaPage({ params }: { params: Promise<{ brand: s
           {models.map(([mf, info]) => (
             <Link
               key={mf}
-              href={`/marka/${brandSlug}/${modelFamilyToSlug(mf)}`}
+              href={categoryPath.length > 0
+                ? `/anasayfa/${categoryPath.map(c => c.slug).join("/")}/${brandSlug}/${modelFamilyToSlug(mf)}`
+                : `/marka/${brandSlug}/${modelFamilyToSlug(mf)}`}
               className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition flex flex-col"
             >
               <div className="relative w-full h-40 flex items-center justify-center">

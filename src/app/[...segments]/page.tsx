@@ -3,10 +3,11 @@ import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import Link from "next/link";
 import Image from "next/image";
-import { notFound, redirect } from "next/navigation";
+import { notFound } from "next/navigation";
 import { fetchDescendantIds, modelFamilyToSlug } from "../../lib/categoryTree";
 import type { Metadata } from "next";
 import KategoriSayfasi from "../kategori/[slug]/page";
+import ModelPage from "../marka/[brand]/[model]/page";
 
 export const revalidate = 120;
 
@@ -172,9 +173,12 @@ export default async function Page({ params, searchParams }: PageProps) {
     );
   }
 
-  // === CASE 3: kategori + brand + model → mevcut marka/[brand]/[model]'e yönlendir
+  // === CASE 3: kategori + brand + model → ModelPage component'ini render et
+  // (URL hiyerarşik kalır, sonsuz redirect önlenir)
   if (brandSlug && modelSlug) {
-    redirect(`/marka/${brandSlug}/${modelSlug}`);
+    return (
+      <ModelPage params={Promise.resolve({ brand: brandSlug, model: modelSlug })} />
+    );
   }
 
   notFound();
