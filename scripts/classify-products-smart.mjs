@@ -40,6 +40,94 @@ const BRAND_EXCLUSIVE = [
 
 // 2) TITLE + CONTEXT RULES (multi-word)
 const TITLE_RULES = [
+  // === YENİ ALT KATEGORILER (hiyerarşik) ===
+  // Telefon Aksesuar alt tipleri
+  { cat: "telefon-kilifi", score: 98, pattern: /\b(telefon\s*k[ıi]l[ıi]f|iphone\s*k[ıi]l[ıi]f|samsung\s*k[ıi]l[ıi]f|kapak\s*k[ıi]l[ıi]f|flip\s*cover|silikon\s*k[ıi]l[ıi]f|cüzdan\s*k[ıi]l[ıi]f|deri\s*k[ıi]l[ıi]f)\b/i },
+  { cat: "ekran-koruyucu", score: 98, pattern: /\b(ekran\s*koruyucu|cam\s*koruyucu|nano\s*koruyucu|hidrojel\s*koruyucu|temperli\s*cam)\b/i },
+  { cat: "powerbank", score: 98, pattern: /\b(powerbank|power\s*bank|ta[sş][ıi]nab[ıi]l[ıi]r\s*[sş]arj\s*cihaz|magsafe\s*powerbank|powercore)\b/i },
+  { cat: "sarj-kablo", score: 95, pattern: /\b(şarj\s*kablosu|usb[- ]?c\s*kablo|lightning\s*kablo|h[ıi]zl[ıi]\s*[sş]arj|ara[cç]\s*[sş]arj|sarj\s*adapt[oö]r|duvar\s*şarj)\b/i },
+
+  // Bilgisayar alt tipleri
+  { cat: "masaustu-bilgisayar", score: 95, pattern: /\b(masa[uü]st[uü]\s*bilgisayar|desktop\s*pc|all[- ]?in[- ]?one|mini\s*pc|i[sş]\s*istasyon|tower\s*pc|gaming\s*pc)\b/i },
+  { cat: "monitor", score: 95, pattern: /\b(monit[oö]r|gaming\s*monit[oö]r|27\s*in[çc]\s*monit[oö]r|32\s*in[çc]\s*monit[oö]r|ultrawide)\b/i },
+
+  // Ses
+  { cat: "soundbar", score: 95, pattern: /\b(soundbar|sound\s*bar|ev\s*sinema\s*sistem|home\s*theater|dolby\s*atmos)\b/i },
+  { cat: "bluetooth-hoparlor", score: 95, pattern: /\b(bluetooth\s*hopar|ta[sş][ıi]nab[ıi]l[ıi]r\s*hopar|wireless\s*speaker|JBL\s*(go|flip|clip|charge|xtreme)|Bose\s*speaker)/i },
+
+  // TV
+  { cat: "projeksiyon", score: 95, pattern: /\b(projeksiyon|projector|short\s*throw|mini\s*led\s*projekt)\b/i },
+
+  // Fotoğraf
+  { cat: "drone", score: 98, pattern: /\b(drone|drön|dji\s*(mini|air|mavic|inspire|avata)|fpv\s*drone|yarı[sş]\s*drone)\b/i },
+  { cat: "aksiyon-kamera", score: 98, pattern: /\b(aksiyon\s*kamera|action\s*cam|gopro|osmo\s*action|insta360|360[°o]\s*kamera)\b/i },
+  { cat: "guvenlik-kamerasi", score: 98, pattern: /\b(g[uü]venlik\s*kamera|ip\s*kamera|ip\s*camera|cctv|dome\s*kamera|nvr|dvr)\b/i },
+
+  // Anne-Bebek alt tipleri
+  { cat: "bebek-bezi", score: 98, pattern: /\b(bebek\s*bezi|[ıi]slak\s*mendil|Pampers|Huggies|Prima|Molfix|Sleepy|bebek\s*bezi\s*kovas)\b/i },
+  { cat: "biberon", score: 98, pattern: /\b(biberon|emzik|g[oö][gğ][uü]s\s*pompas|sterilizat[oö]r|biberon\s*[ıi]s[ıi]t[ıi]c)\b/i },
+  { cat: "mama", score: 90, pattern: /\b(devam\s*mamas|bebek\s*mamas|kavanoz\s*mama|sürülebilir\s*mama|form[uü]la\s*mama|bebek\s*bisk[uü]vi)\b/i },
+  { cat: "bebek-kozmetik", score: 90, pattern: /\b(bebek\s*[sş]ampuan|bebek\s*kremi|bebek\s*ya[gğ][ıi]|bebek\s*sabun|Johnson'?s|Sebamed)\b/i },
+  { cat: "oto-koltugu", score: 98, pattern: /\b(oto\s*koltu[gğ][uü]|car\s*seat|bebek\s*oto\s*koltu[gğ]|maxi[- ]?cosi|besafe|cybex\s*(solution|sirona)|isofix)\b/i },
+  { cat: "puset-araba", score: 95, pattern: /\b(puset|bebek\s*arabas|bebek\s*taşıma|tam\s*yatar\s*araba|3'?[uü]\s*1\s*arada|chicco\s*araba|bugaboo|stokke)\b/i },
+  { cat: "besik", score: 95, pattern: /\b(be[sş]ik|karyola|bebek\s*yata[gğ]|park\s*yatak|ah[sş]ap\s*be[sş]ik|co[- ]?sleeper)\b/i },
+
+  // Beyaz eşya alt tipleri (üst seviye rule'ları override eden daha spesifik)
+  { cat: "camasir-makinesi", score: 98, pattern: /\b[çc]ama[sş][ıi]r\s*makinesi\b/i },
+  { cat: "bulasik-makinesi", score: 98, pattern: /\bbula[sş][ıi]k\s*makinesi\b/i },
+  { cat: "buzdolabi", score: 98, pattern: /\b(buzdolab|no\s*frost\s*buzdolab|french\s*door|side\s*by\s*side)\b/i },
+  { cat: "firin-ocak", score: 98, pattern: /\b(ankastre\s*f[ıi]r[ıi]n|ankastre\s*ocak|ba[gğ][ıi]ms[ıi]z\s*f[ıi]r[ıi]n|ba[gğ][ıi]ms[ıi]z\s*ocak)\b/i },
+  { cat: "kurutma-makinesi", score: 98, pattern: /\bkurutma\s*makinesi\b|\b(?:ısı\s*pompalı|yoğuşmalı)\s*kurutma\b/i },
+  { cat: "klima", score: 98, pattern: /\b(inverter\s*klima|split\s*klima|ta[sş][ıi]nab[ıi]l[ıi]r\s*klima|fanl[ıi]\s*[ıi]s[ıi]t[ıi]c)\b/i },
+
+  // Küçük ev aletleri alt tipleri
+  { cat: "supurge", score: 95, pattern: /\b(robot\s*s[uü]p[uü]rge|dikey\s*s[uü]p[uü]rge|Dyson\s*V\d|Roomba|elektrik\s*s[uü]p)\b/i },
+  { cat: "kahve-cay-makinesi", score: 95, pattern: /\b(espresso\s*makinesi|kahve\s*makinesi|nespresso|[çc]ay\s*makinesi|french\s*press\s*makinesi)\b/i },
+  { cat: "utu", score: 95, pattern: /\b(buharl[ıi]\s*[uü]t[uü]|buharl[ıi]\s*dikey|[uü]t[uü]\s*makinesi)\b/i },
+  { cat: "mutfak-aleti", score: 90, pattern: /\b(blender|mutfak\s*robotu|air\s*fryer|frit[oö]z|tost\s*makinesi|waffle\s*makinesi)\b/i },
+  { cat: "sac-stilizasyon", score: 98, pattern: /\b(sa[çc]\s*kurutma\s*mak|sa[çc]\s*kurutucu|sa[çc]\s*d[uü]zle[sş]tir|sa[çc]\s*ma[sş]a|airwrap|dyson\s*supersonic|bigudi)\b/i },
+
+  // Kozmetik alt tipleri
+  { cat: "yuz-nemlendirici", score: 90, pattern: /\b(y[uü]z\s*kremi|nemlendirici\s*krem|moisturizer|g[uü]ndem\s*krem|gece\s*krem)\b/i },
+  { cat: "yuz-temizleme", score: 90, pattern: /\b(y[uü]z\s*k[oö]p[uü][gğ]|y[uü]z\s*jel|misel\s*su|tonik|y[uü]z\s*temizleyici)\b/i },
+  { cat: "gunes-koruyucu", score: 92, pattern: /\b(g[uü]ne[sş]\s*kremi|spf\s*\d+|bronzla[sş]t[ıi]r[ıi]c)\b/i },
+  { cat: "serum", score: 90, pattern: /\b(c\s*vitamini\s*serumu|niacinamide|retinol\s*serum|hyaluronik\s*asit|y[uü]z\s*serumu)\b/i },
+  { cat: "yuz-maskesi", score: 90, pattern: /\b(kil\s*maskesi|sheet\s*mask|ka[gğ][ıi]t\s*maske|soyulabilir\s*maske|y[uü]z\s*maskesi)\b/i },
+
+  // Makyaj alt tipleri
+  { cat: "yuz-makyaji", score: 90, pattern: /\b(fond[oö]ten|foundation|kapat[ıi]c|concealer|pudra|all[ıi]k|blush|highlighter|kont[uü]r|bb\s*krem|cc\s*krem)\b/i },
+  { cat: "goz-makyaji", score: 92, pattern: /\b(maskara|eyeliner|far\s*palet|g[oö]z\s*far|eyeshadow|ka[sş]\s*kalem|ka[sş]\s*jel)\b/i },
+  { cat: "dudak-makyaji", score: 92, pattern: /\b(\bruj\b|lipstick|lip\s*gloss|dudak\s*kalem|lip\s*liner|dudak\s*rujj)\b/i },
+
+  // Saç bakım
+  { cat: "sampuan", score: 92, pattern: /\b(şampuan|shampoo|sa[çc]\s*kremi|conditioner|sa[çc]\s*bak[ıi]m\s*kremi)\b/i },
+  { cat: "sac-boyasi", score: 95, pattern: /\b(sa[çc]\s*boyas[ıi]|kal[ıi]c[ıi]\s*boya|yar[ıi]\s*kal[ıi]c[ıi]\s*boya|r[oö]fle|balyaj)\b/i },
+
+  // Oyuncak
+  { cat: "lego", score: 98, pattern: /\bLEGO\b/i },
+  { cat: "figur-oyuncak", score: 92, pattern: /\b(Barbie|Hot\s*Wheels|Marvel\s*Fig[uü]r|DC\s*Fig[uü]r|Funko\s*Pop|Playmobil|anime\s*fig[uü]r)\b/i },
+  { cat: "egitici-oyuncak", score: 90, pattern: /\b(Montessori|e[gğ]itici\s*oyuncak|puzzle\s*oyun|aktivite\s*tahtas|fisher[- ]?price)\b/i },
+  { cat: "rc-robot", score: 92, pattern: /\b(kumandalı\s*araba|RC\s*(heli|drone|araba)|robot\s*oyuncak|yarış\s*pisti\s*oyuncak)\b/i },
+
+  // Moda alt tipleri
+  { cat: "elbise", score: 88, pattern: /\b(elbise|abiye|mini\s*elbise|midi\s*elbise|maxi\s*elbise|t[uü]l\s*elbise|gece\s*elbise|kokteyl\s*elbise)\b/i },
+  { cat: "etek", score: 88, pattern: /\b(mini\s*etek|midi\s*etek|maxi\s*etek|pileli\s*etek|deri\s*etek|t[uü]l\s*etek|b[uü]y[uü]k\s*beden\s*etek)\b/i },
+  { cat: "takim-elbise", score: 92, pattern: /\b(takım\s*elbise|2\s*par[çc]a\s*takım|3\s*par[çc]a\s*takım|düğ[uü]n\s*tak[ıi]m)\b/i },
+  { cat: "esofman", score: 88, pattern: /\b(e[sş]ofman\s*tak[ıi]m|e[sş]ofman\s*alt|sweatshirt\s*tak[ıi]m|kap[uü][sş]onl[uü]\s*tak)\b/i },
+
+  // Ayakkabı alt tipleri
+  { cat: "topuklu", score: 92, pattern: /\b(topuklu\s*ayakkab|stiletto|platform\s*topuk|dolgu\s*topuk|k[ıi]sa\s*topuk|abiye\s*topuklu)\b/i },
+  { cat: "klasik-ayakkabi", score: 88, pattern: /\b(oxford\s*ayakkab|derby|loafer\s*erkek|klasik\s*deri\s*ayakkab|mokasen)\b/i },
+  { cat: "babet", score: 90, pattern: /\b(babet|espadrille|loafer\s*kad[ıi]n|deri\s*babet|toka\s*babet)\b/i },
+
+  // Otomotiv
+  { cat: "oto-teyp", score: 92, pattern: /\b(oto\s*teyp|2\s*DIN|Android\s*Auto|Apple\s*CarPlay|ara[cç]\s*multimedya)\b/i },
+
+  // Hobi
+  { cat: "resim-cizim", score: 88, pattern: /\b(ya[gğ]l[ıi]\s*boya|suluboya|akrilik\s*boya|pastel\s*boya|renk\s*kalem|[çc]izim\s*seti)\b/i },
+  { cat: "el-sanatlari", score: 85, pattern: /\b([oö]rg[uü]\s*ipli[gğ]i|amigurumi|scrapbooking|boncuk\s*seti|takı\s*yap[ıi]m|reçine\s*sanat)\b/i },
+
+
   { cat: "su-sporlari", score: 95, pattern: /\bmaske\b.*\b(şnorkel|dal[ıi][sş]|palet|y[uü]zme|sualt[ıi])\b/i },
   { cat: "su-sporlari", score: 95, pattern: /\b(şnorkel|dal[ıi][sş]|palet|sualt[ıi])\b.*\bmaske\b/i },
   { cat: "cilt-bakimi", score: 90, pattern: /\b(y[uü]z|cilt|kil|sheet|kağı[dt]|hidrojel)\s*maskesi\b/i },
