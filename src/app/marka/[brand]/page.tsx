@@ -65,10 +65,17 @@ export default async function MarkaPage({ params }: { params: Promise<{ brand: s
   const dominantCatId = [...catCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
   const categoryPath = dominantCatId ? await fetchCategoryPath(dominantCatId) : [];
 
+  // Jenerik/aksesuar model_family değerleri markaya özgü değildir, filtreleme
+  // (Örn. Apple markası altında "Kılıf", "Ekran Koruyucu", "Android Tablet"
+  // Apple marka ürünü olamaz — bu aksesuar/yanlış etiketlemeyi dışla)
+  const GENERIC_EXCLUDE = /^(Kılıf|Kılıfı|Ekran\s*Koruyucu|Aksesuar|Aksesuarı|Batarya|Bataryası|Adaptör|Adaptörü|Kordon|Kayış|Kamera\s*Aksesuarı|Android\s*Tablet|Android\s*Telefon|Tablet\s*Kılıfı|Notebook\s*Bataryası|Notebook\s*Adaptörü|Tablet|Akıllı\s*Saat|Akıllı\s*Saatler|Güç\s*Kablosu|Güç\s*Kabloları|Tripod|Stand|Kablo|Kablolar|Hoparlör|Mouse|Klavye|Powerbank|Taşınabilir\s*Şarj)$/i;
+
   type Group = { rep: Row; count: number; minPrice: number };
   const groups = new Map<string, Group>();
   for (const p of rows) {
     const mf = p.model_family!;
+    if (GENERIC_EXCLUDE.test(mf)) continue; // aksesuar filtrele
+
     const priceList = p.prices ?? [];
     const minP = priceList.length > 0 ? Math.min(...priceList.map(x => x.price)) : Infinity;
     const existing = groups.get(mf);
