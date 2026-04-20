@@ -5,16 +5,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { fetchCategoryPath, fetchChildCategories, fetchDescendantIds } from "../../../lib/categoryTree";
 import SortDropdown from "../../components/kategori/SortDropdown";
+import FilterModal from "../../components/kategori/FilterModal";
 import { CATEGORY_IMAGE_OVERRIDES } from "../../../lib/categoryImageOverrides";
 
 export const revalidate = 60;
 
 export default async function KategoriSayfasi({ params, searchParams }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ marka?: string; model?: string; q?: string; siralama?: string; hafiza?: string; renk?: string; min?: string; max?: string }>;
+  searchParams: Promise<{ marka?: string; model?: string; q?: string; siralama?: string; hafiza?: string; renk?: string; min?: string; max?: string; kaynak?: string }>;
 }) {
   const { slug } = await params;
-  const { marka, model, q, siralama, hafiza, renk, min, max } = await searchParams;
+  const { marka, model, q, siralama, hafiza, renk, min, max, kaynak } = await searchParams;
 
   const { data: category } = await supabase
     .from("categories")
@@ -81,6 +82,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   if (marka) query = query.eq("brand", marka);
   if (model) query = query.eq("model_family", model);
   if (q) query = query.ilike("title", `%${q}%`);
+  if (kaynak) query = query.eq("source", kaynak);
 
   if (siralama === "az") query = query.order("title", { ascending: true });
   else if (siralama === "za") query = query.order("title", { ascending: false });
@@ -89,7 +91,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   // Paralel: ana ürün query + marka/model count (aynı descendantIds kullanıyor)
   const allBrandsPromise = supabase
     .from("products")
-    .select("brand, model_family")
+    .select("brand, model_family, source")
     .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""]);
   const mainPromise = query.limit(300);
   const [mainRes, allRes] = await Promise.all([mainPromise, allBrandsPromise]);
@@ -188,6 +190,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
 
   const brandCounts: Record<string, number> = {};
   const modelsByBrand: Record<string, Record<string, number>> = {};
+  const sourceCounts: Record<string, number> = {};
   (allProducts || []).forEach(p => {
     if (p.brand) {
       brandCounts[p.brand] = (brandCounts[p.brand] || 0) + 1;
@@ -196,7 +199,19 @@ export default async function KategoriSayfasi({ params, searchParams }: {
         modelsByBrand[p.brand][p.model_family] = (modelsByBrand[p.brand][p.model_family] || 0) + 1;
       }
     }
+    const src = (p as { source?: string | null }).source;
+    if (src) sourceCounts[src] = (sourceCounts[src] || 0) + 1;
   });
+  const SOURCE_LABELS: Record<string, string> = {
+    mediamarkt: "MediaMarkt",
+    vatan: "Vatan",
+    trendyol: "Trendyol",
+    hepsiburada: "Hepsiburada",
+    amazon: "Amazon",
+    n11: "n11",
+    pttavm: "PttAVM",
+    teknosa: "Teknosa",
+  };
   const brands = Object.entries(brandCounts)
     .sort((a, b) => b[1] - a[1])
     .map(([name, count]) => ({ name, count }));
@@ -295,7 +310,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
 
         {(() => {
           const buildUrl = (overrides: Record<string, string | null>): string => {
-            const params: Record<string, string | undefined> = { marka, model, q, siralama, hafiza, renk, min, max };
+            const params: Record<string, string | undefined> = { marka, model, q, siralama, hafiza, renk, min, max, kaynak };
             for (const [k, v] of Object.entries(overrides)) {
               if (v === null || v === "") delete params[k];
               else params[k] = v;
@@ -445,15 +460,29 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                     {(marka || hafiza || renk) && " · "}
                     {products?.length || 0} ürün
                   </div>
-                  <SortDropdown
-                    currentSort={siralama || ""}
-                    options={[
-                      { label: "En Yeni", val: "", href: buildUrl({ siralama: null }) },
-                      { label: "En Ucuz", val: "ucuz", href: buildUrl({ siralama: "ucuz" }) },
-                      { label: "En Pahalı", val: "pahali", href: buildUrl({ siralama: "pahali" }) },
-                      { label: "A → Z", val: "az", href: buildUrl({ siralama: "az" }) },
-                    ]}
-                  />
+                  <div className="flex items-center gap-2">
+                    <FilterModal
+                      currentSource={kaynak ?? null}
+                      clearHref={buildUrl({ kaynak: null })}
+                      sources={Object.entries(sourceCounts)
+                        .sort((a, b) => b[1] - a[1])
+                        .map(([name, count]) => ({
+                          name,
+                          label: SOURCE_LABELS[name] ?? name,
+                          count,
+                          href: buildUrl({ kaynak: kaynak === name ? null : name }),
+                        }))}
+                    />
+                    <SortDropdown
+                      currentSort={siralama || ""}
+                      options={[
+                        { label: "En Yeni", val: "", href: buildUrl({ siralama: null }) },
+                        { label: "En Ucuz", val: "ucuz", href: buildUrl({ siralama: "ucuz" }) },
+                        { label: "En Pahalı", val: "pahali", href: buildUrl({ siralama: "pahali" }) },
+                        { label: "A → Z", val: "az", href: buildUrl({ siralama: "az" }) },
+                      ]}
+                    />
+                  </div>
                 </div>
 
           {!products || products.length === 0 ? (
