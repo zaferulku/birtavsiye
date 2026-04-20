@@ -179,7 +179,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
             {ancestors.map((c) => (
               <span key={c.id} className="flex gap-2">
                 <span className="flex-shrink-0">/</span>
-                <Link href={`/kategori/${c.slug}`} className="hover:text-white transition-colors flex-shrink-0">{c.name}</Link>
+                <Link href={`/anasayfa/${ancestors.slice(0, ancestors.indexOf(c) + 1).map(x => x.slug).join("/")}`} className="hover:text-white transition-colors flex-shrink-0">{c.name}</Link>
               </span>
             ))}
             <span className="flex gap-2 min-w-0">

@@ -115,7 +115,7 @@ export default async function MarkaPage({ params }: { params: Promise<{ brand: s
           {categoryPath.map((c) => (
             <span key={c.id} className="flex gap-2">
               <span className="flex-shrink-0">/</span>
-              <Link href={`/kategori/${c.slug}`} className="hover:text-[#E8460A] flex-shrink-0">{c.name}</Link>
+              <Link href={`/anasayfa/${categoryPath.slice(0, categoryPath.indexOf(c) + 1).map(x => x.slug).join("/")}`} className="hover:text-[#E8460A] flex-shrink-0">{c.name}</Link>
             </span>
           ))}
           <span className="flex gap-2">

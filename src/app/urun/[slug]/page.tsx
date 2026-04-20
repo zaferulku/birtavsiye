@@ -203,7 +203,7 @@ export default async function UrunDetay({
           {categoryPath.map((c) => (
             <span key={c.id} className="flex gap-2">
               <span className="flex-shrink-0">/</span>
-              <Link href={`/${categoryPath.slice(0, categoryPath.indexOf(c) + 1).map(x => x.slug).join("/")}`} className="hover:text-[#E8460A] flex-shrink-0">{c.name}</Link>
+              <Link href={`/anasayfa/${categoryPath.slice(0, categoryPath.indexOf(c) + 1).map(x => x.slug).join("/")}`} className="hover:text-[#E8460A] flex-shrink-0">{c.name}</Link>
             </span>
           ))}
           {product.brand && (
@@ -211,7 +211,7 @@ export default async function UrunDetay({
               <span className="flex-shrink-0">/</span>
               <Link
                 href={categoryPath.length > 0
-                  ? `/${categoryPath.map(c => c.slug).join("/")}/${brandToSlug(product.brand)}`
+                  ? `/anasayfa/${categoryPath.map(c => c.slug).join("/")}/${brandToSlug(product.brand)}`
                   : `/marka/${brandToSlug(product.brand)}`}
                 className="hover:text-[#E8460A] flex-shrink-0"
               >

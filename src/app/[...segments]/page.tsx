@@ -13,6 +13,9 @@ type PageProps = { params: Promise<{ segments: string[] }> };
 type CategoryNode = { id: string; slug: string; name: string; parent_id: string | null; icon: string | null };
 
 async function resolveSegments(segments: string[]) {
+  // "anasayfa" prefix'ini yok say (breadcrumb-as-URL konvansiyonu)
+  if (segments[0] === "anasayfa") segments = segments.slice(1);
+
   const { data: allCatsData } = await supabase
     .from("categories")
     .select("id, slug, name, parent_id, icon");
@@ -62,7 +65,7 @@ export default async function Page({ params }: PageProps) {
   let acc: string[] = [];
   for (const c of categories) {
     acc = [...acc, c.slug];
-    breadcrumbLinks.push({ href: "/" + acc.join("/"), label: c.name });
+    breadcrumbLinks.push({ href: "/anasayfa/" + acc.join("/"), label: c.name });
   }
 
   const leafCategory = categories[categories.length - 1] ?? null;
@@ -105,7 +108,7 @@ export default async function Page({ params }: PageProps) {
           {children.length > 0 && (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 mb-6">
               {children.map(c => (
-                <Link key={c.id} href={`/${acc.join("/")}/${c.slug}`} className="bg-white border border-gray-100 rounded-xl p-3 text-center hover:border-[#E8460A] hover:shadow-sm transition">
+                <Link key={c.id} href={`/anasayfa/${[...acc, c.slug].join("/")}`} className="bg-white border border-gray-100 rounded-xl p-3 text-center hover:border-[#E8460A] hover:shadow-sm transition">
                   <div className="text-2xl mb-1">{c.icon ?? "📦"}</div>
                   <div className="text-xs font-semibold text-gray-800">{c.name}</div>
                 </Link>
@@ -205,7 +208,7 @@ export default async function Page({ params }: PageProps) {
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {models.map(([mf, info]) => (
-              <Link key={mf} href={`/${[...acc, brandSlug, modelFamilyToSlug(mf)].join("/")}`} className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition flex flex-col">
+              <Link key={mf} href={`/anasayfa/${[...acc, brandSlug, modelFamilyToSlug(mf)].join("/")}`} className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition flex flex-col">
                 <div className="relative w-full h-40 flex items-center justify-center">
                   {info.rep.image_url
                     ? <Image src={info.rep.image_url} alt={mf} fill className="object-contain" sizes="(max-width: 768px) 50vw, 25vw" />
