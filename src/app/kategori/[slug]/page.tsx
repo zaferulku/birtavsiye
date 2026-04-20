@@ -59,7 +59,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   // Variant dedup için daha geniş bir havuz çekip in-memory birleştiriyoruz
   let query = supabase
     .from("products")
-    .select("id, title, slug, brand, description, image_url, model_family, variant_storage, variant_color, prices(price)", { count: "exact" })
+    .select("id, title, slug, brand, description, image_url, model_family, variant_storage, variant_color, source, prices(price)", { count: "exact" })
     .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""]);
 
   if (marka) query = query.eq("brand", marka);
@@ -103,7 +103,8 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   const dedupedRepresentatives: (Row & { _variantCount?: number })[] = [];
   for (const arr of familyGroups.values()) {
     const sorted = arr.slice().sort((a, b) => minPriceOf(a) - minPriceOf(b));
-    const rep = { ...sorted[0], _variantCount: arr.length };
+    const uniqSources = new Set(arr.map(x => (x as { source?: string | null }).source).filter(Boolean));
+    const rep = { ...sorted[0], _variantCount: uniqSources.size || arr.length };
     dedupedRepresentatives.push(rep);
   }
 
