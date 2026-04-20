@@ -50,7 +50,7 @@ export async function nimEmbed(opts: {
   model?: NimModel;
   input: string | string[];
 }): Promise<number[][]> {
-  const model = opts.model ?? "baai/bge-m3";
+  const model = opts.model ?? "nvidia/nv-embedqa-e5-v5";
   const inputs = Array.isArray(opts.input) ? opts.input : [opts.input];
   const res = await fetch(`${NIM_ENDPOINT}/embeddings`, {
     method: "POST",
