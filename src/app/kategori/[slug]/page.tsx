@@ -4,6 +4,7 @@ import Footer from "../../components/layout/Footer";
 import Link from "next/link";
 import Image from "next/image";
 import { fetchCategoryPath, fetchChildCategories, fetchDescendantIds } from "../../../lib/categoryTree";
+import SortDropdown from "../../components/kategori/SortDropdown";
 
 export const revalidate = 60;
 
@@ -408,23 +409,15 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                     {(marka || hafiza || renk) && " · "}
                     {products?.length || 0} ürün
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-gray-500">Sırala:</span>
-                    {[
-                      { label: "En Yeni", val: "" },
-                      { label: "En Ucuz", val: "ucuz" },
-                      { label: "En Pahalı", val: "pahali" },
-                      { label: "A → Z", val: "az" },
-                    ].map(({ label, val }) => (
-                      <Link key={val} href={buildUrl({ siralama: val || null })}>
-                        <div className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${
-                          (siralama || "") === val
-                            ? "bg-[#E8460A] text-white border-[#E8460A]"
-                            : "border-gray-200 text-gray-600 hover:border-[#E8460A] hover:text-[#E8460A]"
-                        }`}>{label}</div>
-                      </Link>
-                    ))}
-                  </div>
+                  <SortDropdown
+                    currentSort={siralama || ""}
+                    options={[
+                      { label: "En Yeni", val: "", href: buildUrl({ siralama: null }) },
+                      { label: "En Ucuz", val: "ucuz", href: buildUrl({ siralama: "ucuz" }) },
+                      { label: "En Pahalı", val: "pahali", href: buildUrl({ siralama: "pahali" }) },
+                      { label: "A → Z", val: "az", href: buildUrl({ siralama: "az" }) },
+                    ]}
+                  />
                 </div>
 
           {!products || products.length === 0 ? (
