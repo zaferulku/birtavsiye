@@ -19,6 +19,8 @@ const DRY = process.argv.includes("--dry-run");
 const HEADLESS = (process.argv.find(a => a.startsWith("--headless=")) || "").split("=")[1] === "true";
 const ONLY_ID = (process.argv.find(a => a.startsWith("--id=")) || "").split("=")[1];
 const BRAND = (process.argv.find(a => a.startsWith("--brand=")) || "").split("=")[1];
+const CATEGORY = (process.argv.find(a => a.startsWith("--category=")) || "").split("=")[1];
+const SKIP_ENRICHED = process.argv.includes("--skip-enriched");
 const LIMIT = parseInt((process.argv.find(a => a.startsWith("--limit=")) || "").split("=")[1] || "10", 10);
 const DELAY_MS = 3000;
 
@@ -56,7 +58,22 @@ async function enrichOne(page, product) {
         if (key && val && key.length < 60 && val.length < 200) specs[key] = val;
       });
       const price = document.querySelector(".pb_v8, .pt_v8")?.textContent?.trim() || null;
-      return { akakceTitle: title, akakceUrl: location.href, akakcePrice: price, specs };
+
+      // Çoklu görsel: gallery thumbnail'lerinden tam boy URL'leri topla
+      const imgSet = new Set();
+      document.querySelectorAll("img").forEach(img => {
+        let src = img.getAttribute("src") || img.getAttribute("data-src") || "";
+        if (!src) return;
+        // Akakce'nin küçük boy thumbnail'leri büyüğe çevir (_h.jpg → _l.jpg, vs.)
+        src = src.replace(/_[sh]\.(jpg|jpeg|png|webp)/i, "_l.$1");
+        // Sadece ürün görselleri (akakce CDN)
+        if (/akakce\.akamaized\.net|akakce\.com\/.*\.(jpg|jpeg|png|webp)/i.test(src)) {
+          const abs = src.startsWith("http") ? src : new URL(src, location.href).href;
+          imgSet.add(abs);
+        }
+      });
+      const images = [...imgSet].slice(0, 10);
+      return { akakceTitle: title, akakceUrl: location.href, akakcePrice: price, specs, images };
     });
 
     return data;
@@ -66,7 +83,7 @@ async function enrichOne(page, product) {
 }
 
 (async () => {
-  let query = sb.from("products").select("id, title, brand, model_family, specs");
+  let query = sb.from("products").select("id, title, brand, model_family, specs, image_url, images");
   if (ONLY_ID) query = query.eq("id", ONLY_ID);
   else {
     // Aksesuar (kılıf, batarya, kablo vs.) enrich etme — specs iPhone'a ait olur
@@ -77,12 +94,35 @@ async function enrichOne(page, product) {
       .not("title", "ilike", "%ekran koruyucu%")
       .not("title", "ilike", "%uyumlu%");
     if (BRAND) query = query.ilike("brand", BRAND);
+    if (CATEGORY) {
+      const { data: cat } = await sb.from("categories").select("id").eq("slug", CATEGORY).maybeSingle();
+      if (!cat) { console.error(`Category not found: ${CATEGORY}`); process.exit(1); }
+      // Hem direkt kategori hem de descendant kategorilerdeki ürünleri al
+      const { data: allCats } = await sb.from("categories").select("id, parent_id");
+      const childMap = new Map();
+      for (const c of allCats) {
+        const arr = childMap.get(c.parent_id) ?? [];
+        arr.push(c.id);
+        childMap.set(c.parent_id, arr);
+      }
+      const descendantIds = [cat.id];
+      const stack = [cat.id];
+      while (stack.length) {
+        const id = stack.pop();
+        for (const c of childMap.get(id) ?? []) { descendantIds.push(c); stack.push(c); }
+      }
+      query = query.in("category_id", descendantIds);
+    }
     query = query.limit(LIMIT);
   }
-  const { data: products, error } = await query;
+  // SKIP_ENRICHED: specs._akakce zaten varsa atla (re-run'da duplicate iş olmasın)
+  const { data: productsRaw, error } = await query;
   if (error) { console.error(error); process.exit(1); }
-  if (!products || products.length === 0) { console.log("No products found."); return; }
-  console.log(`Processing ${products.length} products...`);
+  const products = SKIP_ENRICHED
+    ? (productsRaw ?? []).filter(p => !(p.specs && typeof p.specs === "object" && p.specs._akakce))
+    : (productsRaw ?? []);
+  if (products.length === 0) { console.log("No products to process."); return; }
+  console.log(`Processing ${products.length} products${SKIP_ENRICHED ? " (skipping already enriched)" : ""}...`);
 
   const browser = await chromium.launch({
     headless: HEADLESS,
@@ -119,12 +159,18 @@ async function enrichOne(page, product) {
 
     const existing = (p.specs && typeof p.specs === "object") ? p.specs : {};
     const merged = { ...existing, ...result.specs, _akakce: { url: result.akakceUrl, title: result.akakceTitle, price: result.akakcePrice, at: new Date().toISOString() } };
+    const imgCount = (result.images || []).length;
 
     if (!DRY) {
-      const { error: upErr } = await sb.from("products").update({ specs: merged }).eq("id", p.id);
+      const updatePayload = { specs: merged };
+      if (imgCount > 0) {
+        updatePayload.images = result.images;
+        if (!p.image_url) updatePayload.image_url = result.images[0];
+      }
+      const { error: upErr } = await sb.from("products").update(updatePayload).eq("id", p.id);
       if (upErr) { console.log(`UPDATE FAIL: ${upErr.message}`); fail++; continue; }
     }
-    console.log(`+${specCount} specs ${DRY ? "(dry)" : "saved"}`);
+    console.log(`+${specCount} specs +${imgCount} img ${DRY ? "(dry)" : "saved"}`);
     ok++;
     await page.waitForTimeout(DELAY_MS);
   }
