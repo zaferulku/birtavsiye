@@ -2,6 +2,25 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../../lib/supabase";
 
+function buildAutoDescription(p: { title?: string; brand?: string | null; model_family?: string | null; specs?: Record<string, unknown> | null } | null | undefined): string {
+  if (!p) return "";
+  const specs = p.specs ?? {};
+  const HIGHLIGHT_KEYS = [
+    "Ekran Boyutu (inç)", "Ekran boyutu cm / inç", "İşlemci", "RAM Kapasitesi",
+    "Bellek Kapasitesi", "Pil Kapasitesi", "Arka Kamera", "Ön Kamera",
+    "İşletim Sistemi", "Mobil Telefon Standardı",
+  ];
+  const highlights: string[] = [];
+  for (const k of HIGHLIGHT_KEYS) {
+    const v = specs[k];
+    if (typeof v === "string" && v.trim()) highlights.push(`${k}: ${v}`);
+    if (highlights.length >= 4) break;
+  }
+  const head = [p.brand, p.model_family].filter(Boolean).join(" ") || p.title || "";
+  const body = highlights.length > 0 ? `${head}. ${highlights.join(", ")}.` : head;
+  return `${body} Tüm fiyatlar, özellikler ve kullanıcı yorumları birtavsiye.net'te.`.trim();
+}
+
 const StarRating = ({ rating }: { rating: number }) => (
   <div className="flex items-center gap-0.5">
     {[1, 2, 3, 4, 5].map((s) => (
@@ -80,7 +99,7 @@ export default function ProductInfo({ product, avgRating, reviewCount }: {
         )}
       </button>
 
-      <p className="text-sm text-gray-500 mb-4 leading-relaxed">{product?.description}</p>
+      <p className="text-sm text-gray-500 mb-4 leading-relaxed">{product?.description || buildAutoDescription(product)}</p>
 
       <div className="flex gap-2 flex-wrap mb-5">
         {["✅ Resmi garanti", "🛡️ 2 yıl garanti", "📦 Hızlı kargo"].map((t) => (
