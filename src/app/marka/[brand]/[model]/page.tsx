@@ -72,7 +72,8 @@ export default async function ModelPage({
   // (iPhone 16 Pro başlıklı saç kurutma makinası 47k TL gibi durumlar)
   const allMinPrices = rows.map(minPriceOf).filter(p => isFinite(p) && p > 0).sort((a, b) => a - b);
   const medianPrice = allMinPrices.length > 0 ? allMinPrices[Math.floor(allMinPrices.length / 2)] : 0;
-  const minValidPrice = medianPrice > 1000 ? medianPrice * 0.3 : 0;
+  // 0.6x eşiği — iPhone 16 Pro median 84k → 50.400 TL altındakiler outlier
+  const minValidPrice = medianPrice > 1000 ? medianPrice * 0.6 : 0;
 
   const legitRows = rows.filter(r => {
     const mp = minPriceOf(r);
