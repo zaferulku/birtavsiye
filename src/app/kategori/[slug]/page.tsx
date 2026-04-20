@@ -3,7 +3,6 @@ import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
 import Link from "next/link";
 import { fetchCategoryPath, fetchChildCategories, fetchDescendantIds } from "../../../lib/categoryTree";
-import { redirect } from "next/navigation";
 
 export const revalidate = 60;
 
@@ -27,11 +26,6 @@ export default async function KategoriSayfasi({ params, searchParams }: {
     category?.id ? fetchDescendantIds(category.id) : Promise.resolve([]),
   ]);
 
-  // URL hiyerarşiye uygun olsun — /kategori/X → /{ancestors}/X redirect
-  if (category && ancestors.length > 0 && !marka) {
-    const chain = [...ancestors.map(a => a.slug), category.slug].join("/");
-    redirect(`/${chain}`);
-  }
 
   // Variant dedup için daha geniş bir havuz çekip in-memory birleştiriyoruz
   let query = supabase
