@@ -2,6 +2,7 @@ import { supabase } from "../../../lib/supabase";
 import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
 import Link from "next/link";
+import Image from "next/image";
 import { fetchCategoryPath, fetchChildCategories, fetchDescendantIds } from "../../../lib/categoryTree";
 
 export const revalidate = 60;
@@ -25,6 +26,32 @@ export default async function KategoriSayfasi({ params, searchParams }: {
     category?.id ? fetchChildCategories(category.id) : Promise.resolve([]),
     category?.id ? fetchDescendantIds(category.id) : Promise.resolve([]),
   ]);
+
+  // Her child kategori için örnek ürün görseli çek (tek bulk query)
+  const childImageMap = new Map<string, string>();
+  if (children.length > 0) {
+    const childDescendants = await Promise.all(children.map(c => fetchDescendantIds(c.id).then(ids => ({ childId: c.id, ids }))));
+    const catToChild = new Map<string, string>();
+    for (const { childId, ids } of childDescendants) {
+      for (const id of ids) if (!catToChild.has(id)) catToChild.set(id, childId);
+    }
+    const allDescIds = [...catToChild.keys()];
+    if (allDescIds.length > 0) {
+      const { data: prodData } = await supabase
+        .from("products")
+        .select("image_url, category_id")
+        .in("category_id", allDescIds)
+        .not("image_url", "is", null)
+        .order("created_at", { ascending: false })
+        .limit(1000);
+      for (const row of prodData ?? []) {
+        const childId = row.category_id ? catToChild.get(row.category_id) : null;
+        if (childId && row.image_url && !childImageMap.has(childId)) {
+          childImageMap.set(childId, row.image_url);
+        }
+      }
+    }
+  }
 
 
   // Variant dedup için daha geniş bir havuz çekip in-memory birleştiriyoruz
@@ -198,16 +225,31 @@ export default async function KategoriSayfasi({ params, searchParams }: {
       {children.length > 0 && (
         <div className="max-w-[1400px] mx-auto px-3 sm:px-6 pt-4">
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3">
-            {children.map((c) => (
-              <Link
-                key={c.id}
-                href={`/kategori/${c.slug}`}
-                className="bg-white rounded-xl px-3 py-3 text-center shadow-sm hover:shadow-md hover:border-[#E8460A] border border-transparent transition"
-              >
-                <div className="text-2xl mb-1">{c.icon ?? "📦"}</div>
-                <div className="text-xs font-semibold text-gray-800 line-clamp-2">{c.name}</div>
-              </Link>
-            ))}
+            {children.map((c) => {
+              const img = childImageMap.get(c.id);
+              return (
+                <Link
+                  key={c.id}
+                  href={`/kategori/${c.slug}`}
+                  className="bg-white rounded-xl p-2 text-center shadow-sm hover:shadow-md hover:border-[#E8460A] border border-transparent transition group"
+                >
+                  <div className="relative w-full aspect-square mb-2 overflow-hidden rounded-lg bg-gray-50 flex items-center justify-center">
+                    {img ? (
+                      <Image
+                        src={img}
+                        alt={c.name}
+                        fill
+                        className="object-contain p-1 group-hover:scale-105 transition-transform"
+                        sizes="(max-width: 640px) 33vw, (max-width: 1024px) 16vw, 12vw"
+                      />
+                    ) : (
+                      <span className="text-3xl">{c.icon ?? "📦"}</span>
+                    )}
+                  </div>
+                  <div className="text-xs font-semibold text-gray-800 line-clamp-2">{c.name}</div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       )}
