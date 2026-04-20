@@ -14,6 +14,8 @@ import VariantSwitcher from "../../components/urun/VariantSwitcher";
 import { fetchCategoryPath, brandToSlug, modelFamilyToSlug } from "../../../lib/categoryTree";
 import type { Metadata } from "next";
 
+export const revalidate = 60;
+
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> }
 ): Promise<Metadata> {
@@ -53,16 +55,19 @@ export default async function UrunDetay({
   const { data: baseProduct } = await supabase
     .from("products").select("*").eq("slug", slug).maybeSingle();
 
-  // Aynı brand+model_family tüm variant satırları
-  let siblings = baseProduct ? [baseProduct] : [];
-  if (baseProduct?.brand && baseProduct?.model_family) {
-    const { data } = await supabase
-      .from("products")
-      .select("id, slug, title, brand, image_url, specs, category_id, model_family, variant_storage, variant_color")
-      .eq("brand", baseProduct.brand)
-      .eq("model_family", baseProduct.model_family);
-    if (data?.length) siblings = data;
-  }
+  // Paralel: siblings + categoryPath (baseProduct'a bağımlı, birbirine değil)
+  const siblingsPromise = (baseProduct?.brand && baseProduct?.model_family)
+    ? supabase
+        .from("products")
+        .select("id, slug, title, brand, image_url, specs, category_id, model_family, variant_storage, variant_color")
+        .eq("brand", baseProduct.brand)
+        .eq("model_family", baseProduct.model_family)
+        .then(r => r.data)
+    : Promise.resolve(null);
+  const categoryPathPromise = fetchCategoryPath(baseProduct?.category_id ?? null);
+
+  const [siblingsData, categoryPath] = await Promise.all([siblingsPromise, categoryPathPromise]);
+  const siblings = (siblingsData && siblingsData.length > 0) ? siblingsData : (baseProduct ? [baseProduct] : []);
 
   // Variant matrix: (storage, color) -> product row[]
   const variantMap = new Map<string, typeof siblings>();
@@ -102,17 +107,23 @@ export default async function UrunDetay({
     };
   });
 
-  // Seçili variant'ın tüm product id'lerinden fiyatlar
+  // Seçili variant'ın tüm product id'lerinden fiyatlar + history + reviews paralel
   const variantIds = selectedProducts.map(p => p.id).filter(Boolean);
   type PriceRow = { id: string; product_id: string; price: number; affiliate_url: string | null; store_id: string; stores: { name: string; url: string | null } | null };
-  let pricesRaw: PriceRow[] = [];
-  if (variantIds.length > 0) {
-    const { data } = await supabase
-      .from("prices").select("*, stores(name, url)")
-      .in("product_id", variantIds)
-      .order("price", { ascending: true });
-    pricesRaw = (data ?? []) as PriceRow[];
-  }
+
+  const historyIds = variantIds.length > 0 ? variantIds : (product?.id ? [product.id] : []);
+  const pricesPromise = variantIds.length > 0
+    ? supabase.from("prices").select("*, stores(name, url)").in("product_id", variantIds).order("price", { ascending: true }).then(r => r.data)
+    : Promise.resolve([]);
+  const historyPromise = historyIds.length > 0
+    ? supabase.from("price_history").select("recorded_at, price, stores(name)").in("product_id", historyIds).order("recorded_at", { ascending: true }).limit(300).then(r => r.data)
+    : Promise.resolve([]);
+  const reviewsPromise = product?.id
+    ? supabase.from("community_posts").select("rating").eq("product_id", product.id).is("parent_id", null).not("rating", "is", null).then(r => r.data)
+    : Promise.resolve([]);
+
+  const [pricesData, historyData, reviewsData] = await Promise.all([pricesPromise, historyPromise, reviewsPromise]);
+  const pricesRaw: PriceRow[] = (pricesData ?? []) as PriceRow[];
 
   // Aynı product_id'de birden fazla fiyat varsa en düşüğünü tut
   // (ama PttAVM gibi marketplace'ler aynı ürünü farklı merchant'larla satıyor —
@@ -125,18 +136,8 @@ export default async function UrunDetay({
   }
   const prices = [...pricesByProd.values()].sort((a, b) => a.price - b.price);
 
-  const { data: history } = await supabase
-    .from("price_history")
-    .select("recorded_at, price, stores(name)")
-    .in("product_id", variantIds.length > 0 ? variantIds : [product?.id])
-    .order("recorded_at", { ascending: true })
-    .limit(300);
-
-  const { data: reviews } = await supabase
-    .from("community_posts").select("rating")
-    .eq("product_id", product?.id).is("parent_id", null)
-    .not("rating", "is", null);
-
+  const history = historyData;
+  const reviews = reviewsData;
   const reviewCount = reviews?.length || 0;
   const avgRating = reviewCount > 0
     ? Math.round(reviews!.reduce((acc, r) => acc + (r.rating || 0), 0) / reviewCount)
@@ -157,8 +158,6 @@ export default async function UrunDetay({
 
   const minPrice = prices && prices.length > 0 ? prices[0].price : null;
   const cheapestStore = prices && prices.length > 0 ? prices[0].stores?.name : null;
-
-  const categoryPath = await fetchCategoryPath(product.category_id ?? null);
 
   return (
     <main className="bg-white min-h-screen">

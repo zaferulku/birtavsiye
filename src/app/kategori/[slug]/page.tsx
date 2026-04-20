@@ -4,6 +4,8 @@ import Footer from "../../components/layout/Footer";
 import Link from "next/link";
 import { fetchCategoryPath, fetchChildCategories, fetchDescendantIds } from "../../../lib/categoryTree";
 
+export const revalidate = 60;
+
 export default async function KategoriSayfasi({ params, searchParams }: {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ marka?: string; model?: string; siralama?: string; hafiza?: string; renk?: string; min?: string; max?: string }>;
@@ -17,12 +19,12 @@ export default async function KategoriSayfasi({ params, searchParams }: {
     .eq("slug", slug)
     .maybeSingle();
 
-  // Parent chain for breadcrumb (root → this category's parent)
-  const ancestors = category?.parent_id ? await fetchCategoryPath(category.parent_id) : [];
-
-  // Child categories + all descendant IDs (so parent-cat pages include descendant products)
-  const children = category?.id ? await fetchChildCategories(category.id) : [];
-  const descendantIds = category?.id ? await fetchDescendantIds(category.id) : [];
+  // Paralel: ancestors + children + descendants (birbirine bağımlı değil, hepsi category.id'ye)
+  const [ancestors, children, descendantIds] = await Promise.all([
+    category?.parent_id ? fetchCategoryPath(category.parent_id) : Promise.resolve([]),
+    category?.id ? fetchChildCategories(category.id) : Promise.resolve([]),
+    category?.id ? fetchDescendantIds(category.id) : Promise.resolve([]),
+  ]);
 
   // Variant dedup için daha geniş bir havuz çekip in-memory birleştiriyoruz
   let query = supabase
@@ -37,7 +39,15 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   else if (siralama === "za") query = query.order("title", { ascending: false });
   else query = query.order("created_at", { ascending: false });
 
-  const { data: rawProducts, count } = await query.limit(300);
+  // Paralel: ana ürün query + marka/model count (aynı descendantIds kullanıyor)
+  const allBrandsPromise = supabase
+    .from("products")
+    .select("brand, model_family")
+    .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""]);
+  const mainPromise = query.limit(300);
+  const [mainRes, allRes] = await Promise.all([mainPromise, allBrandsPromise]);
+  const { data: rawProducts, count } = mainRes;
+  const allProducts = allRes.data;
 
   // Aynı (brand, model_family) birden fazla kayıt varsa sadece en ucuzunu listele
   type Row = NonNullable<typeof rawProducts>[number];
@@ -108,11 +118,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   const storageOptions = [...storageSet].sort((a, b) => parseInt(a) - parseInt(b));
   const colorOptions = [...colorSet].sort();
 
-  // Markalar + modeller listesi (filtre için, descendant kapsama)
-  const { data: allProducts } = await supabase
-    .from("products")
-    .select("brand, model_family")
-    .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""]);
+  // allProducts yukarıda paralel fetch edildi (mainPromise ile birlikte)
 
   const brandCounts: Record<string, number> = {};
   const modelsByBrand: Record<string, Record<string, number>> = {};

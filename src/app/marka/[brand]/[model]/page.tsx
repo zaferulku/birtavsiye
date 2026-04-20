@@ -4,6 +4,8 @@ import Footer from "../../../components/layout/Footer";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+export const revalidate = 120;
+
 export default async function ModelPage({
   params,
 }: {

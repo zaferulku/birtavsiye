@@ -6,6 +6,8 @@ import HomeBanner from "./components/home/HomeBanner";
 import ToggleBar from "./components/home/ToggleBar";
 import Categories from "./components/home/Categories";
 
+export const revalidate = 300;
+
 export default function Home() {
   return (
     <main className="min-h-screen bg-white">

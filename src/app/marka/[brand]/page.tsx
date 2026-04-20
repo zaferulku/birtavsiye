@@ -6,6 +6,8 @@ import Image from "next/image";
 import { modelFamilyToSlug } from "../../../lib/categoryTree";
 import type { Metadata } from "next";
 
+export const revalidate = 120;
+
 export async function generateMetadata(
   { params }: { params: Promise<{ brand: string }> }
 ): Promise<Metadata> {
