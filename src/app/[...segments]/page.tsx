@@ -162,7 +162,7 @@ export default async function Page({ params, searchParams }: PageProps) {
                     : <div className="text-gray-300 text-4xl">📦</div>}
                 </div>
                 <div className="font-semibold text-sm mt-3 line-clamp-2">{mf}</div>
-                <div className="text-xs text-gray-500 mt-1">{info.count} seçenek</div>
+                <div className="text-xs text-gray-500 mt-1">{info.count} satıcı</div>
                 {isFinite(info.minPrice) && <div className="text-[#E8460A] font-bold mt-1">{info.minPrice.toLocaleString("tr-TR")} TL&apos;den</div>}
               </Link>
             ))}

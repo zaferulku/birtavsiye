@@ -459,7 +459,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                               <div className="text-sm font-bold text-gray-900">{Number(minPrice.price).toLocaleString("tr-TR")} <span className="text-xs font-normal text-gray-400">₺</span></div>
                               {(p as any)._variantCount > 1 && (
                                 <span className="text-[9px] text-gray-500 font-medium bg-gray-100 rounded-full px-1.5 py-0.5">
-                                  {(p as any)._variantCount} seçenek
+                                  {(p as any)._variantCount} satıcı
                                 </span>
                               )}
                             </div>
