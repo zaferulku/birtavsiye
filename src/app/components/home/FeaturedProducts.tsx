@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "../../../lib/supabase";
+import { fetchDescendantIds } from "../../../lib/categoryTree";
 import Link from "next/link";
 
 type Price = { price: number; store: { name: string } };
@@ -74,22 +75,34 @@ export default function FeaturedProducts() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase
-      .from("products")
-      .select("id,title,slug,brand,image_url,prices(price,store:stores(name))")
-      .limit(32)
-      .then(({ data }) => {
-        if (!data) { setLoading(false); return; }
-        const all = data as unknown as Product[];
-        const s = shuffle(all);
-        setSections({
-          son:     s.slice(0, 8),
-          avantaj: s.slice(8, 16),
-          ozel:    s.slice(16, 24),
-          "popüler": s.slice(24, 32),
-        });
-        setLoading(false);
+    (async () => {
+      const { data: elektronikCat } = await supabase
+        .from("categories")
+        .select("id")
+        .eq("slug", "elektronik")
+        .maybeSingle();
+
+      if (!elektronikCat?.id) { setLoading(false); return; }
+
+      const ids = await fetchDescendantIds(elektronikCat.id);
+
+      const { data } = await supabase
+        .from("products")
+        .select("id,title,slug,brand,image_url,prices(price,store:stores(name))")
+        .in("category_id", ids)
+        .limit(64);
+
+      if (!data) { setLoading(false); return; }
+      const all = data as unknown as Product[];
+      const s = shuffle(all);
+      setSections({
+        son:     s.slice(0, 8),
+        avantaj: s.slice(8, 16),
+        ozel:    s.slice(16, 24),
+        "popüler": s.slice(24, 32),
       });
+      setLoading(false);
+    })();
   }, []);
 
   if (loading) return (
