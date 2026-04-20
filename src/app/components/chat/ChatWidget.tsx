@@ -1,7 +1,9 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 
-type Msg = { role: "user" | "assistant"; content: string };
+type ProductCard = { id: string; title: string; slug: string; brand: string | null; image_url: string | null };
+type Msg = { role: "user" | "assistant"; content: string; products?: ProductCard[] };
 
 export default function ChatWidget() {
   const [open, setOpen] = useState(false);
@@ -32,7 +34,7 @@ export default function ChatWidget() {
       });
       const j = await res.json();
       if (j.reply) {
-        setMessages([...next, { role: "assistant", content: j.reply }]);
+        setMessages([...next, { role: "assistant", content: j.reply, products: j.products }]);
       } else {
         setMessages([...next, { role: "assistant", content: "Bir hata oluştu, tekrar dene." }]);
       }
@@ -77,7 +79,7 @@ export default function ChatWidget() {
 
           <div className="flex-1 overflow-y-auto p-3 space-y-3 text-sm">
             {messages.map((m, i) => (
-              <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+              <div key={i} className={`flex flex-col ${m.role === "user" ? "items-end" : "items-start"} gap-2`}>
                 <div
                   className={`max-w-[85%] px-3 py-2 rounded-2xl whitespace-pre-wrap leading-relaxed ${
                     m.role === "user"
@@ -87,6 +89,24 @@ export default function ChatWidget() {
                 >
                   {m.content}
                 </div>
+                {m.role === "assistant" && m.products && m.products.length > 0 && (
+                  <div className="w-full grid grid-cols-2 gap-2 pr-2">
+                    {m.products.slice(0, 4).map(p => (
+                      <Link key={p.id} href={`/urun/${p.slug}`} className="bg-white border border-gray-200 rounded-xl p-2 hover:border-[#E8460A] hover:shadow-sm transition group">
+                        <div className="w-full aspect-square bg-gray-50 rounded-lg overflow-hidden mb-1.5 flex items-center justify-center">
+                          {p.image_url ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={p.image_url} alt={p.title} className="w-full h-full object-contain p-1 group-hover:scale-105 transition" />
+                          ) : (
+                            <span className="text-2xl">📦</span>
+                          )}
+                        </div>
+                        <div className="text-[9px] font-bold text-[#E8460A] uppercase truncate">{p.brand}</div>
+                        <div className="text-[10px] font-medium text-gray-800 line-clamp-2 leading-tight">{p.title}</div>
+                      </Link>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
             {loading && (
