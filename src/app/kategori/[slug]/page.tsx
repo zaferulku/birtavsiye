@@ -6,10 +6,10 @@ import { fetchCategoryPath, fetchChildCategories, fetchDescendantIds } from "../
 
 export default async function KategoriSayfasi({ params, searchParams }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ marka?: string; siralama?: string; hafiza?: string; renk?: string; min?: string; max?: string }>;
+  searchParams: Promise<{ marka?: string; model?: string; siralama?: string; hafiza?: string; renk?: string; min?: string; max?: string }>;
 }) {
   const { slug } = await params;
-  const { marka, siralama, hafiza, renk, min, max } = await searchParams;
+  const { marka, model, siralama, hafiza, renk, min, max } = await searchParams;
 
   const { data: category } = await supabase
     .from("categories")
@@ -31,6 +31,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
     .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""]);
 
   if (marka) query = query.eq("brand", marka);
+  if (model) query = query.eq("model_family", model);
 
   if (siralama === "az") query = query.order("title", { ascending: true });
   else if (siralama === "za") query = query.order("title", { ascending: false });
@@ -107,19 +108,30 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   const storageOptions = [...storageSet].sort((a, b) => parseInt(a) - parseInt(b));
   const colorOptions = [...colorSet].sort();
 
-  // Markalar listesi (filtre için)
+  // Markalar + modeller listesi (filtre için, descendant kapsama)
   const { data: allProducts } = await supabase
     .from("products")
-    .select("brand")
-    .eq("category_id", category?.id);
+    .select("brand, model_family")
+    .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""]);
 
   const brandCounts: Record<string, number> = {};
+  const modelsByBrand: Record<string, Record<string, number>> = {};
   (allProducts || []).forEach(p => {
-    if (p.brand) brandCounts[p.brand] = (brandCounts[p.brand] || 0) + 1;
+    if (p.brand) {
+      brandCounts[p.brand] = (brandCounts[p.brand] || 0) + 1;
+      if (p.model_family) {
+        modelsByBrand[p.brand] = modelsByBrand[p.brand] ?? {};
+        modelsByBrand[p.brand][p.model_family] = (modelsByBrand[p.brand][p.model_family] || 0) + 1;
+      }
+    }
   });
   const brands = Object.entries(brandCounts)
     .sort((a, b) => b[1] - a[1])
     .map(([name, count]) => ({ name, count }));
+
+  const modelsForSelected = marka && modelsByBrand[marka]
+    ? Object.entries(modelsByBrand[marka]).sort((a, b) => b[1] - a[1]).map(([name, count]) => ({ name, count }))
+    : [];
 
   if (!category) {
     return (
@@ -186,7 +198,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
 
         {(() => {
           const buildUrl = (overrides: Record<string, string | null>): string => {
-            const params: Record<string, string | undefined> = { marka, siralama, hafiza, renk, min, max };
+            const params: Record<string, string | undefined> = { marka, model, siralama, hafiza, renk, min, max };
             for (const [k, v] of Object.entries(overrides)) {
               if (v === null || v === "") delete params[k];
               else params[k] = v;
@@ -203,7 +215,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
               {/* Sol: Filtreler sidebar */}
               <aside className="w-full md:w-60 flex-shrink-0 space-y-3">
                 {/* Aktif filtreler (varsa) clear linki */}
-                {(marka || hafiza || renk || min || max) && (
+                {(marka || model || hafiza || renk || min || max) && (
                   <Link href={`/kategori/${slug}${siralama ? "?siralama=" + siralama : ""}`}>
                     <div className="text-xs text-[#E8460A] font-semibold hover:underline cursor-pointer px-1">
                       × Filtreleri temizle
@@ -224,14 +236,40 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                           <span className="text-xs text-gray-400">{count || 0}</span>
                         </div>
                       </Link>
-                      {brands.map((b) => (
-                        <Link key={b.name} href={buildUrl({ marka: b.name })}>
-                          <div className={`flex items-center justify-between px-4 py-2 text-sm cursor-pointer transition-colors ${marka === b.name ? "text-[#E8460A] font-semibold bg-orange-50" : "text-gray-700 hover:bg-gray-50"}`}>
-                            <span>{b.name}</span>
-                            <span className="text-xs text-gray-400">{b.count}</span>
+                      {brands.map((b) => {
+                        const isSelected = marka === b.name;
+                        return (
+                          <div key={b.name}>
+                            <Link href={buildUrl({ marka: isSelected ? null : b.name, model: null })}>
+                              <div className={`flex items-center justify-between px-4 py-2 text-sm cursor-pointer transition-colors ${isSelected ? "text-[#E8460A] font-semibold bg-orange-50" : "text-gray-700 hover:bg-gray-50"}`}>
+                                <span className="flex items-center gap-1">
+                                  <span className={`inline-block transition-transform ${isSelected ? "rotate-90" : ""}`}>›</span>
+                                  {b.name}
+                                </span>
+                                <span className="text-xs text-gray-400">{b.count}</span>
+                              </div>
+                            </Link>
+                            {isSelected && modelsForSelected.length > 0 && (
+                              <div className="bg-gray-50 border-l-2 border-[#E8460A] ml-4">
+                                <Link href={buildUrl({ model: null })}>
+                                  <div className={`flex items-center justify-between px-4 py-1.5 text-xs cursor-pointer transition-colors ${!model ? "text-[#E8460A] font-semibold" : "text-gray-600 hover:bg-gray-100"}`}>
+                                    <span>Tüm modeller</span>
+                                    <span className="text-gray-400">{b.count}</span>
+                                  </div>
+                                </Link>
+                                {modelsForSelected.map(m => (
+                                  <Link key={m.name} href={buildUrl({ model: model === m.name ? null : m.name })}>
+                                    <div className={`flex items-center justify-between px-4 py-1.5 text-xs cursor-pointer transition-colors ${model === m.name ? "text-[#E8460A] font-semibold" : "text-gray-600 hover:bg-gray-100"}`}>
+                                      <span className="truncate">{m.name}</span>
+                                      <span className="text-gray-400 flex-shrink-0 ml-2">{m.count}</span>
+                                    </div>
+                                  </Link>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                        </Link>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 )}
