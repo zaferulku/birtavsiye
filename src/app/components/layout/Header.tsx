@@ -18,9 +18,9 @@ const NAV: NavGroup[] = [
         subs: [
           { label: "Laptop", slug: "bilgisayar-laptop", tags: ["Lenovo", "Asus", "MSI", "MacBook", "HP", "Casper", "Acer", "Monster", "Dell", "Gaming Laptop"] },
           { label: "Tablet", slug: "tablet", tags: ["iPad", "Samsung", "Lenovo", "Huawei", "Xiaomi", "Honor", "Tablet Kılıfı", "Tablet Klavyesi"] },
-          { label: "Masaüstü Bilgisayar", slug: "bilgisayar-laptop", q: "masaüstü", tags: ["All-in-One", "MacBook Mini", "Mini PC", "Gaming PC", "İş İstasyonu"] },
+          { label: "Masaüstü Bilgisayar", slug: "masaustu-bilgisayar", tags: ["All-in-One", "MacBook Mini", "Mini PC", "Gaming PC", "İş İstasyonu"] },
           { label: "Oyuncu Donanımları", slug: "oyun-konsol", tags: ["Oyuncu Klavyesi", "Gaming Laptop", "Oyuncu Mouse", "Oyuncu Kulaklığı", "Oyuncu Monitörü", "Mekanik Klavye", "Oyuncu Koltuk"] },
-          { label: "Monitör", slug: "bilgisayar-bilesenleri", q: "monitör", tags: ["OLED", "Kavisli", "27 inç", "32 inç", "4K", "Asus", "Dell", "MSI", "LG", "Samsung"] },
+          { label: "Monitör", slug: "monitor", tags: ["OLED", "Kavisli", "27 inç", "32 inç", "4K", "Asus", "Dell", "MSI", "LG", "Samsung"] },
           { label: "Bilgisayar Parçaları", slug: "bilgisayar-bilesenleri", tags: ["Anakart", "Ekran Kartı", "RAM", "SSD", "İşlemci", "Kasa", "Nvidia", "AMD", "Intel"] },
           { label: "Çevre Birimleri", slug: "bilgisayar-bilesenleri", tags: ["Klavye & Mouse Set", "Mouse", "Klavye", "Webcam", "Yazıcı", "Tarayıcı", "VR Gözlük"] },
           { label: "Veri Depolama", slug: "bilgisayar-bilesenleri", tags: ["USB Bellek", "SSD", "Hard Disk", "Hafıza Kartı", "Taşınabilir SSD", "NAS"] },
@@ -32,20 +32,20 @@ const NAV: NavGroup[] = [
         label: "Telefon & Aksesuar", slug: "akilli-telefon", icon: "📱",
         subs: [
           { label: "Akıllı Telefon", slug: "akilli-telefon", tags: ["iPhone", "Samsung Galaxy", "Xiaomi", "Huawei", "OnePlus", "Realme", "Oppo"] },
-          { label: "Telefon Kılıfı", slug: "telefon-aksesuar", q: "kılıf", tags: ["iPhone Kılıfı", "Samsung Kılıfı", "Deri Kılıf", "Şeffaf Kılıf", "Cüzdanlı Kılıf"] },
-          { label: "Şarj & Kablo", slug: "telefon-aksesuar", q: "şarj", tags: ["Hızlı Şarj", "Kablosuz Şarj", "USB-C Kablo", "Lightning Kablo", "Power Bank", "Araç Şarjı"] },
+          { label: "Telefon Kılıfı", slug: "telefon-kilifi", tags: ["iPhone Kılıfı", "Samsung Kılıfı", "Deri Kılıf", "Şeffaf Kılıf", "Cüzdanlı Kılıf"] },
+          { label: "Şarj & Kablo", slug: "sarj-kablo", tags: ["Hızlı Şarj", "Kablosuz Şarj", "USB-C Kablo", "Lightning Kablo", "Power Bank", "Araç Şarjı"] },
           { label: "Kulaklık", slug: "ses-kulaklik", tags: ["AirPods", "Samsung Buds", "Bluetooth", "Kulak İçi", "Kulak Üstü", "ANC", "Sony", "JBL", "Jabra"] },
           { label: "Akıllı Saat & Bileklik", slug: "akilli-saat", tags: ["Apple Watch", "Samsung Galaxy Watch", "Xiaomi Band", "Garmin", "Huawei Watch", "Fitbit"] },
-          { label: "Ekran Koruyucu & Aksesuar", slug: "telefon-aksesuar", q: "koruyucu", tags: ["Cam Koruyucu", "Selfie Çubuğu", "Tripod", "Gimbal", "Lens"] },
+          { label: "Ekran Koruyucu & Aksesuar", slug: "ekran-koruyucu", tags: ["Cam Koruyucu", "Selfie Çubuğu", "Tripod", "Gimbal", "Lens"] },
         ]
       },
       {
         label: "TV, Görüntü & Ses", slug: "tv", icon: "📺",
         subs: [
           { label: "Televizyon", slug: "tv", tags: ["OLED", "QLED", "4K", "8K", "55 inç", "65 inç", "75 inç", "Samsung", "LG", "Sony", "Philips", "Hisense", "TCL"] },
-          { label: "Soundbar & Ev Sinema", slug: "ses-kulaklik", q: "soundbar", tags: ["Soundbar", "2.1 Ses Sistemi", "5.1 Ev Sinema", "Dolby Atmos", "Samsung", "Sony", "Bose", "JBL"] },
-          { label: "Bluetooth Hoparlör", slug: "ses-kulaklik", q: "hoparlör", tags: ["Taşınabilir", "Su Geçirmez", "JBL", "Bose", "Sony", "Marshall", "Harman Kardon"] },
-          { label: "Projeksiyon", slug: "tv", q: "projeksiyon", tags: ["Full HD", "4K", "Mini LED", "Taşınabilir", "Epson", "BenQ", "Optoma", "ViewSonic"] },
+          { label: "Soundbar & Ev Sinema", slug: "soundbar", tags: ["Soundbar", "2.1 Ses Sistemi", "5.1 Ev Sinema", "Dolby Atmos", "Samsung", "Sony", "Bose", "JBL"] },
+          { label: "Bluetooth Hoparlör", slug: "bluetooth-hoparlor", tags: ["Taşınabilir", "Su Geçirmez", "JBL", "Bose", "Sony", "Marshall", "Harman Kardon"] },
+          { label: "Projeksiyon", slug: "projeksiyon", tags: ["Full HD", "4K", "Mini LED", "Taşınabilir", "Epson", "BenQ", "Optoma", "ViewSonic"] },
           { label: "Akıllı Ev", slug: "networking", tags: ["Google Nest", "Amazon Echo", "Akıllı Priz", "Akıllı Ampul", "Philips Hue", "Xiaomi"] },
         ]
       },
@@ -61,10 +61,10 @@ const NAV: NavGroup[] = [
         label: "Foto & Kamera", slug: "fotograf-kamera", icon: "📷",
         subs: [
           { label: "Fotoğraf Makinesi", slug: "fotograf-kamera", tags: ["DSLR", "Mirrorless", "Kompakt", "Sony", "Canon", "Nikon", "Fujifilm", "Olympus"] },
-          { label: "Drone", slug: "fotograf-kamera", q: "drone", tags: ["DJI Mini", "DJI Air", "DJI Mavic", "FPV Drone", "Yarış Drone"] },
-          { label: "Aksiyon Kamera", slug: "fotograf-kamera", q: "aksiyon", tags: ["GoPro Hero", "DJI Osmo Action", "Insta360", "Su Altı", "360° Kamera"] },
+          { label: "Drone", slug: "drone", tags: ["DJI Mini", "DJI Air", "DJI Mavic", "FPV Drone", "Yarış Drone"] },
+          { label: "Aksiyon Kamera", slug: "aksiyon-kamera", tags: ["GoPro Hero", "DJI Osmo Action", "Insta360", "Su Altı", "360° Kamera"] },
           { label: "Kamera Aksesuar", slug: "fotograf-kamera", q: "aksesuar", tags: ["Lens", "Tripod", "Gimbal", "Filtre", "Flaş", "Kamera Çantası"] },
-          { label: "Güvenlik Kamerası", slug: "fotograf-kamera", q: "güvenlik", tags: ["IP Kamera", "Dome Kamera", "Gece Görüş", "Wi-Fi Kamera", "Kapalı Devre"] },
+          { label: "Güvenlik Kamerası", slug: "guvenlik-kamerasi", tags: ["IP Kamera", "Dome Kamera", "Gece Görüş", "Wi-Fi Kamera", "Kapalı Devre"] },
         ]
       },
       {
@@ -84,12 +84,12 @@ const NAV: NavGroup[] = [
       {
         label: "Kadın Giyim", slug: "kadin-giyim", icon: "👗",
         subs: [
-          { label: "Elbise", slug: "kadin-giyim", tags: ["Günlük Elbise", "Abiye", "Mini Elbise", "Midi Elbise", "Maxi Elbise", "Tül Elbise", "Çiçekli"] },
-          { label: "Tişört & Bluz", slug: "kadin-giyim", tags: ["Basic Tişört", "Oversize Tişört", "Crop Top", "Polo Yaka", "Pamuklu", "Keten"] },
-          { label: "Pantolon & Jean", slug: "kadin-giyim", tags: ["Skinny Jean", "Mom Jean", "Wide Leg", "Yüksek Bel", "Kumaş Pantolon", "Tayt"] },
-          { label: "Ceket & Mont", slug: "kadin-giyim", tags: ["Blazer", "Deri Ceket", "Kaban", "Parka", "Trençkot", "Puffer Mont"] },
-          { label: "Etek", slug: "kadin-giyim", tags: ["Mini Etek", "Midi Etek", "Maxi Etek", "Pileli Etek", "Deri Etek", "Tül Etek"] },
-          { label: "Kazak & Hırka", slug: "kadin-giyim", tags: ["Oversize Kazak", "Crop Kazak", "Örgü Kazak", "Polar", "Sweatshirt", "Kapüşonlu"] },
+          { label: "Elbise", slug: "elbise", tags: ["Günlük Elbise", "Abiye", "Mini Elbise", "Midi Elbise", "Maxi Elbise", "Tül Elbise", "Çiçekli"] },
+          { label: "Tişört & Bluz", slug: "kadin-tisort-bluz", tags: ["Basic Tişört", "Oversize Tişört", "Crop Top", "Polo Yaka", "Pamuklu", "Keten"] },
+          { label: "Pantolon & Jean", slug: "kadin-pantolon", tags: ["Skinny Jean", "Mom Jean", "Wide Leg", "Yüksek Bel", "Kumaş Pantolon", "Tayt"] },
+          { label: "Ceket & Mont", slug: "kadin-ceket-mont", tags: ["Blazer", "Deri Ceket", "Kaban", "Parka", "Trençkot", "Puffer Mont"] },
+          { label: "Etek", slug: "etek", tags: ["Mini Etek", "Midi Etek", "Maxi Etek", "Pileli Etek", "Deri Etek", "Tül Etek"] },
+          { label: "Kazak & Hırka", slug: "kadin-kazak", tags: ["Oversize Kazak", "Crop Kazak", "Örgü Kazak", "Polar", "Sweatshirt", "Kapüşonlu"] },
           { label: "Büyük Beden", slug: "kadin-giyim", tags: ["Büyük Beden Elbise", "Büyük Beden Tişört", "Büyük Beden Jean", "Tunik"] },
           { label: "Tesettür", slug: "kadin-giyim", tags: ["Tunik", "Abaya", "Tesettür Elbise", "Pardesü", "Şal", "Eşarp", "Tesettür Takım"] },
         ]
@@ -97,31 +97,31 @@ const NAV: NavGroup[] = [
       {
         label: "Erkek Giyim", slug: "erkek-giyim", icon: "👔",
         subs: [
-          { label: "Tişört", slug: "erkek-giyim", tags: ["Basic", "Polo Yaka", "Oversize", "V Yaka", "Pamuklu", "Baskılı"] },
-          { label: "Gömlek", slug: "erkek-giyim", tags: ["Slim Fit", "Regular Fit", "Oxford", "Çizgili", "Keten", "Denim", "Flannel"] },
-          { label: "Pantolon & Jean", slug: "erkek-giyim", tags: ["Slim Fit Jean", "Regular Jean", "Cargo", "Chino", "Spor Şort", "Bermuda"] },
-          { label: "Ceket & Mont", slug: "erkek-giyim", tags: ["Blazer", "Deri Ceket", "Kaban", "Parka", "Puffer", "Denim Ceket"] },
-          { label: "Takım Elbise", slug: "erkek-giyim", tags: ["Slim Fit", "Regular Fit", "2 Parça Takım", "3 Parça Takım", "Düğün Takımı"] },
-          { label: "Eşofman & Spor", slug: "erkek-giyim", tags: ["Eşofman Takım", "Eşofman Altı", "Sweatshirt", "Kapüşonlu", "Polar"] },
+          { label: "Tişört", slug: "erkek-tisort", tags: ["Basic", "Polo Yaka", "Oversize", "V Yaka", "Pamuklu", "Baskılı"] },
+          { label: "Gömlek", slug: "erkek-gomlek", tags: ["Slim Fit", "Regular Fit", "Oxford", "Çizgili", "Keten", "Denim", "Flannel"] },
+          { label: "Pantolon & Jean", slug: "erkek-pantolon", tags: ["Slim Fit Jean", "Regular Jean", "Cargo", "Chino", "Spor Şort", "Bermuda"] },
+          { label: "Ceket & Mont", slug: "erkek-ceket-mont", tags: ["Blazer", "Deri Ceket", "Kaban", "Parka", "Puffer", "Denim Ceket"] },
+          { label: "Takım Elbise", slug: "takim-elbise", tags: ["Slim Fit", "Regular Fit", "2 Parça Takım", "3 Parça Takım", "Düğün Takımı"] },
+          { label: "Eşofman & Spor", slug: "esofman", tags: ["Eşofman Takım", "Eşofman Altı", "Sweatshirt", "Kapüşonlu", "Polar"] },
           { label: "İç Giyim", slug: "ic-giyim", tags: ["Boxer", "Slip", "Atlet", "Çorap", "Pijama", "Termal İçlik"] },
         ]
       },
       {
         label: "Kadın Ayakkabı", slug: "kadin-ayakkabi", icon: "👠",
         subs: [
-          { label: "Topuklu Ayakkabı", slug: "kadin-ayakkabi", tags: ["Stiletto", "Platform Topuk", "Dolgu Topuk", "Kısa Topuk", "Abiye Topuklu"] },
-          { label: "Sneaker & Spor", slug: "kadin-ayakkabi", tags: ["Nike Air Force", "Adidas Stan Smith", "New Balance", "Puma", "Converse", "Vans"] },
-          { label: "Sandalet & Terlik", slug: "kadin-ayakkabi", tags: ["Düz Sandalet", "Topuklu Sandalet", "Havuzbaşı Terlik", "Parmak Arası"] },
-          { label: "Bot & Çizme", slug: "kadin-ayakkabi", tags: ["Diz Altı Bot", "Diz Üstü Çizme", "Chelsea Bot", "Kar Botu", "Combat Boot"] },
-          { label: "Babet & Loafer", slug: "kadin-ayakkabi", tags: ["Deri Babet", "Tokalı Babet", "Loafer", "Espadrille", "Mokasen"] },
+          { label: "Topuklu Ayakkabı", slug: "topuklu", tags: ["Stiletto", "Platform Topuk", "Dolgu Topuk", "Kısa Topuk", "Abiye Topuklu"] },
+          { label: "Sneaker & Spor", slug: "kadin-sneaker", tags: ["Nike Air Force", "Adidas Stan Smith", "New Balance", "Puma", "Converse", "Vans"] },
+          { label: "Sandalet & Terlik", slug: "kadin-sandalet", tags: ["Düz Sandalet", "Topuklu Sandalet", "Havuzbaşı Terlik", "Parmak Arası"] },
+          { label: "Bot & Çizme", slug: "kadin-bot", tags: ["Diz Altı Bot", "Diz Üstü Çizme", "Chelsea Bot", "Kar Botu", "Combat Boot"] },
+          { label: "Babet & Loafer", slug: "babet", tags: ["Deri Babet", "Tokalı Babet", "Loafer", "Espadrille", "Mokasen"] },
         ]
       },
       {
         label: "Erkek Ayakkabı", slug: "erkek-ayakkabi", icon: "👞",
         subs: [
-          { label: "Sneaker", slug: "erkek-ayakkabi", tags: ["Nike", "Adidas", "New Balance", "Puma", "Skechers", "Asics", "Converse"] },
-          { label: "Klasik Ayakkabı", slug: "erkek-ayakkabi", tags: ["Oxford", "Derby", "Loafer", "Deri Ayakkabı", "Mokasen"] },
-          { label: "Bot & Çizme", slug: "erkek-ayakkabi", tags: ["Chelsea Bot", "Timberland", "Kar Botu", "Combat Boot", "Deri Bot"] },
+          { label: "Sneaker", slug: "erkek-sneaker", tags: ["Nike", "Adidas", "New Balance", "Puma", "Skechers", "Asics", "Converse"] },
+          { label: "Klasik Ayakkabı", slug: "klasik-ayakkabi", tags: ["Oxford", "Derby", "Loafer", "Deri Ayakkabı", "Mokasen"] },
+          { label: "Bot & Çizme", slug: "erkek-bot", tags: ["Chelsea Bot", "Timberland", "Kar Botu", "Combat Boot", "Deri Bot"] },
           { label: "Spor & Koşu", slug: "erkek-ayakkabi", tags: ["Koşu Ayakkabısı", "Training", "Basketbol", "Futsal", "Trek"] },
           { label: "Sandalet & Terlik", slug: "erkek-ayakkabi", tags: ["Deri Sandalet", "Flip Flop", "Ev Terliği", "Casual Sandalet"] },
         ]
@@ -162,22 +162,22 @@ const NAV: NavGroup[] = [
       {
         label: "Beyaz Eşya", slug: "beyaz-esya", icon: "🫙",
         subs: [
-          { label: "Çamaşır Makinesi", slug: "beyaz-esya", tags: ["Arçelik", "Bosch", "LG", "Samsung", "Beko", "Vestel", "Siemens", "Grundig"] },
-          { label: "Bulaşık Makinesi", slug: "beyaz-esya", tags: ["Arçelik", "Bosch", "Beko", "Siemens", "Grundig", "Franke", "Ankastre"] },
-          { label: "Buzdolabı", slug: "beyaz-esya", tags: ["No-Frost", "A+++", "Çift Kapılı", "Arçelik", "LG", "Bosch", "Vestel", "Side by Side"] },
-          { label: "Fırın & Ocak", slug: "beyaz-esya", tags: ["Ankastre Fırın", "Bağımsız Ocak", "Ankastre Ocak", "Arçelik", "Bosch", "Siemens", "Franke"] },
-          { label: "Kurutma Makinesi", slug: "beyaz-esya", tags: ["Isı Pompalı", "Yoğuşmalı", "Bosch", "LG", "Beko", "Siemens"] },
-          { label: "Klima & Isıtıcı", slug: "beyaz-esya", tags: ["Split Klima", "Inverter Klima", "Taşınabilir Klima", "Daikin", "Mitsubishi", "Arçelik", "Vestel"] },
+          { label: "Çamaşır Makinesi", slug: "camasir-makinesi", tags: ["Arçelik", "Bosch", "LG", "Samsung", "Beko", "Vestel", "Siemens", "Grundig"] },
+          { label: "Bulaşık Makinesi", slug: "bulasik-makinesi", tags: ["Arçelik", "Bosch", "Beko", "Siemens", "Grundig", "Franke", "Ankastre"] },
+          { label: "Buzdolabı", slug: "buzdolabi", tags: ["No-Frost", "A+++", "Çift Kapılı", "Arçelik", "LG", "Bosch", "Vestel", "Side by Side"] },
+          { label: "Fırın & Ocak", slug: "firin-ocak", tags: ["Ankastre Fırın", "Bağımsız Ocak", "Ankastre Ocak", "Arçelik", "Bosch", "Siemens", "Franke"] },
+          { label: "Kurutma Makinesi", slug: "kurutma-makinesi", tags: ["Isı Pompalı", "Yoğuşmalı", "Bosch", "LG", "Beko", "Siemens"] },
+          { label: "Klima & Isıtıcı", slug: "klima", tags: ["Split Klima", "Inverter Klima", "Taşınabilir Klima", "Daikin", "Mitsubishi", "Arçelik", "Vestel"] },
         ]
       },
       {
         label: "Küçük Ev Aletleri", slug: "kucuk-ev-aletleri", icon: "🔌",
         subs: [
-          { label: "Süpürge", slug: "kucuk-ev-aletleri", tags: ["Robot Süpürge", "Dikey Süpürge", "Torbası", "Dyson", "Roomba", "Xiaomi", "Philips", "Miele"] },
-          { label: "Kahve & Çay", slug: "kucuk-ev-aletleri", tags: ["Espresso Makinesi", "Nespresso", "Çay Makinesi", "French Press", "Delonghi", "Bialetti"] },
-          { label: "Mutfak Aletleri", slug: "kucuk-ev-aletleri", tags: ["Blender", "Mutfak Robotu", "Airfryer", "Çok Pişirici", "Tost Makinesi", "Waffle"] },
-          { label: "Ütü & Buharlı", slug: "kucuk-ev-aletleri", tags: ["Buharlı Ütü", "Buharlı Dikey", "Philips", "Tefal", "Rowenta", "Braun"] },
-          { label: "Saç Stilizasyon", slug: "kucuk-ev-aletleri", tags: ["Saç Kurutma Makinesi", "Düzleştirici", "Maşa", "Dyson Airwrap", "Philips", "Remington"] },
+          { label: "Süpürge", slug: "supurge", tags: ["Robot Süpürge", "Dikey Süpürge", "Torbası", "Dyson", "Roomba", "Xiaomi", "Philips", "Miele"] },
+          { label: "Kahve & Çay", slug: "kahve-cay-makinesi", tags: ["Espresso Makinesi", "Nespresso", "Çay Makinesi", "French Press", "Delonghi", "Bialetti"] },
+          { label: "Mutfak Aletleri", slug: "mutfak-aleti", tags: ["Blender", "Mutfak Robotu", "Airfryer", "Çok Pişirici", "Tost Makinesi", "Waffle"] },
+          { label: "Ütü & Buharlı", slug: "utu", tags: ["Buharlı Ütü", "Buharlı Dikey", "Philips", "Tefal", "Rowenta", "Braun"] },
+          { label: "Saç Stilizasyon", slug: "sac-stilizasyon", tags: ["Saç Kurutma Makinesi", "Düzleştirici", "Maşa", "Dyson Airwrap", "Philips", "Remington"] },
           { label: "Kişisel Bakım Aleti", slug: "kucuk-ev-aletleri", tags: ["Tıraş Makinesi", "Epilatör", "Yüz Temizleyici", "Diş Fırçası", "Braun", "Philips"] },
         ]
       },
@@ -236,7 +236,7 @@ const NAV: NavGroup[] = [
       {
         label: "Araç Elektroniği", slug: "arac-elektronigi", icon: "📻",
         subs: [
-          { label: "Teyp & Multimedya", slug: "arac-elektronigi", tags: ["2 DIN", "Android Auto", "Apple CarPlay", "Pioneer", "Sony", "Kenwood", "JVC"] },
+          { label: "Teyp & Multimedya", slug: "oto-teyp", tags: ["2 DIN", "Android Auto", "Apple CarPlay", "Pioneer", "Sony", "Kenwood", "JVC"] },
           { label: "Navigasyon & GPS", slug: "navigasyon", tags: ["Garmin", "TomTom", "Oto GPS", "Navigasyon Ekranı", "Taşınabilir GPS"] },
           { label: "Dashcam & Geri Görüş", slug: "arac-elektronigi", tags: ["Araç İçi Kamera", "Geri Görüş Kamerası", "360° Kamera", "Gece Görüş"] },
           { label: "Araç Ses Sistemi", slug: "arac-elektronigi", tags: ["Hoparlör", "Subwoofer", "Amfi", "Pioneer", "JBL", "Hertz"] },
@@ -295,25 +295,25 @@ const NAV: NavGroup[] = [
       {
         label: "Bebek Bakım", slug: "bebek-bakim", icon: "🍼",
         subs: [
-          { label: "Bebek Bezi & Islak Mendil", slug: "bebek-bakim", tags: ["Pampers", "Huggies", "Sleepy", "Molfix", "Prima", "Bebek Bezi Kovası"] },
-          { label: "Beslenme & Emzirme", slug: "bebek-bakim", tags: ["Biberon", "Emzik", "Göğüs Pompası", "Mama", "Sterilizatör", "Biberon Isıtıcı", "Philips Avent"] },
-          { label: "Bebek Kozmetik", slug: "bebek-bakim", tags: ["Bebek Şampuanı", "Bebek Kremi", "Bebek Yağı", "Bebek Sabunu", "Johnson's", "Sebamed"] },
-          { label: "Bebek Sağlığı", slug: "bebek-bakim", tags: ["Ateş Ölçer", "Burun Aspiratörü", "Tırnak Makası", "Bebek Monitörü", "Nazal Aspiratör"] },
+          { label: "Bebek Bezi & Islak Mendil", slug: "bebek-bezi", tags: ["Pampers", "Huggies", "Sleepy", "Molfix", "Prima", "Bebek Bezi Kovası"] },
+          { label: "Beslenme & Emzirme", slug: "biberon", tags: ["Biberon", "Emzik", "Göğüs Pompası", "Mama", "Sterilizatör", "Biberon Isıtıcı", "Philips Avent"] },
+          { label: "Bebek Kozmetik", slug: "bebek-kozmetik", tags: ["Bebek Şampuanı", "Bebek Kremi", "Bebek Yağı", "Bebek Sabunu", "Johnson's", "Sebamed"] },
+          { label: "Bebek Sağlığı", slug: "bebek-sagligi", tags: ["Ateş Ölçer", "Burun Aspiratörü", "Tırnak Makası", "Bebek Monitörü", "Nazal Aspiratör"] },
         ]
       },
       {
         label: "Bebek Arabası & Güvenlik", slug: "bebek-arabasi", icon: "🛒",
         subs: [
-          { label: "Bebek Arabası", slug: "bebek-arabasi", tags: ["Tam Yatar Araba", "Puset", "3'ü 1 Arada", "Çift Bebek", "Chicco", "Joie", "Bugaboo", "Stokke"] },
-          { label: "Oto Koltuğu", slug: "bebek-arabasi", tags: ["0-13 kg", "9-36 kg", "9-18 kg", "Maxi-Cosi", "Chicco", "BeSafe", "Cybex"] },
+          { label: "Bebek Arabası", slug: "puset-araba", tags: ["Tam Yatar Araba", "Puset", "3'ü 1 Arada", "Çift Bebek", "Chicco", "Joie", "Bugaboo", "Stokke"] },
+          { label: "Oto Koltuğu", slug: "oto-koltugu", tags: ["0-13 kg", "9-36 kg", "9-18 kg", "Maxi-Cosi", "Chicco", "BeSafe", "Cybex"] },
           { label: "Yürüteç & Salıncak", slug: "bebek-arabasi", tags: ["Yürüteç", "Bebek Salıncağı", "Ana Kucağı", "Portbebe", "Kanguru"] },
-          { label: "Ev Güvenliği", slug: "bebek-arabasi", tags: ["Kapı Kilidi", "Köşe Koruyucu", "Priz Kapağı", "Merdiven Kapısı", "Kamera"] },
+          { label: "Ev Güvenliği", slug: "bebek-guvenligi", tags: ["Kapı Kilidi", "Köşe Koruyucu", "Priz Kapağı", "Merdiven Kapısı", "Kamera"] },
         ]
       },
       {
         label: "Bebek Odası", slug: "cocuk-odasi", icon: "🛏️",
         subs: [
-          { label: "Beşik & Bebek Yatağı", slug: "cocuk-odasi", tags: ["Ahşap Beşik", "Park Yatak", "Tekerlekli Beşik", "Co-Sleeper", "Çok Fonksiyonlu Beşik"] },
+          { label: "Beşik & Bebek Yatağı", slug: "besik", tags: ["Ahşap Beşik", "Park Yatak", "Tekerlekli Beşik", "Co-Sleeper", "Çok Fonksiyonlu Beşik"] },
           { label: "Bebek Nevresimi", slug: "ev-tekstili", tags: ["Nevresim Seti", "Uyku Seti", "Bebek Yorgan", "Bebek Yastığı", "Battaniye"] },
           { label: "Oyun Matı & Parkı", slug: "cocuk-odasi", tags: ["Aktivite Matı", "Oyun Parkı", "Oyun Halısı", "Çadır Ev", "Kum Havuzu"] },
         ]
@@ -321,10 +321,10 @@ const NAV: NavGroup[] = [
       {
         label: "Oyuncak", slug: "oyuncak", icon: "🎁",
         subs: [
-          { label: "LEGO", slug: "oyuncak", tags: ["LEGO City", "LEGO Technic", "LEGO Star Wars", "LEGO Friends", "LEGO Creator", "LEGO Duplo"] },
-          { label: "Eğitici Oyuncak", slug: "oyuncak", tags: ["Montessori", "Ahşap Oyuncak", "Puzzle", "Dil Öğreten", "Fisher-Price", "Vtech"] },
-          { label: "Figür & Oyuncak Bebek", slug: "oyuncak", tags: ["Barbie", "Hot Wheels", "Marvel Figür", "DC Figür", "Funko Pop", "Playmobil"] },
-          { label: "RC & Robot", slug: "oyuncak", tags: ["Kumandalı Araba", "RC Helikopter", "Mini Drone", "Robot", "Yarış Pisti"] },
+          { label: "LEGO", slug: "lego", tags: ["LEGO City", "LEGO Technic", "LEGO Star Wars", "LEGO Friends", "LEGO Creator", "LEGO Duplo"] },
+          { label: "Eğitici Oyuncak", slug: "egitici-oyuncak", tags: ["Montessori", "Ahşap Oyuncak", "Puzzle", "Dil Öğreten", "Fisher-Price", "Vtech"] },
+          { label: "Figür & Oyuncak Bebek", slug: "figur-oyuncak", tags: ["Barbie", "Hot Wheels", "Marvel Figür", "DC Figür", "Funko Pop", "Playmobil"] },
+          { label: "RC & Robot", slug: "rc-robot", tags: ["Kumandalı Araba", "RC Helikopter", "Mini Drone", "Robot", "Yarış Pisti"] },
           { label: "Açık Hava & Spor", slug: "oyuncak", tags: ["Bisiklet", "Scooter", "Trambolin", "Kaydırak", "Kum Havuzu", "Akülü Araba"] },
           { label: "Masa Oyunları", slug: "masa-oyunu", tags: ["Monopoly", "Scrabble", "UNO", "Chess", "Jenga", "Cluedo"] },
         ]
@@ -399,20 +399,20 @@ const NAV: NavGroup[] = [
       {
         label: "Cilt Bakımı", slug: "cilt-bakimi", icon: "🧴",
         subs: [
-          { label: "Yüz Nemlendirici", slug: "cilt-bakimi", tags: ["Normal Cilt", "Yağlı Cilt", "Kuru Cilt", "Karma Cilt", "Olay", "Neutrogena", "La Roche-Posay"] },
-          { label: "Yüz Temizleme", slug: "cilt-bakimi", tags: ["Yüz Köpüğü", "Yüz Jeli", "Misel Suyu", "Tonik", "Yüz Ovası", "Garnier", "Cetaphil"] },
-          { label: "Güneş Koruyucu", slug: "cilt-bakimi", tags: ["SPF 50+", "SPF 30", "Renkli Güneş Kremi", "Avene", "Eucerin", "Isola", "Altruist"] },
-          { label: "Serum & Ampul", slug: "cilt-bakimi", tags: ["C Vitamini Serumu", "Niacinamide", "Retinol", "Hyaluronik Asit", "The Ordinary", "Garnier"] },
-          { label: "Yüz Maskesi", slug: "cilt-bakimi", tags: ["Kil Maskesi", "Soyulabilir", "Yaprak Maske", "Gözenek Temizleyici", "Origins", "Freeman"] },
+          { label: "Yüz Nemlendirici", slug: "yuz-nemlendirici", tags: ["Normal Cilt", "Yağlı Cilt", "Kuru Cilt", "Karma Cilt", "Olay", "Neutrogena", "La Roche-Posay"] },
+          { label: "Yüz Temizleme", slug: "yuz-temizleme", tags: ["Yüz Köpüğü", "Yüz Jeli", "Misel Suyu", "Tonik", "Yüz Ovası", "Garnier", "Cetaphil"] },
+          { label: "Güneş Koruyucu", slug: "gunes-koruyucu", tags: ["SPF 50+", "SPF 30", "Renkli Güneş Kremi", "Avene", "Eucerin", "Isola", "Altruist"] },
+          { label: "Serum & Ampul", slug: "serum", tags: ["C Vitamini Serumu", "Niacinamide", "Retinol", "Hyaluronik Asit", "The Ordinary", "Garnier"] },
+          { label: "Yüz Maskesi", slug: "yuz-maskesi", tags: ["Kil Maskesi", "Soyulabilir", "Yaprak Maske", "Gözenek Temizleyici", "Origins", "Freeman"] },
           { label: "Vücut Bakımı", slug: "cilt-bakimi", tags: ["Vücut Losyonu", "Vücut Peelingi", "Selülit Kremi", "Sıkılaştırıcı", "Nivea", "Dove"] },
         ]
       },
       {
         label: "Makyaj", slug: "makyaj", icon: "💋",
         subs: [
-          { label: "Yüz Makyajı", slug: "makyaj", tags: ["Fondöten", "Kapatıcı", "Pudra", "Allık", "Highlighter", "Kontür", "BB Krem"] },
-          { label: "Göz Makyajı", slug: "makyaj", tags: ["Maskara", "Eyeliner", "Far Paleti", "Göz Kalemi", "Kaş Kalemi", "Kaş Jeli", "Kaş Penci"] },
-          { label: "Dudak Makyajı", slug: "makyaj", tags: ["Ruj", "Lip Gloss", "Dudak Kalemi", "Lip Liner", "MAC", "Charlotte Tilbury", "NARS"] },
+          { label: "Yüz Makyajı", slug: "yuz-makyaji", tags: ["Fondöten", "Kapatıcı", "Pudra", "Allık", "Highlighter", "Kontür", "BB Krem"] },
+          { label: "Göz Makyajı", slug: "goz-makyaji", tags: ["Maskara", "Eyeliner", "Far Paleti", "Göz Kalemi", "Kaş Kalemi", "Kaş Jeli", "Kaş Penci"] },
+          { label: "Dudak Makyajı", slug: "dudak-makyaji", tags: ["Ruj", "Lip Gloss", "Dudak Kalemi", "Lip Liner", "MAC", "Charlotte Tilbury", "NARS"] },
           { label: "Makyaj Aksesuarı", slug: "makyaj", tags: ["Fırça Seti", "Makyaj Süngeri", "Makyaj Çantası", "Ayna", "Göz Kırpağı"] },
           { label: "Tırnak", slug: "makyaj", tags: ["Oje", "Tırnak Jeli", "UV Lamba", "Bazlı Oje", "Tırnak Bakım", "OPI", "Essie"] },
         ]
@@ -420,9 +420,9 @@ const NAV: NavGroup[] = [
       {
         label: "Saç Bakımı", slug: "sac-bakimi", icon: "💇",
         subs: [
-          { label: "Şampuan & Saç Kremi", slug: "sac-bakimi", tags: ["Kepek Önleyici", "Boyalı Saç", "Kuru Saç", "Argan Yağlı", "Pantene", "Head & Shoulders", "Elvive"] },
+          { label: "Şampuan & Saç Kremi", slug: "sampuan", tags: ["Kepek Önleyici", "Boyalı Saç", "Kuru Saç", "Argan Yağlı", "Pantene", "Head & Shoulders", "Elvive"] },
           { label: "Saç Maskesi & Serum", slug: "sac-bakimi", tags: ["Keratin Maskesi", "Onarıcı Maske", "Saç Serumu", "Wella", "Schwarzkopf", "Tresemmé"] },
-          { label: "Saç Boyası", slug: "sac-bakimi", tags: ["Kalıcı Boya", "Yarı Kalıcı", "Röfle & Balyaj", "Garnier Olia", "L'Oréal", "Schwarzkopf"] },
+          { label: "Saç Boyası", slug: "sac-boyasi", tags: ["Kalıcı Boya", "Yarı Kalıcı", "Röfle & Balyaj", "Garnier Olia", "L'Oréal", "Schwarzkopf"] },
           { label: "Saç Şekillendirici", slug: "sac-bakimi", tags: ["Wax", "Jöle", "Saç Spreyi", "Kuru Şampuan", "Isı Koruyucu", "Saç Köpüğü"] },
         ]
       },
@@ -547,8 +547,8 @@ const NAV: NavGroup[] = [
       {
         label: "Hobi & Sanat", slug: "hobi-sanat", icon: "🎨",
         subs: [
-          { label: "Resim & Çizim", slug: "hobi-sanat", tags: ["Yağlı Boya", "Suluboya", "Akrilik Boya", "Pastel", "Renk Kalemi", "Faber-Castell", "Arteza"] },
-          { label: "El Sanatları", slug: "hobi-sanat", tags: ["Örgü İpliği", "Amigurumi", "Dikiş", "Scrapbooking", "Boncuk", "Takı Yapımı", "Reçine"] },
+          { label: "Resim & Çizim", slug: "resim-cizim", tags: ["Yağlı Boya", "Suluboya", "Akrilik Boya", "Pastel", "Renk Kalemi", "Faber-Castell", "Arteza"] },
+          { label: "El Sanatları", slug: "el-sanatlari", tags: ["Örgü İpliği", "Amigurumi", "Dikiş", "Scrapbooking", "Boncuk", "Takı Yapımı", "Reçine"] },
           { label: "Maket & Model", slug: "koleksiyon", tags: ["Maket Araba", "Maket Uçak", "Askeri Maket", "Airfix", "Tamiya", "Revell", "Hasegawa"] },
           { label: "Bulmaca & Masa Oyunu", slug: "masa-oyunu", tags: ["Puzzle 1000 Parça", "Satranç", "Monopoly", "Catan", "Ticket to Ride", "Codenames"] },
           { label: "Koleksiyon & Figür", slug: "koleksiyon", tags: ["Funko Pop", "LEGO Figür", "Metal Araba", "Manga", "Anime Figür", "Hot Wheels"] },
@@ -793,7 +793,7 @@ export default function Header() {
                               {sub.tags.map(tag => (
                                 <Link
                                   key={tag}
-                                  href={"/ara?q=" + encodeURIComponent(tag)}
+                                  href={"/kategori/" + sub.slug + "?q=" + encodeURIComponent(tag)}
                                   onClick={() => setActiveGroup(null)}
                                   className="text-xs text-gray-500 hover:text-[#E8460A] transition-colors"
                                 >
