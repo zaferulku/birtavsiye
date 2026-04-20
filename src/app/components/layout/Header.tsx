@@ -1,8 +1,26 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "../../../lib/supabase";
+
+// Slug → hiyerarşik path (root'tan leaf'e)
+function buildCategoryChain(slug: string, catMap: Map<string, { id: string; slug: string; parent_id: string | null }>, byId: Map<string, { id: string; slug: string; parent_id: string | null }>): string[] {
+  const chain: string[] = [];
+  let current = catMap.get(slug);
+  while (current) {
+    chain.unshift(current.slug);
+    current = current.parent_id ? byId.get(current.parent_id) : undefined;
+  }
+  return chain;
+}
+
+function hierUrl(slug: string, catMap: Map<string, { id: string; slug: string; parent_id: string | null }>, byId: Map<string, { id: string; slug: string; parent_id: string | null }>, q?: string): string {
+  const chain = buildCategoryChain(slug, catMap, byId);
+  if (chain.length === 0) return "/kategori/" + slug + (q ? "?q=" + encodeURIComponent(q) : "");
+  const base = "/anasayfa/" + chain.join("/");
+  return q ? `${base}?q=${encodeURIComponent(q)}` : base;
+}
 
 type NavTag = string;
 type NavSub = { label: string; slug: string; tags: NavTag[]; q?: string };
@@ -589,6 +607,17 @@ export default function Header() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
+  // Kategori hiyerarşisini fetch et — Header NAV linkleri /anasayfa/{chain} üretsin
+  const [cats, setCats] = useState<{ id: string; slug: string; parent_id: string | null }[]>([]);
+  useEffect(() => {
+    supabase.from("categories").select("id, slug, parent_id").then(({ data }) => {
+      if (data) setCats(data);
+    });
+  }, []);
+  const catMap = useMemo(() => new Map(cats.map(c => [c.slug, c])), [cats]);
+  const catById = useMemo(() => new Map(cats.map(c => [c.id, c])), [cats]);
+  const linkFor = (slug: string, q?: string) => hierUrl(slug, catMap, catById, q);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim()) router.push("/ara?q=" + encodeURIComponent(query));
@@ -783,7 +812,7 @@ export default function Header() {
                         {displayCat.subs.map(sub => (
                           <div key={sub.label}>
                             <Link
-                              href={"/kategori/" + sub.slug + (sub.q ? "?q=" + encodeURIComponent(sub.q) : "")}
+                              href={linkFor(sub.slug, sub.q)}
                               onClick={() => setActiveGroup(null)}
                               className="block text-sm font-bold text-[#E8460A] hover:underline mb-1.5"
                             >
@@ -793,7 +822,7 @@ export default function Header() {
                               {sub.tags.map(tag => (
                                 <Link
                                   key={tag}
-                                  href={"/kategori/" + sub.slug + "?q=" + encodeURIComponent(tag)}
+                                  href={linkFor(sub.slug, tag)}
                                   onClick={() => setActiveGroup(null)}
                                   className="text-xs text-gray-500 hover:text-[#E8460A] transition-colors"
                                 >
@@ -806,7 +835,7 @@ export default function Header() {
                       </div>
                       <div className="mt-4 pt-3 border-t border-gray-100">
                         <Link
-                          href={"/kategori/" + displayCat.slug}
+                          href={linkFor(displayCat.slug)}
                           onClick={() => setActiveGroup(null)}
                           className="text-xs font-semibold text-[#E8460A] hover:underline"
                         >
@@ -910,7 +939,7 @@ export default function Header() {
                         {group.cats.map(cat => (
                           <Link
                             key={cat.label}
-                            href={"/kategori/" + cat.slug}
+                            href={linkFor(cat.slug)}
                             onClick={() => { setMobileMenuOpen(false); setMobileExpandedGroup(null); }}
                             className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-[#E8460A] hover:bg-orange-50 rounded-lg"
                           >
