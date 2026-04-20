@@ -18,7 +18,7 @@ const REVIEW_THRESHOLD = 50;
 
 // 1) BRAND → CATEGORY (exclusive brands)
 const BRAND_EXCLUSIVE = [
-  { pattern: /^(Cressi|Mares|Scubapro|Aqua\s*Lung|Apeks|Salvimar)$/i, cats: ["su-sporlari"], score: 100 },
+  { pattern: /^(Cressi|Mares|Scubapro|Aqua\s*Lung|Apeks|Salvimar|Beuchat|Apnea|Busso|Bestway|Dunny|Intex|Sea\s*Doo|Subea|Tusa|Speedo)$/i, cats: ["su-sporlari"], score: 100 },
   { pattern: /^(Bianchi|Trek|Giant|Cube|Specialized|Merida|Kron|Salcano|Bisan)$/i, cats: ["bisiklet"], score: 100 },
   { pattern: /^(Apple|iPhone)$/i, cats: ["akilli-telefon", "bilgisayar-laptop", "tablet", "akilli-saat", "ses-kulaklik", "telefon-aksesuar"], score: 60 },
   { pattern: /^(Samsung|Xiaomi|Huawei|Honor|Oppo|Vivo|Realme|OnePlus|Reeder|Casper|General\s*Mobile|Infinix|Tecno|Nokia|TCL)$/i, cats: ["akilli-telefon", "tablet", "telefon-aksesuar", "akilli-saat"], score: 70 },
@@ -42,7 +42,15 @@ const TITLE_RULES = [
   { cat: "su-sporlari", score: 95, pattern: /\b(şnorkel|dal[ıi][sş]|palet|sualt[ıi])\b.*\bmaske\b/i },
   { cat: "cilt-bakimi", score: 90, pattern: /\b(y[uü]z|cilt|kil|sheet|kağı[dt]|hidrojel)\s*maskesi\b/i },
   { cat: "sac-bakimi", score: 95, pattern: /\bsa[çc]\s*maskesi\b/i },
-  { cat: "kisisel-hijyen", score: 85, pattern: /\b(cerrahi|tıbbi|medikal|FFP2|FFP3|N95|KN95)\s*maske/i },
+  { cat: "kisisel-hijyen", score: 85, pattern: /\b(cerrahi|tıbbi|medikal|FFP2|FFP3|N95|KN95|meltblown|3\s*kat|nebülizat|nebulizat)\s*(maske)?/i },
+  // Industrial masks (welding, respirator, half/full face)
+  { cat: "yapi-market", score: 90, pattern: /\b(kaynak\s*maske|welding\s*mask|kömürlü\s*maske|filtreli\s*maske|yar[ıi]m\s*y[uü]z\s*maske|tam\s*y[uü]z\s*maske|anti[- ]?gaz|X[- ]?plore|gaz\s*maskes)/i },
+  // Costume/party masks
+  { cat: "oyuncak", score: 90, pattern: /\b(spiderman|batman|zorro|venom|hulk|thor|iron\s*man|superhero|s[uü]per\s*kahraman|cosplay|maskeli\s*balo|halloween|cad[ıi]lar|harley\s*quinn|scream|ghost\s*face|ninja|anonim|vendetta|animasyon|[cç]izgi\s*film|elektronik\s*maske|elektronic\s*mask|kost[uü]m)\b/i },
+  // Hair care disguised as skincare (Loreal Pro hair, Olaplex, Garnier hair)
+  { cat: "sac-bakimi", score: 95, pattern: /\b(Olaplex|Kerastase|Loreal\s*Professionnel|Serie\s*Expert|Vitamino|Metal\s*Detox|Wella\s*Professional|Schwarzkopf\s*Pro|Nem\s*Bombas[ıi]\s*Canland[ıi]r[ıi]c[ıi]\s*Ka[gğ][ıi]t|Hair\s*Resfyer|keratin\s*maske|sa[çc]\s*onarıc|sa[çc]\s*g[uü][çc]lendir|sa[çc]\s*nem)\b/i },
+  // Foreo & light therapy cosmetic devices stay in cilt-bakimi
+  { cat: "cilt-bakimi", score: 80, pattern: /\b(Foreo|UFO\s*Power\s*Maske|[ıi][sş][ıi]k\s*terapi|cilt\s*cihaz[ıi]|LED\s*maske)\b/i },
   { cat: "fotograf-kamera", score: 85, pattern: /\b(aynas[ıi]z|mirrorless|dslr|reflex|aksiyon\s*kamera|action\s*cam|gopro|full\s*frame)\b/i },
   { cat: "fotograf-kamera", score: 80, pattern: /\b(objektif|\blens\b|tripod|gimbal)\b/i },
   { cat: "networking", score: 80, pattern: /\b(g[uü]venlik\s*kamera|ip\s*camera|cctv|nvr|dvr)\b/i },
