@@ -4,6 +4,7 @@ import Footer from "../../components/layout/Footer";
 import Link from "next/link";
 import Image from "next/image";
 import { modelFamilyToSlug, fetchCategoryPath, fetchDescendantIds } from "../../../lib/categoryTree";
+import { redirect } from "next/navigation";
 import type { Metadata } from "next";
 
 export const revalidate = 120;
@@ -64,6 +65,13 @@ export default async function MarkaPage({ params }: { params: Promise<{ brand: s
   }
   const dominantCatId = [...catCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
   const categoryPath = dominantCatId ? await fetchCategoryPath(dominantCatId) : [];
+
+  // URL hiyerarşiyle uyumlu olsun — dominant kategorinin tam zincirini kullanarak
+  // hiyerarşik URL'e redirect
+  if (categoryPath.length > 0) {
+    const hierPath = categoryPath.map(c => c.slug).join("/");
+    redirect(`/${hierPath}/${brandSlug}`);
+  }
 
   // Breadcrumb ile URL içeriği uyumlu olsun: dominant kategorinin
   // root'undaki tüm descendants'ları al, sadece o kategorideki ürünleri göster.
