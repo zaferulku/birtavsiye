@@ -4,12 +4,16 @@ import Footer from "../components/layout/Footer";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
-import { fetchChildCategories, fetchDescendantIds, modelFamilyToSlug } from "../../lib/categoryTree";
+import { fetchDescendantIds, modelFamilyToSlug } from "../../lib/categoryTree";
 import type { Metadata } from "next";
+import KategoriSayfasi from "../kategori/[slug]/page";
 
 export const revalidate = 120;
 
-type PageProps = { params: Promise<{ segments: string[] }> };
+type PageProps = {
+  params: Promise<{ segments: string[] }>;
+  searchParams: Promise<Record<string, string | undefined>>;
+};
 type CategoryNode = { id: string; slug: string; name: string; parent_id: string | null; icon: string | null };
 
 async function resolveSegments(segments: string[]) {
@@ -55,8 +59,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return { title, description: `${title} — fiyat karşılaştırma ve tavsiyeler.` };
 }
 
-export default async function Page({ params }: PageProps) {
+export default async function Page({ params, searchParams }: PageProps) {
   const { segments } = await params;
+  const sp = await searchParams;
   const { categories, brandSlug, modelSlug } = await resolveSegments(segments);
 
   if (categories.length === 0 && !brandSlug) notFound();
@@ -71,73 +76,14 @@ export default async function Page({ params }: PageProps) {
   const leafCategory = categories[categories.length - 1] ?? null;
   const descendantIds = leafCategory ? await fetchDescendantIds(leafCategory.id) : [];
 
-  // === CASE 1: kategori zinciri (brand yok) ===
-  if (!brandSlug) {
-    const children = leafCategory ? await fetchChildCategories(leafCategory.id) : [];
-
-    const { data: productsData, count } = await supabase
-      .from("products")
-      .select("id, slug, title, brand, model_family, image_url, prices(price)", { count: "exact" })
-      .in("category_id", descendantIds.length > 0 ? descendantIds : [leafCategory?.id ?? ""])
-      .order("created_at", { ascending: false })
-      .limit(60);
-
-    type Row = { id: string; slug: string; title: string; brand: string | null; model_family: string | null; image_url: string | null; prices: { price: number }[] | null };
-    const products = (productsData ?? []) as unknown as Row[];
-
+  // === CASE 1: kategori zinciri (brand yok) → kategori sayfasını render et
+  // (filter sidebar, marka/model/hafıza/renk/fiyat filtreleri hepsi aktif) ===
+  if (!brandSlug && leafCategory) {
     return (
-      <main className="bg-white min-h-screen">
-        <Header />
-        <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-6">
-          <nav aria-label="Breadcrumb" className="flex flex-wrap gap-2 text-xs md:text-sm text-gray-500 mb-5">
-            {breadcrumbLinks.map((b, i) => (
-              <span key={b.href} className="flex gap-2">
-                {i > 0 && <span>/</span>}
-                {i === breadcrumbLinks.length - 1
-                  ? <span className="text-gray-800 font-semibold">{b.label}</span>
-                  : <Link href={b.href} className="hover:text-[#E8460A]">{b.label}</Link>}
-              </span>
-            ))}
-          </nav>
-
-          <div className="flex items-end justify-between mb-4">
-            <h1 className="text-2xl md:text-3xl font-bold">{leafCategory?.name ?? "Kategori"}</h1>
-            <span className="text-xs text-gray-500">{count ?? 0} ürün</span>
-          </div>
-
-          {children.length > 0 && (
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3 mb-6">
-              {children.map(c => (
-                <Link key={c.id} href={`/anasayfa/${[...acc, c.slug].join("/")}`} className="bg-white border border-gray-100 rounded-xl p-3 text-center hover:border-[#E8460A] hover:shadow-sm transition">
-                  <div className="text-2xl mb-1">{c.icon ?? "📦"}</div>
-                  <div className="text-xs font-semibold text-gray-800">{c.name}</div>
-                </Link>
-              ))}
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {products.map(p => {
-              const minP = (p.prices ?? []).length > 0 ? Math.min(...p.prices!.map(x => x.price)) : null;
-              return (
-                <Link key={p.id} href={`/urun/${p.slug}`} className="bg-white border border-gray-100 rounded-xl overflow-hidden hover:shadow-md hover:border-gray-300 transition group">
-                  <div className="relative aspect-square bg-white">
-                    {p.image_url
-                      ? <Image src={p.image_url} alt={p.title} fill className="object-contain p-3 group-hover:scale-105 transition" sizes="(max-width: 768px) 50vw, 20vw" />
-                      : <div className="w-full h-full flex items-center justify-center text-3xl">📦</div>}
-                  </div>
-                  <div className="p-2">
-                    {p.brand && <div className="text-[9px] font-bold text-[#E8460A] uppercase truncate">{p.brand}</div>}
-                    <div className="text-[11px] font-medium text-gray-800 line-clamp-2 leading-tight">{p.title}</div>
-                    {minP && <div className="text-sm font-bold mt-1">{minP.toLocaleString("tr-TR")} <span className="text-[10px] text-gray-400">TL</span></div>}
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-        <Footer />
-      </main>
+      <KategoriSayfasi
+        params={Promise.resolve({ slug: leafCategory.slug })}
+        searchParams={Promise.resolve(sp)}
+      />
     );
   }
 
