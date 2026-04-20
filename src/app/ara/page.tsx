@@ -14,7 +14,11 @@ type Product = {
   description: string;
   image_url?: string;
   category_id?: string;
+  model_family?: string | null;
+  variant_storage?: string | null;
+  variant_color?: string | null;
   prices?: { price: number; stores: { name: string }[] }[];
+  _variantCount?: number;
 };
 
 const popularSearches = [
@@ -48,8 +52,8 @@ function AramaIcerik() {
 
     let queryBuilder = supabase
       .from("products")
-      .select("id, title, slug, brand, description, image_url, category_id, prices(price,stores(name))")
-      .limit(40);
+      .select("id, title, slug, brand, description, image_url, category_id, model_family, variant_storage, variant_color, prices(price,stores(name))")
+      .limit(200);
 
     if (categoryIds.length > 0) {
       queryBuilder = queryBuilder.or(
@@ -62,7 +66,31 @@ function AramaIcerik() {
     }
 
     const { data } = await queryBuilder;
-    if (data) setResults(data);
+    if (data) {
+      // Variant dedup: aynı (brand, model_family) için tek temsilci (en ucuz fiyatlı)
+      const familyGroups = new Map<string, Product[]>();
+      const singletons: Product[] = [];
+      for (const p of data as Product[]) {
+        if (p.brand && p.model_family) {
+          const key = `${p.brand}|${p.model_family}`;
+          const arr = familyGroups.get(key) ?? [];
+          arr.push(p);
+          familyGroups.set(key, arr);
+        } else {
+          singletons.push(p);
+        }
+      }
+      const minPriceOf = (p: Product): number => {
+        const list = p.prices ?? [];
+        return list.length > 0 ? Math.min(...list.map(x => x.price)) : Infinity;
+      };
+      const dedupped: Product[] = [];
+      for (const arr of familyGroups.values()) {
+        const sorted = arr.slice().sort((a, b) => minPriceOf(a) - minPriceOf(b));
+        dedupped.push({ ...sorted[0], _variantCount: arr.length });
+      }
+      setResults([...dedupped, ...singletons].slice(0, 48));
+    }
     setLoading(false);
   };
 
@@ -226,9 +254,18 @@ function AramaIcerik() {
                       </div>
                       <div className="p-3">
                         <div className="text-xs font-bold text-[#E8460A] uppercase tracking-wide mb-1">{p.brand}</div>
-                        <div className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug mb-2">{p.title}</div>
+                        <div className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug mb-2">
+                          {p.model_family && p.brand ? `${p.brand} ${p.model_family}` : p.title}
+                        </div>
                         {minPrice ? (
-                          <div className="text-sm font-bold text-gray-900">{minPrice.price.toLocaleString("tr-TR")} <span className="text-xs font-normal text-gray-400">₺</span></div>
+                          <div className="flex items-baseline justify-between gap-2">
+                            <div className="text-sm font-bold text-gray-900">{minPrice.price.toLocaleString("tr-TR")} <span className="text-xs font-normal text-gray-400">₺</span></div>
+                            {p._variantCount && p._variantCount > 1 && (
+                              <span className="text-[9px] text-gray-500 font-medium bg-gray-100 rounded-full px-1.5 py-0.5">
+                                {p._variantCount} seçenek
+                              </span>
+                            )}
+                          </div>
                         ) : (
                           <div className="text-xs text-[#E8460A] font-medium">Fiyatları Karşılaştır →</div>
                         )}
