@@ -133,6 +133,19 @@ export default async function KategoriSayfasi({ params, searchParams }: {
     ? Object.entries(modelsByBrand[marka]).sort((a, b) => b[1] - a[1]).map(([name, count]) => ({ name, count }))
     : [];
 
+  // Category-aware sub-filter label
+  const rootSlug = ancestors[0]?.slug ?? category?.slug ?? "";
+  const subLabel =
+    rootSlug === "moda" ? "Ürün Tipi" :
+    rootSlug === "ev-yasam" ? "Tip" :
+    rootSlug === "kozmetik" ? "Ürün" :
+    rootSlug === "kitap-hobi" ? "Tip" :
+    rootSlug === "evcil-hayvan" ? "Tip" :
+    rootSlug === "anne-bebek" ? "Tip" :
+    rootSlug === "spor-outdoor" ? "Tip" :
+    rootSlug === "otomotiv" ? "Tip" :
+    "Model";
+
   if (!category) {
     return (
       <main>
@@ -253,7 +266,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                               <div className="bg-gray-50 border-l-2 border-[#E8460A] ml-4">
                                 <Link href={buildUrl({ model: null })}>
                                   <div className={`flex items-center justify-between px-4 py-1.5 text-xs cursor-pointer transition-colors ${!model ? "text-[#E8460A] font-semibold" : "text-gray-600 hover:bg-gray-100"}`}>
-                                    <span>Tüm modeller</span>
+                                    <span>Tüm {subLabel.toLowerCase()} seçenekleri</span>
                                     <span className="text-gray-400">{b.count}</span>
                                   </div>
                                 </Link>
