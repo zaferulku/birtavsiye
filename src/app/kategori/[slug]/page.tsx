@@ -41,17 +41,33 @@ export default async function KategoriSayfasi({ params, searchParams }: {
     if (allDescIds.length > 0) {
       const { data: prodData } = await supabase
         .from("products")
-        .select("image_url, category_id")
+        .select("image_url, category_id, source")
         .in("category_id", allDescIds)
         .not("image_url", "is", null)
         .order("created_at", { ascending: false })
-        .limit(1000);
+        .limit(2000);
+      const trust = (s: string | null): number => {
+        if (!s) return 0;
+        if (s === "mediamarkt") return 100;
+        if (s === "vatan") return 80;
+        if (s === "trendyol" || s === "hepsiburada") return 70;
+        if (s === "amazon") return 60;
+        if (s === "n11") return 50;
+        if (s === "pttavm") return 20;
+        return 40;
+      };
+      // Her child için en güvenilir source'un görselini seç
+      const bestPerChild = new Map<string, { url: string; trustScore: number }>();
       for (const row of prodData ?? []) {
         const childId = row.category_id ? catToChild.get(row.category_id) : null;
-        if (childId && row.image_url && !childImageMap.has(childId)) {
-          childImageMap.set(childId, row.image_url);
+        if (!childId || !row.image_url) continue;
+        const t = trust(row.source as string | null);
+        const cur = bestPerChild.get(childId);
+        if (!cur || t > cur.trustScore) {
+          bestPerChild.set(childId, { url: row.image_url, trustScore: t });
         }
       }
+      for (const [childId, { url }] of bestPerChild) childImageMap.set(childId, url);
     }
   }
 
@@ -100,11 +116,29 @@ export default async function KategoriSayfasi({ params, searchParams }: {
     return list.length > 0 ? Math.min(...list.map(x => x.price)) : Infinity;
   };
 
+  const srcTrust = (s: string | null | undefined): number => {
+    if (!s) return 0;
+    if (s === "mediamarkt") return 100;
+    if (s === "vatan") return 80;
+    if (s === "trendyol" || s === "hepsiburada") return 70;
+    if (s === "amazon") return 60;
+    if (s === "n11") return 50;
+    if (s === "pttavm") return 20;
+    return 40;
+  };
   const dedupedRepresentatives: (Row & { _variantCount?: number })[] = [];
   for (const arr of familyGroups.values()) {
-    const sorted = arr.slice().sort((a, b) => minPriceOf(a) - minPriceOf(b));
+    const sortedByPrice = arr.slice().sort((a, b) => minPriceOf(a) - minPriceOf(b));
+    const withImage = arr.filter(x => (x as { image_url?: string | null }).image_url);
+    const imageSource = (withImage.length > 0 ? withImage : arr)
+      .slice()
+      .sort((a, b) => srcTrust((b as { source?: string }).source) - srcTrust((a as { source?: string }).source))[0];
     const uniqSources = new Set(arr.map(x => (x as { source?: string | null }).source).filter(Boolean));
-    const rep = { ...sorted[0], _variantCount: uniqSources.size || arr.length };
+    const rep = {
+      ...sortedByPrice[0],
+      image_url: (imageSource as { image_url?: string | null })?.image_url ?? sortedByPrice[0].image_url,
+      _variantCount: uniqSources.size || arr.length,
+    };
     dedupedRepresentatives.push(rep);
   }
 
