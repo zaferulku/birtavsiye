@@ -69,9 +69,35 @@ export default async function ModelPage({
   };
 
   // Aksesuar title keyword'leri — gerçek ürün değil, uyumlu aksesuar
-  // ("Apple Watch Zore Kordon" → brand=Apple yanlış, gerçek ürün Apple Watch değil)
-  const ACCESSORY_TITLE = /\b(kordon|kay[ıi][sş]|k[ıi]l[ıi]f|cover|case|ekran\s*koruyucu|cam\s*koruyucu|pil|batarya|adapt[oö]r|[sş]arj\s*kablos|uyumlu\s*(kordon|kay|k[ıi]l|pil|batarya)|strap\b|band[- ]\d+|hasır\s*kordon|metal\s*kordon|silikon\s*kordon|spor\s*kordon)/i;
-  const legitByTitle = rows.filter(r => !ACCESSORY_TITLE.test(r.title || ""));
+  // ("Apple Watch Zore Kordon" → brand=Apple yanlış, gerçek ürün değil)
+  // 'case' TEK BAŞINA aksesuar değil (Apple Watch Aluminium Case = saat gövdesi),
+  // sadece 'telefon kılıfı/case' bağlamında aksesuar.
+  function isAccessoryTitle(title: string | null | undefined): boolean {
+    if (!title) return false;
+    const t = title.toLowerCase().replace(/İ/g, "i").replace(/I/g, "ı").replace(/Ş/g, "ş").replace(/Ç/g, "ç").replace(/Ğ/g, "ğ").replace(/Ü/g, "ü").replace(/Ö/g, "ö");
+    const patterns = [
+      /\bkordon\b/,
+      /\bkayış\b/,
+      /\bkılıf\b/,
+      /\btelefon\s*kılıfı?\b/,
+      /\bkasa\s*koruyucu\b/,
+      /\bekran\s*koruyucu\b/,
+      /\bcam\s*koruyucu\b/,
+      /\bşarj\s*kablos/,
+      /\bmanyetik\s*kablo/,
+      /\buyumlu\s*(kordon|kayış|kılıf|pil|batarya|koruyucu|şarj)/,
+      /\bstrap\b/,
+      /\bband[- ]\d+/,
+      /\b(hasır|metal|silikon|spor|örgü)\s*kordon/,
+      /\bpil\s*(batarya)?\s*a\d{4}/, // "Pil Batarya A2059" gibi
+      /\bbatarya\s*a\d{4}/,
+      /\baksesuar\b/,
+      /\bparasoley\b/,
+      /\bmenteşe\b/,
+    ];
+    return patterns.some(re => re.test(t));
+  }
+  const legitByTitle = rows.filter(r => !isAccessoryTitle(r.title));
 
   // Outlier detection: median fiyatın 0.6x altındaki ürünler sahte sayılır
   // (title-temiz legitByTitle üzerinde hesapla — aksesuar median'ı bozmasın)
