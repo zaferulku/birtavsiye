@@ -44,8 +44,8 @@ export default function SortDropdown({ options, currentSort }: { options: SortOp
                 onClick={() => setOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3 text-sm transition ${selected ? "text-gray-900" : "text-gray-700 hover:bg-gray-50"}`}
               >
-                <span className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition ${selected ? "border-[#E8460A]" : "border-gray-300"}`}>
-                  {selected && <span className="w-2.5 h-2.5 rounded-full bg-[#E8460A]" />}
+                <span className={`w-5 h-5 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition ${selected ? "border-[#2F80ED]" : "border-gray-300"}`}>
+                  {selected && <span className="w-2.5 h-2.5 rounded-full bg-[#2F80ED]" />}
                 </span>
                 <span className={selected ? "font-semibold" : ""}>{opt.label}</span>
               </Link>

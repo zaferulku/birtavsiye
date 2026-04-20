@@ -233,22 +233,22 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                 <Link
                   key={c.id}
                   href={`/kategori/${c.slug}`}
-                  className="flex-shrink-0 w-20 sm:w-24 bg-white rounded-xl p-1.5 text-center shadow-sm hover:shadow-md hover:border-[#E8460A] border border-transparent transition group"
+                  className="flex-shrink-0 w-24 sm:w-28 lg:w-32 bg-white rounded-xl p-2 text-center shadow-sm hover:shadow-md hover:border-[#E8460A] border border-transparent transition group"
                 >
-                  <div className="relative w-full aspect-square mb-1 overflow-hidden rounded-lg bg-gray-50 flex items-center justify-center">
+                  <div className="relative w-full aspect-square mb-1.5 overflow-hidden rounded-lg bg-gray-50 flex items-center justify-center">
                     {img ? (
                       <Image
                         src={img}
                         alt={c.name}
                         fill
                         className="object-cover group-hover:scale-105 transition-transform"
-                        sizes="96px"
+                        sizes="128px"
                       />
                     ) : (
-                      <span className="text-2xl">{c.icon ?? "📦"}</span>
+                      <span className="text-3xl">{c.icon ?? "📦"}</span>
                     )}
                   </div>
-                  <div className="text-[11px] font-semibold text-gray-800 line-clamp-2 leading-tight">{c.name}</div>
+                  <div className="text-xs font-semibold text-gray-800 line-clamp-2 leading-tight">{c.name}</div>
                 </Link>
               );
             })}
@@ -293,7 +293,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                     </div>
                     <div className="py-2 max-h-60 overflow-y-auto">
                       <Link href={buildUrl({ marka: null })}>
-                        <div className={`flex items-center justify-between px-4 py-2 text-sm cursor-pointer transition-colors ${!marka ? "text-[#E8460A] font-semibold bg-orange-50" : "text-gray-700 hover:bg-gray-50"}`}>
+                        <div className={`flex items-center justify-between px-4 py-2 text-sm cursor-pointer transition-colors ${!marka ? "text-slate-900 font-semibold bg-slate-100" : "text-gray-700 hover:bg-gray-50"}`}>
                           <span>Tümü</span>
                           <span className="text-xs text-gray-400">{count || 0}</span>
                         </div>
@@ -303,7 +303,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                         return (
                           <div key={b.name}>
                             <Link href={buildUrl({ marka: isSelected ? null : b.name, model: null })}>
-                              <div className={`flex items-center justify-between px-4 py-2 text-sm cursor-pointer transition-colors ${isSelected ? "text-[#E8460A] font-semibold bg-orange-50" : "text-gray-700 hover:bg-gray-50"}`}>
+                              <div className={`flex items-center justify-between px-4 py-2 text-sm cursor-pointer transition-colors ${isSelected ? "text-slate-900 font-semibold bg-slate-100" : "text-gray-700 hover:bg-gray-50"}`}>
                                 <span className="flex items-center gap-1">
                                   <span className={`inline-block transition-transform ${isSelected ? "rotate-90" : ""}`}>›</span>
                                   {b.name}
@@ -312,16 +312,16 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                               </div>
                             </Link>
                             {isSelected && modelsForSelected.length > 0 && (
-                              <div className="bg-gray-50 border-l-2 border-[#E8460A] ml-4">
+                              <div className="bg-slate-50 border-l-2 border-slate-300 ml-4">
                                 <Link href={buildUrl({ model: null })}>
-                                  <div className={`flex items-center justify-between px-4 py-1.5 text-xs cursor-pointer transition-colors ${!model ? "text-[#E8460A] font-semibold" : "text-gray-600 hover:bg-gray-100"}`}>
+                                  <div className={`flex items-center justify-between px-4 py-1.5 text-xs cursor-pointer transition-colors ${!model ? "text-slate-900 font-semibold" : "text-gray-600 hover:bg-gray-100"}`}>
                                     <span>Tüm {subLabel.toLowerCase()} seçenekleri</span>
                                     <span className="text-gray-400">{b.count}</span>
                                   </div>
                                 </Link>
                                 {modelsForSelected.map(m => (
                                   <Link key={m.name} href={buildUrl({ model: model === m.name ? null : m.name })}>
-                                    <div className={`flex items-center justify-between px-4 py-1.5 text-xs cursor-pointer transition-colors ${model === m.name ? "text-[#E8460A] font-semibold" : "text-gray-600 hover:bg-gray-100"}`}>
+                                    <div className={`flex items-center justify-between px-4 py-1.5 text-xs cursor-pointer transition-colors ${model === m.name ? "text-slate-900 font-semibold" : "text-gray-600 hover:bg-gray-100"}`}>
                                       <span className="truncate">{m.name}</span>
                                       <span className="text-gray-400 flex-shrink-0 ml-2">{m.count}</span>
                                     </div>
@@ -345,7 +345,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                     <div className="p-3 flex flex-wrap gap-2">
                       {storageOptions.map(s => (
                         <Link key={s} href={buildUrl({ hafiza: hafiza === s ? null : s })}>
-                          <div className={`text-xs px-3 py-1.5 rounded-lg border font-semibold transition-all ${hafiza === s ? "bg-[#E8460A] text-white border-[#E8460A]" : "border-gray-200 text-gray-700 hover:border-[#E8460A]"}`}>{s}</div>
+                          <div className={`text-xs px-3 py-1.5 rounded-lg border font-semibold transition-all ${hafiza === s ? "bg-slate-100 text-slate-900 border-slate-400" : "border-gray-200 text-gray-700 hover:border-slate-400"}`}>{s}</div>
                         </Link>
                       ))}
                     </div>
@@ -361,7 +361,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                     <div className="py-2 max-h-60 overflow-y-auto">
                       {colorOptions.map(c => (
                         <Link key={c} href={buildUrl({ renk: renk === c ? null : c })}>
-                          <div className={`px-4 py-2 text-sm cursor-pointer transition-colors ${renk === c ? "text-[#E8460A] font-semibold bg-orange-50" : "text-gray-700 hover:bg-gray-50"}`}>
+                          <div className={`px-4 py-2 text-sm cursor-pointer transition-colors ${renk === c ? "text-slate-900 font-semibold bg-slate-100" : "text-gray-700 hover:bg-gray-50"}`}>
                             {c}
                           </div>
                         </Link>
@@ -387,7 +387,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                       const active = (min ?? null) === r.mn && (max ?? null) === r.mx;
                       return (
                         <Link key={r.label} href={buildUrl({ min: r.mn, max: r.mx })}>
-                          <div className={`px-4 py-2 text-sm cursor-pointer transition-colors ${active ? "text-[#E8460A] font-semibold bg-orange-50" : "text-gray-700 hover:bg-gray-50"}`}>
+                          <div className={`px-4 py-2 text-sm cursor-pointer transition-colors ${active ? "text-slate-900 font-semibold bg-slate-100" : "text-gray-700 hover:bg-gray-50"}`}>
                             {r.label}
                           </div>
                         </Link>
