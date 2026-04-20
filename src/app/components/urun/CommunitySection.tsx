@@ -136,12 +136,50 @@ export default function CommunitySection({
 
   useEffect(() => {
     if (!categoryId) return;
-    supabase.from("products")
-      .select("id,title,slug,brand,image_url,prices(price)")
-      .eq("category_id", categoryId)
-      .neq("id", productId)
-      .limit(8)
-      .then(({ data }) => { if (data) setSimilarProducts(data as unknown as SimilarProduct[]); });
+
+    const load = async () => {
+      // Bu ürünün model_family'sini öğren — variant dedup için
+      const { data: thisProd } = await supabase
+        .from("products")
+        .select("brand, model_family")
+        .eq("id", productId)
+        .maybeSingle();
+
+      let q = supabase.from("products")
+        .select("id,title,slug,brand,image_url,model_family,prices(price)")
+        .eq("category_id", categoryId)
+        .neq("id", productId);
+
+      if (thisProd?.model_family) {
+        q = q.neq("model_family", thisProd.model_family);
+      }
+
+      const { data } = await q.limit(40);
+      if (!data) return;
+
+      // Her family'den 1 temsilci (variant dedup)
+      const byFamily = new Map<string, typeof data[number]>();
+      const noFamily: typeof data = [];
+      for (const p of data) {
+        if (p.brand && p.model_family) {
+          const key = `${p.brand}|${p.model_family}`;
+          if (!byFamily.has(key)) byFamily.set(key, p);
+        } else {
+          noFamily.push(p);
+        }
+      }
+      const deduped = [...byFamily.values(), ...noFamily];
+
+      // Aynı brand'i öne al
+      const sorted = deduped.sort((a, b) => {
+        const aBrand = thisProd?.brand && a.brand === thisProd.brand ? 0 : 1;
+        const bBrand = thisProd?.brand && b.brand === thisProd.brand ? 0 : 1;
+        return aBrand - bBrand;
+      });
+
+      setSimilarProducts(sorted.slice(0, 8) as unknown as SimilarProduct[]);
+    };
+    load();
   }, [categoryId, productId]);
 
   useEffect(() => {
