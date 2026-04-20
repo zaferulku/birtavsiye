@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans, Syne } from "next/font/google";
 import "./globals.css";
 import SessionProviderWrapper from "./components/SessionProviderWrapper";
+import ChatWidget from "./components/chat/ChatWidget";
 
 const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" });
 const syne = Syne({ subsets: ["latin"], variable: "--font-syne" });
@@ -30,6 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="tr">
       <body className={`${dmSans.variable} ${syne.variable} antialiased`}>
         <SessionProviderWrapper>{children}</SessionProviderWrapper>
+        <ChatWidget />
       </body>
     </html>
   );
