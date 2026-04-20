@@ -40,12 +40,31 @@ const NOISE_PATTERNS = [
   /\s*-?\s*\(?\d+\s*y[ıi]l\s*garantil?i?\)?\s*$/gi,
 ];
 
-function cleanTitle(title) {
+// Kategori sonek keyword'leri — "Akıllı Telefon", "Televizyon" vs. son eklere atılır
+const CATEGORY_SUFFIXES = /\s+(Akıllı\s*Telefon|Televizyon|Dizüstü\s*Bilgisayar|Laptop|Notebook|Tablet|Akıllı\s*Saat|Kulaklık|Çamaşır\s*Makinesi|Bulaşık\s*Makinesi|Buzdolabı|Klima|Fırın|Ocak|Saç\s*Kurutma\s*Makinesi|Blender|Fritöz)\b/gi;
+
+// MPN/SKU pattern — 2-6 büyük harf + rakamlar + opsiyonel /harf
+const MPN_PATTERN = /\b[A-Z]{2,8}\d+[A-Z0-9]{0,8}(?:\/[A-Z]{1,4})?\b/g;
+
+// İngilizce renk/materyal → Türkçe
+const EN_TR_MAP = [
+  [/\bTitanium\b/gi, "Titanyum"],
+  [/\bBlack\s+Titanium\b/gi, "Siyah Titanyum"],
+  [/\bWhite\s+Titanium\b/gi, "Beyaz Titanyum"],
+  [/\bNatural\s+Titanium\b/gi, "Naturel Titanyum"],
+  [/\bDesert\s+Titanium\b/gi, "Çöl Titanyum"],
+  [/\bBlue\s+Titanium\b/gi, "Mavi Titanyum"],
+  [/\bMidnight\b/gi, "Gece Yarısı"],
+  [/\bStarlight\b/gi, "Yıldız Işığı"],
+  [/\bSpace\s+Gray\b/gi, "Uzay Grisi"],
+  [/\bRose\s+Gold\b/gi, "Gül Altını"],
+];
+
+function applyRegexClean(title) {
   if (!title) return title;
-  // Normalize Turkish caps (İ→i, I→ı) so case-insensitive regex matches
   const normalized = normalizeForMatch(title);
   let t = title;
-  // Find removable spans using normalized version, cut from original
+
   for (const re of NOISE_PATTERNS) {
     re.lastIndex = 0;
     const spans = [];
@@ -54,14 +73,52 @@ function cleanTitle(title) {
       spans.push({ start: m.index, end: m.index + m[0].length });
       if (!re.global) break;
     }
-    // Apply spans in reverse order to original
     for (let i = spans.length - 1; i >= 0; i--) {
-      const s = spans[i];
-      t = t.slice(0, s.start) + t.slice(s.end);
+      t = t.slice(0, spans[i].start) + t.slice(spans[i].end);
     }
   }
+
+  t = t.replace(MPN_PATTERN, "");
+  t = t.replace(CATEGORY_SUFFIXES, "");
+  for (const [re, rep] of EN_TR_MAP) t = t.replace(re, rep);
+
+  // Trailing/leading garbage cleanup
+  t = t.replace(/\s*[-,]\s*$/g, ""); // sondaki - veya ,
+  t = t.replace(/^\s*[-,]\s*/g, ""); // baştaki - veya ,
+  t = t.replace(/,\s*,/g, ","); // duplicate comma
+  t = t.replace(/\s+,/g, ","); // space before comma
+  t = t.replace(/\(\s*\)/g, ""); // empty parens
   t = t.replace(/\s+/g, " ").trim();
   return t;
+}
+
+function composeStructured(p) {
+  const parts = [];
+  if (p.brand) parts.push(p.brand);
+  if (p.model_family) parts.push(p.model_family);
+  if (p.variant_storage) parts.push(p.variant_storage);
+  if (p.variant_color) parts.push(p.variant_color);
+  return parts.join(" ").trim();
+}
+
+function cleanTitle(p) {
+  const original = p.title || "";
+  if (!original) return original;
+
+  // Yapısal alanların hepsi varsa → onları kullan
+  if (p.brand && p.model_family && p.variant_storage && p.variant_color) {
+    return composeStructured(p);
+  }
+
+  // Yoksa regex cleanup + brand prefix strip
+  let t = applyRegexClean(original);
+  if (p.brand) {
+    // Brand baştaysa ve tekrar ediyorsa (Apple xxx Apple) → tek bırak
+    const brandPrefixRe = new RegExp(`^\\s*${p.brand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s+`, "i");
+    const brandCount = (t.match(new RegExp(p.brand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi")) || []).length;
+    if (brandCount > 1) t = t.replace(brandPrefixRe, "");
+  }
+  return t.replace(/\s+/g, " ").trim();
 }
 
 (async () => {
@@ -72,7 +129,7 @@ function cleanTitle(title) {
     if (processed >= LIMIT) break;
     const { data } = await sb
       .from("products")
-      .select("id, title, specs")
+      .select("id, title, brand, model_family, variant_storage, variant_color, specs")
       .range(page * 1000, page * 1000 + 999);
 
     if (!data || data.length === 0) break;
@@ -80,19 +137,22 @@ function cleanTitle(title) {
     for (const p of data) {
       if (processed >= LIMIT) break;
       processed++;
-      const original = p.title || "";
-      const cleaned = cleanTitle(original);
+      // Önce orijinali bul — önceki run'dan backup varsa onu kaynak al
+      const currentTitle = p.title || "";
+      const backupTitle = (p.specs && typeof p.specs === "object" && typeof p.specs.original_title === "string") ? p.specs.original_title : null;
+      const sourceTitle = backupTitle ?? currentTitle;
+      const cleaned = cleanTitle({ ...p, title: sourceTitle });
 
-      if (cleaned === original || cleaned.length < 5) {
+      if (cleaned === currentTitle || cleaned.length < 5) {
         skipped++;
         continue;
       }
 
-      if (examples.length < 25) examples.push({ from: original, to: cleaned });
+      if (examples.length < 25) examples.push({ from: currentTitle, to: cleaned });
 
       if (!DRY) {
         const newSpecs = { ...(p.specs || {}) };
-        if (!newSpecs.original_title) newSpecs.original_title = original;
+        if (!newSpecs.original_title) newSpecs.original_title = currentTitle;
         await sb.from("products").update({ title: cleaned, specs: newSpecs }).eq("id", p.id);
       }
       changed++;
