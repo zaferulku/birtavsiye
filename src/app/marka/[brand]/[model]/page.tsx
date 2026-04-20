@@ -68,6 +68,18 @@ export default async function ModelPage({
     return list.length > 0 ? Math.min(...list.map(x => x.price)) : Infinity;
   };
 
+  // Outlier detection: median fiyatın 0.3x altındaki ürünler sahte sayılır
+  // (iPhone 16 Pro başlıklı saç kurutma makinası 47k TL gibi durumlar)
+  const allMinPrices = rows.map(minPriceOf).filter(p => isFinite(p) && p > 0).sort((a, b) => a - b);
+  const medianPrice = allMinPrices.length > 0 ? allMinPrices[Math.floor(allMinPrices.length / 2)] : 0;
+  const minValidPrice = medianPrice > 1000 ? medianPrice * 0.3 : 0;
+
+  const legitRows = rows.filter(r => {
+    const mp = minPriceOf(r);
+    if (!isFinite(mp)) return true;
+    return mp >= minValidPrice;
+  });
+
   // Source güven skoru — MediaMarkt > Trendyol > Hepsiburada > PttAVM
   // Görsel kalitesi ve başlık doğruluğu için güvenilir kaynakları öncele
   const sourceTrust = (src: string | null): number => {
@@ -85,7 +97,7 @@ export default async function ModelPage({
   // Group by (variant_storage, variant_color) — rep seçimi: önce source trust, sonra fiyat
   type VariantGroup = { rep: Row; minPrice: number; count: number; image: string | null };
   const groups = new Map<string, VariantGroup>();
-  for (const r of rows) {
+  for (const r of legitRows) {
     const key = `${r.variant_storage ?? ""}|${r.variant_color ?? ""}`;
     const mp = minPriceOf(r);
     const existing = groups.get(key);
