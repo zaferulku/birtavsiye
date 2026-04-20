@@ -223,32 +223,32 @@ export default async function KategoriSayfasi({ params, searchParams }: {
         </div>
       </div>
 
-      {/* Alt kategoriler (varsa) */}
+      {/* Alt kategoriler (varsa) — tek satırda, gerekirse yatay scroll */}
       {children.length > 0 && (
         <div className="max-w-[1400px] mx-auto px-3 sm:px-6 pt-4">
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-3">
+          <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
             {children.map((c) => {
               const img = CATEGORY_IMAGE_OVERRIDES[c.slug] ?? childImageMap.get(c.id);
               return (
                 <Link
                   key={c.id}
                   href={`/kategori/${c.slug}`}
-                  className="bg-white rounded-xl p-2 text-center shadow-sm hover:shadow-md hover:border-[#E8460A] border border-transparent transition group"
+                  className="flex-shrink-0 w-20 sm:w-24 bg-white rounded-xl p-1.5 text-center shadow-sm hover:shadow-md hover:border-[#E8460A] border border-transparent transition group"
                 >
-                  <div className="relative w-full aspect-square mb-2 overflow-hidden rounded-lg bg-gray-50 flex items-center justify-center">
+                  <div className="relative w-full aspect-square mb-1 overflow-hidden rounded-lg bg-gray-50 flex items-center justify-center">
                     {img ? (
                       <Image
                         src={img}
                         alt={c.name}
                         fill
-                        className="object-contain p-1 group-hover:scale-105 transition-transform"
-                        sizes="(max-width: 640px) 33vw, (max-width: 1024px) 16vw, 12vw"
+                        className="object-cover group-hover:scale-105 transition-transform"
+                        sizes="96px"
                       />
                     ) : (
-                      <span className="text-3xl">{c.icon ?? "📦"}</span>
+                      <span className="text-2xl">{c.icon ?? "📦"}</span>
                     )}
                   </div>
-                  <div className="text-xs font-semibold text-gray-800 line-clamp-2">{c.name}</div>
+                  <div className="text-[11px] font-semibold text-gray-800 line-clamp-2 leading-tight">{c.name}</div>
                 </Link>
               );
             })}

@@ -9,6 +9,7 @@ export const CATEGORY_IMAGE_OVERRIDES: Record<string, string> = {
   "banyo": "/categories/ev-yasam/banyo.avif",
   "ev-tekstili": "/categories/ev-yasam/ev-tekstili.jpg",
   "mobilya-dekorasyon": "/categories/ev-yasam/mobilya-dekorasyon.avif",
+  "mutfak-sofra": "/categories/ev-yasam/mutfak-sofra.avif",
   "kucuk-ev-aletleri": "/categories/ev-yasam/kucuk-ev-aletleri.jpg",
   "ofis-mobilyasi": "/categories/ev-yasam/ofis-mobilyasi.jpg",
   "temizlik": "/categories/ev-yasam/temizlik.jpg",
