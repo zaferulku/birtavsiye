@@ -59,7 +59,7 @@ export default async function UrunDetay({
   const siblingsPromise = (baseProduct?.brand && baseProduct?.model_family)
     ? supabase
         .from("products")
-        .select("id, slug, title, brand, image_url, specs, category_id, model_family, variant_storage, variant_color")
+        .select("id, slug, title, brand, image_url, specs, category_id, model_family, variant_storage, variant_color, source")
         .eq("brand", baseProduct.brand)
         .eq("model_family", baseProduct.model_family)
         .then(r => r.data)
@@ -94,6 +94,23 @@ export default async function UrunDetay({
   const selectedKey = `${selectedStorage ?? ""}|${selectedColor ?? ""}`;
   const selectedProducts = variantMap.get(selectedKey) ?? (baseProduct ? [baseProduct] : []);
   const product = selectedProducts[0] ?? baseProduct;
+
+  // Source-trust: en güvenilir görsel için siblings içinden en iyi source'u bul
+  // (PttAVM satıcılarının yanlış görsellerini bypass et)
+  const sourceTrust = (src: string | null | undefined): number => {
+    if (!src) return 0;
+    if (src === "mediamarkt") return 100;
+    if (src === "vatan") return 80;
+    if (src === "trendyol" || src === "hepsiburada") return 70;
+    if (src === "amazon") return 60;
+    if (src === "n11") return 50;
+    if (src === "pttavm") return 30;
+    return 40;
+  };
+  const trustedImageSibling = [...selectedProducts, ...siblings]
+    .filter(s => s?.image_url)
+    .sort((a, b) => sourceTrust((b as { source?: string }).source) - sourceTrust((a as { source?: string }).source))[0];
+  const trustedImageUrl = trustedImageSibling?.image_url ?? product?.image_url ?? null;
 
   // Variants meta (her variant'ın min fiyatı için count lazım — basit count yeterli)
   const variants = [...variantMap.entries()].map(([key, arr]) => {
@@ -215,7 +232,7 @@ export default async function UrunDetay({
         {/* Üst Bölüm: Resim + Bilgi + Fiyat */}
         <div className="bg-white rounded-2xl p-3 sm:p-5 md:p-6 mb-4 md:mb-6 shadow-sm">
           <div className="grid gap-5 md:gap-6 lg:gap-8 grid-cols-1 md:grid-cols-2 lg:[grid-template-columns:2fr_3fr_2fr]">
-            <ProductGallery imageUrl={product.image_url} />
+            <ProductGallery imageUrl={trustedImageUrl} />
             <div className="space-y-5">
               <ProductInfo product={product} avgRating={avgRating} reviewCount={reviewCount} />
               {(storages.length > 1 || colors.length > 1) && (
