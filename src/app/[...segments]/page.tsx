@@ -7,7 +7,7 @@ import { notFound } from "next/navigation";
 import { fetchDescendantIds, modelFamilyToSlug } from "../../lib/categoryTree";
 import type { Metadata } from "next";
 import KategoriSayfasi from "../kategori/[slug]/page";
-import ModelPage from "../marka/[brand]/[model]/page";
+import ModelPageView from "../components/marka/ModelPageView";
 
 export const revalidate = 120;
 
@@ -173,12 +173,9 @@ export default async function Page({ params, searchParams }: PageProps) {
     );
   }
 
-  // === CASE 3: kategori + brand + model → ModelPage component'ini render et
-  // (URL hiyerarşik kalır, sonsuz redirect önlenir)
+  // === CASE 3: kategori + brand + model → ModelPageView component (hiyerarşik URL korunur)
   if (brandSlug && modelSlug) {
-    return (
-      <ModelPage params={Promise.resolve({ brand: brandSlug, model: modelSlug })} />
-    );
+    return <ModelPageView brand={brandSlug} model={modelSlug} />;
   }
 
   notFound();
