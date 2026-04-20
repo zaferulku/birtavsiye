@@ -754,7 +754,7 @@ export default function Header() {
                   <div className="max-w-[1400px] mx-auto w-full flex" style={{ minHeight: 320 }}>
 
                     {/* Sol: Kategori listesi */}
-                    <div className="w-52 flex-shrink-0 border-r border-gray-100 py-3 bg-gray-50">
+                    <div className="w-52 flex-shrink-0 border-r border-gray-100 py-3 bg-white">
                       {activeGroupData.cats.map(cat => (
                         <button
                           key={cat.slug + cat.label}
