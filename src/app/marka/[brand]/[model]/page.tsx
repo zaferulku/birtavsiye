@@ -26,13 +26,14 @@ export default async function ModelPage({
     variant_storage: string | null;
     variant_color: string | null;
     category_id: string | null;
+    source: string | null;
     specs: Record<string, unknown> | null;
     prices: PriceRow[] | null;
   };
 
   const { data } = await supabase
     .from("products")
-    .select("id, slug, title, brand, image_url, variant_storage, variant_color, category_id, specs, prices(price)")
+    .select("id, slug, title, brand, image_url, variant_storage, variant_color, category_id, source, specs, prices(price)")
     .ilike("brand", brandGuess)
     .ilike("model_family", modelGuess)
     .limit(200);
@@ -67,17 +68,40 @@ export default async function ModelPage({
     return list.length > 0 ? Math.min(...list.map(x => x.price)) : Infinity;
   };
 
-  // Group by (variant_storage, variant_color) — take cheapest per variant
+  // Source güven skoru — MediaMarkt > Trendyol > Hepsiburada > PttAVM
+  // Görsel kalitesi ve başlık doğruluğu için güvenilir kaynakları öncele
+  const sourceTrust = (src: string | null): number => {
+    if (!src) return 0;
+    if (src === "mediamarkt") return 100;
+    if (src === "vatan") return 80;
+    if (src === "trendyol") return 70;
+    if (src === "hepsiburada") return 70;
+    if (src === "amazon") return 60;
+    if (src === "n11") return 50;
+    if (src === "pttavm") return 30;
+    return 40;
+  };
+
+  // Group by (variant_storage, variant_color) — rep seçimi: önce source trust, sonra fiyat
   type VariantGroup = { rep: Row; minPrice: number; count: number; image: string | null };
   const groups = new Map<string, VariantGroup>();
   for (const r of rows) {
     const key = `${r.variant_storage ?? ""}|${r.variant_color ?? ""}`;
     const mp = minPriceOf(r);
     const existing = groups.get(key);
-    if (!existing || mp < existing.minPrice) {
-      groups.set(key, { rep: r, minPrice: mp, count: (existing?.count ?? 0) + 1, image: r.image_url });
-    } else {
-      existing.count += 1;
+    if (!existing) {
+      groups.set(key, { rep: r, minPrice: mp, count: 1, image: r.image_url });
+      continue;
+    }
+    existing.count += 1;
+    if (mp < existing.minPrice) existing.minPrice = mp;
+
+    // Rep seçimi: daha güvenli source kaynağı varsa onunla değiştir
+    const curTrust = sourceTrust(existing.rep.source);
+    const newTrust = sourceTrust(r.source);
+    if (newTrust > curTrust || (newTrust === curTrust && mp < minPriceOf(existing.rep))) {
+      existing.rep = r;
+      existing.image = r.image_url;
     }
   }
 
