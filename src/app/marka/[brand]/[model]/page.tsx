@@ -68,14 +68,18 @@ export default async function ModelPage({
     return list.length > 0 ? Math.min(...list.map(x => x.price)) : Infinity;
   };
 
-  // Outlier detection: median fiyatın 0.3x altındaki ürünler sahte sayılır
-  // (iPhone 16 Pro başlıklı saç kurutma makinası 47k TL gibi durumlar)
-  const allMinPrices = rows.map(minPriceOf).filter(p => isFinite(p) && p > 0).sort((a, b) => a - b);
+  // Aksesuar title keyword'leri — gerçek ürün değil, uyumlu aksesuar
+  // ("Apple Watch Zore Kordon" → brand=Apple yanlış, gerçek ürün Apple Watch değil)
+  const ACCESSORY_TITLE = /\b(kordon|kay[ıi][sş]|k[ıi]l[ıi]f|cover|case|ekran\s*koruyucu|cam\s*koruyucu|pil|batarya|adapt[oö]r|[sş]arj\s*kablos|uyumlu\s*(kordon|kay|k[ıi]l|pil|batarya)|strap\b|band[- ]\d+|hasır\s*kordon|metal\s*kordon|silikon\s*kordon|spor\s*kordon)/i;
+  const legitByTitle = rows.filter(r => !ACCESSORY_TITLE.test(r.title || ""));
+
+  // Outlier detection: median fiyatın 0.6x altındaki ürünler sahte sayılır
+  // (title-temiz legitByTitle üzerinde hesapla — aksesuar median'ı bozmasın)
+  const allMinPrices = legitByTitle.map(minPriceOf).filter(p => isFinite(p) && p > 0).sort((a, b) => a - b);
   const medianPrice = allMinPrices.length > 0 ? allMinPrices[Math.floor(allMinPrices.length / 2)] : 0;
-  // 0.6x eşiği — iPhone 16 Pro median 84k → 50.400 TL altındakiler outlier
   const minValidPrice = medianPrice > 1000 ? medianPrice * 0.6 : 0;
 
-  const legitRows = rows.filter(r => {
+  const legitRows = legitByTitle.filter(r => {
     const mp = minPriceOf(r);
     if (!isFinite(mp)) return true;
     return mp >= minValidPrice;
