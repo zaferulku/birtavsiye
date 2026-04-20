@@ -3,7 +3,7 @@ import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
 import Link from "next/link";
 import Image from "next/image";
-import { modelFamilyToSlug, fetchCategoryPath } from "../../../lib/categoryTree";
+import { modelFamilyToSlug, fetchCategoryPath, fetchDescendantIds } from "../../../lib/categoryTree";
 import type { Metadata } from "next";
 
 export const revalidate = 120;
@@ -65,6 +65,19 @@ export default async function MarkaPage({ params }: { params: Promise<{ brand: s
   const dominantCatId = [...catCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
   const categoryPath = dominantCatId ? await fetchCategoryPath(dominantCatId) : [];
 
+  // Breadcrumb ile URL içeriği uyumlu olsun: dominant kategorinin
+  // root'undaki tüm descendants'ları al, sadece o kategorideki ürünleri göster.
+  // (Apple sayfası "Akıllı Telefon" altındaysa → sadece telefon ürünleri;
+  // MacBook/iPad Apple-altı ama farklı kategoride → ayrı marka sayfasına düşerler
+  // ya da kategori filtresiyle ayrılırlar)
+  let rowsInScope = rows;
+  if (categoryPath.length > 0) {
+    const rootCat = categoryPath[0]; // en üst seviye (Elektronik, Moda, vb.)
+    const scopedIds = await fetchDescendantIds(rootCat.id);
+    const scopedSet = new Set(scopedIds);
+    rowsInScope = rows.filter(r => r.category_id && scopedSet.has(r.category_id));
+  }
+
   // Jenerik/aksesuar model_family değerleri markaya özgü değildir, filtreleme
   // (Örn. Apple markası altında "Kılıf", "Ekran Koruyucu", "Android Tablet"
   // Apple marka ürünü olamaz — bu aksesuar/yanlış etiketlemeyi dışla)
@@ -72,7 +85,7 @@ export default async function MarkaPage({ params }: { params: Promise<{ brand: s
 
   type Group = { rep: Row; count: number; minPrice: number };
   const groups = new Map<string, Group>();
-  for (const p of rows) {
+  for (const p of rowsInScope) {
     const mf = p.model_family!;
     if (GENERIC_EXCLUDE.test(mf)) continue; // aksesuar filtrele
 
