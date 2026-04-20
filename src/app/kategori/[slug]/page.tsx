@@ -8,10 +8,10 @@ export const revalidate = 60;
 
 export default async function KategoriSayfasi({ params, searchParams }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ marka?: string; model?: string; siralama?: string; hafiza?: string; renk?: string; min?: string; max?: string }>;
+  searchParams: Promise<{ marka?: string; model?: string; q?: string; siralama?: string; hafiza?: string; renk?: string; min?: string; max?: string }>;
 }) {
   const { slug } = await params;
-  const { marka, model, siralama, hafiza, renk, min, max } = await searchParams;
+  const { marka, model, q, siralama, hafiza, renk, min, max } = await searchParams;
 
   const { data: category } = await supabase
     .from("categories")
@@ -35,6 +35,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
 
   if (marka) query = query.eq("brand", marka);
   if (model) query = query.eq("model_family", model);
+  if (q) query = query.ilike("title", `%${q}%`);
 
   if (siralama === "az") query = query.order("title", { ascending: true });
   else if (siralama === "za") query = query.order("title", { ascending: false });
@@ -218,7 +219,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
 
         {(() => {
           const buildUrl = (overrides: Record<string, string | null>): string => {
-            const params: Record<string, string | undefined> = { marka, model, siralama, hafiza, renk, min, max };
+            const params: Record<string, string | undefined> = { marka, model, q, siralama, hafiza, renk, min, max };
             for (const [k, v] of Object.entries(overrides)) {
               if (v === null || v === "") delete params[k];
               else params[k] = v;
@@ -235,7 +236,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
               {/* Sol: Filtreler sidebar */}
               <aside className="w-full md:w-60 flex-shrink-0 space-y-3">
                 {/* Aktif filtreler (varsa) clear linki */}
-                {(marka || model || hafiza || renk || min || max) && (
+                {(marka || model || q || hafiza || renk || min || max) && (
                   <Link href={`/kategori/${slug}${siralama ? "?siralama=" + siralama : ""}`}>
                     <div className="text-xs text-[#E8460A] font-semibold hover:underline cursor-pointer px-1">
                       × Filtreleri temizle

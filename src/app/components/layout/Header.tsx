@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "../../../lib/supabase";
 
 type NavTag = string;
-type NavSub = { label: string; slug: string; tags: NavTag[] };
+type NavSub = { label: string; slug: string; tags: NavTag[]; q?: string };
 type NavCat = { label: string; slug: string; icon: string; subs: NavSub[] };
 type NavGroup = { title: string; icon: string; cats: NavCat[] };
 
@@ -18,9 +18,9 @@ const NAV: NavGroup[] = [
         subs: [
           { label: "Laptop", slug: "bilgisayar-laptop", tags: ["Lenovo", "Asus", "MSI", "MacBook", "HP", "Casper", "Acer", "Monster", "Dell", "Gaming Laptop"] },
           { label: "Tablet", slug: "tablet", tags: ["iPad", "Samsung", "Lenovo", "Huawei", "Xiaomi", "Honor", "Tablet Kılıfı", "Tablet Klavyesi"] },
-          { label: "Masaüstü Bilgisayar", slug: "bilgisayar-laptop", tags: ["All-in-One", "MacBook Mini", "Mini PC", "Gaming PC", "İş İstasyonu"] },
+          { label: "Masaüstü Bilgisayar", slug: "bilgisayar-laptop", q: "masaüstü", tags: ["All-in-One", "MacBook Mini", "Mini PC", "Gaming PC", "İş İstasyonu"] },
           { label: "Oyuncu Donanımları", slug: "oyun-konsol", tags: ["Oyuncu Klavyesi", "Gaming Laptop", "Oyuncu Mouse", "Oyuncu Kulaklığı", "Oyuncu Monitörü", "Mekanik Klavye", "Oyuncu Koltuk"] },
-          { label: "Monitör", slug: "bilgisayar-bilesenleri", tags: ["OLED", "Kavisli", "27 inç", "32 inç", "4K", "Asus", "Dell", "MSI", "LG", "Samsung"] },
+          { label: "Monitör", slug: "bilgisayar-bilesenleri", q: "monitör", tags: ["OLED", "Kavisli", "27 inç", "32 inç", "4K", "Asus", "Dell", "MSI", "LG", "Samsung"] },
           { label: "Bilgisayar Parçaları", slug: "bilgisayar-bilesenleri", tags: ["Anakart", "Ekran Kartı", "RAM", "SSD", "İşlemci", "Kasa", "Nvidia", "AMD", "Intel"] },
           { label: "Çevre Birimleri", slug: "bilgisayar-bilesenleri", tags: ["Klavye & Mouse Set", "Mouse", "Klavye", "Webcam", "Yazıcı", "Tarayıcı", "VR Gözlük"] },
           { label: "Veri Depolama", slug: "bilgisayar-bilesenleri", tags: ["USB Bellek", "SSD", "Hard Disk", "Hafıza Kartı", "Taşınabilir SSD", "NAS"] },
@@ -32,20 +32,20 @@ const NAV: NavGroup[] = [
         label: "Telefon & Aksesuar", slug: "akilli-telefon", icon: "📱",
         subs: [
           { label: "Akıllı Telefon", slug: "akilli-telefon", tags: ["iPhone", "Samsung Galaxy", "Xiaomi", "Huawei", "OnePlus", "Realme", "Oppo"] },
-          { label: "Telefon Kılıfı", slug: "telefon-aksesuar", tags: ["iPhone Kılıfı", "Samsung Kılıfı", "Deri Kılıf", "Şeffaf Kılıf", "Cüzdanlı Kılıf"] },
-          { label: "Şarj & Kablo", slug: "telefon-aksesuar", tags: ["Hızlı Şarj", "Kablosuz Şarj", "USB-C Kablo", "Lightning Kablo", "Power Bank", "Araç Şarjı"] },
+          { label: "Telefon Kılıfı", slug: "telefon-aksesuar", q: "kılıf", tags: ["iPhone Kılıfı", "Samsung Kılıfı", "Deri Kılıf", "Şeffaf Kılıf", "Cüzdanlı Kılıf"] },
+          { label: "Şarj & Kablo", slug: "telefon-aksesuar", q: "şarj", tags: ["Hızlı Şarj", "Kablosuz Şarj", "USB-C Kablo", "Lightning Kablo", "Power Bank", "Araç Şarjı"] },
           { label: "Kulaklık", slug: "ses-kulaklik", tags: ["AirPods", "Samsung Buds", "Bluetooth", "Kulak İçi", "Kulak Üstü", "ANC", "Sony", "JBL", "Jabra"] },
           { label: "Akıllı Saat & Bileklik", slug: "akilli-saat", tags: ["Apple Watch", "Samsung Galaxy Watch", "Xiaomi Band", "Garmin", "Huawei Watch", "Fitbit"] },
-          { label: "Ekran Koruyucu & Aksesuar", slug: "telefon-aksesuar", tags: ["Cam Koruyucu", "Selfie Çubuğu", "Tripod", "Gimbal", "Lens"] },
+          { label: "Ekran Koruyucu & Aksesuar", slug: "telefon-aksesuar", q: "koruyucu", tags: ["Cam Koruyucu", "Selfie Çubuğu", "Tripod", "Gimbal", "Lens"] },
         ]
       },
       {
         label: "TV, Görüntü & Ses", slug: "tv", icon: "📺",
         subs: [
           { label: "Televizyon", slug: "tv", tags: ["OLED", "QLED", "4K", "8K", "55 inç", "65 inç", "75 inç", "Samsung", "LG", "Sony", "Philips", "Hisense", "TCL"] },
-          { label: "Soundbar & Ev Sinema", slug: "ses-kulaklik", tags: ["Soundbar", "2.1 Ses Sistemi", "5.1 Ev Sinema", "Dolby Atmos", "Samsung", "Sony", "Bose", "JBL"] },
-          { label: "Bluetooth Hoparlör", slug: "ses-kulaklik", tags: ["Taşınabilir", "Su Geçirmez", "JBL", "Bose", "Sony", "Marshall", "Harman Kardon"] },
-          { label: "Projeksiyon", slug: "tv", tags: ["Full HD", "4K", "Mini LED", "Taşınabilir", "Epson", "BenQ", "Optoma", "ViewSonic"] },
+          { label: "Soundbar & Ev Sinema", slug: "ses-kulaklik", q: "soundbar", tags: ["Soundbar", "2.1 Ses Sistemi", "5.1 Ev Sinema", "Dolby Atmos", "Samsung", "Sony", "Bose", "JBL"] },
+          { label: "Bluetooth Hoparlör", slug: "ses-kulaklik", q: "hoparlör", tags: ["Taşınabilir", "Su Geçirmez", "JBL", "Bose", "Sony", "Marshall", "Harman Kardon"] },
+          { label: "Projeksiyon", slug: "tv", q: "projeksiyon", tags: ["Full HD", "4K", "Mini LED", "Taşınabilir", "Epson", "BenQ", "Optoma", "ViewSonic"] },
           { label: "Akıllı Ev", slug: "networking", tags: ["Google Nest", "Amazon Echo", "Akıllı Priz", "Akıllı Ampul", "Philips Hue", "Xiaomi"] },
         ]
       },
@@ -61,10 +61,10 @@ const NAV: NavGroup[] = [
         label: "Foto & Kamera", slug: "fotograf-kamera", icon: "📷",
         subs: [
           { label: "Fotoğraf Makinesi", slug: "fotograf-kamera", tags: ["DSLR", "Mirrorless", "Kompakt", "Sony", "Canon", "Nikon", "Fujifilm", "Olympus"] },
-          { label: "Drone", slug: "fotograf-kamera", tags: ["DJI Mini", "DJI Air", "DJI Mavic", "FPV Drone", "Yarış Drone"] },
-          { label: "Aksiyon Kamera", slug: "fotograf-kamera", tags: ["GoPro Hero", "DJI Osmo Action", "Insta360", "Su Altı", "360° Kamera"] },
-          { label: "Kamera Aksesuar", slug: "fotograf-kamera", tags: ["Lens", "Tripod", "Gimbal", "Filtre", "Flaş", "Kamera Çantası"] },
-          { label: "Güvenlik Kamerası", slug: "fotograf-kamera", tags: ["IP Kamera", "Dome Kamera", "Gece Görüş", "Wi-Fi Kamera", "Kapalı Devre"] },
+          { label: "Drone", slug: "fotograf-kamera", q: "drone", tags: ["DJI Mini", "DJI Air", "DJI Mavic", "FPV Drone", "Yarış Drone"] },
+          { label: "Aksiyon Kamera", slug: "fotograf-kamera", q: "aksiyon", tags: ["GoPro Hero", "DJI Osmo Action", "Insta360", "Su Altı", "360° Kamera"] },
+          { label: "Kamera Aksesuar", slug: "fotograf-kamera", q: "aksesuar", tags: ["Lens", "Tripod", "Gimbal", "Filtre", "Flaş", "Kamera Çantası"] },
+          { label: "Güvenlik Kamerası", slug: "fotograf-kamera", q: "güvenlik", tags: ["IP Kamera", "Dome Kamera", "Gece Görüş", "Wi-Fi Kamera", "Kapalı Devre"] },
         ]
       },
       {
@@ -783,7 +783,7 @@ export default function Header() {
                         {displayCat.subs.map(sub => (
                           <div key={sub.label}>
                             <Link
-                              href={"/kategori/" + sub.slug}
+                              href={"/kategori/" + sub.slug + (sub.q ? "?q=" + encodeURIComponent(sub.q) : "")}
                               onClick={() => setActiveGroup(null)}
                               className="block text-sm font-bold text-[#E8460A] hover:underline mb-1.5"
                             >
