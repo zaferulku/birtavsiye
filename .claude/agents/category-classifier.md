@@ -140,6 +140,11 @@ MediaMarkt enrichment extracts product type into specs. Direct map:
 | TV wall mounts in TV | Source site's broad "Televizyon" cat | TITLE_RULE for "askı aparatı" → mobilya-dekorasyon |
 | Phone cases in akilli-telefon | Scraper keyword "iphone" catches cases | TITLE_RULE for "kılıf/case" → telefon-aksesuar |
 | Laptop adapters in laptop | PttAVM "Notebook Adaptörleri" | SOURCE_CAT_MAP score 95 — already handled |
+| Costume masks (Zorro, Spiderman) in skincare | "maske" keyword overmatch | TITLE_RULE for cosplay keywords → oyuncak |
+| Welding / industrial masks in skincare | Same overmatch | TITLE_RULE for "kaynak/tam yüz/kömürlü" → yapi-market |
+| Surgical/3-layer masks in skincare | Same | TITLE_RULE for "cerrahi/meltblown/3 kat" → kisisel-hijyen |
+| Hair care masks (Olaplex, Loreal Pro) in cilt-bakimi | Hair products lack "saç" word in title | Pattern for specific product line names → sac-bakimi |
+| Scuba brands (Beuchat, Apnea, Busso) | Generic brand field in DB | BRAND_EXCLUSIVE entry → su-sporlari (100 pts) |
 
 ## Thresholds
 
