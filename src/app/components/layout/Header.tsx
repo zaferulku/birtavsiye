@@ -300,10 +300,21 @@ const NAV: NavGroup[] = [
       {
         label: "Yapı Market", slug: "yapi-market", icon: "🔨",
         subs: [
-          { label: "Elektrikli El Aletleri", slug: "yapi-market", tags: ["Matkap", "Açılı Taşlama", "Daire Testere", "Bosch", "Makita", "DeWalt", "Hikoki"] },
-          { label: "El Aletleri", slug: "yapi-market", tags: ["Tornavida", "Çekiç", "Pense Seti", "İngiliz Anahtarı", "Stanley", "Bahçe El Aleti"] },
-          { label: "Boya & Yapıştırıcı", slug: "yapi-market", tags: ["İç Cephe", "Dış Cephe", "Astar", "Silikon", "Pvc Bant", "Macun", "Rulo Fırça"] },
-          { label: "Hırdavat & Güvenlik", slug: "yapi-market", tags: ["Vida", "Dübel", "Menteşe", "Asma Kilit", "Akıllı Kilit", "Güvenlik Kamerası"] },
+          { label: "Elektrikli El Aletleri", slug: "elektrikli-aletler", tags: ["Matkap", "Açılı Taşlama", "Daire Testere", "Bosch", "Makita", "DeWalt", "Hikoki"] },
+          { label: "El Aletleri", slug: "el-aletleri", tags: ["Tornavida", "Çekiç", "Pense Seti", "İngiliz Anahtarı", "Stanley"] },
+          { label: "Boya & Malzeme", slug: "boya-malzeme", tags: ["İç Cephe", "Dış Cephe", "Astar", "Silikon", "Filli Boya", "Marshall"] },
+          { label: "Elektrik Malzeme", slug: "elektrik-malzeme", tags: ["Priz", "Anahtar", "LED Ampul", "Uzatma Kablo", "Multimetre"] },
+          { label: "Su Tesisat", slug: "su-tesisat", tags: ["Duş Hortumu", "Vana", "Musluk Contası"] },
+          { label: "Hırdavat & Vida", slug: "hirdavat-vida", tags: ["Vida", "Dübel", "Çivi", "Menteşe"] },
+        ]
+      },
+      {
+        label: "Oto Yedek Parça & Bakım", slug: "oto-yedek-parca", icon: "🔩",
+        subs: [
+          { label: "Oto Akü", slug: "oto-aku", tags: ["60 AH", "75 AH", "Mutlu", "İnci", "Varta"] },
+          { label: "Oto Yağ & Bakım", slug: "oto-yag-bakim", tags: ["10W40", "5W30", "Antifriz", "Castrol", "Shell Helix", "Mobil"] },
+          { label: "Fren & Süspansiyon", slug: "oto-yedek-parca", tags: ["Fren Balata", "Fren Diski", "Amortisör", "Debriyaj"] },
+          { label: "Silecek & Ampul", slug: "oto-yedek-parca", tags: ["Silecek", "Far Ampul", "Xenon", "Stop Ampul"] },
         ]
       },
     ]
@@ -497,30 +508,31 @@ const NAV: NavGroup[] = [
         ]
       },
       {
-        label: "Gıda & İçecek", slug: "temizlik", icon: "🛒",
+        label: "Gıda & İçecek", slug: "supermarket", icon: "🛒",
         subs: [
-          { label: "Kahvaltılık & Atıştırmalık", slug: "temizlik", tags: ["Çikolata", "Bisküvi", "Kuruyemiş", "Kuru Meyve", "Cips", "Kraker", "Gofret"] },
-          { label: "Kahve & Çay", slug: "temizlik", tags: ["Türk Kahvesi", "Nescafe", "Çay", "Bitki Çayı", "Kapsül Kahve", "Bardak Çay"] },
-          { label: "Bebek Gıdası", slug: "bebek-bakim", tags: ["Kavanoz Mama", "Sürülebilir Mama", "Bebek Bisküvisi", "Formüla", "Biberon Suyu"] },
-          { label: "Organik & Doğal", slug: "temizlik", tags: ["Organik Ürün", "Glutensiz", "Vegan", "Protein Bar", "Sağlıklı Atıştırmalık"] },
+          { label: "Atıştırmalık & Çikolata", slug: "atistirmalik", tags: ["Çikolata", "Bisküvi", "Gofret", "Cips", "Kraker", "Milka", "Ülker", "M&M"] },
+          { label: "İçecek", slug: "icecek", tags: ["Kola", "Pepsi", "Meyve Suyu", "Maden Suyu", "Ayran", "Red Bull"] },
+          { label: "Kahvaltı & Kahve", slug: "kahvalti-kahve", tags: ["Nescafe", "Jacobs", "Granola", "Mısır Gevreği", "Reçel", "Tahin", "Bal"] },
+          { label: "Bakliyat & Makarna", slug: "bakliyat-makarna", tags: ["Mercimek", "Nohut", "Pirinç", "Bulgur", "Makarna", "Spagetti"] },
+          { label: "Konserve & Sos", slug: "konserve-sos", tags: ["Ton Balığı", "Domates Sos", "Mayonez", "Ketçap", "Zeytinyağı"] },
+          { label: "Dondurma & Tatlı", slug: "dondurma-tatli", tags: ["Algida", "Magnum", "Panda", "Puding", "Jöle Toz"] },
         ]
       },
       {
-        label: "Kedi", slug: "kedi", icon: "🐈",
+        label: "Kedi", slug: "pet-shop", icon: "🐈",
         subs: [
-          { label: "Kedi Kuru Maması", slug: "kedi", tags: ["Yavru Kedi", "Yetişkin", "Kısırlaştırılmış", "Yaşlı Kedi", "Royal Canin", "Hill's Science", "Purina Pro Plan"] },
-          { label: "Kedi Yaş Maması", slug: "kedi", tags: ["Pouch", "Konserve", "Whiskas", "Felix", "Sheba", "Royal Canin Wet"] },
-          { label: "Kedi Kumu & Tuvalet", slug: "kedi", tags: ["Topaklaşan Kum", "Silika Kum", "Doğal Kum", "Kapalı Tuvalet", "Catit", "Van Cat"] },
-          { label: "Kedi Aksesuar & Oyuncak", slug: "kedi", tags: ["Tırmalama Tahtası", "Kedi Evi", "Mama Kabı", "Taşıma Çantası", "Lazer", "Yelek"] },
+          { label: "Kedi Maması", slug: "kedi-mamasi", tags: ["Yavru Kedi", "Yetişkin", "Kısırlaştırılmış", "Yaşlı Kedi", "Royal Canin", "Hill's Science", "Purina Pro Plan", "Whiskas", "Felix"] },
+          { label: "Kedi Kumu", slug: "kedi-kumu", tags: ["Topaklaşan Kum", "Silika Kum", "Doğal Kum", "Bentonit"] },
+          { label: "Pet Aksesuar", slug: "pet-aksesuar", tags: ["Tırmalama Tahtası", "Kedi Evi", "Mama Kabı", "Taşıma Çantası", "Lazer"] },
         ]
       },
       {
-        label: "Köpek", slug: "kopek", icon: "🐕",
+        label: "Köpek", slug: "pet-shop", icon: "🐕",
         subs: [
-          { label: "Köpek Kuru Maması", slug: "kopek", tags: ["Yavru Köpek", "Irk Maması", "Büyük Irk", "Küçük Irk", "Royal Canin", "Hills Science", "Pedigree"] },
-          { label: "Köpek Yaş Maması", slug: "kopek", tags: ["Pouch", "Konserve", "Pedigree Wet", "Cesar", "Frolic", "Yarı Yaş"] },
-          { label: "Köpek Aksesuar", slug: "kopek", tags: ["Tasma", "Köpek Yeleği", "Giysi", "Yatak", "Oyuncak", "Kemirlik"] },
-          { label: "Köpek Bakım", slug: "kopek", tags: ["Köpek Şampuanı", "Tımar Fırçası", "Tırnak Makası", "Kene & Pire", "Diş Bakım"] },
+          { label: "Köpek Maması", slug: "kopek-mamasi", tags: ["Yavru Köpek", "Irk Maması", "Büyük Irk", "Royal Canin", "Pedigree", "Pro Plan"] },
+          { label: "Köpek Tasma & Aksesuar", slug: "pet-aksesuar", tags: ["Tasma", "Köpek Yeleği", "Yatak", "Oyuncak", "Kemirlik"] },
+          { label: "Pet Bakım & Hijyen", slug: "pet-bakim", tags: ["Köpek Şampuanı", "Kene & Pire", "Diş Bakım", "Deodorant"] },
+          { label: "Akvaryum & Balık", slug: "akvaryum", tags: ["Akvaryum", "Balık Yemi", "Filtre", "Isıtıcı"] },
         ]
       },
       {

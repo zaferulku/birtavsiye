@@ -184,6 +184,35 @@ const RULES = [
   { slug: "kitap", patterns: [/\bkitap(?!\s*(tutucu|okuma\s*lambas))|\broman\b|\bbiyografi\b|\bşiir\s*kitab|\bders\s*kitab/i] },
   { slug: "muzik-aleti", patterns: [/\b(akustik\s*gitar|elektro\s*gitar|klasik\s*gitar|piano|keyboard|dijital\s*piyano|bateri|bağlama|ney|saksofon)\b/i] },
   { slug: "kirtasiye", patterns: [/\b(defter|dosya|klasör|tükenmez\s*kalem|kurşun\s*kalem|silgi|kalemtraş|zımba|delgeç|post[- ]?it|stabilo)\b/i] },
+
+  // === 15. PET SHOP ===
+  { slug: "kedi-mamasi", patterns: [/\b(kedi\s*mamas|kedi\s*kuru\s*mama|kedi\s*ıslak\s*mama|cat\s*food|royal\s*canin\s*kedi|whiskas|felix|purina\s*kedi|pro\s*plan\s*kedi)\b/i] },
+  { slug: "kopek-mamasi", patterns: [/\b(köpek\s*mamas|köpek\s*kuru\s*mama|köpek\s*ıslak\s*mama|dog\s*food|royal\s*canin\s*köpek|pedigree|pro\s*plan\s*köpek|purina\s*köpek|brit\s*care)\b/i] },
+  { slug: "kedi-kumu", patterns: [/\b(kedi\s*kumu|bentonit\s*kum|topaklaşan\s*kum|silica\s*cat\s*litter)\b/i] },
+  { slug: "pet-aksesuar", patterns: [/\b(köpek\s*tasma|kedi\s*tasma|köpek\s*oyuncak|kedi\s*oyuncak|pet\s*yatak|köpek\s*yatak|kedi\s*yatak|pet\s*çanta|taşıma\s*kafes|köpek\s*maması\s*kabı|köpek\s*ödül)\b/i] },
+  { slug: "akvaryum", patterns: [/\b(akvaryum|balık\s*yemi|akvaryum\s*filtre|akvaryum\s*ısıtıc|akvaryum\s*süng)\b/i] },
+  { slug: "pet-bakim", patterns: [/\b(köpek\s*şampuan|kedi\s*şampuan|pet\s*bakım|pire\s*damlas|kene\s*tasma|pet\s*dental|pet\s*deodorant)\b/i] },
+
+  // === 16. SÜPERMARKET ===
+  { slug: "atistirmalik", patterns: [/\b(çikolata\b|gofret|bisküvi|kraker|cips|m&m|snickers|mars\s*çikolata|milka|ülker|eti\s*çikolata|tadelle|damlanoz)\b/i] },
+  { slug: "icecek", patterns: [/\b(kola\s*\d|pepsi\b|fanta\b|ayran|meyve\s*suyu|maden\s*suyu|nestle\s*water|erikli|sırma|enerji\s*içeceği|red\s*bull|monster\s*içecek)\b/i] },
+  { slug: "kahvalti-kahve", patterns: [/\b(nescafe|jacobs\s*kahve|nestle\s*kahve|nesquik|granola|mısır\s*gevreği|corn\s*flakes|honey\s*nut|reçel|tahin|bal|kahvaltılık\s*krema)\b/i] },
+  { slug: "bakliyat-makarna", patterns: [/\b(kırmızı\s*mercimek|yeşil\s*mercimek|nohut|kuru\s*fasulye|bulgur|pirinç\s*\d+\s*kg|makarna|spagetti|penne|pilavlık)\b/i] },
+  { slug: "konserve-sos", patterns: [/\b(ton\s*balığı\s*konserve|domates\s*sos|mayonez|ketçap|hardal|soya\s*sos|zeytinyağ\s*\d+\s*l|sirke)\b/i] },
+  { slug: "dondurma-tatli", patterns: [/\b(dondurma\b|algida|golf\s*dondurma|panda\s*dondurma|magnum\s*dondurma|tatlı\s*çekmec|puding\s*toz|jöle\s*toz)\b/i] },
+
+  // === 17. YAPI MARKET ===
+  { slug: "el-aletleri", patterns: [/\b(çekiç|tornavida|pense|kargaburun|anahtar\s*takım|mastar|gönye|keser|keski|vida\s*takım)\b/i] },
+  { slug: "elektrikli-aletler", patterns: [/\b(matkap\b|darbeli\s*matkap|pilli\s*matkap|akülü\s*matkap|çapa\s*makinesi|tarama\s*makines|testere\s*makines|dekupaj|sanding\s*makines|bosch\s*profes|makita|dewalt)\b/i] },
+  { slug: "boya-malzeme", patterns: [/\b(iç\s*cephe\s*boya|dış\s*cephe\s*boya|duvar\s*boyas|mat\s*boya|silikonlu\s*boya|filli\s*boya|marshall\s*boya|polisan\s*boya|rulo\s*fırça|boya\s*tutkal)\b/i] },
+  { slug: "elektrik-malzeme", patterns: [/\b(priz\s*anahtar|duy\s*anahtar|led\s*ampul|spot\s*ampul|uzatma\s*kablo|multimetre|sigorta|kontaktör)\b/i] },
+  { slug: "su-tesisat", patterns: [/\b(duş\s*hortumu|pis\s*su\s*boru|pex\s*boru|vana\s*\d+|küresel\s*vana|musluk\s*contas|tuvalet\s*musluğ)\b/i] },
+  { slug: "hirdavat-vida", patterns: [/\b(ahşap\s*vidas|sunta\s*vidas|dibl\b|dübel|çivi\s*\d+\s*mm|somun\s*\d|cıvata\s*\d|kapı\s*kulpu|menteşe\s*\d)\b/i] },
+
+  // === 18. OTO YEDEK PARÇA & AKÜ ===
+  { slug: "oto-aku", patterns: [/\b(oto\s*akü|araba\s*akü|\d+\s*ah\s*akü|\d+\s*amper\s*akü|mutlu\s*akü|inci\s*akü|varta\s*akü)\b/i] },
+  { slug: "oto-yag-bakim", patterns: [/\b(motor\s*yağ|10w\s*40|5w\s*30|5w\s*40|antifriz|fren\s*hidroliğ|motor\s*temizley|radyatör\s*temizley|mobil\s*yağ|castrol|shell\s*helix|total\s*yağ|aral\s*yağ)\b/i] },
+  { slug: "oto-yedek-parca", patterns: [/\b(fren\s*balata|fren\s*diski|debriyaj\s*set|amortisör|rot\s*başı|silecek\s*(süpürge|lastik)|oto\s*lamba|xenon\s*ampul|far\s*ampul|oto\s*yedek\s*parça)\b/i] },
 ];
 
 export async function buildRouter(sb) {
