@@ -1,6 +1,5 @@
 "use client";
 import { useState, useRef, useCallback } from "react";
-import { supabase } from "../../lib/supabase";
 import Link from "next/link";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
@@ -49,11 +48,9 @@ export default function KarsilastirSayfasi() {
     if (!q.trim()) { setProducts([]); setSearched(false); return; }
     setLoading(true);
     setSearched(true);
-    const { data } = await supabase
-      .from("products")
-      .select("id,title,slug,brand,image_url,prices(id,price,affiliate_url,stores(name,url))")
-      .or(`title.ilike.%${q}%,brand.ilike.%${q}%`)
-      .limit(48);
+    const res = await fetch(`/api/public/products?q=${encodeURIComponent(q)}&limit=48`)
+      .then(r => r.json()).catch(() => null);
+    const data = res?.products;
 
     if (data) {
       const enriched: Product[] = (data as any[]).map(p => ({

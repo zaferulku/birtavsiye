@@ -10,7 +10,7 @@ export async function GET(req: Request) {
 
   const { data, error } = await supabaseAdmin
     .from("profiles")
-    .select("id, username, gender, avatar_url, is_admin, created_at")
+    .select("id, username, full_name, bio, phone, birth_date, gender, avatar_url, is_admin, created_at")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -28,7 +28,13 @@ export async function PATCH(req: Request) {
 
   const payload: Record<string, unknown> = {};
   if (typeof body.username === "string") payload.username = body.username.slice(0, 80).trim();
-  if (typeof body.gender === "string" && ["kadin", "erkek", "belirtmek-istemiyor"].includes(body.gender)) {
+  if (typeof body.full_name === "string") payload.full_name = body.full_name.slice(0, 150).trim();
+  if (typeof body.bio === "string") payload.bio = body.bio.slice(0, 1000);
+  if (typeof body.phone === "string") payload.phone = body.phone.slice(0, 30);
+  if (body.birth_date === null || (typeof body.birth_date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.birth_date))) {
+    payload.birth_date = body.birth_date;
+  }
+  if (typeof body.gender === "string" && ["kadin", "erkek", "belirtmek-istemiyor", ""].includes(body.gender)) {
     payload.gender = body.gender;
   }
   if (typeof body.avatar_url === "string") payload.avatar_url = body.avatar_url.slice(0, 500);

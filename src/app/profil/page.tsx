@@ -60,8 +60,13 @@ export default function ProfilSayfasi() {
     });
   }, []);
 
-  const loadProfile = async (userId: string) => {
-    const { data } = await supabase.from("profiles").select("*").eq("id", userId).maybeSingle();
+  const loadProfile = async (_userId: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return;
+    const res = await fetch("/api/me/profile", {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    }).then(r => r.json()).catch(() => null);
+    const data = res?.profile;
     if (data) {
       setUsername(data.username || "");
       setFullName(data.full_name || "");
@@ -98,10 +103,14 @@ export default function ProfilSayfasi() {
     const birthDate = (birthYear && birthMonth && birthDay)
       ? `${birthYear}-${birthMonth}-${birthDay}`
       : null;
-    await supabase.from("profiles").upsert({
-  id: user.id, username, full_name: fullName, bio, phone, birth_date: birthDate,
-  gender,
-});
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      await fetch("/api/me/profile", {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ username, full_name: fullName, bio, phone, birth_date: birthDate, gender }),
+      });
+    }
     setSaveMsg("Kaydedildi!");
     setTimeout(() => setSaveMsg(""), 2000);
     setSaving(false);
