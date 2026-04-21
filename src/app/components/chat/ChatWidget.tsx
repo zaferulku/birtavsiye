@@ -28,13 +28,27 @@ export default function ChatWidget() {
   const [loading, setLoading] = useState(false);
   const [pendingImage, setPendingImage] = useState<string | null>(null);
   const [recording, setRecording] = useState(false);
+  const [plusMenuOpen, setPlusMenuOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const plusMenuRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   useEffect(() => {
     if (open) bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, open]);
+
+  useEffect(() => {
+    if (!plusMenuOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (plusMenuRef.current && !plusMenuRef.current.contains(e.target as Node)) {
+        setPlusMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [plusMenuOpen]);
 
   async function send(textOverride?: string) {
     const text = (textOverride ?? input).trim();
@@ -210,17 +224,53 @@ export default function ChatWidget() {
             className="hidden"
             onChange={onFilePick}
           />
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:text-[#E8460A] hover:bg-gray-50 transition"
-            aria-label="Görsel ekle"
-            title="Görsel ile arama"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-            </svg>
-          </button>
+          <input
+            ref={cameraRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={onFilePick}
+          />
+          <div ref={plusMenuRef} className="relative flex-shrink-0">
+            <button
+              type="button"
+              onClick={() => setPlusMenuOpen(v => !v)}
+              className="w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:text-[#E8460A] hover:bg-gray-50 transition"
+              aria-label="Görsel ile arama menüsünü aç"
+              title="Görsel ile arama"
+            >
+              <svg className={`w-5 h-5 transition-transform ${plusMenuOpen ? "rotate-45" : ""}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+            {plusMenuOpen && (
+              <div className="absolute bottom-11 left-0 bg-white border border-gray-200 rounded-2xl shadow-xl overflow-hidden w-52 z-50">
+                <button
+                  type="button"
+                  onClick={() => { setPlusMenuOpen(false); fileRef.current?.click(); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition text-left"
+                >
+                  <svg className="w-5 h-5 text-[#E8460A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="font-medium">Fotoğraf Yükle</span>
+                </button>
+                <div className="h-px bg-gray-100" />
+                <button
+                  type="button"
+                  onClick={() => { setPlusMenuOpen(false); cameraRef.current?.click(); }}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition text-left"
+                >
+                  <svg className="w-5 h-5 text-[#E8460A]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <span className="font-medium">Fotoğraf Çek</span>
+                </button>
+              </div>
+            )}
+          </div>
 
           <input
             value={input}
