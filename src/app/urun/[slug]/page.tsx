@@ -69,16 +69,28 @@ export default async function UrunDetay({
   const [siblingsData, categoryPath] = await Promise.all([siblingsPromise, categoryPathPromise]);
   const siblings = (siblingsData && siblingsData.length > 0) ? siblingsData : (baseProduct ? [baseProduct] : []);
 
-  // Variant matrix: (storage, color) -> product row[]
+  // Normalize: "128 GB" / "128GB" / "128 gb" → "128 GB"
+  const normalizeStorage = (s: string | null | undefined): string | null => {
+    if (!s) return null;
+    const m = s.trim().match(/^(\d+(?:[.,]\d+)?)\s*(gb|tb|mb)\b/i);
+    if (m) return `${m[1].replace(",", ".")} ${m[2].toUpperCase()}`;
+    return s.trim().replace(/\s+/g, " ");
+  };
+  const normalizeColor = (c: string | null | undefined): string | null => {
+    if (!c) return null;
+    return c.trim().replace(/\s+/g, " ").toLowerCase().replace(/\b\w/g, ch => ch.toUpperCase());
+  };
+
+  // Variant matrix: (storage, color) -> product row[] — normalize key ile dedup
   const variantMap = new Map<string, typeof siblings>();
   for (const s of siblings) {
-    const key = `${s.variant_storage ?? ""}|${s.variant_color ?? ""}`;
+    const key = `${normalizeStorage(s.variant_storage) ?? ""}|${normalizeColor(s.variant_color) ?? ""}`;
     const arr = variantMap.get(key) ?? [];
     arr.push(s);
     variantMap.set(key, arr);
   }
 
-  const storages = [...new Set(siblings.map(s => s.variant_storage).filter(Boolean) as string[])]
+  const storages = [...new Set(siblings.map(s => normalizeStorage(s.variant_storage)).filter(Boolean) as string[])]
     .sort((a, b) => {
       const na = parseInt(a, 10);
       const nb = parseInt(b, 10);
@@ -86,7 +98,7 @@ export default async function UrunDetay({
       const unitB = b.toUpperCase().includes("TB") ? 1000 : 1;
       return (na * unitA) - (nb * unitB);
     });
-  const colors = [...new Set(siblings.map(s => s.variant_color).filter(Boolean) as string[])].sort();
+  const colors = [...new Set(siblings.map(s => normalizeColor(s.variant_color)).filter(Boolean) as string[])].sort();
 
   // Seçili variant
   const selectedStorage = storageParam ?? baseProduct?.variant_storage ?? storages[0] ?? null;
