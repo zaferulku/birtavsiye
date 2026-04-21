@@ -47,20 +47,30 @@ export default function ProductInfo({ product, avgRating, reviewCount }: {
     });
   }, [product?.id]);
 
-  const checkFav = async (userId: string) => {
-    const { data } = await supabase.from("favorites").select("id")
-      .eq("user_id", userId).eq("product_id", product.id).maybeSingle();
-    setIsFav(!!data);
+  const checkFav = async (_userId: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token || !product?.id) return;
+    const res = await fetch(`/api/me/favorites?product_id=${product.id}`, {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    }).then(r => r.json()).catch(() => null);
+    setIsFav(!!res?.favorited);
   };
 
   const toggleFav = async () => {
     if (!user) { window.location.href = "/giris"; return; }
     setLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) { setLoading(false); return; }
+    const auth = { Authorization: `Bearer ${session.access_token}` };
     if (isFav) {
-      await supabase.from("favorites").delete().eq("user_id", user.id).eq("product_id", product.id);
+      await fetch(`/api/me/favorites?product_id=${product.id}`, { method: "DELETE", headers: auth });
       setIsFav(false);
     } else {
-      await supabase.from("favorites").insert({ user_id: user.id, product_id: product.id });
+      await fetch("/api/me/favorites", {
+        method: "POST",
+        headers: { ...auth, "Content-Type": "application/json" },
+        body: JSON.stringify({ product_id: product.id }),
+      });
       setIsFav(true);
     }
     setLoading(false);
