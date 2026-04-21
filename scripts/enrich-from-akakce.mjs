@@ -92,6 +92,29 @@ async function enrichOne(page, product) {
         if (m && !specs[m[1].trim()]) specs[m[1].trim()] = m[2].trim();
       });
 
+      // Div-based spec grid (tabloda olmayan ürünler için)
+      document.querySelectorAll("[class*=spec], [class*=Spec], [class*=feature]").forEach(container => {
+        const kids = Array.from(container.children || []);
+        for (let i = 0; i + 1 < kids.length; i++) {
+          const k = kids[i];
+          const v = kids[i + 1];
+          if (!k || !v) continue;
+          const keyText = (k.textContent || "").replace(/[:：]$/, "").trim();
+          const valText = readCellValue(v);
+          if (keyText && valText && keyText.length < 60 && valText.length < 300 &&
+              !/[{}<>]/.test(keyText) && !specs[keyText]) {
+            specs[keyText] = valText;
+          }
+        }
+      });
+
+      // data-attribute bazlı spec
+      document.querySelectorAll("[data-spec-key]").forEach(el => {
+        const k = el.getAttribute("data-spec-key")?.trim();
+        const v = el.textContent?.trim() || el.getAttribute("data-spec-value")?.trim();
+        if (k && v && !specs[k]) specs[k] = v;
+      });
+
       // 2) JSON-LD ProductGroup/Product
       let jsonLd = null;
       document.querySelectorAll("script[type='application/ld+json']").forEach(s => {
@@ -100,6 +123,15 @@ async function enrichOne(page, product) {
           if (obj["@type"] === "ProductGroup" || obj["@type"] === "Product") jsonLd = obj;
         } catch {}
       });
+
+      // JSON-LD additionalProperty — schema.org spec fields
+      if (jsonLd?.additionalProperty && Array.isArray(jsonLd.additionalProperty)) {
+        for (const prop of jsonLd.additionalProperty) {
+          const k = prop?.name?.trim();
+          const v = (prop?.value ?? prop?.text ?? "").toString().trim();
+          if (k && v && !specs[k] && k.length < 60 && v.length < 300) specs[k] = v;
+        }
+      }
 
       // 3) Offers (tüm satıcılar)
       const offers = [];
