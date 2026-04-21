@@ -134,9 +134,10 @@ export default function SpecsTable({ specs }: { specs: Record<string, unknown> |
 
   const toStr = (v: unknown): string => {
     if (v == null) return "";
-    if (typeof v === "string") return v;
-    if (typeof v === "number" || typeof v === "boolean") return String(v);
-    return "";
+    let s = typeof v === "string" ? v : (typeof v === "number" || typeof v === "boolean") ? String(v) : "";
+    // Baştaki ":" veya tekrar eden ":" simgelerini temizle (eski scrape artıkları)
+    s = s.replace(/^\s*[:：]+\s*/, "").trim();
+    return s;
   };
 
   // Placeholder-boş değerleri tanı (-, —, :, N/A, ?, boş, tek karakterli junk)
@@ -185,9 +186,9 @@ export default function SpecsTable({ specs }: { specs: Record<string, unknown> |
               const no = isBooleanNo(value);
               return (
                 <div key={key} className="contents">
-                  <div className="text-gray-600 leading-tight py-1 pr-2">{key}</div>
-                  <div className="text-gray-400 py-1">:</div>
-                  <div className="text-gray-900 font-medium leading-tight py-1 break-words">
+                  <div className="text-gray-600 leading-tight py-1.5 pr-2 border-b border-gray-100">{key}</div>
+                  <div className="text-gray-400 py-1.5 border-b border-gray-100">:</div>
+                  <div className="text-gray-900 font-medium leading-tight py-1.5 break-words border-b border-gray-100">
                     {yes ? (
                       <svg className="w-3.5 h-3.5 text-emerald-600 inline" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
