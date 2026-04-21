@@ -91,17 +91,23 @@ export default function TavsiyeDetay() {
   useEffect(() => {
     fetchAll();
     fetchPopular();
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
-      setUser(data.user);
-      const { data: profile } = await supabase.from("profiles").select("gender,username").eq("id", data.user.id).maybeSingle();
+    supabase.auth.getSession().then(async ({ data: sdata }) => {
+      const session = sdata.session;
+      if (!session?.user || !session.access_token) return;
+      setUser(session.user);
+      const auth = { Authorization: `Bearer ${session.access_token}` };
+      const [pRes, vRes, tvRes] = await Promise.all([
+        fetch("/api/me/profile", { headers: auth }).then(r => r.json()).catch(() => null),
+        fetch("/api/me/answer-votes", { headers: auth }).then(r => r.json()).catch(() => null),
+        fetch(`/api/me/topic-vote?topic_id=${id}`, { headers: auth }).then(r => r.json()).catch(() => null),
+      ]);
+      const profile = pRes?.profile;
       setUserGender(profile?.gender || "");
-      const n = profile?.username || data.user.user_metadata?.full_name || data.user.user_metadata?.name || data.user.email?.split("@")[0] || "Kullanıcı";
+      const n = profile?.username || session.user.user_metadata?.full_name || session.user.user_metadata?.name || session.user.email?.split("@")[0] || "Kullanıcı";
       setUserName(n);
-      const { data: votes } = await supabase.from("topic_answer_votes").select("answer_id, vote").eq("user_id", data.user.id);
+      const votes = vRes?.votes as { answer_id: string; vote: number }[] | undefined;
       if (votes) setUserVotes(Object.fromEntries(votes.map(v => [v.answer_id, v.vote])));
-      const { data: tv } = await supabase.from("topic_votes").select("vote").eq("topic_id", id).eq("user_id", data.user.id).maybeSingle();
-      if (tv) setTopicVote(tv.vote);
+      if (typeof tvRes?.vote === "number") setTopicVote(tvRes.vote);
     });
 
     const channel = supabase.channel(`answers-${id}`)
@@ -113,35 +119,38 @@ export default function TavsiyeDetay() {
   }, [id]);
 
   const fetchAll = async () => {
-    const { data: t } = await supabase.from("topics").select("*").eq("id", id).maybeSingle();
-    if (t) {
-      let authorGender: string | null = null;
-      if (t.user_id) {
-        const { data: p } = await supabase.from("public_profiles").select("gender").eq("id", t.user_id).maybeSingle();
-        authorGender = p?.gender || null;
-      }
-      setTopic({ ...t, author_gender: authorGender });
-    } else {
-      setTopic(t);
-    }
-    const { data: a } = await supabase.from("topic_answers").select("*").eq("topic_id", id).order("created_at", { ascending: true });
-    setAnswers(a || []);
-    const topLevel = (a || []).filter((x: any) => !x.parent_id);
-    const sorted2 = [...topLevel].sort((x: any, y: any) => (y.votes || 0) - (x.votes || 0)).slice(0, 2);
-    setTop2Ids(sorted2.map((x: any) => x.id));
+    const tRes = await fetch(`/api/public/topics/${id}`).then(r => r.json()).catch(() => null);
+    if (tRes?.topic) setTopic(tRes.topic as Topic);
+    const aRes = await fetch(`/api/public/topic-answers?topic_id=${id}`).then(r => r.json()).catch(() => null);
+    const ans = (aRes?.answers as Answer[] | undefined) || [];
+    const sorted = [...ans].sort((x, y) => new Date(x.created_at).getTime() - new Date(y.created_at).getTime());
+    setAnswers(sorted);
+    const topLevel = sorted.filter(x => !x.parent_id);
+    const sorted2 = [...topLevel].sort((x, y) => (y.votes || 0) - (x.votes || 0)).slice(0, 2);
+    setTop2Ids(sorted2.map(x => x.id));
   };
 
   const fetchPopular = async () => {
-    const { data } = await supabase.from("topics").select("id,title,category,votes,answer_count,created_at")
-      .order("votes", { ascending: false }).limit(10);
-    if (data) setPopular(data);
+    const res = await fetch("/api/public/topics?popular=1&limit=10").then(r => r.json()).catch(() => null);
+    if (Array.isArray(res?.topics)) setPopular(res.topics as PopularTopic[]);
+  };
+
+  const getAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return null;
+    return { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" } as const;
   };
 
   const handleAnswer = async () => {
     if (!answerText.trim() || !user) return;
     setLoading(true);
-    await supabase.from("topic_answers").insert({ topic_id: id, user_id: user.id, user_name: userName, gender: userGender, body: answerText, votes: 0, parent_id: null });
-    await supabase.from("topics").update({ answer_count: (topic?.answer_count || 0) + 1 }).eq("id", id);
+    const auth = await getAuth();
+    if (auth) {
+      await fetch("/api/topic-answers", {
+        method: "POST", headers: auth,
+        body: JSON.stringify({ topic_id: id, user_name: userName, gender: userGender, body: answerText }),
+      });
+    }
     setAnswerText(""); setLoading(false);
     await fetchAll();
   };
@@ -149,7 +158,13 @@ export default function TavsiyeDetay() {
   const handleEdit = async (answerId: string) => {
     if (!editText.trim()) return;
     setEditLoading(true);
-    await supabase.from("topic_answers").update({ body: editText }).eq("id", answerId);
+    const auth = await getAuth();
+    if (auth) {
+      await fetch(`/api/topic-answers/${answerId}`, {
+        method: "PATCH", headers: auth,
+        body: JSON.stringify({ body: editText }),
+      });
+    }
     setAnswers(prev => prev.map(a => a.id === answerId ? { ...a, body: editText } : a));
     setEditingId(null);
     setEditText("");
@@ -158,10 +173,12 @@ export default function TavsiyeDetay() {
 
   const handleDelete = async (answerId: string, parentId?: string | null) => {
     if (!confirm("Bu yorumu silmek istediğine emin misin?")) return;
-    await supabase.from("topic_answers").delete().eq("id", answerId);
+    const auth = await getAuth();
+    if (auth) {
+      await fetch(`/api/topic-answers/${answerId}`, { method: "DELETE", headers: auth });
+    }
     setAnswers(prev => prev.filter(a => a.id !== answerId));
     const newCount = Math.max((topic?.answer_count || 1) - 1, 0);
-    await supabase.from("topics").update({ answer_count: newCount }).eq("id", id);
     setTopic(prev => prev ? { ...prev, answer_count: newCount } : prev);
     if (!parentId) setEditingId(null);
   };
@@ -170,8 +187,13 @@ export default function TavsiyeDetay() {
     const text = replyTexts[parentId];
     if (!text?.trim() || !user) return;
     setReplyLoading(prev => ({ ...prev, [parentId]: true }));
-    await supabase.from("topic_answers").insert({ topic_id: id, user_id: user.id, user_name: userName, gender: userGender, body: text, votes: 0, parent_id: parentId });
-    await supabase.from("topics").update({ answer_count: (topic?.answer_count || 0) + 1 }).eq("id", id);
+    const auth = await getAuth();
+    if (auth) {
+      await fetch("/api/topic-answers", {
+        method: "POST", headers: auth,
+        body: JSON.stringify({ topic_id: id, user_name: userName, gender: userGender, body: text, parent_id: parentId }),
+      });
+    }
     setReplyTexts(prev => ({ ...prev, [parentId]: "" }));
     setReplyOpen(prev => ({ ...prev, [parentId]: false }));
     setReplyLoading(prev => ({ ...prev, [parentId]: false }));
@@ -183,10 +205,14 @@ export default function TavsiyeDetay() {
     const cur = topicVote;
     const diff = cur === voteValue ? -voteValue : cur === 0 ? voteValue : voteValue * 2;
     const nv = cur === voteValue ? 0 : voteValue;
-    if (cur === voteValue) await supabase.from("topic_votes").delete().eq("topic_id", id).eq("user_id", user.id);
-    else await supabase.from("topic_votes").upsert({ topic_id: id, user_id: user.id, vote: nv }, { onConflict: "topic_id,user_id" });
+    const auth = await getAuth();
+    if (!auth) return;
+    if (cur === voteValue) {
+      await fetch(`/api/topic-votes?topic_id=${id}`, { method: "DELETE", headers: auth });
+    } else {
+      await fetch("/api/topic-votes", { method: "POST", headers: auth, body: JSON.stringify({ topic_id: id, vote: nv }) });
+    }
     const newTotal = (topic.votes || 0) + diff;
-    await supabase.from("topics").update({ votes: newTotal }).eq("id", id);
     setTopic(prev => prev ? { ...prev, votes: newTotal } : prev);
     setTopicVote(nv);
   };
@@ -196,10 +222,14 @@ export default function TavsiyeDetay() {
     const cur = userVotes[answer.id] || 0;
     const voteDiff = cur === voteValue ? -voteValue : cur === 0 ? voteValue : voteValue * 2;
     const newVote = cur === voteValue ? 0 : voteValue;
-    if (cur === voteValue) await supabase.from("topic_answer_votes").delete().eq("answer_id", answer.id).eq("user_id", user.id);
-    else await supabase.from("topic_answer_votes").upsert({ answer_id: answer.id, user_id: user.id, vote: voteValue }, { onConflict: "answer_id,user_id" });
+    const auth = await getAuth();
+    if (!auth) return;
+    if (cur === voteValue) {
+      await fetch(`/api/topic-answer-votes?answer_id=${answer.id}`, { method: "DELETE", headers: auth });
+    } else {
+      await fetch("/api/topic-answer-votes", { method: "POST", headers: auth, body: JSON.stringify({ answer_id: answer.id, vote: voteValue }) });
+    }
     const newTotal = (answer.votes || 0) + voteDiff;
-    await supabase.from("topic_answers").update({ votes: newTotal }).eq("id", answer.id);
     setAnswers(prev => prev.map(a => a.id === answer.id ? { ...a, votes: newTotal } : a));
     setUserVotes(prev => ({ ...prev, [answer.id]: newVote }));
   };

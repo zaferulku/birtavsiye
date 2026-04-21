@@ -8,12 +8,16 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const limit = Math.min(200, Math.max(1, parseInt(url.searchParams.get("limit") || "60", 10)));
   const category = url.searchParams.get("category");
+  const popular = url.searchParams.get("popular") === "1";
 
   let q = supabaseAdmin
     .from("topics")
-    .select("*")
-    .order("created_at", { ascending: false })
+    .select(popular ? "id,title,category,votes,answer_count,created_at" : "*")
     .limit(limit);
+
+  q = popular
+    ? q.order("votes", { ascending: false })
+    : q.order("created_at", { ascending: false });
 
   if (category && category !== "Hepsi") q = q.eq("category", category);
 

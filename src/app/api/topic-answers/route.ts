@@ -16,12 +16,13 @@ export async function POST(req: Request) {
   const text = typeof body.body === "string" ? body.body.slice(0, 2000).trim() : "";
   const userName = typeof body.user_name === "string" ? body.user_name.slice(0, 80) : null;
   const gender = typeof body.gender === "string" ? body.gender : null;
+  const parent_id = typeof body.parent_id === "string" ? body.parent_id : null;
 
   if (!topic_id || !text) return NextResponse.json({ error: "topic_id and body required" }, { status: 400 });
 
   const { data, error } = await supabaseAdmin
     .from("topic_answers")
-    .insert({ topic_id, user_id: user.id, user_name: userName, body: text, gender, votes: 0 })
+    .insert({ topic_id, user_id: user.id, user_name: userName, body: text, gender, votes: 0, parent_id })
     .select("*")
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
