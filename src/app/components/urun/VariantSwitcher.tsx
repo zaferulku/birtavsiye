@@ -52,13 +52,8 @@ export default function VariantSwitcher({
   colors,
   selectedStorage,
   selectedColor,
-  variants,
 }: Props) {
   if (storages.length <= 1 && colors.length <= 1) return null;
-
-  const isAvailable = (storage: string | null, color: string | null): boolean => {
-    return variants.some(v => v.storage === storage && v.color === color && v.count > 0);
-  };
 
   return (
     <div className="space-y-4">
@@ -70,7 +65,6 @@ export default function VariantSwitcher({
           <div className="flex flex-wrap gap-2">
             {storages.map(s => {
               const active = s === selectedStorage;
-              const avail = isAvailable(s, selectedColor);
               return (
                 <Link
                   key={s}
@@ -78,9 +72,7 @@ export default function VariantSwitcher({
                   className={`px-3 py-2 rounded-xl border-2 text-sm font-semibold transition-all ${
                     active
                       ? "border-[#E8460A] bg-orange-50 text-[#E8460A]"
-                      : avail
-                        ? "border-gray-200 text-gray-700 hover:border-[#E8460A]"
-                        : "border-gray-100 text-gray-400 line-through"
+                      : "border-gray-200 text-gray-700 hover:border-[#E8460A]"
                   }`}
                 >
                   {s}
@@ -99,7 +91,6 @@ export default function VariantSwitcher({
           <div className="flex flex-wrap gap-2">
             {colors.map(c => {
               const active = c === selectedColor;
-              const avail = isAvailable(selectedStorage, c);
               const bg = colorSwatch(c);
               return (
                 <Link
@@ -108,9 +99,7 @@ export default function VariantSwitcher({
                   className={`flex items-center gap-2 px-3 py-2 rounded-xl border-2 text-xs font-medium transition-all ${
                     active
                       ? "border-[#E8460A] bg-orange-50"
-                      : avail
-                        ? "border-gray-200 hover:border-[#E8460A]"
-                        : "border-gray-100 opacity-50"
+                      : "border-gray-200 hover:border-[#E8460A]"
                   }`}
                   title={c}
                 >
