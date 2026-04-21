@@ -324,7 +324,7 @@ export default function TavsiyelerSayfasi() {
                     Erkeklere Özel
                   </button>
                 )}
-                {!userGender && (
+                {(userGender === "kadin" || userGender === "erkek") && (
                   <button onClick={() => setGenderFilter(genderFilter === "tumu" ? "hepsi" : "tumu")}
                     className={`inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-full border-2 transition-all shadow-sm ${genderFilter === "tumu" ? "border-purple-500 bg-purple-50 text-purple-700 shadow-md" : "border-gray-300 bg-white text-gray-600 hover:border-purple-400"}`}>
                     <span className="w-5 h-5 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-white text-xs font-black">♀</span>

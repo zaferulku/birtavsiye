@@ -30,19 +30,22 @@ const RULES = [
 
   // === 2. TELEFON AKSESUAR ===
   { slug: "telefon-kilifi", patterns: [
-    /\b(telefon\s*kılıf|iphone\s*kılıf|samsung\s*kılıf|huawei\s*kılıf|xiaomi\s*kılıf|realme\s*kılıf|oppo\s*kılıf|honor\s*kılıf|redmi\s*kılıf|\bkılıf\b|silikon\s*kılıf|deri\s*kılıf|magsafe\s*kılıf|cüzdan\s*kılıf|flip\s*cover|kapaklı\s*kılıf|şeffaf\s*kılıf|case\s*(iphone|samsung|huawei))\b/i,
+    /\b(telefon\s*kılıf|iphone\s*kılıf|samsung\s*kılıf|huawei\s*kılıf|xiaomi\s*kılıf|realme\s*kılıf|oppo\s*kılıf|honor\s*kılıf|redmi\s*kılıf|\bkılıf\b|silikon\s*kılıf|deri\s*kılıf|magsafe\s*kılıf|cüzdan\s*kılıf|flip\s*cover|kapaklı\s*kılıf|şeffaf\s*kılıf|harvel\s*kapak|raze\s*metal\s*kamera|metal\s*kamera\s*lens|shine\s*kamera|kamera\s*lens\s*koruyucu|case\s*(iphone|samsung|huawei))\b/i,
+    /\biphone\s*\d+\s*(harvel|raze|shine|metal|silikon|bilvis|titan)\s*(kapak|lens|kılıf|titan)/i,
+    /\b(bilvis|harvel|raze|shine)\s*(titan\s*)?kamera\s*lens/i,
   ] },
   { slug: "ekran-koruyucu", patterns: [
-    /\b(ekran\s*koruyucu|cam\s*koruyucu|nano\s*koruyucu|hidrojel\s*koruyucu|temperli\s*cam|tempered\s*glass|screen\s*protector|cam\s*jelatin|nano\s*jelatin)\b/i,
+    /\b(ekran\s*koruyucu|cam\s*koruyucu|nano\s*koruyucu|hidrojel\s*koruyucu|temperli\s*cam|tempered\s*glass|screen\s*protector|cam\s*jelatin|nano\s*jelatin|arka\s*koruyucu|full\s*body\s*(arka\s*)?koruyucu|360\s*full\s*body)\b/i,
   ] },
   { slug: "powerbank", patterns: [
     /\b(powerbank|power\s*bank|powercore|magsafe\s*powerbank|taşınabilir\s*şarj|harici\s*pil|taşınabilir\s*pil)\b/i,
   ] },
   { slug: "sarj-kablo", patterns: [
-    /\b(şarj\s*(kablosu|cihazı|adaptör|istasyon|standı|pedi|dock)|kablosuz\s*şarj|usb[- ]?c\s*(kablo|şarj)|lightning\s*(kablo|şarj)|hızlı\s*şarj|type[- ]?c\s*kablo|duvar\s*(şarj|adaptör)|araç\s*şarj|gan\s*şarj|magsafe\s*şarj|anker\s*şarj)\b/i,
+    /\b(şarj\s*(kablosu|cihazı|adaptör|istasyon|standı|pedi|dock)|kablosuz\s*şarj|usb[- ]?c\s*(kablo|şarj)|lightning\s*(kablo|şarj)|hızlı\s*şarj|type[- ]?c\s*kablo|duvar\s*(şarj|adaptör)|araç\s*şarj|gan\s*şarj|magsafe\s*şarj|anker\s*şarj|veri\s*kablo|data\s*kablo|\d+w\s*(güçlü\s*)?veri\s*kablo)\b/i,
   ] },
   { slug: "telefon-aksesuar", patterns: [
-    /\b(selfie\s*çubuğ|araç\s*tutucu|pop\s*socket|parmak\s*tutucu|tripod\s*telefon|stereo\s*tak\s*çalıştır|uyumlu.*adaptör|uyumlu.*şarj|uyumlu\s*stereo|uyumlu\s*adapter|uyumlu.*kablo|otg\s*kablo|flash\s*bellek|otg\s*kablosu|dokunmatik\s*kalem|stylus\s*pen)\b/i,
+    /\b(selfie\s*çubuğ|araç\s*tutucu|pop\s*socket|parmak\s*tutucu|tripod\s*telefon|telefon\s*tutucu|vlog\s*kiti|tripod\s*mini|stereo\s*tak\s*çalıştır|uyumlu.*adaptör|uyumlu.*şarj|uyumlu\s*stereo|uyumlu\s*adapter|uyumlu.*kablo|uyumlu.*kulak|uyumlu.*bluetooth|uyumlu.*güvenlik\s*kamera|uyumlu.*gece\s*görüş|uyumlu.*watch|uyumlu.*anc|otg\s*kablo|flash\s*bellek|otg\s*kablosu|dokunmatik\s*kalem|stylus\s*pen)\b/i,
+    /\bakıllı\s*telefon\s*(uyumlu|vlog|tripod|tutucu)/i,
   ] },
 
   // === 3. TV AKSESUAR ===
@@ -181,7 +184,7 @@ const RULES = [
   // === 14. KİTAP & HOBİ ===
   { slug: "resim-cizim", patterns: [/\b(yağlı\s*boya|suluboya|akrilik\s*boya|pastel\s*boya|renk\s*kalem\s*set|çizim\s*seti|faber[- ]?castell|arteza|resim\s*tuval)\b/i] },
   { slug: "el-sanatlari", patterns: [/\b(örgü\s*ipliğ|amigurumi|dikiş\s*seti|scrapbooking|boncuk\s*seti|takı\s*yapım|reçine\s*sanat)\b/i] },
-  { slug: "kitap", patterns: [/\bkitap(?!\s*(tutucu|okuma\s*lambas))|\broman\b|\bbiyografi\b|\bşiir\s*kitab|\bders\s*kitab/i] },
+  { slug: "kitap", patterns: [/\bkitap(?!\s*(tutucu|okuma\s*lambas))|\broman\b|\bbiyografi\b|\bşiir\s*kitab|\bders\s*kitab|allen\s*carr|dijital\s*bağımlılıktan\s*kurtarın/i] },
   { slug: "muzik-aleti", patterns: [/\b(akustik\s*gitar|elektro\s*gitar|klasik\s*gitar|piano|keyboard|dijital\s*piyano|bateri|bağlama|ney|saksofon)\b/i] },
   { slug: "kirtasiye", patterns: [/\b(defter|dosya|klasör|tükenmez\s*kalem|kurşun\s*kalem|silgi|kalemtraş|zımba|delgeç|post[- ]?it|stabilo)\b/i] },
 
