@@ -620,12 +620,13 @@ export default function Header() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  // Kategori hiyerarşisini fetch et — Header NAV linkleri /anasayfa/{chain} üretsin
+  // Kategori hiyerarşisini fetch et — /api/public/categories proxy üzerinden
   const [cats, setCats] = useState<{ id: string; slug: string; parent_id: string | null }[]>([]);
   useEffect(() => {
-    supabase.from("categories").select("id, slug, parent_id").then(({ data }) => {
-      if (data) setCats(data);
-    });
+    fetch("/api/public/categories")
+      .then(r => r.json())
+      .then(j => { if (Array.isArray(j.categories)) setCats(j.categories); })
+      .catch(() => {});
   }, []);
   const catMap = useMemo(() => new Map(cats.map(c => [c.slug, c])), [cats]);
   const catById = useMemo(() => new Map(cats.map(c => [c.id, c])), [cats]);

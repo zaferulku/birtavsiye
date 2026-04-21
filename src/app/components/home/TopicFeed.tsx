@@ -144,8 +144,8 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
   }, []);
 
   const fetchTopics = async () => {
-    const { data } = await supabase.from("topics").select("*")
-      .order("created_at", { ascending: false }).limit(60);
+    const res = await fetch("/api/public/topics?limit=60").then(r => r.json()).catch(() => null);
+    const data = res?.topics;
     if (!data) return;
     setTopics(data);
     isFirst.current = false;
