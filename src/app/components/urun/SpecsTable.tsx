@@ -4,9 +4,11 @@ const HIDDEN_KEYS = new Set([
   "merchant", "mpn", "sku",
   "original_title",
   "_akakce", "_akakce_offers", "_offers",
+  // Spam/metadata — teknik özellik değil
+  "Popülerlik", "Ortalama Puan", "Kullanıcı Puanı", "İnceleme Sayısı",
 ]);
 
-const HIDDEN_KEY_PATTERNS = /fiyat|satıcı|satici|price|seller|url|mağaza|magaza|store|kargo|stock|stok|indirim|kampanya/i;
+const HIDDEN_KEY_PATTERNS = /fiyat|satıcı|satici|price|seller|url|mağaza|magaza|store|kargo|stock|stok|indirim|kampanya|popülerlik|ortalama\s*puan/i;
 
 const PRIORITY_KEYS = [
   "Seri",
@@ -81,6 +83,39 @@ const PRIORITY_KEYS = [
   "Onarılabilirlik Sınıfı",
   "Düşme Direnci Sınıfı",
   "Geekbench (Multi-Core)",
+  // Kulaklık/ses alanları
+  "Aktif Gürültü Önleme",
+  "TWS",
+  "Mikrofonlu",
+  "Müzik Dinleyebilme",
+  "Müzik Dinleme Süresi",
+  "Şarj Kutulu",
+  "Şarj Göstergesi",
+  "Kablosuz",
+  // Powerbank/şarj aletleri
+  "Type-C Çıkış Sayısı",
+  "USB Çıkış Sayısı",
+  "Şarj Giriş Tipi",
+  "Şarj Çıkışı",
+  // Monitor/ek spec
+  "Çözünürlük",
+  "Çözünürlük Formatı",
+  "Yenileme Hızı",
+  "Ekran Kartı",
+  "Yonga Seti",
+  "İşlemci Çekirdek Sayısı",
+  "Dahili Depolama",
+  // Genel boyut
+  "Batarya",
+  "Genişlik",
+  "Yükseklik",
+  "Derinlik",
+  "Türü",
+  "Tipi",
+  "Özellik",
+  "Uyumlu Marka",
+  // Dayanıklılık
+  "Toza Dayanıklılık Seviyesi",
   "Renk",
   "Renk (Üreticiye Göre)",
 ];
