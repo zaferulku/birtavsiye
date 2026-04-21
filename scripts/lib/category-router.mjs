@@ -218,6 +218,40 @@ const RULES = [
   { slug: "oto-yedek-parca", patterns: [/\b(fren\s*balata|fren\s*diski|debriyaj\s*set|amortisör|rot\s*başı|silecek\s*(süpürge|lastik)|oto\s*lamba|xenon\s*ampul|far\s*ampul|oto\s*yedek\s*parça)\b/i] },
 ];
 
+// Telefon/saat/tablet başlığında bu kelimelerden biri bile varsa,
+// ürün teknik özellik DEĞİL aksesuar/yedek parça/aksesuar demektir.
+// (Başlık sadece marka+model+GB+renk içermeli)
+const PHONE_NEGATIVE_INDICATORS = [
+  // Kılıf/kapak/koruyucu
+  { re: /\b(kılıf|kapak|cover|case\b|flip|cüzdan\s*kılıf|silikon\s*kılıf|deri\s*kılıf)\b/i, target: "telefon-kilifi" },
+  { re: /\b(ekran\s*koruyucu|cam\s*koruyucu|koruma|protector|nano\s*jelatin|temperli|hidrojel|arka\s*koruyucu|full\s*body|360\s*koruma|kamera\s*lens\s*koruyucu|lens\s*koruma)\b/i, target: "ekran-koruyucu" },
+  { re: /\b(harvel|raze|shine|bilvis|titan\s*kamera)\b/i, target: "telefon-kilifi" },
+
+  // Kablo/şarj/güç
+  { re: /\b(şarj\s*kablo|veri\s*kablo|data\s*kablo|type[- ]?c\s*kablo|lightning\s*kablo|usb[- ]?c\s*kablo|magsafe\s*kablo|\d+w\s*kablo)\b/i, target: "sarj-kablo" },
+  { re: /\b(şarj\s*(cihaz|adaptör|istasyon|stand|pedi|dock)|duvar\s*şarj|araç\s*şarj|hızlı\s*şarj\s*(cihaz|adapt)|gan\s*şarj|kablosuz\s*şarj)\b/i, target: "sarj-kablo" },
+  { re: /\b(powerbank|power\s*bank|taşınabilir\s*şarj|harici\s*pil|taşınabilir\s*pil)\b/i, target: "powerbank" },
+
+  // Kordon/kayış/strap — saat kordonları
+  { re: /\b(kordon|kayış|strap|watch\s*band|saat\s*kordon|loop\s*band|hasır\s*kordon|metal\s*kordon|silikon\s*kordon|spor\s*kordon|örgü\s*kordon|deri\s*kordon)\b/i, target: "telefon-aksesuar" },
+
+  // Kulaklık / ses
+  { re: /\b(kulaklık|kulak\s*içi|kulak\s*üstü|airpods|galaxy\s*buds|bluetooth\s*kulak|\btws\b|true\s*wireless|earbud|earphone|headphone)\b/i, target: "ses-kulaklik" },
+
+  // Aksesuar / tutucu
+  { re: /\b(tutucu|holder|araç\s*tutucu|selfie\s*çubuğ|tripod|pop\s*socket|pop\s*grip|stylus|dokunmatik\s*kalem|vlog\s*kiti|flash\s*bellek|otg\s*kablo|kızıl\s*ötesi|ir\s*alıcı)\b/i, target: "telefon-aksesuar" },
+
+  // Yedek parça / servis
+  { re: /\b(şarj\s*soket|sim\s*bordu|mikrofon\s*bordu|hoparlör\s*bordu|kamera\s*flexi|arka\s*kapak\s*cam|orta\s*kasa|titreşim\s*motoru|home\s*tuş|power\s*tuş|ses\s*tuş|parmak\s*izi\s*sensör)\b/i, target: "telefon-yedek-parca" },
+  { re: /\b(yedek\s*pil|yedek\s*batarya|orjinal\s*batarya|orjinal\s*pil|retro\s+\w+\s*(pil|batarya)|sanger|apple\s*batarya\s*pili|dell\s*pili|lenovo\s*pili|hp\s*pili|asus\s*pili|samsung\s*pili)\b/i, target: "telefon-yedek-parca" },
+  { re: /\buyumlu\b/i, target: "telefon-aksesuar" },
+  { re: /\bservis\b/i, target: "telefon-yedek-parca" },
+  { re: /\byedek\s*parça\b/i, target: "telefon-yedek-parca" },
+
+  // Kitap (iPhone hakkında kitap = telefon değil)
+  { re: /\b(allen\s*carr|dijital\s*bağımlılıktan|kitab)\b/i, target: "kitap" },
+];
+
 export async function buildRouter(sb) {
   const { data: cats } = await sb.from("categories").select("id, slug, parent_id, name");
   const bySlug = new Map((cats ?? []).map(c => [c.slug, c]));
@@ -232,20 +266,58 @@ export async function buildRouter(sb) {
     resolved.push({ ...rule, id: cat.id });
   }
 
+  // Negative indicator slug'larını id'ye çevir
+  const negativeIndicators = [];
+  for (const ind of PHONE_NEGATIVE_INDICATORS) {
+    const target = bySlug.get(ind.target);
+    if (target) negativeIndicators.push({ re: ind.re, targetId: target.id, targetSlug: ind.target });
+  }
+
+  const mainPhoneLikeIds = new Set([
+    bySlug.get("akilli-telefon")?.id,
+    bySlug.get("akilli-saat")?.id,
+    bySlug.get("tablet")?.id,
+    bySlug.get("bilgisayar-laptop")?.id,
+  ].filter(Boolean));
+
   return {
     route(title, brand, currentCategoryId) {
       if (!title) return null;
       const t = tlower(title);
+
+      // Önce normal kurallardan match bul
+      let matched = null;
       for (const rule of resolved) {
         for (const pat of rule.patterns) {
           if (pat.test(t)) {
+            matched = { categoryId: rule.id, slug: rule.slug };
+            break;
+          }
+        }
+        if (matched) break;
+      }
+
+      // POST-CHECK: Ana kategori (akıllı telefon/saat/tablet/laptop) hedefine düşmüşse
+      // başlıkta aksesuar/yedek indicator'ı varsa zorla aksesuara çevir
+      const currentOrMatchedId = matched?.categoryId ?? currentCategoryId;
+      if (currentOrMatchedId && mainPhoneLikeIds.has(currentOrMatchedId)) {
+        for (const ind of negativeIndicators) {
+          if (ind.re.test(t)) {
             return {
-              categoryId: rule.id,
-              reason: `${rule.slug}`,
-              changed: rule.id !== currentCategoryId,
+              categoryId: ind.targetId,
+              reason: `neg:${ind.targetSlug}`,
+              changed: ind.targetId !== currentCategoryId,
             };
           }
         }
+      }
+
+      if (matched) {
+        return {
+          categoryId: matched.categoryId,
+          reason: matched.slug,
+          changed: matched.categoryId !== currentCategoryId,
+        };
       }
       return null;
     },
