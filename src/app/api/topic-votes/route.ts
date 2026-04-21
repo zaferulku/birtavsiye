@@ -8,6 +8,16 @@ async function readBody(req: Request): Promise<{ topic_id?: string; vote?: numbe
   try { return await req.json(); } catch { return {}; }
 }
 
+async function recalcTotal(topicId: string): Promise<number> {
+  const { data } = await supabaseAdmin
+    .from("topic_votes")
+    .select("vote")
+    .eq("topic_id", topicId);
+  const total = (data ?? []).reduce((s: number, r: { vote: number }) => s + (r.vote || 0), 0);
+  await supabaseAdmin.from("topics").update({ votes: total }).eq("id", topicId);
+  return total;
+}
+
 // POST: upsert vote (+1 / -1)
 export async function POST(req: Request) {
   const user = await getUserFromRequest(req);
@@ -21,7 +31,8 @@ export async function POST(req: Request) {
     .from("topic_votes")
     .upsert({ topic_id, user_id: user.id, vote }, { onConflict: "topic_id,user_id" });
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true });
+  const total = await recalcTotal(topic_id);
+  return NextResponse.json({ ok: true, total });
 }
 
 // DELETE: remove vote
@@ -39,5 +50,6 @@ export async function DELETE(req: Request) {
     .eq("topic_id", topic_id)
     .eq("user_id", user.id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true });
+  const total = await recalcTotal(topic_id);
+  return NextResponse.json({ ok: true, total });
 }

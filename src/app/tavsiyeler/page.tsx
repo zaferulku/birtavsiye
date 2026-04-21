@@ -86,14 +86,17 @@ export default function TavsiyelerSayfasi() {
   const [genderOnly, setGenderOnly] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      setUser(data.user);
-      if (data.user) {
-        const { data: v } = await supabase.from("topic_votes")
-          .select("topic_id,vote").eq("user_id", data.user.id);
-        if (v) setUserVotes(Object.fromEntries(v.map(x => [x.topic_id, x.vote])));
-        const { data: profile } = await supabase.from("profiles").select("gender").eq("id", data.user.id).maybeSingle();
-        setUserGender(profile?.gender || "");
+    supabase.auth.getSession().then(async ({ data: sdata }) => {
+      const session = sdata.session;
+      setUser(session?.user ?? null);
+      if (session?.access_token) {
+        const auth = { Authorization: `Bearer ${session.access_token}` };
+        const [vRes, pRes] = await Promise.all([
+          fetch("/api/me/votes", { headers: auth }).then(r => r.json()).catch(() => null),
+          fetch("/api/me/profile", { headers: auth }).then(r => r.json()).catch(() => null),
+        ]);
+        if (vRes?.votes) setUserVotes(Object.fromEntries((vRes.votes as { topic_id: string; vote: number }[]).map(x => [x.topic_id, x.vote])));
+        setUserGender(pRes?.profile?.gender || "");
       }
     });
     fetchTopics();
@@ -112,17 +115,16 @@ export default function TavsiyelerSayfasi() {
   }, []);
 
   const fetchTopics = async () => {
-    const { data } = await supabase.from("topics").select("*")
-      .order("created_at", { ascending: false }).limit(100);
+    const tRes = await fetch("/api/public/topics?limit=100").then(r => r.json()).catch(() => null);
+    const data = tRes?.topics as Topic[] | undefined;
     if (!data) return;
     setTopics(data);
     isFirst.current = false;
-    const ids = data.map(t => t.id);
+    const ids = data.map((t: Topic) => t.id);
     if (ids.length > 0) {
-      const { data: ans } = await supabase.from("topic_answers")
-        .select("id,topic_id,user_name,body,votes,gender")
-        .in("topic_id", ids)
-        .order("votes", { ascending: false });
+      const aRes = await fetch(`/api/public/topic-answers?topic_ids=${ids.join(",")}`)
+        .then(r => r.json()).catch(() => null);
+      const ans = aRes?.answers as Answer[] | undefined;
       if (ans) {
         const grouped: Record<string, Answer[]> = {};
         ans.forEach(a => {
@@ -169,11 +171,10 @@ export default function TavsiyelerSayfasi() {
     if (productSearchTimeout.current) clearTimeout(productSearchTimeout.current);
     if (!q.trim()) { setProductResults([]); return; }
     productSearchTimeout.current = setTimeout(async () => {
-      const { data } = await supabase.from("products")
-        .select("id,title,slug,brand,image_url,categories(slug)")
-        .or(`title.ilike.%${q}%,brand.ilike.%${q}%`)
-        .limit(6);
-      setProductResults((data || []).map((p: any) => ({ ...p, category_slug: p.categories?.slug ?? null })));
+      const res = await fetch(`/api/public/products?q=${encodeURIComponent(q)}&limit=6`)
+        .then(r => r.json()).catch(() => null);
+      const data = res?.products;
+      setProductResults((data || []).map((p: any) => ({ ...p, category_slug: null })));
     }, 300);
   };
 
@@ -182,17 +183,24 @@ export default function TavsiyelerSayfasi() {
     setSubmitting(true);
     const finalCat = selectedProduct ? catVal : guessCatFromTitle(titleVal);
     const gf = genderOnly && (userGender === "kadin" || userGender === "erkek") ? userGender : null;
-    await supabase.from("topics").insert({
-      user_id: user.id, user_name: getDisplay(user),
-      title: titleVal, body: bodyVal, category: finalCat, votes: 0, answer_count: 0,
-      gender_filter: gf,
-      ...(selectedProduct ? {
-        product_id: selectedProduct.id,
-        product_slug: selectedProduct.slug,
-        product_title: selectedProduct.title,
-        product_brand: selectedProduct.brand,
-      } : {}),
-    });
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      await fetch("/api/topics", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_name: getDisplay(user),
+          title: titleVal, body: bodyVal, category: finalCat,
+          gender_filter: gf,
+          ...(selectedProduct ? {
+            product_id: selectedProduct.id,
+            product_slug: selectedProduct.slug,
+            product_title: selectedProduct.title,
+            product_brand: selectedProduct.brand,
+          } : {}),
+        }),
+      });
+    }
     setTitleVal(""); setBodyVal(""); setShowForm(false); setSubmitting(false);
     setSelectedProduct(null); setProductSearch(""); setProductResults([]);
     setGenderOnly(false);
@@ -204,10 +212,15 @@ export default function TavsiyelerSayfasi() {
     const cur = userVotes[t.id] || 0;
     const diff = cur === val ? -val : cur === 0 ? val : val * 2;
     const nv = cur === val ? 0 : val;
-    if (cur === val) await supabase.from("topic_votes").delete().eq("topic_id", t.id).eq("user_id", user.id);
-    else await supabase.from("topic_votes").upsert({ topic_id: t.id, user_id: user.id, vote: val }, { onConflict: "topic_id,user_id" });
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return;
+    const auth = { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" };
+    if (cur === val) {
+      await fetch(`/api/topic-votes?topic_id=${t.id}`, { method: "DELETE", headers: auth });
+    } else {
+      await fetch("/api/topic-votes", { method: "POST", headers: auth, body: JSON.stringify({ topic_id: t.id, vote: val }) });
+    }
     const newTotal = (t.votes || 0) + diff;
-    await supabase.from("topics").update({ votes: newTotal }).eq("id", t.id);
     setTopics(prev => prev.map(x => x.id === t.id ? { ...x, votes: newTotal } : x));
     setUserVotes(prev => ({ ...prev, [t.id]: nv }));
   };
