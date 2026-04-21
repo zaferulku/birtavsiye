@@ -8,18 +8,20 @@ import path from "path";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Hacme göre sırala (büyük havuz önce)
+// Round 2: büyük havuzlarda limit yükseltildi (skip-enriched zaten işlenenleri
+// atlar, sadece yeni ürünler taranır)
 const CATEGORIES = [
-  { slug: "kozmetik",     limit: 500 },
-  { slug: "moda",         limit: 500 },
-  { slug: "spor-outdoor", limit: 500 },
-  { slug: "ev-yasam",     limit: 400 },
-  { slug: "anne-bebek",   limit: 200 },
-  { slug: "otomotiv",     limit: 130 },
-  { slug: "yapi-market",  limit: 160 },
-  { slug: "supermarket",  limit: 60 },
-  { slug: "pet-shop",     limit: 22 },
-  { slug: "kitap-hobi",   limit: 21 },
+  { slug: "kozmetik",     limit: 3000 },
+  { slug: "moda",         limit: 3000 },
+  { slug: "spor-outdoor", limit: 2500 },
+  { slug: "ev-yasam",     limit: 2000 },
+  { slug: "elektronik",   limit: 3000 },
+  { slug: "anne-bebek",   limit: 500 },
+  { slug: "otomotiv",     limit: 500 },
+  { slug: "yapi-market",  limit: 500 },
+  { slug: "supermarket",  limit: 300 },
+  { slug: "pet-shop",     limit: 100 },
+  { slug: "kitap-hobi",   limit: 100 },
 ];
 
 function runOne(slug, limit) {
