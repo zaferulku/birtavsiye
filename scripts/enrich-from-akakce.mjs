@@ -53,12 +53,29 @@ async function enrichOne(page, product) {
 
       // 1) Multi-section spec extraction
       const specs = {};
+      const readCellValue = (cell) => {
+        // Önce içindeki icon/svg'ye bak (Akakçe "var/yok" icon ile gösteriyor)
+        const svgYes = cell.querySelector("svg[class*=check], svg[class*=tick], img[alt*=var], img[alt*=yes], svg[class*=green], svg[class*=positive]");
+        const svgNo = cell.querySelector("svg[class*=x], svg[class*=cross], svg[class*=close], img[alt*=yok], img[alt*=no], svg[class*=red], svg[class*=negative]");
+        if (svgYes) return "VAR";
+        if (svgNo) return "YOK";
+        // Class name'i üzerinden kontrol
+        const classes = Array.from(cell.querySelectorAll("*")).map(el => el.className).join(" ");
+        if (/\b(checkmark|tick|v_green|i_yes|icon_v|yes|positive|approved)\b/i.test(classes)) return "VAR";
+        if (/\b(cross|x_red|i_no|icon_x|no|negative|denied)\b/i.test(classes)) return "YOK";
+        const text = cell.textContent?.replace(/^:\s*/, "").trim() || "";
+        return text;
+      };
       document.querySelectorAll("table tr").forEach(tr => {
         const cells = tr.querySelectorAll("td, th");
         if (cells.length < 2) return;
         const key = cells[0].textContent?.replace(/:/g, "").trim();
-        const val = cells[1].textContent?.replace(/^:\s*/, "").trim();
-        if (key && val && key.length < 60 && val.length < 300) specs[key] = val;
+        const val = readCellValue(cells[1]);
+        if (!key || key.length >= 60) return;
+        if (!val) return;
+        // Sadece ":" veya tek karakter junk'ları eleme
+        if (val.length <= 2 && /^[\-—:;.,?!*#]+$/.test(val)) return;
+        if (val.length < 300) specs[key] = val;
       });
       document.querySelectorAll("dl").forEach(dl => {
         const dts = dl.querySelectorAll("dt");

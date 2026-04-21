@@ -139,11 +139,13 @@ export default function SpecsTable({ specs }: { specs: Record<string, unknown> |
     return "";
   };
 
-  // Placeholder-boş değerleri tanı (-, —, N/A, ?, boş, sadece whitespace)
+  // Placeholder-boş değerleri tanı (-, —, :, N/A, ?, boş, tek karakterli junk)
   const isPlaceholderEmpty = (v: string): boolean => {
     const s = v.trim();
     if (s.length === 0) return true;
-    if (/^(-+|—+|n\/?a|\?+|boş|yok bilgi|bilinmiyor)$/i.test(s)) return true;
+    // Tek karakterli değersiz sinyaller (akakce icon'ları ":" olarak parse edilmiş olabilir)
+    if (s.length <= 2 && /^[\-—:;.,?!*#]+$/.test(s)) return true;
+    if (/^(-+|—+|n\/?a|\?+|boş|yok bilgi|bilinmiyor|belirtilmemiş|bilinmemektedir)$/i.test(s)) return true;
     return false;
   };
 
