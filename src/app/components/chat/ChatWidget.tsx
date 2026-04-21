@@ -119,7 +119,7 @@ export default function ChatWidget() {
     <>
       {/* Konuşma paneli — sağ kenarda, sadece send'den sonra açık */}
       {open && (
-        <div className="fixed top-4 right-4 bottom-24 z-50 w-[min(420px,calc(100vw-2rem))] bg-white border border-gray-200 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+        <div className="fixed right-4 bottom-24 z-50 w-[min(420px,calc(100vw-2rem))] h-[min(48vh,480px)] bg-white border border-gray-200 rounded-2xl shadow-2xl flex flex-col overflow-hidden">
           <div className="bg-[#0F0E0D] text-white px-4 py-3 flex items-center justify-between flex-shrink-0">
             <div>
               <div className="font-bold text-sm">birtavsiye Asistan</div>
