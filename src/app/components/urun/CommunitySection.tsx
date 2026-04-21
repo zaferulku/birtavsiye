@@ -2,8 +2,9 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../../../lib/supabase";
 import Link from "next/link";
+import SpecsTable from "./SpecsTable";
 
-const tabs = ["Yorumlar", "Benzer Ürünler", "Tavsiyeler"];
+const tabs = ["Yorumlar", "Teknik Özellikler", "Benzer Ürünler", "Tavsiyeler"];
 
 type Post = {
   id: string;
@@ -496,8 +497,15 @@ export default function CommunitySection({
         </div>
       )}
 
-      {/* Benzer Ürünler */}
+      {/* Teknik Özellikler */}
       {activeTab === 1 && (
+        <div>
+          <SpecsTable specs={specs as Record<string, unknown> | null} />
+        </div>
+      )}
+
+      {/* Benzer Ürünler */}
+      {activeTab === 2 && (
         <div>
           {similarProducts.length === 0 ? (
             <div className="text-center py-16 bg-gray-50 rounded-2xl">
@@ -538,7 +546,7 @@ export default function CommunitySection({
       )}
 
       {/* Tavsiyeler */}
-      {activeTab === 2 && (
+      {activeTab === 3 && (
         <div id="tavsiyeler">
           {linkedTopics.length === 0 ? (
             <div className="text-center py-16 bg-gray-50 rounded-2xl">
