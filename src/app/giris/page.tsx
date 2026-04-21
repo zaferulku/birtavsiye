@@ -34,13 +34,19 @@ export default function GirisSayfasi() {
       options: { data: { full_name: fullName } }
     });
     if (error) { setError("Kayıt başarısız: " + error.message); setLoading(false); return; }
-    if (data.user) {
-      await supabase.from("profiles").upsert({
-        id: data.user.id,
-        full_name: fullName,
-        username: email.split("@")[0],
-        gender,
-        age_range: ageRange,
+    if (data.user && data.session?.access_token) {
+      await fetch("/api/auth/signup-profile", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${data.session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          full_name: fullName,
+          username: email.split("@")[0],
+          gender,
+          age_range: ageRange,
+        }),
       });
     }
     setSuccess("Doğrulama emaili gönderildi! Emailini kontrol et.");

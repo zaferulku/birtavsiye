@@ -10,6 +10,7 @@ export async function GET(req: Request) {
 
   const url = new URL(req.url);
   const productId = url.searchParams.get("product_id");
+  const details = url.searchParams.get("details") === "1";
 
   if (productId) {
     const { data } = await supabaseAdmin
@@ -19,6 +20,15 @@ export async function GET(req: Request) {
       .eq("product_id", productId)
       .maybeSingle();
     return NextResponse.json({ favorited: !!data });
+  }
+
+  if (details) {
+    const { data } = await supabaseAdmin
+      .from("favorites")
+      .select("*, products(id, title, slug, brand, image_url)")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+    return NextResponse.json({ favorites: data ?? [] });
   }
 
   const { data } = await supabaseAdmin

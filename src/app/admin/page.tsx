@@ -68,42 +68,51 @@ export default function AdminPanel() {
     else setPriceProductPrices([]);
   }, [priceProductId]);
 
+  const getAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return null;
+    return { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" } as const;
+  };
+
   const checkAdmin = async () => {
-    const { data: userData } = await supabase.auth.getUser();
-    if (!userData.user) { router.push("/giris"); return; }
-    const { data: profile } = await supabase
-      .from("profiles").select("is_admin").eq("id", userData.user.id).maybeSingle();
-    if (!profile?.is_admin) { router.push("/"); return; }
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) { router.push("/giris"); return; }
+    const res = await fetch("/api/admin/check", {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    });
+    if (!res.ok) { router.push("/"); return; }
     setLoading(false);
   };
 
   const loadProducts = async () => {
-    const { data } = await supabase
-      .from("products")
-      .select("id, title, slug, brand, created_at")
-      .order("created_at", { ascending: false });
-    if (data) setProducts(data);
+    const auth = await getAuth();
+    if (!auth) return;
+    const res = await fetch("/api/admin/products", { headers: auth }).then(r => r.json()).catch(() => null);
+    if (Array.isArray(res?.products)) setProducts(res.products);
   };
 
   const loadCategories = async () => {
-    const { data } = await supabase.from("categories").select("id, name, slug");
-    if (data) setCategories(data);
+    const res = await fetch("/api/public/categories").then(r => r.json()).catch(() => null);
+    if (Array.isArray(res?.categories)) setCategories(res.categories);
   };
 
   const loadStoresAndPrices = async () => {
-    const { data: storeData } = await supabase.from("stores").select("*").order("name");
-    if (storeData) setStores(storeData);
-    const { data: priceData } = await supabase
-      .from("prices").select("id, price, product_id, store_id, products(title), stores(name, url)")
-      .order("price", { ascending: true });
-    if (priceData) setAllPrices(priceData);
+    const auth = await getAuth();
+    if (!auth) return;
+    const [sRes, pRes] = await Promise.all([
+      fetch("/api/admin/stores", { headers: auth }).then(r => r.json()).catch(() => null),
+      fetch("/api/admin/prices", { headers: auth }).then(r => r.json()).catch(() => null),
+    ]);
+    if (Array.isArray(sRes?.stores)) setStores(sRes.stores);
+    if (Array.isArray(pRes?.prices)) setAllPrices(pRes.prices);
   };
 
   const loadProductPrices = async (productId: string) => {
-    const { data } = await supabase
-      .from("prices").select("id, price, store_id, stores(name, url)")
-      .eq("product_id", productId).order("price", { ascending: true });
-    setPriceProductPrices(data || []);
+    const auth = await getAuth();
+    if (!auth) return;
+    const res = await fetch(`/api/admin/prices?product_id=${productId}`, { headers: auth })
+      .then(r => r.json()).catch(() => null);
+    setPriceProductPrices(res?.prices || []);
   };
 
   const handleAddPrice = async () => {
@@ -115,26 +124,26 @@ export default function AdminPanel() {
     if (isNaN(parsed)) { setPriceError("Geçersiz fiyat!"); return; }
     setPriceSaving(true); setPriceError(""); setPriceSuccess("");
 
-    // Store bul veya oluştur
-    let storeId: string;
-    const { data: existingStore } = await supabase
-      .from("stores").select("id").ilike("name", storeName.trim()).maybeSingle();
-    if (existingStore) {
-      storeId = existingStore.id;
-    } else {
-      const { data: newStore, error: storeErr } = await supabase
-        .from("stores").insert({ name: storeName.trim(), url: storeUrl.trim() || null }).select("id").single();
-      if (storeErr) { setPriceError("Mağaza oluşturulamadı: " + storeErr.message); setPriceSaving(false); return; }
-      storeId = newStore.id;
-    }
+    const auth = await getAuth();
+    if (!auth) { setPriceError("Oturum yok"); setPriceSaving(false); return; }
 
-    // Aynı ürün+mağaza kombinasyonu varsa güncelle, yoksa ekle
-    const { error } = await supabase.from("prices").upsert(
-      { product_id: priceProductId, store_id: storeId, price: parsed, affiliate_url: affiliateUrl.trim() || null },
-      { onConflict: "product_id,store_id" }
-    );
-    if (error) {
-      setPriceError(error.message);
+    const storeRes = await fetch("/api/admin/stores", {
+      method: "POST", headers: auth,
+      body: JSON.stringify({ name: storeName.trim(), url: storeUrl.trim() }),
+    }).then(r => r.json()).catch(() => null);
+    const storeId = storeRes?.store?.id;
+    if (!storeId) { setPriceError("Mağaza oluşturulamadı"); setPriceSaving(false); return; }
+
+    const res = await fetch("/api/admin/prices", {
+      method: "POST", headers: auth,
+      body: JSON.stringify({
+        product_id: priceProductId, store_id: storeId,
+        price: parsed, affiliate_url: affiliateUrl.trim() || null,
+      }),
+    });
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({ error: "Hata" }));
+      setPriceError(j.error || "Hata");
     } else {
       setPriceSuccess("✅ Fiyat eklendi!");
       setStoreName(""); setStoreUrl(""); setPriceValue(""); setAffiliateUrl("");
@@ -146,7 +155,9 @@ export default function AdminPanel() {
 
   const handleDeletePrice = async (priceId: string) => {
     if (!confirm("Bu fiyatı silmek istediğine emin misin?")) return;
-    await supabase.from("prices").delete().eq("id", priceId);
+    const auth = await getAuth();
+    if (!auth) return;
+    await fetch(`/api/admin/prices?id=${priceId}`, { method: "DELETE", headers: auth });
     setPriceProductPrices(prev => prev.filter(p => p.id !== priceId));
   };
 
@@ -226,16 +237,22 @@ export default function AdminPanel() {
     // Specs'i JSON olarak kaydet
     const specsJson = specs.length > 0 ? JSON.stringify(specs) : null;
 
-    const { error } = await supabase.from("products").insert({
-      title, slug, brand, description,
-      image_url: imageUrl || null,
-      category_id: category?.id || null,
-      specs: specsJson,
-      icecat_id: icecatProductId || null,
+    const auth = await getAuth();
+    if (!auth) { setError("Oturum yok"); setSaving(false); return; }
+    const res = await fetch("/api/admin/products", {
+      method: "POST", headers: auth,
+      body: JSON.stringify({
+        title, slug, brand, description,
+        image_url: imageUrl || null,
+        category_id: category?.id || null,
+        specs: specsJson,
+        icecat_id: icecatProductId || null,
+      }),
     });
 
-    if (error) {
-      setError(error.message.includes("unique") ? "Bu slug zaten kullanılıyor." : error.message);
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({ error: "Hata" }));
+      setError((j.error || "").includes("unique") ? "Bu slug zaten kullanılıyor." : (j.error || "Hata"));
     } else {
       setSuccess("✅ Ürün eklendi!");
       setTitle(""); setSlug(""); setBrand(""); setDescription("");
@@ -248,7 +265,9 @@ export default function AdminPanel() {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Silmek istediğine emin misin?")) return;
-    await supabase.from("products").delete().eq("id", id);
+    const auth = await getAuth();
+    if (!auth) return;
+    await fetch(`/api/admin/products?id=${id}`, { method: "DELETE", headers: auth });
     setProducts((prev) => prev.filter((p) => p.id !== id));
   };
 
@@ -307,18 +326,23 @@ export default function AdminPanel() {
     setCsvImporting(true); setCsvResult(""); setCsvError("");
     let ok = 0; let fail = 0;
 
+    const auth = await getAuth();
+    if (!auth) { setCsvError("Oturum yok"); setCsvImporting(false); return; }
     for (const row of csvParsed) {
       const cat = categories.find(c => c.slug === row.category || c.name.toLowerCase() === row.category.toLowerCase());
-      const { error } = await supabase.from("products").insert({
-        title: row.title,
-        slug: makeSlug(row.title),
-        brand: row.brand,
-        description: row.description || null,
-        image_url: row.image_url || null,
-        category_id: cat?.id || null,
-        specs: row.specs ? JSON.parse(row.specs) : null,
+      const res = await fetch("/api/admin/products", {
+        method: "POST", headers: auth,
+        body: JSON.stringify({
+          title: row.title,
+          slug: makeSlug(row.title),
+          brand: row.brand,
+          description: row.description || null,
+          image_url: row.image_url || null,
+          category_id: cat?.id || null,
+          specs: row.specs ? JSON.parse(row.specs) : null,
+        }),
       });
-      if (error) fail++; else ok++;
+      if (!res.ok) fail++; else ok++;
     }
 
     setCsvResult(`✅ ${ok} ürün eklendi${fail > 0 ? `, ❌ ${fail} hata` : ""}`);

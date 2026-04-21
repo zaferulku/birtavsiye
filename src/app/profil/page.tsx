@@ -82,19 +82,22 @@ export default function ProfilSayfasi() {
     }
   };
 
-  const loadPosts = async (userId: string) => {
-    const { data } = await supabase.from("community_posts")
-      .select("*, products(title, slug, image_url)")
-      .eq("user_id", userId).is("parent_id", null)
-      .order("created_at", { ascending: false });
-    if (data) setPosts(data);
+  const loadPosts = async (_userId: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return;
+    const res = await fetch("/api/me/community-posts", {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    }).then(r => r.json()).catch(() => null);
+    if (Array.isArray(res?.posts)) setPosts(res.posts);
   };
 
-  const loadFavorites = async (userId: string) => {
-    const { data } = await supabase.from("favorites")
-      .select("*, products(id, title, slug, brand, image_url)")
-      .eq("user_id", userId).order("created_at", { ascending: false });
-    if (data) setFavorites(data);
+  const loadFavorites = async (_userId: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return;
+    const res = await fetch("/api/me/favorites?details=1", {
+      headers: { Authorization: `Bearer ${session.access_token}` },
+    }).then(r => r.json()).catch(() => null);
+    if (Array.isArray(res?.favorites)) setFavorites(res.favorites);
   };
 
   const handleSave = async () => {
