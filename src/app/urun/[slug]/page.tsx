@@ -4,7 +4,6 @@ import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
 import ProductGallery from "../../components/urun/ProductGallery";
 import ProductInfo from "../../components/urun/ProductInfo";
-import SpecsTable from "../../components/urun/SpecsTable";
 import CommunitySection from "../../components/urun/CommunitySection";
 import StoreLogo from "../../components/ui/StoreLogo";
 import PriceHistoryChart from "../../components/urun/PriceHistoryChart";
@@ -311,8 +310,7 @@ export default async function UrunDetay({
           </div>
         </div>
 
-        {/* Teknik Özellikler */}
-        <SpecsTable specs={product.specs ?? null} />
+        {/* Teknik Özellikler sadece tab'da gösteriliyor (CommunitySection) */}
 
         {/* Fiyat Geçmişi */}
         {history && history.length > 0 && (

@@ -139,9 +139,20 @@ export default function SpecsTable({ specs }: { specs: Record<string, unknown> |
     return "";
   };
 
+  // Placeholder-boş değerleri tanı (-, —, N/A, ?, boş, sadece whitespace)
+  const isPlaceholderEmpty = (v: string): boolean => {
+    const s = v.trim();
+    if (s.length === 0) return true;
+    if (/^(-+|—+|n\/?a|\?+|boş|yok bilgi|bilinmiyor)$/i.test(s)) return true;
+    return false;
+  };
+
   const filtered = Object.entries(specs)
-    .filter(([k, v]) => !HIDDEN_KEYS.has(k) && !HIDDEN_KEY_PATTERNS.test(k) && toStr(v).length > 0)
-    .map(([k, v]) => [k, toStr(v)] as [string, string]);
+    .filter(([k]) => !HIDDEN_KEYS.has(k) && !HIDDEN_KEY_PATTERNS.test(k))
+    .map(([k, v]) => [k, toStr(v)] as [string, string])
+    .filter(([, v]) => !isPlaceholderEmpty(v))
+    // "Yok / Hayır / No / Desteklemez" olan satırları gizle — sadece pozitif sinyaller gösterilir
+    .filter(([, v]) => !isBooleanNo(v));
 
   if (filtered.length === 0) return null;
 
