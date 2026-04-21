@@ -128,82 +128,53 @@ export default function CommunitySection({
   const [linkedTopics, setLinkedTopics] = useState<LinkedTopic[]>([]);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      if (data.user) loadUserVotes(data.user.id);
+    supabase.auth.getSession().then(async ({ data: sdata }) => {
+      const session = sdata.session;
+      setUser(session?.user ?? null);
+      if (session?.access_token) {
+        const res = await fetch("/api/me/post-votes", {
+          headers: { Authorization: `Bearer ${session.access_token}` },
+        }).then(r => r.json()).catch(() => null);
+        const votes = res?.votes as { post_id: string; vote_type: "up" | "down" }[] | undefined;
+        if (votes) {
+          const map: Record<string, "up" | "down"> = {};
+          votes.forEach(v => { map[v.post_id] = v.vote_type; });
+          setVotedPosts(map);
+        }
+      }
     });
     fetchPosts();
   }, [productId]);
 
   useEffect(() => {
     if (!categoryId) return;
-
-    const load = async () => {
-      // Bu ürünün model_family'sini öğren — variant dedup için
-      const { data: thisProd } = await supabase
-        .from("products")
-        .select("brand, model_family")
-        .eq("id", productId)
-        .maybeSingle();
-
-      let q = supabase.from("products")
-        .select("id,title,slug,brand,image_url,model_family,prices(price)")
-        .eq("category_id", categoryId)
-        .neq("id", productId);
-
-      if (thisProd?.model_family) {
-        q = q.neq("model_family", thisProd.model_family);
-      }
-
-      const { data } = await q.limit(40);
-      if (!data) return;
-
-      // Her family'den 1 temsilci (variant dedup)
-      const byFamily = new Map<string, typeof data[number]>();
-      const noFamily: typeof data = [];
-      for (const p of data) {
-        if (p.brand && p.model_family) {
-          const key = `${p.brand}|${p.model_family}`;
-          if (!byFamily.has(key)) byFamily.set(key, p);
-        } else {
-          noFamily.push(p);
-        }
-      }
-      const deduped = [...byFamily.values(), ...noFamily];
-
-      // Aynı brand'i öne al
-      const sorted = deduped.sort((a, b) => {
-        const aBrand = thisProd?.brand && a.brand === thisProd.brand ? 0 : 1;
-        const bBrand = thisProd?.brand && b.brand === thisProd.brand ? 0 : 1;
-        return aBrand - bBrand;
-      });
-
-      setSimilarProducts(sorted.slice(0, 8) as unknown as SimilarProduct[]);
-    };
-    load();
+    fetch(`/api/public/products/similar?product_id=${productId}`)
+      .then(r => r.json())
+      .then(res => {
+        if (Array.isArray(res?.products)) setSimilarProducts(res.products as unknown as SimilarProduct[]);
+      })
+      .catch(() => {});
   }, [categoryId, productId]);
 
   useEffect(() => {
-    supabase.from("topics")
-      .select("id,title,body,user_name,category,votes,answer_count,created_at")
-      .eq("product_id", productId)
-      .order("created_at", { ascending: false })
-      .then(({ data }) => { if (data) setLinkedTopics(data); });
+    fetch(`/api/public/topics?product_id=${productId}&limit=50`)
+      .then(r => r.json())
+      .then(res => {
+        if (Array.isArray(res?.topics)) setLinkedTopics(res.topics);
+      })
+      .catch(() => {});
   }, [productId]);
 
-  const loadUserVotes = async (userId: string) => {
-    const { data } = await supabase.from("post_votes").select("post_id, vote_type").eq("user_id", userId);
-    if (data) {
-      const map: Record<string, "up" | "down"> = {};
-      data.forEach((v) => { map[v.post_id] = v.vote_type; });
-      setVotedPosts(map);
-    }
+  const fetchPosts = async () => {
+    const res = await fetch(`/api/public/community-posts?product_id=${productId}`)
+      .then(r => r.json()).catch(() => null);
+    if (Array.isArray(res?.posts)) setPosts(res.posts);
   };
 
-  const fetchPosts = async () => {
-    const { data } = await supabase.from("community_posts").select("*")
-      .eq("product_id", productId).order("created_at", { ascending: true });
-    if (data) setPosts(data);
+  const getAuth = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return null;
+    return { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" } as const;
   };
 
   const getDisplayName = (u: any) =>
@@ -211,13 +182,14 @@ export default function CommunitySection({
 
   const handleVote = async (post: Post, type: "up" | "down") => {
     if (!user) { window.location.href = "/giris"; return; }
+    const auth = await getAuth();
+    if (!auth) return;
     const existing = votedPosts[post.id];
     if (existing === type) {
       const update: any = type === "up" ? { votes: Math.max(0, post.votes - 1) } : { downvotes: Math.max(0, post.downvotes - 1) };
       setPosts((prev) => prev.map((p) => p.id === post.id ? { ...p, ...update } : p));
       setVotedPosts((prev) => { const n = { ...prev }; delete n[post.id]; return n; });
-      await supabase.from("community_posts").update(update).eq("id", post.id);
-      await supabase.from("post_votes").delete().eq("post_id", post.id).eq("user_id", user.id);
+      await fetch(`/api/post-votes?post_id=${post.id}`, { method: "DELETE", headers: auth });
       return;
     }
     const update: any = {};
@@ -225,8 +197,10 @@ export default function CommunitySection({
     else { update.downvotes = (post.downvotes || 0) + 1; if (existing === "up") update.votes = Math.max(0, post.votes - 1); }
     setPosts((prev) => prev.map((p) => p.id === post.id ? { ...p, ...update } : p));
     setVotedPosts((prev) => ({ ...prev, [post.id]: type }));
-    await supabase.from("community_posts").update(update).eq("id", post.id);
-    await supabase.from("post_votes").upsert({ post_id: post.id, user_id: user.id, vote_type: type }, { onConflict: "post_id,user_id" });
+    await fetch("/api/post-votes", {
+      method: "POST", headers: auth,
+      body: JSON.stringify({ post_id: post.id, vote_type: type }),
+    });
   };
 
   const handleSubmit = async () => {
@@ -234,22 +208,38 @@ export default function CommunitySection({
     if (!user) { window.location.href = "/giris"; return; }
     setLoading(true);
     const submitBody = body.trim() || `${userRating} yıldız puan verildi.`;
-    await supabase.from("community_posts").insert({
-      product_id: productId, user_id: user.id,
-      user_name: getDisplayName(user), type: "yorum",
-      title: submitBody.slice(0, 80), body: submitBody,
-      votes: 0, downvotes: 0, parent_id: null, rating: userRating,
-    });
+    const auth = await getAuth();
+    if (auth) {
+      await fetch("/api/community-posts", {
+        method: "POST", headers: auth,
+        body: JSON.stringify({
+          product_id: productId,
+          user_name: getDisplayName(user),
+          type: "yorum",
+          title: submitBody.slice(0, 80),
+          body: submitBody,
+          rating: userRating,
+        }),
+      });
+    }
     setBody(""); setUserRating(0); await fetchPosts(); setLoading(false);
   };
 
   const handleReply = useCallback(async (parentId: string, replyBody: string) => {
     if (!user) { window.location.href = "/giris"; return; }
-    await supabase.from("community_posts").insert({
-      product_id: productId, user_id: user.id,
-      user_name: getDisplayName(user), type: "yorum",
-      title: replyBody.slice(0, 80), body: replyBody,
-      votes: 0, downvotes: 0, parent_id: parentId,
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session?.access_token) return;
+    await fetch("/api/community-posts", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        product_id: productId,
+        user_name: getDisplayName(user),
+        type: "yorum",
+        title: replyBody.slice(0, 80),
+        body: replyBody,
+        parent_id: parentId,
+      }),
     });
     await fetchPosts();
     setReplyToId(null);

@@ -8,6 +8,7 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const limit = Math.min(200, Math.max(1, parseInt(url.searchParams.get("limit") || "60", 10)));
   const category = url.searchParams.get("category");
+  const product_id = url.searchParams.get("product_id");
   const popular = url.searchParams.get("popular") === "1";
 
   let q = supabaseAdmin
@@ -20,6 +21,7 @@ export async function GET(req: Request) {
     : q.order("created_at", { ascending: false });
 
   if (category && category !== "Hepsi") q = q.eq("category", category);
+  if (product_id) q = q.eq("product_id", product_id);
 
   const { data, error } = await q;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
