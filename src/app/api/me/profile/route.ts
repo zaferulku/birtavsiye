@@ -1,0 +1,49 @@
+import { NextResponse } from "next/server";
+import { supabaseAdmin } from "../../../../lib/supabaseServer";
+import { getUserFromRequest } from "../../../../lib/apiAuth";
+
+export const runtime = "nodejs";
+
+export async function GET(req: Request) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: "auth required" }, { status: 401 });
+
+  const { data, error } = await supabaseAdmin
+    .from("profiles")
+    .select("id, username, gender, avatar_url, is_admin, created_at")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ profile: data });
+}
+
+export async function PATCH(req: Request) {
+  const user = await getUserFromRequest(req);
+  if (!user) return NextResponse.json({ error: "auth required" }, { status: 401 });
+
+  let body: Record<string, unknown>;
+  try { body = await req.json(); }
+  catch { return NextResponse.json({ error: "invalid json" }, { status: 400 }); }
+
+  const payload: Record<string, unknown> = {};
+  if (typeof body.username === "string") payload.username = body.username.slice(0, 80).trim();
+  if (typeof body.gender === "string" && ["kadin", "erkek", "belirtmek-istemiyor"].includes(body.gender)) {
+    payload.gender = body.gender;
+  }
+  if (typeof body.avatar_url === "string") payload.avatar_url = body.avatar_url.slice(0, 500);
+
+  if (Object.keys(payload).length === 0) {
+    return NextResponse.json({ error: "no valid fields" }, { status: 400 });
+  }
+
+  // is_admin user tarafından ASLA değiştirilemez (güvenlik)
+  const { data, error } = await supabaseAdmin
+    .from("profiles")
+    .upsert({ id: user.id, ...payload }, { onConflict: "id" })
+    .select("*")
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ profile: data });
+}
