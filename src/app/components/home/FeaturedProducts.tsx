@@ -1,7 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { supabase } from "../../../lib/supabase";
-import { fetchDescendantIds } from "../../../lib/categoryTree";
 import Link from "next/link";
 
 type Price = { price: number; store: { name: string } };
@@ -76,25 +74,12 @@ export default function FeaturedProducts() {
 
   useEffect(() => {
     (async () => {
-      const { data: elektronikCat } = await supabase
-        .from("categories")
-        .select("id")
-        .eq("slug", "elektronik")
-        .maybeSingle();
-
-      if (!elektronikCat?.id) { setLoading(false); return; }
-
-      const ids = await fetchDescendantIds(elektronikCat.id);
-
-      const { data } = await supabase
-        .from("products")
-        .select("id,title,slug,brand,image_url,prices(price,store:stores(name))")
-        .in("category_id", ids)
-        .limit(64);
-
-      if (!data) { setLoading(false); return; }
-      const all = data as unknown as Product[];
-      const s = shuffle(all);
+      const res = await fetch("/api/public/products?category=elektronik&limit=64")
+        .then(r => r.json())
+        .catch(() => null);
+      const data = res?.products as Product[] | undefined;
+      if (!data || data.length === 0) { setLoading(false); return; }
+      const s = shuffle(data);
       setSections({
         son:     s.slice(0, 8),
         avantaj: s.slice(8, 16),
