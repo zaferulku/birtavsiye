@@ -12,6 +12,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { chromium } from "playwright";
+import { buildRouter } from "./lib/category-router.mjs";
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
@@ -144,7 +145,8 @@ async function enrichOne(page, product) {
 }
 
 (async () => {
-  let query = sb.from("products").select("id, title, brand, model_family, specs, image_url, images");
+  const router = await buildRouter(sb);
+  let query = sb.from("products").select("id, title, brand, model_family, specs, image_url, images, category_id");
   if (ONLY_ID) query = query.eq("id", ONLY_ID);
   else {
     // Aksesuar (kılıf, batarya, kablo vs.) enrich etme — specs iPhone'a ait olur
@@ -237,16 +239,23 @@ async function enrichOne(page, product) {
     const imgCount = (result.images || []).length;
     const offerCount = (result.offers || []).length;
 
+    // Kategori router: ürün başlığına göre doğru kategoriyi tespit et
+    const routeResult = router.route(p.title, p.brand, p.category_id);
+    const routeNote = routeResult && routeResult.changed ? ` → ${routeResult.reason}` : "";
+
     if (!DRY) {
       const updatePayload = { specs: merged };
       if (imgCount > 0) {
         updatePayload.images = result.images;
         if (!p.image_url) updatePayload.image_url = result.images[0];
       }
+      if (routeResult && routeResult.changed) {
+        updatePayload.category_id = routeResult.categoryId;
+      }
       const { error: upErr } = await sb.from("products").update(updatePayload).eq("id", p.id);
       if (upErr) { console.log(`UPDATE FAIL: ${upErr.message}`); fail++; continue; }
     }
-    console.log(`+${specCount} specs +${imgCount} img +${offerCount} offers ${DRY ? "(dry)" : "saved"}`);
+    console.log(`+${specCount} specs +${imgCount} img +${offerCount} offers${routeNote} ${DRY ? "(dry)" : "saved"}`);
     ok++;
     await page.waitForTimeout(DELAY_MS);
   }
