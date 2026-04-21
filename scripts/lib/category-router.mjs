@@ -58,10 +58,49 @@ const RULES = [
     /\b(laptop\s*(batarya|pil|adaptör)|notebook\s*(batarya|pil|adaptör|power|kablo|soğutucu)|ram\s*\d+\s*gb|\bssd\b|m\.?2\s*ssd|nvme|anakart|ekran\s*kart|ddr[345]\s*ram|sodimm|dimm|kingston|corsair|g\.skill|crucial|klavye\s*(mekanik|gaming)|mouse\s*(gaming|kablosuz)|mouse\s*pad|webcam)\b/i,
   ] },
 
-  // === 5. ANA KATEGORİLER ===
-  { slug: "akilli-telefon", patterns: [
-    /\b(iphone\s*\d+|galaxy\s*(s|note|a|z|m|fold|flip)\s*\d+|redmi\s*(note|k)?\s*\d+|xiaomi\s*\d+|poco\s*[xfm]?\s*\d+|huawei\s*(p|mate|nova|pura)\s*\d+|honor\s*(magic|x|\d+)|oppo\s*(reno|find|a)\s*\d+|vivo\s*(y|x|v)\s*\d+|realme\s*(gt|c|\d+)|oneplus\s*\d+|tecno\s*(camon|spark|pova)|infinix\s*(hot|note|zero)|reeder\s*[pms]\d+|hiking\s*a\d+|blackview|general\s*mobile|akıllı\s*telefon|cep\s*telefon)\b/i,
+  // === 5. TELEFON — MARKA LEAF'LERİ (öncelik: en spesifik markalardan genele) ===
+  { slug: "apple-telefon", patterns: [
+    /\b(iphone\s*\d+|iphone\s+se|iphone\s+(11|12|13|14|15|16|17)|apple\s*iphone|apple\s+cep\s*telefon)\b/i,
   ] },
+  { slug: "samsung-telefon", patterns: [
+    /\b(samsung\s+galaxy\s*[a-z]\s*\d+|galaxy\s*(s|note|a|z|m|fold|flip)\s*\d+|samsung\s+cep\s*telefon)\b/i,
+  ] },
+  { slug: "xiaomi-telefon", patterns: [
+    /\b(xiaomi\s*\d+|xiaomi\s+mi\s*\d+|xiaomi\s+redmi|redmi\s*(note|k)?\s*\d+|poco\s*[xfmc]?\s*\d+|xiaomi\s+cep\s*telefon|mi\s*\d+\s*(pro|ultra|lite)?)\b/i,
+  ] },
+  { slug: "huawei-telefon", patterns: [
+    /\bhuawei\s*(p|mate|nova|pura|y)\s*\d+|huawei\s+cep\s*telefon\b/i,
+  ] },
+  { slug: "honor-telefon", patterns: [
+    /\bhonor\s*(magic|x|\d+|play|view)|honor\s+cep\s*telefon\b/i,
+  ] },
+  { slug: "oppo-telefon", patterns: [
+    /\b(oppo\s*(reno|find|a|k)\s*\d+|oppo\s+cep\s*telefon)\b/i,
+  ] },
+  { slug: "vivo-telefon", patterns: [
+    /\b(vivo\s*(y|x|v|s)\s*\d+|vivo\s+cep\s*telefon)\b/i,
+  ] },
+  { slug: "realme-telefon", patterns: [
+    /\b(realme\s*(gt|c|narzo|\d+)|realme\s+cep\s*telefon)\b/i,
+  ] },
+  { slug: "oneplus-telefon", patterns: [
+    /\b(oneplus\s*\d+|oneplus\s+nord|one\s*plus\s*\d+)\b/i,
+  ] },
+  { slug: "tecno-infinix-telefon", patterns: [
+    /\b(tecno\s*(camon|spark|pova|phantom)|infinix\s*(hot|note|zero|smart)|itel\s+\w+)\b/i,
+  ] },
+  { slug: "reeder-telefon", patterns: [
+    /\breeder\s*[pms]\d+|reeder\s+cep\s*telefon\b/i,
+  ] },
+  { slug: "hiking-telefon", patterns: [
+    /\bhiking\s*[as]\d+|hiking\s+cep\s*telefon\b/i,
+  ] },
+  { slug: "diger-telefon", patterns: [
+    /\b(blackview|general\s*mobile|tcl\s*\d+|wiko|doogee|ulefone|venüs\s*\w+)\b/i,
+    /\bcep\s*telefon|akıllı\s*telefon\b/i,
+  ] },
+
+  // === ANA KATEGORİLER (diğer) ===
   { slug: "akilli-saat", patterns: [
     /\b(apple\s*watch|galaxy\s*watch|mi\s*band|amazfit|huawei\s*(watch|band)|xiaomi\s*watch|akıllı\s*saat|smart\s*watch|fitness\s*tracker)\b/i,
   ] },
@@ -278,6 +317,20 @@ export async function buildRouter(sb) {
     bySlug.get("akilli-saat")?.id,
     bySlug.get("tablet")?.id,
     bySlug.get("bilgisayar-laptop")?.id,
+    // Marka-leaf'ler de telefon'dur — negative indicator'dan geçmeli
+    bySlug.get("apple-telefon")?.id,
+    bySlug.get("samsung-telefon")?.id,
+    bySlug.get("xiaomi-telefon")?.id,
+    bySlug.get("huawei-telefon")?.id,
+    bySlug.get("honor-telefon")?.id,
+    bySlug.get("oppo-telefon")?.id,
+    bySlug.get("vivo-telefon")?.id,
+    bySlug.get("realme-telefon")?.id,
+    bySlug.get("oneplus-telefon")?.id,
+    bySlug.get("tecno-infinix-telefon")?.id,
+    bySlug.get("reeder-telefon")?.id,
+    bySlug.get("hiking-telefon")?.id,
+    bySlug.get("diger-telefon")?.id,
   ].filter(Boolean));
 
   return {
