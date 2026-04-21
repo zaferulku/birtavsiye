@@ -118,33 +118,45 @@ export default function SpecsTable({ specs }: { specs: Record<string, unknown> |
     return a[0].localeCompare(b[0], "tr");
   });
 
+  // 3 kolona eşit paylaştır
+  const numCols = 3;
+  const rowsPerCol = Math.ceil(filtered.length / numCols);
+  const columns: [string, string][][] = [];
+  for (let i = 0; i < numCols; i++) {
+    columns.push(filtered.slice(i * rowsPerCol, (i + 1) * rowsPerCol));
+  }
+
   return (
     <div className="bg-white rounded-xl p-3 md:p-4 shadow-sm mb-3 md:mb-4">
       <h2 className="font-bold text-sm md:text-base text-gray-900 mb-2.5">Teknik Özellikler</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-0 text-[11px] md:text-[12px]">
-        {filtered.map(([key, value]) => {
-          const yes = isBooleanYes(value);
-          const no = isBooleanNo(value);
-          return (
-            <div key={key} className="flex items-baseline gap-1 py-0.5">
-              <div className="text-gray-600 leading-tight whitespace-nowrap">{key}</div>
-              <div className="text-gray-400">:</div>
-              <div className="text-gray-900 font-medium leading-tight break-words">
-                {yes ? (
-                  <svg className="w-3.5 h-3.5 text-emerald-600 inline" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                ) : no ? (
-                  <svg className="w-3.5 h-3.5 text-gray-400 inline" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
-                  </svg>
-                ) : (
-                  value
-                )}
-              </div>
-            </div>
-          );
-        })}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 text-[11px] md:text-[12px]">
+        {columns.map((col, colIdx) => (
+          <div key={colIdx} className="grid grid-cols-[max-content_auto_1fr] gap-x-1.5 gap-y-0 items-baseline h-fit">
+            {col.map(([key, value]) => {
+              const yes = isBooleanYes(value);
+              const no = isBooleanNo(value);
+              return (
+                <div key={key} className="contents">
+                  <div className="text-gray-600 leading-tight py-1 pr-2">{key}</div>
+                  <div className="text-gray-400 py-1">:</div>
+                  <div className="text-gray-900 font-medium leading-tight py-1 break-words">
+                    {yes ? (
+                      <svg className="w-3.5 h-3.5 text-emerald-600 inline" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    ) : no ? (
+                      <svg className="w-3.5 h-3.5 text-gray-400 inline" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    ) : (
+                      value
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ))}
       </div>
     </div>
   );

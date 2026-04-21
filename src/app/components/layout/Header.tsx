@@ -61,6 +61,7 @@ const NAV: NavGroup[] = [
         label: "TV, Görüntü & Ses", slug: "tv", icon: "📺",
         subs: [
           { label: "Televizyon", slug: "tv", tags: ["OLED", "QLED", "4K", "8K", "55 inç", "65 inç", "75 inç", "Samsung", "LG", "Sony", "Philips", "Hisense", "TCL"] },
+          { label: "TV Aksesuar", slug: "tv-aksesuar", tags: ["Kumanda", "Duvar Askı", "TV Sehpa", "HDMI Kablo", "Anten", "VESA"] },
           { label: "Soundbar & Ev Sinema", slug: "soundbar", tags: ["Soundbar", "2.1 Ses Sistemi", "5.1 Ev Sinema", "Dolby Atmos", "Samsung", "Sony", "Bose", "JBL"] },
           { label: "Bluetooth Hoparlör", slug: "bluetooth-hoparlor", tags: ["Taşınabilir", "Su Geçirmez", "JBL", "Bose", "Sony", "Marshall", "Harman Kardon"] },
           { label: "Projeksiyon", slug: "projeksiyon", tags: ["Full HD", "4K", "Mini LED", "Taşınabilir", "Epson", "BenQ", "Optoma", "ViewSonic"] },
