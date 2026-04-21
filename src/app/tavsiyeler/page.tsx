@@ -238,7 +238,11 @@ export default function TavsiyelerSayfasi() {
     if (genderFilter === "kadin") return t.gender_filter === "kadin";
     if (genderFilter === "erkek") return t.gender_filter === "erkek";
     if (genderFilter === "tumu") return t.gender_filter === "kadin" || t.gender_filter === "erkek";
-    return !t.gender_filter;
+    // Default "hepsi": non-gender + kendi cinsiyetine uygun olanlar
+    // (erkek kullanıcı kadınlara özel topic'leri görmesin)
+    if (!t.gender_filter) return true;
+    if (userGender && t.gender_filter === userGender) return true;
+    return false;
   });
   const filtered = searchQuery.trim()
     ? genderFiltered.map(t => ({ t, score: scoreSearch(t, searchQuery) })).filter(x => x.score > 0).sort((a, b) => b.score - a.score).map(x => x.t)
@@ -305,24 +309,29 @@ export default function TavsiyelerSayfasi() {
 
             {/* Cinsiyet sekmeleri — ayrı satır */}
             {user && (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 border-t border-gray-100">
+              <div className="flex items-center gap-2 px-3 py-2 border-t border-gray-100">
                 {userGender === "kadin" && (
                   <button onClick={() => setGenderFilter(genderFilter === "kadin" ? "hepsi" : "kadin")}
-                    className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${genderFilter === "kadin" ? "bg-pink-500 text-white border-pink-500" : "border-pink-300 text-pink-600 hover:border-pink-500"}`}>
-                    ♀ Kızakıza
+                    className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border-2 transition-all shadow-sm ${genderFilter === "kadin" ? "bg-pink-500 text-white border-pink-500 shadow-md" : "border-pink-400 text-pink-600 bg-white hover:bg-pink-50"}`}>
+                    <span className="w-4 h-4 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-white text-[11px] font-black">♀</span>
+                    Kızlara Özel
                   </button>
                 )}
                 {userGender === "erkek" && (
                   <button onClick={() => setGenderFilter(genderFilter === "erkek" ? "hepsi" : "erkek")}
-                    className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all ${genderFilter === "erkek" ? "bg-blue-500 text-white border-blue-500" : "border-blue-300 text-blue-600 hover:border-blue-500"}`}>
-                    ♂ Erkek Özel
+                    className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border-2 transition-all shadow-sm ${genderFilter === "erkek" ? "bg-blue-500 text-white border-blue-500 shadow-md" : "border-blue-400 text-blue-600 bg-white hover:bg-blue-50"}`}>
+                    <span className="w-4 h-4 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-[11px] font-black">♂</span>
+                    Erkeklere Özel
                   </button>
                 )}
-                <button onClick={() => setGenderFilter(genderFilter === "tumu" ? "hepsi" : "tumu")}
-                  className={`flex items-center gap-0.5 px-2 py-1 rounded-full border transition-all ${genderFilter === "tumu" ? "border-purple-400 bg-purple-50" : "border-gray-200 bg-white hover:border-purple-300"}`}>
-                  <span className="w-5 h-5 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-white text-[11px] font-bold">♀</span>
-                  <span className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-[11px] font-bold">♂</span>
-                </button>
+                {!userGender && (
+                  <button onClick={() => setGenderFilter(genderFilter === "tumu" ? "hepsi" : "tumu")}
+                    className={`inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-full border-2 transition-all shadow-sm ${genderFilter === "tumu" ? "border-purple-500 bg-purple-50 text-purple-700 shadow-md" : "border-gray-300 bg-white text-gray-600 hover:border-purple-400"}`}>
+                    <span className="w-5 h-5 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-white text-xs font-black">♀</span>
+                    <span className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-xs font-black -ml-1">♂</span>
+                    <span className="ml-1">Hepsi</span>
+                  </button>
+                )}
               </div>
             )}
 
