@@ -121,15 +121,15 @@ export default function SpecsTable({ specs }: { specs: Record<string, unknown> |
   return (
     <div className="bg-white rounded-xl p-3 md:p-4 shadow-sm mb-3 md:mb-4">
       <h2 className="font-bold text-sm md:text-base text-gray-900 mb-2.5">Teknik Özellikler</h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-5 gap-y-0.5 text-[11px] md:text-[12px]">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-0 text-[11px] md:text-[12px]">
         {filtered.map(([key, value]) => {
           const yes = isBooleanYes(value);
           const no = isBooleanNo(value);
           return (
-            <div key={key} className="flex items-start gap-1.5 py-1 border-b border-gray-50">
-              <div className="flex-1 text-gray-600 leading-tight">{key}</div>
-              <div className="flex-shrink-0 text-gray-400">:</div>
-              <div className="flex-shrink-0 text-gray-900 font-medium min-w-0 max-w-[55%] text-right break-words leading-tight">
+            <div key={key} className="flex items-baseline gap-1 py-0.5">
+              <div className="text-gray-600 leading-tight whitespace-nowrap">{key}</div>
+              <div className="text-gray-400">:</div>
+              <div className="text-gray-900 font-medium leading-tight break-words">
                 {yes ? (
                   <svg className="w-3.5 h-3.5 text-emerald-600 inline" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
