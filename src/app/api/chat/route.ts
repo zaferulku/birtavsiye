@@ -52,24 +52,32 @@ Görsel (imageBase64) geldiğinde:
 - Görselde marka/model net değilse kullanıcıdan teyit iste`;
 
 async function findRelevantProducts(userQuery: string): Promise<MatchedProduct[]> {
+  // 1) NVIDIA embed varsa vector similarity
   try {
     const vecs = await nimEmbed({ input: userQuery });
     const queryVec = vecs[0];
-    if (!queryVec) return [];
-    const { data, error } = await sb.rpc("match_products", {
-      query_embedding: queryVec,
-      match_count: 6,
-      min_similarity: 0.35,
-    });
-    if (error) {
-      console.error("match_products RPC error:", error.message);
-      return [];
+    if (queryVec) {
+      const { data } = await sb.rpc("match_products", {
+        query_embedding: queryVec,
+        match_count: 6,
+        min_similarity: 0.35,
+      });
+      if (data && data.length > 0) return data as MatchedProduct[];
     }
-    return (data ?? []) as MatchedProduct[];
   } catch (e) {
-    console.error("embed error:", e instanceof Error ? e.message : e);
-    return [];
+    console.warn("embed fallback:", e instanceof Error ? e.message : e);
   }
+
+  // 2) Keyword fallback — title ilike
+  const words = userQuery.split(/\s+/).filter(w => w.length >= 3).slice(0, 4);
+  if (words.length === 0) return [];
+  const pattern = "%" + words.join("%") + "%";
+  const { data } = await sb
+    .from("products")
+    .select("id, title, slug, brand, model_family, image_url, category_id")
+    .ilike("title", pattern)
+    .limit(6);
+  return (data ?? []).map(p => ({ ...p, similarity: 0.5 })) as MatchedProduct[];
 }
 
 export async function POST(req: Request) {
