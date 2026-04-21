@@ -1,4 +1,3 @@
-// Sistem içi metadata anahtarları — kullanıcıya gösterilmez
 const HIDDEN_KEYS = new Set([
   "pttavm_category", "pttavm_path",
   "mediamarkt_category", "mediamarkt_path",
@@ -7,39 +6,93 @@ const HIDDEN_KEYS = new Set([
   "_akakce", "_akakce_offers", "_offers",
 ]);
 
-// Key adında geçerse kullanıcıya gösterilmez (fiyat, satıcı, URL, stok bilgileri Teknik Özellikler'de gereksiz)
 const HIDDEN_KEY_PATTERNS = /fiyat|satıcı|satici|price|seller|url|mağaza|magaza|store|kargo|stock|stok|indirim|kampanya/i;
 
 const PRIORITY_KEYS = [
-  "Ürün Tipi",
-  "Çıkış Tarihi",
-  "Çıkış Yılı",
   "Seri",
+  "Dahili Hafıza",
+  "RAM Kapasitesi",
+  "Batarya Kapasitesi",
+  "Çıkış Yılı",
+  "Mobil Erişim Teknolojisi",
   "Ekran Boyutu",
   "Ekran Boyutu (inç)",
-  "Ekran boyutu cm / inç",
   "Ekran Çözünürlüğü",
-  "İşlemci",
-  "RAM",
-  "RAM Kapasitesi",
-  "Bellek Kapasitesi",
-  "Dahili Hafıza",
-  "Depolama",
+  "Ekran Yenileme Hızı",
+  "Ekran Teknolojisi",
+  "Ekran Parlaklık Değeri",
+  "Ekran Gövde Oranı",
+  "Ekran Dayanıklılığı",
+  "Dokunmatik",
+  "HDR",
+  "Always on Display",
+  "Çerçevesiz",
+  "Arka Kamera Sayısı",
   "Arka Kamera",
+  "İkinci Arka Kamera",
+  "Üçüncü Arka Kamera",
+  "Video Kayıt Çözünürlüğü",
+  "Video FPS Değeri",
+  "Piksel Yoğunluğu",
   "Ön Kamera",
-  "Pil Kapasitesi",
-  "Batarya Kapasitesi",
+  "Ön Kamera Video Çözünürlüğü",
+  "Ön Kamera Video FPS Değeri",
+  "Ekran İçinde Ön Kamera",
+  "Optik Görüntü Sabitleme",
   "İşletim Sistemi",
-  "Mobil Erişim Teknolojisi",
-  "Mobil Telefon Standardı",
-  "Çift SİM",
-  "SIM-kart boyutu",
-  "WİFİ",
+  "İşlemci",
+  "İşlemci Hızı",
+  "Çekirdek Sayısı",
+  "Grafik İşlemcisi (GPU)",
+  "Chipset",
+  "Oyun",
+  "Hızlı Şarj",
+  "Kablosuz Şarj",
+  "Kablosuz Şarj Gücü",
+  "Pil Türü",
+  "USB Türü",
+  "SIM Türü",
+  "eSIM",
+  "Çift Hatlı",
+  "Kulaklık Bağlantısı",
+  "Hoparlör",
   "Bluetooth",
+  "Bluetooth Versiyonu",
+  "Wi-Fi",
+  "WİFİ",
+  "NFC",
+  "GPS",
+  "Ekran Yansıtma",
+  "Gövde Malzemesi",
+  "Çerçeve Malzemesi",
+  "Suya Dayanıklı",
+  "Suya Dayanıklılık Seviyesi",
   "Ağırlık",
+  "Barometre",
+  "İvmeölçer",
+  "Jiroskop",
+  "Yüz Tanıma",
+  "Dolby Vision",
+  "Yapay Zeka Destekli",
+  "Boyut",
+  "Akıllı",
+  "Antutu",
+  "Şarj Döngü Sayısı",
+  "Onarılabilirlik Sınıfı",
+  "Düşme Direnci Sınıfı",
+  "Geekbench (Multi-Core)",
   "Renk",
   "Renk (Üreticiye Göre)",
 ];
+
+function isBooleanYes(v: string): boolean {
+  const s = v.trim().toLowerCase();
+  return s === "var" || s === "yes" || s === "true" || s === "evet" || s === "✓" || s === "destekler" || s === "mevcut";
+}
+function isBooleanNo(v: string): boolean {
+  const s = v.trim().toLowerCase();
+  return s === "yok" || s === "no" || s === "false" || s === "hayır" || s === "desteklemez";
+}
 
 export default function SpecsTable({ specs }: { specs: Record<string, unknown> | null }) {
   if (!specs) return null;
@@ -66,21 +119,32 @@ export default function SpecsTable({ specs }: { specs: Record<string, unknown> |
   });
 
   return (
-    <div className="bg-white rounded-2xl p-6 shadow-sm">
-      <h2 className="font-bold text-lg text-gray-900 mb-4">Teknik Özellikler</h2>
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <tbody>
-            {filtered.map(([key, value], i) => (
-              <tr key={key} className={i % 2 === 0 ? "bg-gray-50" : "bg-white"}>
-                <th scope="row" className="text-left font-semibold text-gray-600 px-4 py-2.5 w-1/3 align-top">
-                  {key}
-                </th>
-                <td className="text-gray-900 px-4 py-2.5 align-top">{value}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <div className="bg-white rounded-2xl p-4 md:p-6 shadow-sm mb-4 md:mb-6">
+      <h2 className="font-bold text-base md:text-lg text-gray-900 mb-4">Teknik Özellikler</h2>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-1.5 text-sm">
+        {filtered.map(([key, value]) => {
+          const yes = isBooleanYes(value);
+          const no = isBooleanNo(value);
+          return (
+            <div key={key} className="flex items-start gap-2 py-1.5 border-b border-gray-50">
+              <div className="flex-1 text-gray-600 text-xs md:text-[13px] leading-snug">{key}</div>
+              <div className="flex-shrink-0 text-gray-400 text-xs">:</div>
+              <div className="flex-shrink-0 text-gray-900 text-xs md:text-[13px] font-medium min-w-0 max-w-[55%] text-right break-words">
+                {yes ? (
+                  <svg className="w-4 h-4 text-emerald-600 inline" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                ) : no ? (
+                  <svg className="w-4 h-4 text-gray-400 inline" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  value
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

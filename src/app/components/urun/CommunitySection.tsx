@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "../../../lib/supabase";
 import Link from "next/link";
 
-const tabs = ["Yorumlar", "Teknik Özellikler", "Benzer Ürünler", "Tavsiyeler"];
+const tabs = ["Yorumlar", "Benzer Ürünler", "Tavsiyeler"];
 
 type Post = {
   id: string;
@@ -496,34 +496,8 @@ export default function CommunitySection({
         </div>
       )}
 
-      {/* Teknik Özellikler */}
-      {activeTab === 1 && (
-        <div>
-          {specEntries.length === 0 ? (
-            <div className="text-center py-16 bg-gray-50 rounded-2xl">
-              <div className="text-3xl mb-3">📋</div>
-              <div className="text-sm font-medium text-gray-600 mb-1">Teknik özellik girilmemiş</div>
-              <div className="text-xs text-gray-400">Bu ürün için henüz teknik özellik bilgisi bulunmuyor</div>
-            </div>
-          ) : (
-            <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden">
-              <table className="w-full text-sm">
-                <tbody>
-                  {specEntries.map(([key, value], i) => (
-                    <tr key={key} className={i % 2 === 0 ? "bg-white" : "bg-gray-50"}>
-                      <td className="px-6 py-3.5 text-gray-500 font-medium w-2/5 border-r border-gray-100">{key}</td>
-                      <td className="px-6 py-3.5 text-gray-800 font-medium">{value}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      )}
-
       {/* Benzer Ürünler */}
-      {activeTab === 2 && (
+      {activeTab === 1 && (
         <div>
           {similarProducts.length === 0 ? (
             <div className="text-center py-16 bg-gray-50 rounded-2xl">
@@ -564,7 +538,7 @@ export default function CommunitySection({
       )}
 
       {/* Tavsiyeler */}
-      {activeTab === 3 && (
+      {activeTab === 2 && (
         <div id="tavsiyeler">
           {linkedTopics.length === 0 ? (
             <div className="text-center py-16 bg-gray-50 rounded-2xl">
