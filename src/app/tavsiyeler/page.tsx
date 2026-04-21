@@ -307,51 +307,49 @@ export default function TavsiyelerSayfasi() {
               })}
             </div>
 
-            {/* Cinsiyet sekmeleri — her iki cinsiyet de etiketleri görür; içerik üyelik gerektirir */}
+            {/* Cinsiyet sekmeleri — her iki buton herkese görünür, yanlış cinsiyet click'te uyarı */}
             <div className="flex items-center gap-2 px-3 py-2 border-t border-gray-100">
-              {(!user || userGender === "kadin") && (
-                <button onClick={() => {
-                  if (!user || userGender !== "kadin") { alert("Kızkıza Özel içerik için kadın üye olmalısınız."); return; }
-                  setGenderFilter(genderFilter === "kadin" ? "hepsi" : "kadin");
-                }}
-                  className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border-2 transition-all shadow-sm ${genderFilter === "kadin" ? "bg-pink-500 text-white border-pink-500 shadow-md" : "border-pink-400 text-pink-600 bg-white hover:bg-pink-50"} ${(!user || userGender !== "kadin") ? "opacity-70 cursor-not-allowed" : ""}`}
-                  title={(!user || userGender !== "kadin") ? "Sadece kadın üyelere açık" : ""}
-                >
-                  <span className="w-4 h-4 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-white text-[11px] font-black">♀</span>
-                  Kızkıza Özel
-                  {(!user || userGender !== "kadin") && <span className="text-[10px]">🔒</span>}
-                </button>
-              )}
-              {(!user || userGender === "erkek") && (
-                <button onClick={() => {
-                  if (!user || userGender !== "erkek") { alert("Erkeklere Özel içerik için erkek üye olmalısınız."); return; }
-                  setGenderFilter(genderFilter === "erkek" ? "hepsi" : "erkek");
-                }}
-                  className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border-2 transition-all shadow-sm ${genderFilter === "erkek" ? "bg-blue-500 text-white border-blue-500 shadow-md" : "border-blue-400 text-blue-600 bg-white hover:bg-blue-50"} ${(!user || userGender !== "erkek") ? "opacity-70 cursor-not-allowed" : ""}`}
-                  title={(!user || userGender !== "erkek") ? "Sadece erkek üyelere açık" : ""}
-                >
-                  <span className="w-4 h-4 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-[11px] font-black">♂</span>
-                  Erkeklere Özel
-                  {(!user || userGender !== "erkek") && <span className="text-[10px]">🔒</span>}
-                </button>
-              )}
-              {/* Üye olmayanlara her iki butonu da göster */}
-              {!user && (
-                <>
-                  <button onClick={() => { alert("Kızkıza Özel içerik için kadın üye olmalısınız."); }}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border-2 transition-all shadow-sm border-pink-400 text-pink-600 bg-white opacity-70 cursor-not-allowed"
-                    title="Sadece kadın üyelere açık">
-                    <span className="w-4 h-4 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-white text-[11px] font-black">♀</span>
-                    Kızkıza Özel <span className="text-[10px]">🔒</span>
-                  </button>
-                  <button onClick={() => { alert("Erkeklere Özel içerik için erkek üye olmalısınız."); }}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border-2 transition-all shadow-sm border-blue-400 text-blue-600 bg-white opacity-70 cursor-not-allowed"
-                    title="Sadece erkek üyelere açık">
-                    <span className="w-4 h-4 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-[11px] font-black">♂</span>
-                    Erkeklere Özel <span className="text-[10px]">🔒</span>
-                  </button>
-                </>
-              )}
+              {/* Kızkıza Özel */}
+              <button onClick={() => {
+                if (!user) { alert("Kızkıza Özel içeriği görmek için üye olmalısınız."); return; }
+                if (userGender !== "kadin") { alert("🔒 Bu bölüm gizlidir. Kızkıza Özel içerik yalnızca kadın üyelere açıktır."); return; }
+                setGenderFilter(genderFilter === "kadin" ? "hepsi" : "kadin");
+              }}
+                className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border-2 transition-all shadow-sm ${
+                  genderFilter === "kadin"
+                    ? "bg-pink-500 text-white border-pink-500 shadow-md"
+                    : userGender === "kadin"
+                      ? "border-pink-400 text-pink-600 bg-white hover:bg-pink-50"
+                      : "border-pink-300 text-pink-500 bg-pink-50/30 opacity-80"
+                }`}
+                title={userGender === "kadin" ? "" : "Sadece kadın üyelere açık"}
+              >
+                <span className="w-4 h-4 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center text-white text-[11px] font-black">♀</span>
+                Kızkıza Özel
+                {userGender !== "kadin" && <span className="text-[10px]">🔒</span>}
+              </button>
+
+              {/* Erkeklere Özel */}
+              <button onClick={() => {
+                if (!user) { alert("Erkeklere Özel içeriği görmek için üye olmalısınız."); return; }
+                if (userGender !== "erkek") { alert("🔒 Bu bölüm gizlidir. Erkeklere Özel içerik yalnızca erkek üyelere açıktır."); return; }
+                setGenderFilter(genderFilter === "erkek" ? "hepsi" : "erkek");
+              }}
+                className={`inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border-2 transition-all shadow-sm ${
+                  genderFilter === "erkek"
+                    ? "bg-blue-500 text-white border-blue-500 shadow-md"
+                    : userGender === "erkek"
+                      ? "border-blue-400 text-blue-600 bg-white hover:bg-blue-50"
+                      : "border-blue-300 text-blue-500 bg-blue-50/30 opacity-80"
+                }`}
+                title={userGender === "erkek" ? "" : "Sadece erkek üyelere açık"}
+              >
+                <span className="w-4 h-4 rounded-full bg-gradient-to-br from-blue-400 to-indigo-500 flex items-center justify-center text-white text-[11px] font-black">♂</span>
+                Erkeklere Özel
+                {userGender !== "erkek" && <span className="text-[10px]">🔒</span>}
+              </button>
+
+              {/* Hepsi — sadece cinsiyet belirlemiş üyeler için */}
               {(userGender === "kadin" || userGender === "erkek") && (
                 <button onClick={() => setGenderFilter(genderFilter === "tumu" ? "hepsi" : "tumu")}
                   className={`inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-full border-2 transition-all shadow-sm ${genderFilter === "tumu" ? "border-purple-500 bg-purple-50 text-purple-700 shadow-md" : "border-gray-300 bg-white text-gray-600 hover:border-purple-400"}`}>
