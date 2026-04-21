@@ -145,13 +145,13 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
 
   const fetchTopics = async () => {
     const res = await fetch("/api/public/topics?limit=60").then(r => r.json()).catch(() => null);
-    const data = res?.topics;
+    const data = res?.topics as Topic[] | undefined;
     if (!data) return;
     setTopics(data);
     isFirst.current = false;
 
     // Tüm topic'lerin cevaplarını tek sorguda çek
-    const ids = data.map(t => t.id);
+    const ids = data.map((t: Topic) => t.id);
     if (ids.length > 0) {
       const { data: ans } = await supabase.from("topic_answers")
         .select("id,topic_id,user_name,body,votes,gender")
