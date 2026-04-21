@@ -138,10 +138,29 @@ Eğer `moved > 0` ise aksesuar/yedek parça yanlış kategoriye düşmüş demek
 | 55 inç Smart LED TV | tv | İnch + smart led |
 | Samsung Uyumlu Lcd Led Tv Kumandası | tv-aksesuar | "tv kumandası" |
 
-## Genişletme önerileri
+## Kapsanmış kategori grupları (tam liste)
 
-- **Beyaz eşya yedek parça**: buzdolabı contası, çamaşır makinesi filtresi
-- **Oto yedek parça**: araba akü, motor yağı, fren balata
-- **Anne bebek yedek**: biberon pompası filtresi, emzik yedek
+✅ **Elektronik** — akıllı telefon/saat, tablet, laptop, ses-kulaklık, tv, fotoğraf/aksiyon kamera, drone
+✅ **Telefon aksesuar** — kılıf, ekran koruyucu, powerbank, şarj-kablo, telefon-aksesuar
+✅ **Telefon yedek parça** — şarj soket, sim bordu, uyumlu pil, servis
+✅ **TV aksesuar** — kumanda, duvar askı, hdmi kablo, vesa
+✅ **Bilgisayar bileşen** — RAM, SSD, anakart, ekran kartı, laptop batarya
+✅ **Moda** — elbise, etek, kadın/erkek giyim (pantolon, tişört, gömlek, kazak, ceket, takım elbise), eşofman
+✅ **Moda — Ayakkabı** — kadın/erkek sneaker, bot, topuklu, sandalet, babet, klasik
+✅ **Moda — Aksesuar** — çanta/cüzdan, gözlük, saat/takı
+✅ **Ev & Yaşam** — aydınlatma, banyo, beyaz eşya (çamaşır/bulaşık/buzdolabı/fırın-ocak/kurutma/klima), küçük ev aletleri (süpürge/kahve/mutfak aleti/ütü), mobilya, ev tekstili, mutfak-sofra, temizlik, ofis mobilyası, bahçe-balkon
+✅ **Otomotiv** — navigasyon, oto teyp, araç aksesuar, motor/scooter, lastik/jant
+✅ **Anne & Bebek** — bebek bezi, biberon, mama, bebek kozmetik, oto koltuğu, puset, beşik, oyuncak (lego, figür, eğitici, RC)
+✅ **Spor & Outdoor** — outdoor/kamp, su sporları, fitness, bisiklet, yoga, takım sporları
+✅ **Kozmetik** — makyaj (yüz/göz/dudak), cilt bakım (maskesi/güneş/serum/temizleme/nemlendirici), saç bakım (stilizasyon/boyası/şampuan), parfüm, ağız-diş, kişisel hijyen
+✅ **Kitap & Hobi** — kitap, resim-çizim, el sanatları, müzik aleti, kırtasiye
+
+## Eksikler / gelecek genişletme
+
+- **Pet Shop** — mama, tasma, kum, akvaryum (kategori DB'de yok, açılmalı)
+- **Süpermarket** — gıda, içecek, temizlik tüketim (kategori DB'de yok, açılmalı)
+- **Yapı Market** — el aletleri, elektrik malzeme, boya (DB'de yok)
+- **Oto yedek parça** — araba akü, fren balata (`arac-yedek-parca` kategorisi açılmalı)
+- **Beyaz eşya yedek parça** — contası, filtre
 
 Eklemek için: önce DB'de kategori oluştur → `RULES` dizisine ekle → dry-run doğrula → apply.
