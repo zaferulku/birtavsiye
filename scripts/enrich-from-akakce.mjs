@@ -49,31 +49,92 @@ async function enrichOne(page, product) {
 
     const data = await page.evaluate(() => {
       const title = document.querySelector("h1")?.textContent?.trim() || null;
+
+      // 1) Multi-section spec extraction
       const specs = {};
       document.querySelectorAll("table tr").forEach(tr => {
         const cells = tr.querySelectorAll("td, th");
         if (cells.length < 2) return;
         const key = cells[0].textContent?.replace(/:/g, "").trim();
         const val = cells[1].textContent?.replace(/^:\s*/, "").trim();
-        if (key && val && key.length < 60 && val.length < 200) specs[key] = val;
+        if (key && val && key.length < 60 && val.length < 300) specs[key] = val;
       });
-      const price = document.querySelector(".pb_v8, .pt_v8")?.textContent?.trim() || null;
+      document.querySelectorAll("dl").forEach(dl => {
+        const dts = dl.querySelectorAll("dt");
+        const dds = dl.querySelectorAll("dd");
+        for (let i = 0; i < Math.min(dts.length, dds.length); i++) {
+          const k = dts[i].textContent?.trim();
+          const v = dds[i].textContent?.trim();
+          if (k && v && k.length < 60 && v.length < 300 && !specs[k]) specs[k] = v;
+        }
+      });
+      document.querySelectorAll("ul li, .spec_list li, [class*=tech] li").forEach(li => {
+        const txt = li.textContent?.trim() || "";
+        const m = txt.match(/^([^:]{2,50}):\s*(.{1,300})$/);
+        if (m && !specs[m[1].trim()]) specs[m[1].trim()] = m[2].trim();
+      });
 
-      // Çoklu görsel: gallery thumbnail'lerinden tam boy URL'leri topla
+      // 2) JSON-LD ProductGroup/Product
+      let jsonLd = null;
+      document.querySelectorAll("script[type='application/ld+json']").forEach(s => {
+        try {
+          const obj = JSON.parse(s.textContent);
+          if (obj["@type"] === "ProductGroup" || obj["@type"] === "Product") jsonLd = obj;
+        } catch {}
+      });
+
+      // 3) Offers (tüm satıcılar)
+      const offers = [];
+      if (jsonLd?.offers?.offers) {
+        for (const o of jsonLd.offers.offers) {
+          offers.push({
+            seller: o.seller?.name || null,
+            price: o.price ? parseFloat(o.price) : null,
+            currency: o.priceCurrency || "TRY",
+            url: o.url || null,
+            availability: (o.availability || "").replace("https://schema.org/", ""),
+          });
+        }
+      }
+
+      const jsonCategory = jsonLd?.category || null;
+      const brandLogo = jsonLd?.brand?.logo || null;
+      const description = jsonLd?.description || document.querySelector("meta[name='description']")?.getAttribute("content") || null;
+
+      // 4) Görseller — JSON-LD + DOM birleşimi
       const imgSet = new Set();
+      if (jsonLd?.image) {
+        const imgs = Array.isArray(jsonLd.image) ? jsonLd.image : [jsonLd.image];
+        for (const i of imgs) {
+          const url = typeof i === "string" ? i : (i.contentUrl || i.url);
+          if (url) imgSet.add(url);
+        }
+      }
       document.querySelectorAll("img").forEach(img => {
         let src = img.getAttribute("src") || img.getAttribute("data-src") || "";
         if (!src) return;
-        // Akakce'nin küçük boy thumbnail'leri büyüğe çevir (_h.jpg → _l.jpg, vs.)
         src = src.replace(/_[sh]\.(jpg|jpeg|png|webp)/i, "_l.$1");
-        // Sadece ürün görselleri (akakce CDN)
-        if (/akakce\.akamaized\.net|akakce\.com\/.*\.(jpg|jpeg|png|webp)/i.test(src)) {
+        if (/akakce\.akamaized\.net|akakce\.com\/.*\.(jpg|jpeg|png|webp)/i.test(src) || /cdn\.akakce\.com/i.test(src)) {
           const abs = src.startsWith("http") ? src : new URL(src, location.href).href;
           imgSet.add(abs);
         }
       });
-      const images = [...imgSet].slice(0, 10);
-      return { akakceTitle: title, akakceUrl: location.href, akakcePrice: price, specs, images };
+      const images = [...imgSet].slice(0, 15);
+
+      const price = jsonLd?.offers?.lowPrice || document.querySelector(".pb_v8, .pt_v8")?.textContent?.trim() || null;
+
+      return {
+        akakceTitle: title,
+        akakceUrl: location.href,
+        akakcePrice: price,
+        specs,
+        images,
+        offers,
+        category: jsonCategory,
+        brandLogo,
+        description,
+        offerCount: jsonLd?.offers?.offerCount ? parseInt(jsonLd.offers.offerCount, 10) : offers.length,
+      };
     });
 
     return data;
@@ -158,8 +219,23 @@ async function enrichOne(page, product) {
     }
 
     const existing = (p.specs && typeof p.specs === "object") ? p.specs : {};
-    const merged = { ...existing, ...result.specs, _akakce: { url: result.akakceUrl, title: result.akakceTitle, price: result.akakcePrice, at: new Date().toISOString() } };
+    const merged = {
+      ...existing,
+      ...result.specs,
+      _akakce: {
+        url: result.akakceUrl,
+        title: result.akakceTitle,
+        price: result.akakcePrice,
+        at: new Date().toISOString(),
+        category: result.category,
+        brandLogo: result.brandLogo,
+        description: result.description,
+        offerCount: result.offerCount,
+      },
+      _akakce_offers: result.offers || [],
+    };
     const imgCount = (result.images || []).length;
+    const offerCount = (result.offers || []).length;
 
     if (!DRY) {
       const updatePayload = { specs: merged };
@@ -170,7 +246,7 @@ async function enrichOne(page, product) {
       const { error: upErr } = await sb.from("products").update(updatePayload).eq("id", p.id);
       if (upErr) { console.log(`UPDATE FAIL: ${upErr.message}`); fail++; continue; }
     }
-    console.log(`+${specCount} specs +${imgCount} img ${DRY ? "(dry)" : "saved"}`);
+    console.log(`+${specCount} specs +${imgCount} img +${offerCount} offers ${DRY ? "(dry)" : "saved"}`);
     ok++;
     await page.waitForTimeout(DELAY_MS);
   }
