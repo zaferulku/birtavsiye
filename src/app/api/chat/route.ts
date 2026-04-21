@@ -68,16 +68,40 @@ async function findRelevantProducts(userQuery: string): Promise<MatchedProduct[]
     console.warn("embed fallback:", e instanceof Error ? e.message : e);
   }
 
-  // 2) Keyword fallback — title ilike
-  const words = userQuery.split(/\s+/).filter(w => w.length >= 3).slice(0, 4);
+  // 2) Keyword fallback — stopword-filtered OR ilike + rank by match count
+  const STOPWORDS = new Set([
+    "bir","bu","şu","ne","nasıl","neden","niçin","nedir","midir","mi","mu","mı","mü",
+    "en","ucuz","pahalı","uygun","iyi","kötü","güzel","hangi","hangisi","kaç","kadar",
+    "için","ile","gibi","olan","olabilir","olur","oldu","var","yok","tl","lira",
+    "adet","yeni","eski","altı","altında"
+  ]);
+  const words = userQuery
+    .toLowerCase()
+    .replace(/[^\wşüıçğöâî\s]/gi, " ")
+    .split(/\s+/)
+    .filter(w => w.length >= 3 && !STOPWORDS.has(w))
+    .slice(0, 5);
   if (words.length === 0) return [];
-  const pattern = "%" + words.join("%") + "%";
+
+  const orClauses = words.map(w => `title.ilike.%${w}%`).join(",");
   const { data } = await sb
     .from("products")
     .select("id, title, slug, brand, model_family, image_url, category_id")
-    .ilike("title", pattern)
-    .limit(6);
-  return (data ?? []).map(p => ({ ...p, similarity: 0.5 })) as MatchedProduct[];
+    .or(orClauses)
+    .limit(50);
+  if (!data || data.length === 0) return [];
+
+  // Title içinde kaç kelimenin geçtiğine göre rank et
+  const ranked = data
+    .map(p => {
+      const t = (p.title || "").toLowerCase();
+      const hits = words.filter(w => t.includes(w)).length;
+      return { ...p, similarity: hits / words.length };
+    })
+    .filter(p => p.similarity > 0)
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, 6);
+  return ranked as MatchedProduct[];
 }
 
 export async function POST(req: Request) {
