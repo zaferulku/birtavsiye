@@ -1,0 +1,999 @@
+# =============================================================================
+# birtavsiye.net — Canonical Taxonomy v2.0 (Full Coverage)
+# =============================================================================
+# AMAÇ: Sistemdeki TEK kategori gerçeği. Tüm agent'lar, scraper'lar, chatbot,
+#       query parser bu dosyayı referans alır.
+#
+# PRENSİPLER:
+# 1. Marka kategori DEĞİLDİR — brand field'ında tutulur
+# 2. Model kategori DEĞİLDİR — model_family field'ında tutulur
+# 3. Kategori = ürün TİPİ
+# 4. Her slug GLOBAL UNIQUE
+#
+# KAPSAM: 13 ana kategori, ~160 leaf kategori
+# =============================================================================
+
+version: "2.0.0"
+last_updated: "2026-04-22"
+
+root_categories:
+
+  # ============================================================
+  # 1. ELEKTRONİK
+  # ============================================================
+  - slug: elektronik
+    name_tr: "Elektronik"
+    icon: "📱"
+    subcategories:
+
+      - slug: akilli-telefon
+        name_tr: "Akıllı Telefon"
+        keywords: ["akıllı telefon", "cep telefonu", "smartphone", "iphone", "galaxy", "redmi", "poco"]
+        exclude_keywords: ["kılıf", "ekran koruyucu", "şarj", "kablo", "powerbank", "için", "uyumlu", "servis", "yedek", "tutucu", "soket"]
+        title_patterns: ["\\b\\d+\\s*(GB|TB)\\b", "iPhone\\s+\\d+", "Galaxy\\s+[AS]\\d+"]
+        related_brands: [Apple, Samsung, Xiaomi, Huawei, Honor, Redmi, Poco, Realme, Oppo, Vivo, OnePlus, Google, Nokia, Motorola, Tecno, Infinix, Reeder, Hiking, "General Mobile", Nubia]
+        migrate_from: [apple-telefon, samsung-telefon, huawei-telefon, xiaomi-telefon, honor-telefon, oneplus-telefon, oppo-telefon, realme-telefon, vivo-telefon, tecno-infinix-telefon, reeder-telefon, hiking-telefon, diger-telefon, cep-telefonu]
+
+      - slug: telefon-kilifi
+        name_tr: "Telefon Kılıfı"
+        keywords: ["kılıf", "kapak", "case", "silikon kılıf", "deri kılıf", "magsafe kılıf", "cüzdan kılıf", "flip kapak", "şeffaf kılıf"]
+
+      - slug: ekran-koruyucu
+        name_tr: "Ekran Koruyucu"
+        keywords: ["ekran koruyucu", "cam koruyucu", "tempered glass", "nano cam", "hidrojel", "nano jelatin", "privacy glass"]
+
+      - slug: powerbank
+        name_tr: "Powerbank & Taşınabilir Şarj"
+        keywords: ["powerbank", "power bank", "taşınabilir şarj", "harici pil", "magsafe powerbank"]
+
+      - slug: sarj-kablo
+        name_tr: "Şarj Cihazı & Kablo"
+        keywords: ["şarj kablosu", "şarj cihazı", "şarj aleti", "lightning kablo", "usb-c kablo", "type c kablo", "hızlı şarj", "kablosuz şarj", "gan şarj", "adaptör"]
+
+      - slug: telefon-aksesuar
+        name_tr: "Telefon Aksesuarı"
+        keywords: ["selfie çubuğu", "araç tutucu", "telefon tutucu", "pop socket", "otg kablo", "flash bellek", "stylus", "yaka mikrofonu", "telefon soğutucu", "ring light", "gimbal"]
+
+      - slug: telefon-yedek-parca
+        name_tr: "Telefon Yedek Parça"
+        keywords: ["şarj soket", "sim bordu", "mikrofon bordu", "kamera flexi", "lcd ekran değişim", "ses tuşu", "home tuşu", "uyumlu pil", "servis kit"]
+
+      - slug: laptop
+        name_tr: "Laptop & Notebook"
+        keywords: ["laptop", "notebook", "dizüstü bilgisayar", "macbook", "vivobook", "thinkpad", "ideapad"]
+        exclude_keywords: ["çanta", "kılıf", "stant", "soğutucu", "adaptör"]
+        related_brands: [Apple, Lenovo, HP, Dell, ASUS, Acer, MSI, Huawei, Monster, Casper, Samsung, LG, Razer]
+        migrate_from: [bilgisayar-laptop]
+
+      - slug: masaustu-bilgisayar
+        name_tr: "Masaüstü Bilgisayar"
+        keywords: ["masaüstü bilgisayar", "pc kasa", "all in one", "mini pc", "gaming pc"]
+        migrate_from: [masaustu-bilgisayar]
+
+      - slug: tablet
+        name_tr: "Tablet"
+        keywords: ["tablet", "ipad", "galaxy tab", "matepad", "redmi pad", "lenovo tab", "xiaomi pad", "honor pad"]
+        exclude_keywords: ["kılıf", "klavye tablet", "kalem tablet"]
+        related_brands: [Apple, Samsung, Huawei, Xiaomi, Lenovo, Honor]
+
+      - slug: monitor
+        name_tr: "Monitör"
+        keywords: ["monitör", "gaming monitör", "4k monitör", "ultrawide", "curved monitor"]
+        migrate_from: [monitor]
+
+      - slug: bilgisayar-bilesenleri
+        name_tr: "Bilgisayar Bileşenleri"
+        keywords: ["ram", "ddr4", "ddr5", "ssd", "nvme", "m.2", "hdd", "ekran kartı", "rtx", "gtx", "işlemci", "cpu", "anakart", "motherboard", "güç kaynağı"]
+        related_brands: [Kingston, Corsair, "G.Skill", Crucial, Samsung, Intel, AMD, NVIDIA, Gigabyte, MSI, ASUS, Seagate, WD]
+        migrate_from: [bilgisayar-bilesenleri]
+
+      - slug: bilgisayar-cevre
+        name_tr: "Klavye, Mouse, Webcam"
+        keywords: ["klavye", "mouse", "mousepad", "webcam", "usb hub", "docking station", "harici ssd", "gaming klavye", "mekanik klavye"]
+
+      - slug: yazici-tarayici
+        name_tr: "Yazıcı & Tarayıcı"
+        keywords: ["yazıcı", "printer", "tarayıcı", "fotokopi", "lazer yazıcı", "mürekkep kartuş", "toner"]
+        migrate_from: [yazici-tarayici]
+
+      - slug: networking
+        name_tr: "Modem & Ağ Cihazları"
+        keywords: ["modem", "router", "mesh", "access point", "switch", "range extender", "wifi extender"]
+        migrate_from: [networking]
+
+      - slug: tv
+        name_tr: "Televizyon"
+        keywords: ["televizyon", "smart tv", "oled tv", "qled tv", "led tv", "4k tv", "nanocell"]
+        exclude_keywords: ["kumanda", "askı", "aparatı", "sehpa"]
+        related_brands: [Samsung, LG, Sony, Philips, TCL, Hisense, Vestel, Arçelik, Xiaomi]
+        migrate_from: [tv, tv-ses]
+
+      - slug: tv-aksesuar
+        name_tr: "TV Aksesuar"
+        keywords: ["tv kumanda", "televizyon kumanda", "tv askı", "duvar askı aparatı", "vesa", "tv sehpa", "hdmi kablo"]
+
+      - slug: projeksiyon
+        name_tr: "Projeksiyon"
+        keywords: ["projeksiyon", "projector", "beamer"]
+        migrate_from: [projeksiyon]
+
+      - slug: ses-kulaklik
+        name_tr: "Kulaklık"
+        keywords: ["kulaklık", "headphone", "headset", "kulak içi", "kulak üstü", "airpods", "galaxy buds", "tws", "gaming kulaklık"]
+        exclude_keywords: ["kılıf", "silikon kılıf", "kordon"]
+        related_brands: [Apple, Samsung, Sony, JBL, Bose, Beats, Sennheiser, AKG, Marshall, Anker, Soundcore, Xiaomi, Razer]
+        migrate_from: [ses-kulaklik]
+
+      - slug: bluetooth-hoparlor
+        name_tr: "Bluetooth Hoparlör"
+        keywords: ["bluetooth hoparlör", "portable speaker", "taşınabilir hoparlör", "party speaker"]
+        migrate_from: [bluetooth-hoparlor]
+
+      - slug: soundbar
+        name_tr: "Soundbar & Ev Sinema"
+        keywords: ["soundbar", "sound bar", "ev sinema sistemi", "home theater", "5.1 sistem", "dolby atmos"]
+        migrate_from: [soundbar]
+
+      - slug: fotograf-kamera
+        name_tr: "Fotoğraf Makinesi"
+        keywords: ["fotoğraf makinesi", "dslr", "aynasız kamera", "mirrorless", "profesyonel kamera"]
+        related_brands: [Canon, Nikon, Sony, Fujifilm, Olympus, Leica, Panasonic]
+        migrate_from: [fotograf-kamera]
+
+      - slug: aksiyon-kamera
+        name_tr: "Aksiyon Kamera"
+        keywords: ["aksiyon kamera", "action camera", "gopro", "insta360", "osmo action"]
+        related_brands: [GoPro, DJI, Insta360, SJCAM]
+        migrate_from: [aksiyon-kamera]
+
+      - slug: drone
+        name_tr: "Drone"
+        keywords: ["drone", "dji mavic", "dji mini", "dji air"]
+        related_brands: [DJI, Autel, Parrot]
+        migrate_from: [drone]
+
+      - slug: guvenlik-kamerasi
+        name_tr: "Güvenlik Kamerası"
+        keywords: ["güvenlik kamerası", "ip kamera", "kamera sistemi"]
+        migrate_from: [guvenlik-kamerasi]
+
+      - slug: akilli-saat
+        name_tr: "Akıllı Saat & Bileklik"
+        keywords: ["akıllı saat", "smartwatch", "apple watch", "galaxy watch", "huawei watch", "mi band", "smart band", "akıllı bileklik", "fitbit", "garmin", "amazfit"]
+        exclude_keywords: ["kordon", "kayış", "kılıf"]
+        related_brands: [Apple, Samsung, Huawei, Xiaomi, Honor, Fitbit, Garmin, Amazfit]
+        migrate_from: [akilli-saat]
+
+      - slug: oyun-konsol
+        name_tr: "Oyun Konsolu"
+        keywords: ["playstation", "ps5", "ps4", "xbox", "nintendo switch", "steam deck", "oyun konsolu"]
+        related_brands: [Sony, Microsoft, Nintendo, Valve]
+        migrate_from: [oyun-konsol]
+
+  # ============================================================
+  # 2. BEYAZ EŞYA
+  # ============================================================
+  - slug: beyaz-esya
+    name_tr: "Beyaz Eşya"
+    icon: "🏠"
+    subcategories:
+
+      - slug: buzdolabi
+        name_tr: "Buzdolabı"
+        keywords: ["buzdolabı", "no frost", "side by side", "gardrop tipi", "kombi buzdolabı", "mini buzdolabı"]
+        related_brands: [Arçelik, Beko, Vestel, Samsung, LG, Bosch, Siemens, Profilo, Altus, Whirlpool, Miele]
+        migrate_from: [buzdolabi]
+
+      - slug: camasir-makinesi
+        name_tr: "Çamaşır Makinesi"
+        keywords: ["çamaşır makinesi", "yıkama makinesi"]
+        related_brands: [Arçelik, Beko, Vestel, Samsung, LG, Bosch, Siemens, Profilo, Miele]
+        migrate_from: [camasir-makinesi]
+
+      - slug: kurutma-makinesi
+        name_tr: "Kurutma Makinesi"
+        keywords: ["kurutma makinesi", "çamaşır kurutma", "tumble dryer"]
+        migrate_from: [kurutma-makinesi]
+
+      - slug: bulasik-makinesi
+        name_tr: "Bulaşık Makinesi"
+        keywords: ["bulaşık makinesi", "dishwasher"]
+        migrate_from: [bulasik-makinesi]
+
+      - slug: firin-ocak
+        name_tr: "Fırın & Ocak"
+        keywords: ["ankastre fırın", "fırın", "ocak", "ankastre ocak", "gazlı ocak", "elektrikli ocak", "indüksiyon"]
+        exclude_keywords: ["airfryer", "fritöz", "mikrodalga", "mini fırın"]
+        related_brands: [Bosch, Siemens, Profilo, Arçelik, Beko, Samsung, Vestel, Miele, AEG]
+        migrate_from: [firin-ocak]
+
+      - slug: klima
+        name_tr: "Klima"
+        keywords: ["klima", "split klima", "inverter klima", "portatif klima"]
+        migrate_from: [klima]
+
+      - slug: isitici
+        name_tr: "Isıtıcı & Soba"
+        keywords: ["ısıtıcı", "seramik ısıtıcı", "yağlı radyatör", "fanlı ısıtıcı", "doğalgaz sobası"]
+
+      - slug: mikrodalga
+        name_tr: "Mikrodalga"
+        keywords: ["mikrodalga", "microwave"]
+
+      - slug: aspirator-davlumbaz
+        name_tr: "Aspiratör & Davlumbaz"
+        keywords: ["aspiratör", "davlumbaz", "ankastre davlumbaz"]
+
+  # ============================================================
+  # 3. KÜÇÜK EV ALETLERİ
+  # ============================================================
+  - slug: kucuk-ev-aletleri
+    name_tr: "Küçük Ev Aletleri"
+    icon: "⚡"
+    subcategories:
+
+      - slug: supurge
+        name_tr: "Süpürge"
+        keywords: ["süpürge", "elektrikli süpürge", "robot süpürge", "dikey süpürge", "şarjlı süpürge", "torbalı süpürge"]
+        related_brands: [Dyson, Xiaomi, Arçelik, Philips, Samsung, LG, Roborock, iRobot, Fakir, Tefal, Rowenta]
+        migrate_from: [supurge]
+
+      - slug: kahve-makinesi
+        name_tr: "Kahve Makinesi"
+        keywords: ["kahve makinesi", "espresso makinesi", "filtre kahve", "kapsül kahve", "türk kahve makinesi", "nespresso", "dolce gusto"]
+        related_brands: [Philips, Delonghi, Nespresso, Jura, Breville, Krups, Arzum, Arçelik, Fakir]
+        migrate_from: [kahve-cay-makinesi]
+
+      - slug: su-isiticisi
+        name_tr: "Su Isıtıcısı & Çay Makinesi"
+        keywords: ["su ısıtıcı", "kettle", "çay makinesi", "semaver", "elektrikli semaver", "ketıl"]
+
+      - slug: blender-robot
+        name_tr: "Blender & Mutfak Robotu"
+        keywords: ["blender", "el blender", "mutfak robotu", "rondo", "doğrayıcı", "chopper", "smoothie maker"]
+        migrate_from: [mutfak-aleti]
+
+      - slug: mikser-cirpici
+        name_tr: "Mikser & Çırpıcı"
+        keywords: ["mikser", "stand mikser", "el mikseri", "çırpıcı"]
+
+      - slug: fritoz-airfryer
+        name_tr: "Fritöz & Airfryer"
+        keywords: ["fritöz", "airfryer", "air fryer", "yağsız fritöz"]
+
+      - slug: tost-makinesi
+        name_tr: "Tost & Kızartma Makinesi"
+        keywords: ["tost makinesi", "ekmek kızartma makinesi", "sandviç makinesi", "waffle makinesi"]
+
+      - slug: utu
+        name_tr: "Ütü"
+        keywords: ["ütü", "buharlı ütü", "dikey ütü", "buhar kazanı"]
+        migrate_from: [utu]
+
+      - slug: mutfak-aleti-diger
+        name_tr: "Diğer Mutfak Aletleri"
+        keywords: ["meyve sıkacağı", "narenciye sıkacağı", "kıyma makinesi", "et öğütücü", "yumurta pişirici", "dondurma makinesi"]
+
+      - slug: sac-kurutma-sekillendirici
+        name_tr: "Saç Kurutma & Şekillendirici"
+        keywords: ["saç kurutma makinesi", "saç maşası", "saç düzleştirici", "bigudi", "dyson airwrap", "dyson supersonic"]
+        migrate_from: [sac-stilizasyon]
+
+      - slug: kisisel-bakim-elektrikli
+        name_tr: "Kişisel Bakım Cihazları"
+        keywords: ["tıraş makinesi", "epilatör", "ipl", "lazer epilasyon", "sakal düzeltici", "elektrikli diş fırçası", "ağız duşu"]
+
+      - slug: hava-temizleyici
+        name_tr: "Hava Temizleyici & Nemlendirici"
+        keywords: ["hava temizleyici", "air purifier", "hava nemlendirici", "humidifier", "nem alıcı"]
+
+      - slug: tarti-terazi
+        name_tr: "Tartı & Terazi"
+        keywords: ["tartı", "baskül", "vücut analiz terazisi", "mutfak terazisi"]
+
+  # ============================================================
+  # 4. MODA
+  # ============================================================
+  - slug: moda
+    name_tr: "Moda"
+    icon: "👗"
+    subcategories:
+
+      - slug: kadin-giyim-ust
+        name_tr: "Kadın Üst Giyim"
+        keywords: ["kadın tişört", "bluz", "kadın gömlek", "kadın kazak", "kadın hırka", "tunik", "kadın sweatshirt"]
+        migrate_from: [kadin-tisort-bluz, kadin-kazak]
+
+      - slug: kadin-giyim-alt
+        name_tr: "Kadın Alt Giyim"
+        keywords: ["kadın pantolon", "kadın jean", "kadın şort", "tayt", "kadın etek"]
+        migrate_from: [kadin-pantolon, etek]
+
+      - slug: kadin-elbise
+        name_tr: "Elbise"
+        keywords: ["elbise", "abiye", "gece elbisesi", "mini elbise", "maxi elbise"]
+        migrate_from: [elbise]
+
+      - slug: kadin-dis-giyim
+        name_tr: "Kadın Dış Giyim"
+        keywords: ["kadın ceket", "kadın mont", "kadın kaban", "kadın palto", "kadın trençkot"]
+        migrate_from: [kadin-ceket-mont]
+
+      - slug: kadin-ayakkabi-sneaker
+        name_tr: "Kadın Sneaker & Spor Ayakkabı"
+        keywords: ["kadın sneaker", "kadın spor ayakkabı", "kadın koşu ayakkabısı"]
+        migrate_from: [kadin-sneaker]
+
+      - slug: kadin-ayakkabi-topuklu
+        name_tr: "Topuklu Ayakkabı"
+        keywords: ["topuklu", "stiletto", "platform ayakkabı", "dolgu topuklu"]
+        migrate_from: [topuklu]
+
+      - slug: kadin-ayakkabi-bot
+        name_tr: "Kadın Bot & Çizme"
+        keywords: ["kadın bot", "kadın çizme", "bootie"]
+        migrate_from: [kadin-bot]
+
+      - slug: kadin-ayakkabi-sandalet
+        name_tr: "Sandalet, Babet, Terlik (Kadın)"
+        keywords: ["kadın sandalet", "babet", "kadın terlik", "kadın loafer"]
+        migrate_from: [kadin-sandalet, babet]
+
+      - slug: erkek-giyim-ust
+        name_tr: "Erkek Üst Giyim"
+        keywords: ["erkek tişört", "erkek gömlek", "erkek kazak", "erkek sweatshirt", "erkek polo"]
+        migrate_from: [erkek-tisort, erkek-gomlek]
+
+      - slug: erkek-giyim-alt
+        name_tr: "Erkek Alt Giyim"
+        keywords: ["erkek pantolon", "erkek jean", "erkek şort", "erkek chino"]
+        migrate_from: [erkek-pantolon]
+
+      - slug: erkek-dis-giyim
+        name_tr: "Erkek Dış Giyim"
+        keywords: ["erkek ceket", "erkek mont", "erkek kaban", "erkek palto", "erkek trençkot"]
+        migrate_from: [erkek-ceket-mont]
+
+      - slug: erkek-takim-elbise
+        name_tr: "Takım Elbise & Smokin"
+        keywords: ["takım elbise", "smokin", "damatlık"]
+        migrate_from: [takim-elbise]
+
+      - slug: erkek-ayakkabi-sneaker
+        name_tr: "Erkek Sneaker & Spor Ayakkabı"
+        keywords: ["erkek sneaker", "erkek spor ayakkabı", "erkek koşu"]
+        migrate_from: [erkek-sneaker]
+
+      - slug: erkek-ayakkabi-klasik
+        name_tr: "Klasik Erkek Ayakkabı"
+        keywords: ["erkek klasik ayakkabı", "erkek loafer", "oxford ayakkabı"]
+        migrate_from: [klasik-ayakkabi]
+
+      - slug: erkek-ayakkabi-bot
+        name_tr: "Erkek Bot & Çizme"
+        keywords: ["erkek bot", "erkek çizme"]
+        migrate_from: [erkek-bot]
+
+      - slug: cocuk-giyim
+        name_tr: "Çocuk Giyim"
+        keywords: ["çocuk elbise", "çocuk pantolon", "çocuk tişört", "bebek tulum", "çocuk mont"]
+        migrate_from: [cocuk-giyim, bebek-giyim]
+
+      - slug: cocuk-ayakkabi
+        name_tr: "Çocuk Ayakkabı"
+        keywords: ["çocuk ayakkabı", "çocuk sneaker", "bebek ayakkabı", "çocuk bot"]
+
+      - slug: ic-giyim
+        name_tr: "İç Giyim & Pijama"
+        keywords: ["iç çamaşır", "sütyen", "külot", "boxer", "pijama", "gecelik", "çorap"]
+        migrate_from: [ic-giyim]
+
+      - slug: esofman-spor-giyim
+        name_tr: "Eşofman & Spor Giyim"
+        keywords: ["eşofman", "spor taytı", "spor tişört", "spor şort", "training"]
+        migrate_from: [esofman, spor-giyim, outdoor-giyim]
+
+      - slug: canta-cuzdan
+        name_tr: "Çanta & Cüzdan"
+        keywords: ["çanta", "kadın çanta", "sırt çantası", "laptop çantası", "cüzdan", "el çantası", "omuz çantası"]
+        migrate_from: [canta-cuzdan]
+
+      - slug: gozluk
+        name_tr: "Gözlük"
+        keywords: ["güneş gözlüğü", "numaralı gözlük", "optik gözlük"]
+        migrate_from: [gozluk]
+
+      - slug: saat-taki
+        name_tr: "Saat & Takı"
+        keywords: ["kol saati", "kolye", "bileklik", "yüzük", "küpe", "altın takı", "gümüş takı"]
+        migrate_from: [saat-taki]
+
+  # ============================================================
+  # 5. KOZMETİK & BAKIM
+  # ============================================================
+  - slug: kozmetik-bakim
+    name_tr: "Kozmetik & Bakım"
+    icon: "💄"
+    subcategories:
+
+      - slug: yuz-nemlendirici
+        name_tr: "Yüz Nemlendirici"
+        keywords: ["yüz nemlendirici", "nemlendirici krem", "moisturizer", "day cream", "night cream"]
+        related_brands: [CeraVe, "La Roche-Posay", Vichy, Bioderma, Eucerin, Cetaphil, Neutrogena, Olay, Nivea, Avene, Garnier, Loreal]
+        migrate_from: [yuz-nemlendirici]
+
+      - slug: yuz-temizleyici
+        name_tr: "Yüz Temizleyici"
+        keywords: ["yüz temizleyici", "temizleme jeli", "cleanser", "makyaj temizleyici", "micellar", "misel su", "tonik"]
+        migrate_from: [yuz-temizleme]
+
+      - slug: serum-ampul
+        name_tr: "Serum & Ampul"
+        keywords: ["cilt serumu", "vitamin c serum", "hyaluronic acid", "retinol", "niacinamide", "anti aging serum"]
+        migrate_from: [serum]
+
+      - slug: yuz-maskesi-skincare
+        name_tr: "Yüz Maskesi (Cilt Bakım)"
+        keywords: ["yüz maskesi", "cilt maskesi", "kil maskesi", "sheet mask", "kağıt maske", "hidrojel maske"]
+        migrate_from: [yuz-maskesi]
+
+      - slug: gunes-koruyucu
+        name_tr: "Güneş Koruyucu"
+        keywords: ["güneş kremi", "sunscreen", "spf", "güneş koruyucu"]
+        migrate_from: [gunes-koruyucu]
+
+      - slug: yuz-makyaji
+        name_tr: "Yüz Makyajı"
+        keywords: ["fondöten", "foundation", "kapatıcı", "concealer", "pudra", "allık", "blush", "bronzer", "highlighter"]
+        migrate_from: [yuz-makyaji]
+
+      - slug: goz-makyaji
+        name_tr: "Göz Makyajı"
+        keywords: ["maskara", "eyeliner", "kaş kalemi", "far", "eyeshadow", "göz paleti"]
+        migrate_from: [goz-makyaji]
+
+      - slug: dudak-makyaji
+        name_tr: "Dudak Makyajı"
+        keywords: ["ruj", "lipstick", "dudak kalemi", "dudak parlatıcı", "lip gloss", "lip tint", "dudak balmı"]
+        migrate_from: [dudak-makyaji]
+
+      - slug: makyaj-aksesuar
+        name_tr: "Makyaj Fırça & Aksesuar"
+        keywords: ["makyaj fırçası", "süngeri", "beauty blender", "kirpik kıvırıcı"]
+
+      - slug: sampuan
+        name_tr: "Şampuan & Saç Kremi"
+        keywords: ["şampuan", "saç kremi", "conditioner"]
+        related_brands: ["Head & Shoulders", Pantene, Elseve, Elvive, Schwarzkopf, Wella, "TRESemmé", Loreal, Garnier, Palmolive]
+        migrate_from: [sampuan]
+
+      - slug: sac-bakim
+        name_tr: "Saç Bakım Ürünleri"
+        keywords: ["saç maskesi", "saç serumu", "saç yağı", "saç losyonu", "hair mask"]
+        migrate_from: [sac-bakimi]
+
+      - slug: sac-boyasi
+        name_tr: "Saç Boyası"
+        keywords: ["saç boyası", "hair color", "kalıcı boya"]
+        migrate_from: [sac-boyasi]
+
+      - slug: sac-sekillendirme
+        name_tr: "Saç Şekillendirici Ürün"
+        keywords: ["saç spreyi", "saç jölesi", "mousse", "hairspray", "saç wax"]
+
+      - slug: parfum
+        name_tr: "Parfüm"
+        keywords: ["parfüm", "eau de parfum", "edt", "edp", "cologne", "kolonya"]
+        migrate_from: [parfum]
+
+      - slug: deodorant
+        name_tr: "Deodorant"
+        keywords: ["deodorant", "roll-on", "anti-perspirant", "sprey deodorant"]
+
+      - slug: erkek-bakim
+        name_tr: "Erkek Bakımı"
+        keywords: ["tıraş köpüğü", "after shave", "sakal yağı", "sakal bakım", "erkek parfüm", "tıraş jeli"]
+        migrate_from: [erkek-bakimi]
+
+      - slug: agiz-dis-bakim
+        name_tr: "Ağız & Diş Bakımı"
+        keywords: ["diş macunu", "ağız bakım suyu", "diş ipi", "diş fırçası", "mouthwash", "beyazlatıcı"]
+        migrate_from: [agiz-dis]
+
+      - slug: kisisel-hijyen
+        name_tr: "Kişisel Hijyen"
+        keywords: ["el sabunu", "duş jeli", "vücut şampuanı", "banyo köpüğü", "ıslak mendil", "el dezenfektanı"]
+        migrate_from: [kisisel-hijyen]
+
+      - slug: vucut-bakim
+        name_tr: "Vücut Bakımı"
+        keywords: ["vücut losyonu", "body lotion", "vücut kremi", "el kremi", "ayak kremi"]
+
+  # ============================================================
+  # 6. ANNE & BEBEK
+  # ============================================================
+  - slug: anne-bebek
+    name_tr: "Anne & Bebek"
+    icon: "👶"
+    subcategories:
+
+      - slug: bebek-bezi
+        name_tr: "Bebek Bezi"
+        keywords: ["bebek bezi", "diaper"]
+        migrate_from: [bebek-bezi]
+
+      - slug: islak-mendil
+        name_tr: "Islak Mendil"
+        keywords: ["ıslak mendil", "baby wipes"]
+
+      - slug: biberon-emzik
+        name_tr: "Biberon & Emzik"
+        keywords: ["biberon", "emzik", "biberon sterilizatör", "mama şişesi"]
+        migrate_from: [biberon]
+
+      - slug: bebek-mama
+        name_tr: "Bebek Maması"
+        keywords: ["bebek maması", "devam sütü", "takviyeli mama"]
+        migrate_from: [mama]
+
+      - slug: bebek-bakim-urunleri
+        name_tr: "Bebek Bakım Ürünleri"
+        keywords: ["bebek şampuan", "bebek kremi", "pişik kremi", "bebek yağı", "bebek banyosu"]
+        migrate_from: [bebek-bakim, bebek-kozmetik, bebek-sagligi]
+
+      - slug: puset-araba
+        name_tr: "Bebek Arabası & Puset"
+        keywords: ["bebek arabası", "puset", "travel sistem", "ikiz puset", "jogger"]
+        migrate_from: [puset-araba, bebek-arabasi]
+
+      - slug: oto-koltugu
+        name_tr: "Oto Koltuğu"
+        keywords: ["bebek oto koltuğu", "çocuk oto koltuğu", "isofix"]
+        migrate_from: [oto-koltugu]
+
+      - slug: besik-bebek-yatak
+        name_tr: "Beşik & Bebek Yatağı"
+        keywords: ["beşik", "bebek yatağı", "park yatak"]
+        migrate_from: [besik]
+
+      - slug: bebek-guvenligi
+        name_tr: "Bebek Güvenliği"
+        keywords: ["bebek monitörü", "baby monitor", "güvenlik kilidi", "priz koruyucu"]
+        migrate_from: [bebek-guvenligi]
+
+      - slug: cocuk-odasi
+        name_tr: "Çocuk Odası"
+        keywords: ["çocuk karyolası", "çocuk gardrop", "oyuncak dolabı", "çocuk masası"]
+        migrate_from: [cocuk-odasi]
+
+      - slug: oyuncak-egitici
+        name_tr: "Eğitici Oyuncak"
+        keywords: ["eğitici oyuncak", "bultak", "puzzle çocuk", "aktivite oyuncağı"]
+        migrate_from: [egitici-oyuncak]
+
+      - slug: oyuncak-figur
+        name_tr: "Figür & Oyuncak Bebek"
+        keywords: ["oyuncak bebek", "barbie", "figür oyuncak", "action figure", "peluş"]
+        migrate_from: [figur-oyuncak]
+
+      - slug: oyuncak-lego
+        name_tr: "LEGO & Yapı Blokları"
+        keywords: ["lego", "yapı blokları", "building blocks"]
+        migrate_from: [lego]
+
+      - slug: oyuncak-rc
+        name_tr: "RC & Robot Oyuncak"
+        keywords: ["uzaktan kumandalı araba", "rc araba", "robot oyuncak"]
+        migrate_from: [rc-robot]
+
+      - slug: oyuncak-masa
+        name_tr: "Masa Oyunu & Bulmaca"
+        keywords: ["masa oyunu", "bulmaca", "puzzle", "board game", "satranç"]
+        migrate_from: [masa-oyunu]
+
+      - slug: oyuncak-diger
+        name_tr: "Diğer Oyuncaklar"
+        keywords: ["oyuncak", "kum havuzu"]
+        migrate_from: [oyuncak]
+
+  # ============================================================
+  # 7. SPOR & OUTDOOR
+  # ============================================================
+  - slug: spor-outdoor
+    name_tr: "Spor & Outdoor"
+    icon: "⚽"
+    subcategories:
+
+      - slug: fitness-kondisyon
+        name_tr: "Fitness & Kondisyon"
+        keywords: ["dambıl", "halter", "kettlebell", "koşu bandı", "kondisyon bisikleti", "egzersiz matı", "direnç lastiği"]
+        migrate_from: [fitness]
+
+      - slug: yoga-pilates
+        name_tr: "Yoga & Pilates"
+        keywords: ["yoga matı", "pilates topu", "yoga blok", "pilates lastiği"]
+        migrate_from: [yoga]
+
+      - slug: outdoor-kamp
+        name_tr: "Outdoor & Kamp"
+        keywords: ["çadır", "uyku tulumu", "mat", "kamp ocağı", "kamp masası", "kamp sandalyesi", "trekking bastonu"]
+        migrate_from: [outdoor-kamp]
+
+      - slug: bisiklet
+        name_tr: "Bisiklet"
+        keywords: ["bisiklet", "dağ bisikleti", "yol bisikleti", "şehir bisikleti", "çocuk bisikleti", "elektrikli bisiklet"]
+        related_brands: [Bianchi, Trek, Giant, Cube, Specialized, Merida, Kron, Salcano, Bisan]
+        migrate_from: [bisiklet]
+
+      - slug: scooter
+        name_tr: "Scooter & Elektrikli Scooter"
+        keywords: ["scooter", "elektrikli scooter", "e-scooter", "kick scooter"]
+
+      - slug: su-sporlari
+        name_tr: "Su Sporları"
+        keywords: ["dalış maskesi", "şnorkel", "palet", "yüzme gözlüğü", "bone", "dalış kıyafeti", "mayo", "bikini", "sörf tahtası", "sup board", "can yeleği"]
+        related_brands: [Cressi, Mares, Scubapro, "Aqua Lung", Apeks, Salvimar]
+        migrate_from: [su-sporlari]
+
+      - slug: takim-sporlari
+        name_tr: "Takım Sporları"
+        keywords: ["futbol topu", "basketbol topu", "voleybol topu", "forma", "futbol ayakkabısı", "krampon"]
+        migrate_from: [takim-sporlari]
+
+      - slug: spor-ayakkabi
+        name_tr: "Spor Ayakkabı (Genel)"
+        keywords: ["spor ayakkabı", "koşu ayakkabısı", "basketbol ayakkabısı"]
+
+  # ============================================================
+  # 8. PET SHOP
+  # ============================================================
+  - slug: pet-shop
+    name_tr: "Pet Shop"
+    icon: "🐾"
+    subcategories:
+
+      - slug: kedi-mamasi
+        name_tr: "Kedi Maması"
+        keywords: ["kedi maması", "kuru kedi maması", "yaş kedi maması", "yavru kedi maması"]
+        related_brands: ["Royal Canin", "Hill's", Proplan, Purina, Whiskas, Felix, Sheba, "Me-O", Matisse, Brit, Acana, Orijen]
+        migrate_from: [kedi-mamasi]
+
+      - slug: kopek-mamasi
+        name_tr: "Köpek Maması"
+        keywords: ["köpek maması", "kuru köpek maması", "yaş köpek maması", "yavru köpek maması"]
+        related_brands: ["Royal Canin", "Hill's", Proplan, Purina, Pedigree, Brit, Acana, Orijen, Bonacibo]
+        migrate_from: [kopek-mamasi]
+
+      - slug: kedi-kumu
+        name_tr: "Kedi Kumu"
+        keywords: ["kedi kumu", "topaklaşan kum", "silika kum", "bentonit kum"]
+        migrate_from: [kedi-kumu]
+
+      - slug: pet-aksesuar
+        name_tr: "Pet Aksesuar"
+        keywords: ["tasma", "boyunluk", "mama kabı", "su kabı", "köpek ipi", "oyuncak köpek", "oyuncak kedi", "pet yatağı", "tırmık tahtası"]
+        migrate_from: [pet-aksesuar]
+
+      - slug: pet-bakim-hijyen
+        name_tr: "Pet Bakım & Hijyen"
+        keywords: ["pet şampuan", "köpek şampuan", "bit damlası", "dış parazit"]
+        migrate_from: [pet-bakim]
+
+      - slug: akvaryum
+        name_tr: "Akvaryum & Balık"
+        keywords: ["akvaryum", "balık yemi", "akvaryum filtresi", "akvaryum ısıtıcı"]
+        migrate_from: [akvaryum, balik-akvaryum]
+
+      - slug: kus-urunleri
+        name_tr: "Kuş Ürünleri"
+        keywords: ["muhabbet kuşu", "kuş yemi", "kuş kafesi", "kuş oyuncağı"]
+        migrate_from: [kus]
+
+      - slug: pet-diger
+        name_tr: "Diğer Evcil Hayvan"
+        keywords: ["hamster", "tavşan maması", "tavşan kafesi", "kaplumbağa yemi"]
+        migrate_from: [diger-evcil-hayvan]
+
+  # ============================================================
+  # 9. OTOMOTİV
+  # ============================================================
+  - slug: otomotiv
+    name_tr: "Otomotiv"
+    icon: "🚗"
+    subcategories:
+
+      - slug: oto-navigasyon
+        name_tr: "Navigasyon & GPS"
+        keywords: ["navigasyon", "gps", "araç navigasyonu"]
+        migrate_from: [navigasyon]
+
+      - slug: oto-teyp-multimedya
+        name_tr: "Teyp & Multimedya"
+        keywords: ["oto teyp", "araç multimedya", "android auto ekran", "carplay"]
+        migrate_from: [oto-teyp]
+
+      - slug: arac-aksesuar
+        name_tr: "Araç Aksesuar"
+        keywords: ["araç telefon tutucu", "araç şarj cihazı", "koltuk kılıfı", "direksiyon kılıfı", "paspas", "güneşlik"]
+        migrate_from: [arac-aksesuar]
+
+      - slug: oto-yag-bakim
+        name_tr: "Motor Yağı & Bakım"
+        keywords: ["motor yağı", "antifriz", "cam suyu", "fren hidroliği", "yağ filtresi", "hava filtresi"]
+        migrate_from: [oto-yag-bakim]
+
+      - slug: oto-aku
+        name_tr: "Oto Akü"
+        keywords: ["oto akü", "akü", "car battery"]
+        migrate_from: [oto-aku]
+
+      - slug: oto-lastik-jant
+        name_tr: "Lastik & Jant"
+        keywords: ["oto lastik", "kış lastiği", "yaz lastiği", "jant", "zincir"]
+        migrate_from: [lastik-jant]
+
+      - slug: oto-yedek-parca
+        name_tr: "Oto Yedek Parça"
+        keywords: ["fren balata", "silecek", "ampul oto", "bujisi", "amortisör"]
+        migrate_from: [oto-yedek-parca]
+
+      - slug: motor-scooter
+        name_tr: "Motor & Scooter"
+        keywords: ["motosiklet", "scooter motor", "mobilet", "motor kaskı", "motor eldiveni"]
+        migrate_from: [motor-scooter]
+
+      - slug: arac-elektronigi
+        name_tr: "Araç Elektroniği"
+        keywords: ["araç kamerası", "dash cam", "park sensörü", "geri görüş kamerası"]
+        migrate_from: [arac-elektronigi]
+
+  # ============================================================
+  # 10. EV & YAŞAM
+  # ============================================================
+  - slug: ev-yasam
+    name_tr: "Ev & Yaşam"
+    icon: "🛋️"
+    subcategories:
+
+      - slug: mobilya-oturma
+        name_tr: "Oturma Odası Mobilya"
+        keywords: ["koltuk takımı", "kanepe", "çekyat", "berjer", "sehpa", "tv ünitesi"]
+        migrate_from: [mobilya-dekorasyon]
+
+      - slug: mobilya-yatak
+        name_tr: "Yatak Odası Mobilya"
+        keywords: ["yatak", "baza", "gardrop", "komodin", "şifonyer", "tuvalet masası"]
+
+      - slug: mobilya-yemek
+        name_tr: "Yemek Odası Mobilya"
+        keywords: ["yemek masası", "sandalye", "vitrin", "büfe"]
+
+      - slug: mobilya-ofis
+        name_tr: "Ofis Mobilyası"
+        keywords: ["çalışma masası", "ofis koltuğu", "kütüphane", "ofis dolabı", "gaming koltuk"]
+        migrate_from: [ofis-mobilyasi]
+
+      - slug: aydinlatma
+        name_tr: "Aydınlatma"
+        keywords: ["avize", "sarkıt", "aplik", "masa lambası", "gece lambası", "led şerit", "ampul"]
+        migrate_from: [aydinlatma]
+
+      - slug: ev-tekstili
+        name_tr: "Ev Tekstili"
+        keywords: ["nevresim", "çarşaf", "yorgan", "yastık", "perde", "halı", "battaniye", "havlu"]
+        migrate_from: [ev-tekstili]
+
+      - slug: mutfak-sofra
+        name_tr: "Mutfak & Sofra"
+        keywords: ["tencere", "tava", "kase", "tabak", "bardak", "çatal bıçak", "çaydanlık", "sofra takımı"]
+        migrate_from: [mutfak-sofra]
+
+      - slug: banyo-tuvalet
+        name_tr: "Banyo & Tuvalet"
+        keywords: ["duş perdesi", "banyo halısı", "klozet kapağı", "banyo aksesuar", "sabunluk"]
+        migrate_from: [banyo]
+
+      - slug: temizlik-deterjan
+        name_tr: "Temizlik & Deterjan"
+        keywords: ["deterjan", "yüzey temizleyici", "çamaşır suyu", "bulaşık deterjanı", "yumuşatıcı"]
+        migrate_from: [temizlik]
+
+      - slug: bahce-balkon
+        name_tr: "Bahçe & Balkon"
+        keywords: ["bahçe mobilyası", "çim biçme makinesi", "saksı", "çiçek toprak", "mangal", "barbekü"]
+        migrate_from: [bahce-balkon]
+
+  # ============================================================
+  # 11. YAPI MARKET
+  # ============================================================
+  - slug: yapi-market
+    name_tr: "Yapı Market"
+    icon: "🔧"
+    subcategories:
+
+      - slug: el-aletleri
+        name_tr: "El Aletleri"
+        keywords: ["tornavida", "pense", "anahtar takımı", "tornavida seti", "çekiç", "metre"]
+        migrate_from: [el-aletleri]
+
+      - slug: elektrikli-aletler
+        name_tr: "Elektrikli Aletler"
+        keywords: ["matkap", "şarjlı matkap", "taşlama", "yuvarlak testere", "dekupaj", "zımpara makinesi"]
+        migrate_from: [elektrikli-aletler]
+
+      - slug: hirdavat
+        name_tr: "Hırdavat & Vida"
+        keywords: ["vida", "dübel", "cıvata", "çivi", "kelepçe", "menteşe", "kilit"]
+        migrate_from: [hirdavat-vida]
+
+      - slug: boya-malzeme
+        name_tr: "Boya & Malzeme"
+        keywords: ["duvar boyası", "su bazlı boya", "astar", "rulo", "fırça", "tiner", "silikon"]
+        migrate_from: [boya-malzeme]
+
+      - slug: elektrik-malzeme
+        name_tr: "Elektrik Malzeme"
+        keywords: ["kablo", "elektrik priz", "anahtar priz", "uzatma kablo", "sigorta", "priz grubu"]
+        migrate_from: [elektrik-malzeme]
+
+      - slug: su-tesisat
+        name_tr: "Su Tesisatı"
+        keywords: ["musluk", "batarya", "duş başlığı", "sifon", "boru", "klozet"]
+        migrate_from: [su-tesisat]
+
+      - slug: olcum-aletleri
+        name_tr: "Ölçüm Aletleri"
+        keywords: ["termometre", "higrometre", "anemometre", "lazer metre", "infrared termometre"]
+
+  # ============================================================
+  # 12. SÜPERMARKET
+  # ============================================================
+  - slug: supermarket
+    name_tr: "Süpermarket"
+    icon: "🛒"
+    subcategories:
+
+      - slug: atistirmalik-cikolata
+        name_tr: "Atıştırmalık & Çikolata"
+        keywords: ["çikolata", "cips", "kraker", "gofret", "bisküvi", "şekerleme", "kuruyemiş"]
+        migrate_from: [atistirmalik]
+
+      - slug: icecek
+        name_tr: "İçecek"
+        keywords: ["kola", "gazoz", "meyve suyu", "su", "maden suyu", "enerji içeceği", "ayran"]
+        migrate_from: [icecek]
+
+      - slug: bakliyat-makarna
+        name_tr: "Bakliyat & Makarna"
+        keywords: ["makarna", "pirinç", "mercimek", "nohut", "fasulye", "bulgur"]
+        migrate_from: [bakliyat-makarna]
+
+      - slug: konserve-sos
+        name_tr: "Konserve & Sos"
+        keywords: ["konserve", "ton balığı konserve", "domates salçası", "ketçap", "mayonez", "hardal"]
+        migrate_from: [konserve-sos]
+
+      - slug: kahvalti-kahve
+        name_tr: "Kahvaltı & Kahve"
+        keywords: ["kahve çekirdeği", "nescafe", "çay", "reçel", "bal", "tahin", "pekmez"]
+        migrate_from: [kahvalti-kahve]
+
+      - slug: dondurma-tatli
+        name_tr: "Dondurma & Tatlı"
+        keywords: ["dondurma", "magnum", "lokum", "helva", "tatlı konserve"]
+        migrate_from: [dondurma-tatli]
+
+  # ============================================================
+  # 13. KİTAP & HOBİ
+  # ============================================================
+  - slug: kitap-hobi
+    name_tr: "Kitap & Hobi"
+    icon: "📚"
+    subcategories:
+
+      - slug: kitap
+        name_tr: "Kitap"
+        keywords: ["roman", "kitap", "ders kitabı", "hikaye kitabı", "deneme", "şiir kitabı"]
+        migrate_from: [kitap]
+
+      - slug: cocuk-kitaplari
+        name_tr: "Çocuk Kitapları"
+        keywords: ["çocuk kitabı", "hikaye kitabı çocuk", "boyama kitabı", "aktivite kitabı"]
+        migrate_from: [cocuk-kitaplari]
+
+      - slug: kirtasiye
+        name_tr: "Kırtasiye & Okul"
+        keywords: ["defter", "kalem", "silgi", "kurşun kalem", "tükenmez", "cetvel", "çıkartma kitabı"]
+        migrate_from: [kirtasiye]
+
+      - slug: resim-cizim
+        name_tr: "Resim & Çizim"
+        keywords: ["boya seti", "akrilik boya", "pastel boya", "sulu boya", "tuval", "grafik tablet"]
+        migrate_from: [resim-cizim]
+
+      - slug: el-sanatlari
+        name_tr: "El Sanatları"
+        keywords: ["tığ", "yün", "iplik", "dikiş iğnesi", "el işi", "keçe", "dantel"]
+        migrate_from: [el-sanatlari]
+
+      - slug: muzik-aleti
+        name_tr: "Müzik Aleti"
+        keywords: ["gitar", "piyano", "org", "ukulele", "ağız mızıkası", "davul", "midi klavye", "amfi"]
+        migrate_from: [muzik-aleti]
+
+      - slug: koleksiyon
+        name_tr: "Koleksiyon"
+        keywords: ["koleksiyon figür", "funko pop", "plak", "vinyl", "pul", "para"]
+        migrate_from: [koleksiyon]
+
+
+# ============================================================
+# BRAND NORMALIZATION
+# ============================================================
+brand_normalization:
+  Apple: [apple, APPLE, iphone, İphone, IPHONE, ipad, airpods]
+  Samsung: [samsung, SAMSUNG, "Samsung Samsung"]
+  Xiaomi: [xiaomi, XIAOMI, Mi, mi]
+  Huawei: [huawei, HUAWEI]
+  Sony: [sony, SONY, PlayStation, PS5, PS4]
+  JBL: [jbl, Jbl, JBL]
+  Gigabyte: [gigabyte, GIGABYTE]
+  Corsair: [corsair, CORSAIR]
+  Kingston: [kingston, KINGSTON]
+  Oppo: [oppo, OPPO]
+  Vivo: [vivo, VIVO]
+  Honor: [honor, HONOR]
+  OnePlus: [oneplus, ONEPLUS]
+  Realme: [realme, REALME]
+  Tecno: [tecno, TECNO]
+  Infinix: [infinix, INFINIX]
+  Redmi: [redmi, REDMI]
+  Poco: [poco, POCO]
+  Dyson: [dyson, DYSON]
+  LG: [lg, LG]
+  Bosch: [bosch, BOSCH]
+  Siemens: [siemens, SIEMENS]
+  Arçelik: [arçelik, ARÇELIK, arcelik]
+  Beko: [beko, BEKO]
+  Profilo: [profilo, PROFILO]
+  Vestel: [vestel, VESTEL]
+  Philips: [philips, PHILIPS]
+  "Royal Canin": ["royal canin", "ROYAL CANIN", royalcanin]
+
+
+# ============================================================
+# SPECIAL RULES
+# ============================================================
+special_rules:
+
+  reject_patterns:
+    - "\\bikinci el\\b"
+    - "\\b2\\.\\s*el\\b"
+    - "\\bkullanılmış\\b"
+    - "\\bdefolu\\b"
+    - "\\bhasarlı\\b"
+    - "\\baçık kutu\\b"
+    - "\\bteşhir\\b"
+    - "\\boutlet\\b"
+    - "\\byenilenmiş\\b"
+    - "\\brefurbished\\b"
+
+  accessory_indicators:
+    - "için"
+    - "uyumlu"
+    - "ile kullanılabilen"
+    - "compatible with"
+
+  accessory_only_brands:
+    - PDX
+    - Renksan
+    - Ulanzi
+    - Borofone
+    - Smcase
+    - Zore
+    - Vexor
+    - Gpack
+    - NEWFACE
+    - Apec
+    - Targus
+    - Dragos

@@ -194,6 +194,23 @@ async function enrichOne(page, product) {
 }
 
 (async () => {
+  const startedAt = Date.now();
+  const { data: logRow } = await sb.from("agent_logs").insert({
+    agent_name: "akakce-enrich",
+    task: "spec-enrichment",
+    status: "running",
+    payload: { limit: LIMIT, brand: BRAND || null, category: CATEGORY || null, only_id: ONLY_ID || null, dry: DRY },
+  }).select("id").maybeSingle();
+  const logId = logRow?.id ?? null;
+  const finishLog = async (summary) => {
+    if (!logId) return;
+    await sb.from("agent_logs").update({
+      status: summary.status,
+      result: summary,
+      duration_ms: Date.now() - startedAt,
+    }).eq("id", logId);
+  };
+
   const router = await buildRouter(sb);
   let query = sb.from("products").select("id, title, brand, model_family, specs, image_url, images, category_id");
   if (ONLY_ID) query = query.eq("id", ONLY_ID);
@@ -225,7 +242,8 @@ async function enrichOne(page, product) {
       }
       query = query.in("category_id", descendantIds);
     }
-    query = query.limit(LIMIT);
+    // En eski zenginleştirilenden başla — enriched_at NULL olanlar en önde
+    query = query.order("enriched_at", { ascending: true, nullsFirst: true }).limit(LIMIT);
   }
   // SKIP_ENRICHED: specs._akakce zaten varsa atla (re-run'da duplicate iş olmasın)
   const { data: productsRaw, error } = await query;
@@ -252,12 +270,22 @@ async function enrichOne(page, product) {
   const page = await ctx.newPage();
 
   let ok = 0, fail = 0, skipped = 0;
+  const markEnriched = async (productId, status) => {
+    if (DRY) return;
+    await sb.from("products").update({
+      enriched_at: new Date().toISOString(),
+      enrichment_source: "akakce",
+      enrichment_status: status,
+    }).eq("id", productId);
+  };
+
   for (const p of products) {
     process.stdout.write(`  [${p.id.slice(0, 8)}] ${(p.title || "").slice(0, 60)} … `);
     const result = await enrichOne(page, p);
     if (!result || result.error) {
       console.log(`FAIL: ${result?.error ?? "unknown"}`);
       fail++;
+      await markEnriched(p.id, "error");
       await page.waitForTimeout(DELAY_MS);
       continue;
     }
@@ -265,6 +293,7 @@ async function enrichOne(page, product) {
     if (specCount === 0) {
       console.log("skipped (no specs)");
       skipped++;
+      await markEnriched(p.id, "no_match");
       await page.waitForTimeout(DELAY_MS);
       continue;
     }
@@ -293,7 +322,12 @@ async function enrichOne(page, product) {
     const routeNote = routeResult && routeResult.changed ? ` → ${routeResult.reason}` : "";
 
     if (!DRY) {
-      const updatePayload = { specs: merged };
+      const updatePayload = {
+        specs: merged,
+        enriched_at: new Date().toISOString(),
+        enrichment_source: "akakce",
+        enrichment_status: "success",
+      };
       if (imgCount > 0) {
         updatePayload.images = result.images;
         if (!p.image_url) updatePayload.image_url = result.images[0];
@@ -310,6 +344,15 @@ async function enrichOne(page, product) {
   }
 
   await browser.close();
+  const summary = {
+    status: fail > 0 && ok === 0 ? "error" : "success",
+    ok, fail, skipped,
+    total: products.length,
+    dry: DRY,
+    filters: { limit: LIMIT, brand: BRAND || null, category: CATEGORY || null, only_id: ONLY_ID || null },
+  };
+  await finishLog(summary);
   console.log(`\n=== ${DRY ? "DRY RUN" : "APPLIED"} ===`);
   console.log(`OK: ${ok} | FAIL: ${fail} | SKIPPED: ${skipped}`);
+  if (fail > 0 && ok === 0) process.exit(1);
 })();
