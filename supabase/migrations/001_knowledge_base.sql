@@ -45,10 +45,12 @@ CREATE TABLE IF NOT EXISTS knowledge_chunks (
 -- Indexler
 -- ============================================================================
 
+-- NOTE: ivfflat lists must be ≈ sqrt(row_count). Start low (3) for small KB;
+-- re-create with higher list count as chunks scale past ~1000.
 CREATE INDEX IF NOT EXISTS idx_knowledge_embedding
   ON knowledge_chunks
   USING ivfflat (embedding vector_cosine_ops)
-  WITH (lists = 50);
+  WITH (lists = 3);
 
 CREATE INDEX IF NOT EXISTS idx_knowledge_category
   ON knowledge_chunks (category_slug)
