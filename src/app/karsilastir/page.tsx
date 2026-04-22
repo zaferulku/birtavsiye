@@ -6,6 +6,8 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import type { Metadata } from "next";
+import Header from "../components/layout/Header";
+import Footer from "../components/layout/Footer";
 
 type ComparisonProduct = {
   id: string;
@@ -227,12 +229,16 @@ export default async function ComparisonPage({
 
   if (productIds.length < 2) {
     return (
-      <div className="comparison-error">
-        <h1>En az 2 ürün seçin</h1>
-        <p>Karşılaştırma sayfasına ürün seçmeden gelinmiş. Bir kategori sayfasından 2-4 ürün seçerek karşılaştırabilirsiniz.</p>
-        <a href="/" className="btn">Anasayfaya dön</a>
-        <style>{COMPARISON_STYLES}</style>
-      </div>
+      <>
+        <Header />
+        <div className="comparison-error">
+          <h1>En az 2 ürün seçin</h1>
+          <p>Karşılaştırma sayfasına ürün seçmeden gelinmiş. Bir kategori sayfasından 2-4 ürün seçerek karşılaştırabilirsiniz.</p>
+          <a href="/" className="btn">Anasayfaya dön</a>
+          <style>{COMPARISON_STYLES}</style>
+        </div>
+        <Footer />
+      </>
     );
   }
 
@@ -244,19 +250,23 @@ export default async function ComparisonPage({
 
   if (!categoryMatch) {
     return (
-      <div className="comparison-error">
-        <h1>Bu ürünler karşılaştırılamaz</h1>
-        <p>Seçtiğiniz ürünler farklı kategorilerde. Adil bir karşılaştırma için aynı kategorideki ürünleri seçin.</p>
-        <ul>
-          {products.map((p) => (
-            <li key={p.id}>
-              <a href={`/urun/${p.slug}`}>{p.title}</a> — {p.category_name}
-            </li>
-          ))}
-        </ul>
-        <a href="/" className="btn">Anasayfaya dön</a>
-        <style>{COMPARISON_STYLES}</style>
-      </div>
+      <>
+        <Header />
+        <div className="comparison-error">
+          <h1>Bu ürünler karşılaştırılamaz</h1>
+          <p>Seçtiğiniz ürünler farklı kategorilerde. Adil bir karşılaştırma için aynı kategorideki ürünleri seçin.</p>
+          <ul>
+            {products.map((p) => (
+              <li key={p.id}>
+                <a href={`/urun/${p.slug}`}>{p.title}</a> — {p.category_name}
+              </li>
+            ))}
+          </ul>
+          <a href="/" className="btn">Anasayfaya dön</a>
+          <style>{COMPARISON_STYLES}</style>
+        </div>
+        <Footer />
+      </>
     );
   }
 
@@ -269,8 +279,10 @@ export default async function ComparisonPage({
     : null;
 
   return (
-    <article className="comparison-page">
-      <header className="comparison-header">
+    <>
+      <Header />
+      <article className="comparison-page">
+        <header className="comparison-header">
         <nav className="breadcrumb" aria-label="Navigasyon">
           <a href="/">Anasayfa</a>
           <span aria-hidden="true"> › </span>
@@ -375,6 +387,8 @@ export default async function ComparisonPage({
 
       <style>{COMPARISON_STYLES}</style>
     </article>
+      <Footer />
+    </>
   );
 }
 

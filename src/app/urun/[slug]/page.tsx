@@ -7,6 +7,8 @@ import { notFound } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import type { Metadata } from "next";
 import { LivePriceComparison } from "@/components/LivePriceComparison";
+import Header from "../../components/layout/Header";
+import Footer from "../../components/layout/Footer";
 
 type ProductPageData = {
   id: string;
@@ -217,6 +219,8 @@ export default async function ProductPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
+      <Header />
+
       <article className="product-page">
         <nav className="breadcrumb" aria-label="Navigasyon">
           <a href="/">Anasayfa</a>
@@ -284,6 +288,8 @@ export default async function ProductPage({
           </section>
         )}
       </article>
+
+      <Footer />
 
       <style>{PRODUCT_PAGE_STYLES}</style>
     </>
