@@ -1,20 +1,18 @@
 /**
- * Trendyol live price fetcher.
- * Tries API first (fast, structured). Falls back to HTML parsing if API fails.
- * Endpoint URLs + response shapes are best-effort; verify vs existing batch scraper.
+ * Trendyol live price fetcher
+ *
+ * Trendyol has a semi-public product API used by their own frontend.
+ * Not officially documented; may change without notice.
+ *
+ * STATUS: Interface-compliant but URL/endpoint is a placeholder.
+ * TODO: Align with existing batch scraper at scripts/scrapers/trendyol.
+ *   - If listing has source_url, prefer HTML path (stable).
+ *   - Otherwise construct API URL from sourceProductId.
  */
 
-import type { StoreFetcher, StoreLiveData } from "./types";
+import type { StoreFetcher, StoreLiveData, FetchContext } from "./types";
 
-const TIMEOUT_MS = 4000;
-
-function buildTrendyolApiUrl(sourceProductId: string): string {
-  return `https://api.trendyol.com/webproductgw/api/productDetail/${encodeURIComponent(sourceProductId)}`;
-}
-
-function buildTrendyolPageUrl(sourceProductId: string): string {
-  return `https://www.trendyol.com/sr?pi=${encodeURIComponent(sourceProductId)}`;
-}
+const TIMEOUT_MS = 5000;
 
 const USER_AGENTS = [
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36",
@@ -26,117 +24,25 @@ function pickUA(): string {
   return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
 }
 
-export async function fetchTrendyol(sourceProductId: string): Promise<StoreLiveData> {
-  try {
-    return await fetchTrendyolApi(sourceProductId);
-  } catch (err: any) {
-    const msg = String(err?.message || err).toLowerCase();
-    if (msg.includes("rate") || msg.includes("block") || msg.includes("403")) throw err;
-    return await fetchTrendyolHtml(sourceProductId);
-  }
-}
-
-async function fetchTrendyolApi(sourceProductId: string): Promise<StoreLiveData> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
-
-  try {
-    const response = await fetch(buildTrendyolApiUrl(sourceProductId), {
-      signal: controller.signal,
-      headers: {
-        "User-Agent": pickUA(),
-        Accept: "application/json",
-        "Accept-Language": "tr-TR,tr;q=0.9",
-        "x-storefront-id": "1",
-        "x-application-id": "1",
-      },
-    });
-
-    if (!response.ok) {
-      if (response.status === 404) throw new Error("not_found");
-      if (response.status === 429) throw new Error("rate_limited");
-      if (response.status === 403) throw new Error("blocked");
-      throw new Error(`api_http_${response.status}`);
+export async function fetchTrendyol(ctx: FetchContext): Promise<StoreLiveData> {
+  if (ctx.sourceUrl) {
+    try {
+      return await fetchTrendyolHtml(ctx.sourceUrl);
+    } catch (err: any) {
+      const msg = String(err?.message || err).toLowerCase();
+      if (msg.includes("rate") || msg.includes("block")) throw err;
     }
-
-    const data = await response.json();
-    return parseTrendyolApiResponse(data);
-  } catch (err: any) {
-    if (err.name === "AbortError") throw new Error("api_timeout");
-    throw err;
-  } finally {
-    clearTimeout(timeoutId);
   }
+
+  return await fetchTrendyolApi(ctx.sourceProductId);
 }
 
-function parseTrendyolApiResponse(data: any): StoreLiveData {
-  const result = data?.result ?? data?.data ?? data;
-
-  const price = parseNumber(
-    result?.price?.sellingPrice ??
-      result?.price?.discounted ??
-      result?.sellingPrice ??
-      result?.discountedPrice ??
-      result?.price
-  );
-  if (price === null) throw new Error("no_price_in_api");
-
-  const originalPrice = parseNumber(
-    result?.price?.originalPrice ?? result?.originalPrice ?? result?.listPrice
-  );
-
-  const inStock =
-    result?.stock?.isAvailable ??
-    result?.isAvailable ??
-    (parseNumber(result?.stock?.quantity) !== null && (result?.stock?.quantity ?? 0) > 0);
-
-  const sellerName = parseString(
-    result?.merchant?.name ?? result?.seller?.name ?? result?.merchantName
-  );
-
-  const installments = result?.installmentOptions ?? result?.installments ?? [];
-  let installmentHint: string | null = null;
-  if (Array.isArray(installments) && installments.length > 0) {
-    const maxMonths = Math.max(
-      ...installments
-        .map((i: any) => parseNumber(i?.count ?? i?.months))
-        .filter((n: any): n is number => typeof n === "number")
-    );
-    if (maxMonths > 0) installmentHint = `${maxMonths} taksit`;
-  }
-
-  const campaigns = result?.campaigns ?? result?.promotions ?? [];
-  let campaignHint: string | null = null;
-  if (Array.isArray(campaigns) && campaigns.length > 0) {
-    const text = parseString(campaigns[0]?.name ?? campaigns[0]?.description);
-    campaignHint = text ? truncate(text, 80) : null;
-  }
-
-  const freeShipping =
-    result?.freeCargo ?? result?.freeShipping ?? result?.shippingInfo?.isFree ?? false;
-
-  return {
-    price,
-    original_price: originalPrice && originalPrice > price ? originalPrice : null,
-    currency: "TRY",
-    in_stock: Boolean(inStock),
-    stock_count: parseNumber(result?.stock?.quantity),
-    shipping_price: parseNumber(result?.shippingPrice),
-    free_shipping: Boolean(freeShipping),
-    seller_name: sellerName,
-    installment_hint: installmentHint,
-    campaign_hint: campaignHint,
-    affiliate_url: null,
-    fetched_at: new Date().toISOString(),
-  };
-}
-
-async function fetchTrendyolHtml(sourceProductId: string): Promise<StoreLiveData> {
+async function fetchTrendyolHtml(url: string): Promise<StoreLiveData> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
   try {
-    const response = await fetch(buildTrendyolPageUrl(sourceProductId), {
+    const response = await fetch(url, {
       signal: controller.signal,
       headers: {
         "User-Agent": pickUA(),
@@ -147,6 +53,7 @@ async function fetchTrendyolHtml(sourceProductId: string): Promise<StoreLiveData
     });
 
     if (!response.ok) {
+      if (response.status === 404) throw new Error("not_found");
       if (response.status === 429) throw new Error("rate_limited");
       if (response.status === 403) throw new Error("blocked");
       throw new Error(`html_http_${response.status}`);
@@ -163,50 +70,159 @@ async function fetchTrendyolHtml(sourceProductId: string): Promise<StoreLiveData
 }
 
 function parseTrendyolHtml(html: string): StoreLiveData {
+  const jsonLdMatches = html.matchAll(
+    /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
+  );
+
+  for (const match of jsonLdMatches) {
+    try {
+      const parsed = JSON.parse(match[1].trim());
+      const candidates = Array.isArray(parsed) ? parsed : [parsed];
+      for (const item of candidates) {
+        const type = item?.["@type"];
+        const isProduct =
+          type === "Product" || (Array.isArray(type) && type.includes("Product"));
+        if (!isProduct) continue;
+
+        const offers = Array.isArray(item.offers) ? item.offers[0] : item.offers;
+        if (!offers) continue;
+
+        const price = parseNumber(offers.price);
+        if (price === null) continue;
+
+        return {
+          price,
+          original_price: parseNumber(offers.highPrice) ?? null,
+          currency: parseString(offers.priceCurrency) ?? "TRY",
+          in_stock: String(offers.availability ?? "").toLowerCase().includes("instock"),
+          stock_count: null,
+          shipping_price: null,
+          free_shipping: /ücretsiz\s*kargo|kargo\s*bedava/i.test(html),
+          seller_name: parseString(offers.seller?.name),
+          installment_hint: null,
+          campaign_hint: null,
+          affiliate_url: null,
+          fetched_at: new Date().toISOString(),
+        };
+      }
+    } catch {
+      continue;
+    }
+  }
+
   const stateMatch = html.match(
     /__PRODUCT_DETAIL_APP_INITIAL_STATE__\s*=\s*(\{[\s\S]*?\});/
   );
-
   if (stateMatch) {
     try {
       const state = JSON.parse(stateMatch[1]);
       const product = state?.product ?? state?.productDetail;
-      if (product) return parseTrendyolApiResponse({ result: product });
+      if (product) {
+        const price = parseNumber(
+          product?.price?.sellingPrice ?? product?.price?.discounted ?? product?.sellingPrice
+        );
+        if (price !== null) {
+          return {
+            price,
+            original_price: parseNumber(
+              product?.price?.originalPrice ?? product?.originalPrice
+            ),
+            currency: "TRY",
+            in_stock: Boolean(product?.stock?.isAvailable ?? product?.isAvailable ?? true),
+            stock_count: parseNumber(product?.stock?.quantity),
+            shipping_price: null,
+            free_shipping: Boolean(product?.freeCargo ?? product?.freeShipping),
+            seller_name: parseString(product?.merchant?.name ?? product?.seller?.name),
+            installment_hint: null,
+            campaign_hint: null,
+            affiliate_url: null,
+            fetched_at: new Date().toISOString(),
+          };
+        }
+      }
     } catch {
       /* fall through */
     }
   }
 
-  const priceMatch = html.match(/"discountedPrice"\s*:\s*(\d+(?:\.\d+)?)/);
-  if (!priceMatch) throw new Error("no_price_in_html");
-  const price = parseNumber(priceMatch[1]);
-  if (price === null) throw new Error("invalid_price");
+  throw new Error("no_price_in_html");
+}
 
-  const originalMatch = html.match(/"originalPrice"\s*:\s*(\d+(?:\.\d+)?)/);
-  const originalPrice = originalMatch ? parseNumber(originalMatch[1]) : null;
+async function fetchTrendyolApi(sourceProductId: string): Promise<StoreLiveData> {
+  const url = `https://api.trendyol.com/webproductgw/api/productDetail/${encodeURIComponent(sourceProductId)}`;
 
-  const inStock = !/tükendi|stokta\s*yok|sold\s*out/i.test(html);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
-  return {
-    price,
-    original_price: originalPrice && originalPrice > price ? originalPrice : null,
-    currency: "TRY",
-    in_stock: inStock,
-    stock_count: null,
-    shipping_price: null,
-    free_shipping: /ücretsiz\s*kargo|kargo\s*bedava/i.test(html),
-    seller_name: null,
-    installment_hint: null,
-    campaign_hint: null,
-    affiliate_url: null,
-    fetched_at: new Date().toISOString(),
-  };
+  try {
+    const response = await fetch(url, {
+      signal: controller.signal,
+      headers: {
+        "User-Agent": pickUA(),
+        Accept: "application/json",
+        "Accept-Language": "tr-TR,tr;q=0.9",
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 404) throw new Error("not_found");
+      if (response.status === 429) throw new Error("rate_limited");
+      if (response.status === 403) throw new Error("blocked");
+      throw new Error(`api_http_${response.status}`);
+    }
+
+    const data = await response.json();
+    const result = data?.result ?? data?.data ?? data;
+
+    const price = parseNumber(
+      result?.price?.sellingPrice ??
+        result?.price?.discounted ??
+        result?.sellingPrice ??
+        result?.price
+    );
+
+    if (price === null) throw new Error("no_price_in_api");
+
+    const originalPrice = parseNumber(
+      result?.price?.originalPrice ?? result?.originalPrice
+    );
+    const inStock =
+      result?.stock?.isAvailable ??
+      result?.isAvailable ??
+      (parseNumber(result?.stock?.quantity) ?? 0) > 0;
+
+    return {
+      price,
+      original_price: originalPrice && originalPrice > price ? originalPrice : null,
+      currency: "TRY",
+      in_stock: Boolean(inStock),
+      stock_count: parseNumber(result?.stock?.quantity),
+      shipping_price: null,
+      free_shipping: Boolean(result?.freeCargo ?? result?.freeShipping),
+      seller_name: parseString(result?.merchant?.name ?? result?.seller?.name),
+      installment_hint: null,
+      campaign_hint: null,
+      affiliate_url: null,
+      fetched_at: new Date().toISOString(),
+    };
+  } catch (err: any) {
+    if (err.name === "AbortError") throw new Error("api_timeout");
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 function parseNumber(v: unknown): number | null {
   if (typeof v === "number" && !isNaN(v)) return v;
   if (typeof v === "string") {
-    let n = v.replace(/[^\d.,]/g, "");
+    const trimmed = v.trim();
+    if (!trimmed) return null;
+    if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
+      const n = parseFloat(trimmed);
+      return isNaN(n) ? null : n;
+    }
+    let n = trimmed.replace(/[^\d.,\-]/g, "");
     if (n.includes(",") && n.includes(".")) {
       const lastComma = n.lastIndexOf(",");
       const lastDot = n.lastIndexOf(".");
@@ -226,11 +242,6 @@ function parseNumber(v: unknown): number | null {
 function parseString(v: unknown): string | null {
   if (typeof v === "string" && v.trim()) return v.trim();
   return null;
-}
-
-function truncate(s: string, max: number): string {
-  if (s.length <= max) return s;
-  return s.slice(0, max - 1) + "…";
 }
 
 export const trendyolFetcher: StoreFetcher = {

@@ -1,25 +1,42 @@
 /**
  * Live price fetcher - shared types
+ *
+ * Every store fetcher implements StoreFetcher interface.
+ * SSE events emit StoreUpdate structures to the client.
  */
 
 export type StoreLiveData = {
   price: number;
-  original_price: number | null;
-  currency: string;
+  original_price: number | null;          // strike-through if shown
+  currency: string;                        // "TRY"
   in_stock: boolean;
   stock_count: number | null;
   shipping_price: number | null;
   free_shipping: boolean;
   seller_name: string | null;
-  installment_hint: string | null;
-  campaign_hint: string | null;
+  installment_hint: string | null;         // "12 taksit" — short summary
+  campaign_hint: string | null;            // "5000 TL üstü %10 indirim"
   affiliate_url: string | null;
-  fetched_at: string;
+  fetched_at: string;                      // ISO timestamp
+};
+
+/**
+ * Context passed to every fetcher.
+ *
+ * Fetchers may use sourceUrl directly (preferred — stored at ingest time)
+ * or fall back to constructing URLs from sourceProductId + a known pattern.
+ *
+ * PttAVM uses sourceUrl exclusively. MediaMarkt and Trendyol may reconstruct
+ * URL from sourceProductId when sourceUrl is missing.
+ */
+export type FetchContext = {
+  sourceProductId: string;
+  sourceUrl: string | null;
 };
 
 export type StoreFetcher = {
   source: string;
-  fetch: (sourceProductId: string) => Promise<StoreLiveData>;
+  fetch: (ctx: FetchContext) => Promise<StoreLiveData>;
   timeoutMs: number;
   rpmLimit: number;
 };
