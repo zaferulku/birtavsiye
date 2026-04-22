@@ -1,0 +1,319 @@
+/**
+ * LivePriceComparison — Product detail page price comparison card
+ * Uses SSE (via useLivePrices hook) to progressively populate data.
+ */
+
+"use client";
+
+import { useMemo } from "react";
+import { useLivePrices, type ListingState, type StoreLiveData } from "@/lib/scrapers/live/useLivePrices";
+
+type Store = {
+  id: string;
+  slug: string;
+  name: string;
+  logo_url: string | null;
+};
+
+type InitialListing = {
+  listing_id: string;
+  source: string;
+  cached_price: number | null;
+};
+
+type Props = {
+  productId: string;
+  productTitle: string;
+  stores: Record<string, Store>;
+  initialListings: InitialListing[];
+};
+
+export function LivePriceComparison({
+  productId,
+  productTitle,
+  stores,
+  initialListings,
+}: Props) {
+  const { listings, isLoading, isDone, successful, failed, refresh } = useLivePrices(productId);
+
+  const merged = useMemo(() => {
+    const result: Array<{
+      listing_id: string;
+      source: string;
+      store: Store | null;
+      state: ListingState;
+      displayPrice: number | null;
+      totalPrice: number | null;
+      isCached: boolean;
+    }> = [];
+
+    for (const il of initialListings) {
+      const liveState = listings[il.listing_id];
+      const store = stores[il.source] ?? null;
+
+      if (liveState) {
+        const data = liveState.data;
+        result.push({
+          listing_id: il.listing_id,
+          source: il.source,
+          store,
+          state: liveState,
+          displayPrice: data?.price ?? il.cached_price,
+          totalPrice: data ? computeTotal(data) : il.cached_price,
+          isCached: false,
+        });
+      } else {
+        result.push({
+          listing_id: il.listing_id,
+          source: il.source,
+          store,
+          state: {
+            listing_id: il.listing_id,
+            source: il.source,
+            status: "pending",
+            data: null,
+            error: null,
+          },
+          displayPrice: il.cached_price,
+          totalPrice: il.cached_price,
+          isCached: true,
+        });
+      }
+    }
+
+    return result.sort((a, b) => {
+      const aInStock = a.state.data?.in_stock !== false;
+      const bInStock = b.state.data?.in_stock !== false;
+      if (aInStock !== bInStock) return aInStock ? -1 : 1;
+      const aPrice = a.totalPrice ?? Infinity;
+      const bPrice = b.totalPrice ?? Infinity;
+      return aPrice - bPrice;
+    });
+  }, [initialListings, listings, stores]);
+
+  const minPrice = merged
+    .map((m) => m.totalPrice)
+    .filter((p): p is number => p !== null)
+    .sort((a, b) => a - b)[0];
+
+  return (
+    <section className="live-price-comparison">
+      <header className="lpc-header">
+        <div className="lpc-header-left">
+          <h2 className="lpc-title">Mağaza Fiyatları</h2>
+          {merged.length > 0 && (
+            <p className="lpc-subtitle">
+              {merged.length} mağaza
+              {minPrice !== undefined && (
+                <>
+                  {" · "}
+                  <strong>{formatTL(minPrice)}'dan başlıyor</strong>
+                </>
+              )}
+            </p>
+          )}
+        </div>
+        <button
+          className="lpc-refresh"
+          onClick={refresh}
+          disabled={isLoading}
+          aria-label="Fiyatları yenile"
+        >
+          {isLoading ? (
+            <span className="lpc-loading-indicator">Güncelleniyor…</span>
+          ) : (
+            <span>↻ Yenile</span>
+          )}
+        </button>
+      </header>
+
+      <ul className="lpc-list">
+        {merged.map((row) => (
+          <StoreRow key={row.listing_id} row={row} isMinPrice={row.totalPrice === minPrice} />
+        ))}
+      </ul>
+
+      {isDone && (
+        <footer className="lpc-footer">
+          <span className="lpc-stats">
+            {successful} mağaza güncellendi
+            {failed > 0 && ` · ${failed} mağaza fiyatı alınamadı`}
+          </span>
+          <span className="lpc-disclaimer">
+            Fiyatlar son dakika güncellemeleri yansıtır. Taksit ve kampanya detayları mağazada gösterilir.
+          </span>
+        </footer>
+      )}
+
+      <style jsx>{STYLES}</style>
+    </section>
+  );
+}
+
+type StoreRowProps = {
+  row: {
+    listing_id: string;
+    source: string;
+    store: Store | null;
+    state: ListingState;
+    displayPrice: number | null;
+    totalPrice: number | null;
+    isCached: boolean;
+  };
+  isMinPrice: boolean;
+};
+
+function StoreRow({ row, isMinPrice }: StoreRowProps) {
+  const { state, store, displayPrice, isCached } = row;
+  const storeName = store?.name ?? row.source;
+  const data = state.data;
+
+  const isError = state.status === "error";
+  const isPending = state.status === "pending";
+  const isOutOfStock = data?.in_stock === false;
+
+  return (
+    <li className={`lpc-row ${isError ? "lpc-row--error" : ""} ${isOutOfStock ? "lpc-row--oos" : ""}`}>
+      <div className="lpc-store">
+        {store?.logo_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={store.logo_url} alt={storeName} className="lpc-logo" />
+        ) : (
+          <div className="lpc-logo-placeholder">{storeName.charAt(0)}</div>
+        )}
+        <div className="lpc-store-info">
+          <span className="lpc-store-name">{storeName}</span>
+          {data?.seller_name && data.seller_name !== storeName && (
+            <span className="lpc-seller">Satıcı: {data.seller_name}</span>
+          )}
+        </div>
+      </div>
+
+      <div className="lpc-details">
+        {isError && (
+          <span className="lpc-error-text">
+            Fiyat alınamadı
+            {row.state.error === "rate_limited" && " (sonra tekrar deneyin)"}
+            {row.state.error === "timeout" && " (zaman aşımı)"}
+          </span>
+        )}
+        {!isError && isOutOfStock && <span className="lpc-oos-text">Stokta yok</span>}
+        {!isError && !isOutOfStock && (
+          <>
+            {data?.campaign_hint && (
+              <span className="lpc-badge lpc-badge--campaign">{data.campaign_hint}</span>
+            )}
+            {data?.free_shipping && (
+              <span className="lpc-badge lpc-badge--shipping">Kargo bedava</span>
+            )}
+            {data?.installment_hint && (
+              <span className="lpc-badge lpc-badge--installment">{data.installment_hint}</span>
+            )}
+          </>
+        )}
+      </div>
+
+      <div className="lpc-price-col">
+        {displayPrice !== null ? (
+          <div className={`lpc-price ${isMinPrice ? "lpc-price--best" : ""}`}>
+            {isMinPrice && <span className="lpc-price-label">En uygun</span>}
+            <span className="lpc-price-value">
+              {isPending && isCached && <span className="lpc-pending-dot" aria-label="Güncelleniyor" />}
+              {formatTL(displayPrice)}
+            </span>
+            {data?.original_price && data.original_price > displayPrice && (
+              <span className="lpc-price-strike">{formatTL(data.original_price)}</span>
+            )}
+            {data?.shipping_price && data.shipping_price > 0 && (
+              <span className="lpc-price-shipping">+ {formatTL(data.shipping_price)} kargo</span>
+            )}
+          </div>
+        ) : (
+          <div className="lpc-price lpc-price--skeleton" aria-label="Fiyat yükleniyor">
+            <span className="lpc-skeleton-bar" />
+          </div>
+        )}
+
+        {!isError && !isOutOfStock && data?.affiliate_url && (
+          <a
+            href={data.affiliate_url}
+            target="_blank"
+            rel="noopener noreferrer nofollow sponsored"
+            className="lpc-cta"
+          >
+            Mağazaya Git →
+          </a>
+        )}
+        {!isError && !isOutOfStock && !data?.affiliate_url && (
+          <span className="lpc-cta-disabled" aria-hidden="true">
+            Bağlantı yok
+          </span>
+        )}
+      </div>
+    </li>
+  );
+}
+
+function formatTL(amount: number): string {
+  return new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency: "TRY",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(amount);
+}
+
+function computeTotal(data: StoreLiveData): number {
+  return data.price + (data.shipping_price && !data.free_shipping ? data.shipping_price : 0);
+}
+
+const STYLES = `
+  .live-price-comparison { border: 1px solid var(--border, #e5e7eb); border-radius: 12px; background: var(--surface, #fff); overflow: hidden; }
+  .lpc-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border, #e5e7eb); background: var(--surface-subtle, #f9fafb); }
+  .lpc-title { margin: 0; font-size: 1.125rem; font-weight: 600; color: var(--text, #111); }
+  .lpc-subtitle { margin: 2px 0 0; font-size: 0.875rem; color: var(--text-muted, #6b7280); }
+  .lpc-subtitle strong { color: var(--accent, #dc2626); font-weight: 600; }
+  .lpc-refresh { padding: 8px 14px; border: 1px solid var(--border, #e5e7eb); border-radius: 8px; background: var(--surface, #fff); color: var(--text, #111); font-size: 0.875rem; cursor: pointer; }
+  .lpc-refresh:hover:not(:disabled) { background: var(--surface-hover, #f3f4f6); }
+  .lpc-refresh:disabled { opacity: 0.6; cursor: not-allowed; }
+  .lpc-list { list-style: none; margin: 0; padding: 0; }
+  .lpc-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 16px; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border-subtle, #f3f4f6); }
+  .lpc-row:last-child { border-bottom: none; }
+  .lpc-row--error { opacity: 0.6; }
+  .lpc-row--oos { opacity: 0.7; }
+  .lpc-store { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .lpc-logo, .lpc-logo-placeholder { width: 48px; height: 48px; border-radius: 6px; object-fit: contain; }
+  .lpc-logo-placeholder { background: var(--surface-subtle, #f9fafb); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--text-muted, #6b7280); }
+  .lpc-store-info { display: flex; flex-direction: column; min-width: 0; }
+  .lpc-store-name { font-weight: 500; color: var(--text, #111); }
+  .lpc-seller { font-size: 0.75rem; color: var(--text-muted, #6b7280); }
+  .lpc-details { display: flex; flex-wrap: wrap; gap: 6px; }
+  .lpc-badge { padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; }
+  .lpc-badge--campaign { background: var(--accent-soft, #fef2f2); color: var(--accent, #dc2626); }
+  .lpc-badge--shipping { background: var(--success-soft, #ecfdf5); color: var(--success, #059669); }
+  .lpc-badge--installment { background: var(--info-soft, #eff6ff); color: var(--info, #2563eb); }
+  .lpc-error-text, .lpc-oos-text { font-size: 0.8125rem; color: var(--text-muted, #6b7280); }
+  .lpc-price-col { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .lpc-price { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+  .lpc-price--best .lpc-price-value { color: var(--accent, #dc2626); }
+  .lpc-price-label { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; color: var(--accent, #dc2626); }
+  .lpc-price-value { font-size: 1.125rem; font-weight: 700; display: flex; align-items: center; gap: 6px; }
+  .lpc-price-strike { font-size: 0.8125rem; color: var(--text-muted, #6b7280); text-decoration: line-through; }
+  .lpc-price-shipping { font-size: 0.75rem; color: var(--text-muted, #6b7280); }
+  .lpc-price--skeleton { min-width: 100px; height: 24px; }
+  .lpc-skeleton-bar { display: block; width: 80px; height: 20px; background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%); background-size: 200% 100%; animation: lpc-shimmer 1.5s infinite; border-radius: 4px; }
+  .lpc-pending-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent, #dc2626); opacity: 0.6; animation: lpc-pulse 1.5s infinite; }
+  .lpc-cta { padding: 8px 16px; border-radius: 8px; background: var(--accent, #dc2626); color: #fff; font-weight: 500; font-size: 0.875rem; text-decoration: none; white-space: nowrap; }
+  .lpc-cta:hover { background: var(--accent-hover, #b91c1c); }
+  .lpc-cta-disabled { font-size: 0.75rem; color: var(--text-muted, #9ca3af); font-style: italic; }
+  .lpc-footer { padding: 12px 20px; border-top: 1px solid var(--border-subtle, #f3f4f6); background: var(--surface-subtle, #f9fafb); display: flex; flex-direction: column; gap: 4px; }
+  .lpc-stats { font-size: 0.8125rem; color: var(--text, #111); font-weight: 500; }
+  .lpc-disclaimer { font-size: 0.75rem; color: var(--text-muted, #6b7280); }
+  @keyframes lpc-shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  @keyframes lpc-pulse { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.8; } }
+  @media (max-width: 640px) {
+    .lpc-row { grid-template-columns: 1fr; gap: 12px; }
+    .lpc-price-col { flex-direction: row; justify-content: space-between; width: 100%; }
+    .lpc-price { align-items: flex-start; }
+  }
+`;

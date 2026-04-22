@@ -1,336 +1,371 @@
-import { supabase } from "../../../lib/supabase";
-import Link from "next/link";
-import Header from "../../components/layout/Header";
-import Footer from "../../components/layout/Footer";
-import ProductGallery from "../../components/urun/ProductGallery";
-import ProductInfo from "../../components/urun/ProductInfo";
-import CommunitySection from "../../components/urun/CommunitySection";
-import StoreLogo from "../../components/ui/StoreLogo";
-import PriceHistoryChart from "../../components/urun/PriceHistoryChart";
-import PriceAlertModal from "../../components/urun/PriceAlertModal";
-import PriceRefresher from "../../components/urun/PriceRefresher";
-import VariantSwitcher from "../../components/urun/VariantSwitcher";
-import { fetchCategoryPath, brandToSlug, modelFamilyToSlug } from "../../../lib/categoryTree";
+/**
+ * Product detail page: /urun/[slug]
+ * SSR with cached listings + client-side SSE hydration via LivePriceComparison.
+ */
+
+import { notFound } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
 import type { Metadata } from "next";
+import { LivePriceComparison } from "@/components/LivePriceComparison";
 
-export const revalidate = 60;
+type ProductPageData = {
+  id: string;
+  slug: string;
+  title: string;
+  brand: string | null;
+  model_family: string | null;
+  variant_storage: string | null;
+  variant_color: string | null;
+  description: string | null;
+  image_url: string | null;
+  images: string[] | null;
+  specs: Record<string, any> | null;
+  category: {
+    id: string;
+    slug: string;
+    name: string;
+  } | null;
+  listings: Array<{
+    listing_id: string;
+    source: string;
+    price: number;
+  }>;
+  stores: Record<string, {
+    id: string;
+    slug: string;
+    name: string;
+    logo_url: string | null;
+  }>;
+};
 
-export async function generateMetadata(
-  { params }: { params: Promise<{ slug: string }> }
-): Promise<Metadata> {
+async function loadProduct(slug: string): Promise<ProductPageData | null> {
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const { data: product, error } = await supabase
+    .from("products")
+    .select(`
+      id, slug, title, brand, model_family, variant_storage, variant_color,
+      description, image_url, images, specs,
+      category:categories!inner(id, slug, name),
+      listings!inner(id, source, source_product_id, price, is_active, store_id)
+    `)
+    .eq("slug", slug)
+    .eq("is_active", true)
+    .eq("listings.is_active", true)
+    .maybeSingle();
+
+  if (error || !product) return null;
+
+  const sources = [...new Set((product as any).listings.map((l: any) => l.source))];
+  const { data: storesData } = await supabase
+    .from("stores")
+    .select("id, slug, name, logo_url")
+    .in("slug", sources);
+
+  const stores: Record<string, any> = {};
+  for (const s of storesData ?? []) {
+    stores[s.slug] = s;
+  }
+
+  return {
+    ...(product as any),
+    listings: (product as any).listings.map((l: any) => ({
+      listing_id: l.id,
+      source: l.source,
+      price: Number(l.price),
+    })),
+    stores,
+  } as ProductPageData;
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
   const { slug } = await params;
-  const { data: product } = await supabase
-    .from("products").select("title, description, brand, image_url").eq("slug", slug).maybeSingle();
+  const product = await loadProduct(slug);
 
-  if (!product) return { title: "Ürün Bulunamadı" };
+  if (!product) {
+    return { title: "Ürün bulunamadı — birtavsiye" };
+  }
 
-  const title = `${product.title}${product.brand ? ` - ${product.brand}` : ""}`;
-  const description = product.description
-    ? product.description.slice(0, 155)
-    : `${title} fiyatları, özellikleri ve kullanıcı tavsiyeleri`;
+  const minPrice = Math.min(...product.listings.map((l) => l.price));
+  const priceFormatted = new Intl.NumberFormat("tr-TR", {
+    maximumFractionDigits: 0,
+  }).format(minPrice);
+
+  const title = truncate(
+    `${product.title} Fiyatı | En Ucuz ${priceFormatted} TL — birtavsiye`,
+    60
+  );
+
+  const description = truncate(
+    `${product.title} için en uygun fiyatları ${product.listings.length}+ mağazada karşılaştır. ${priceFormatted} TL'den başlayan fiyatlarla.`,
+    160
+  );
+
+  const image = product.image_url ?? product.images?.[0] ?? null;
 
   return {
     title,
     description,
     openGraph: {
-      title,
+      title: product.title,
       description,
-      type: "article",
-      images: product.image_url ? [{ url: product.image_url }] : undefined,
+      type: "website",
+      locale: "tr_TR",
+      siteName: "birtavsiye.net",
+      ...(image && { images: [image] }),
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: product.title,
+      description,
+      ...(image && { images: [image] }),
+    },
+    alternates: {
+      canonical: `/urun/${product.slug}`,
     },
   };
 }
 
-export default async function UrunDetay({
+export default async function ProductPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ s?: string; c?: string }>;
 }) {
   const { slug } = await params;
-  const { s: storageParam, c: colorParam } = await searchParams;
-
-  const { data: baseProduct } = await supabase
-    .from("products").select("*").eq("slug", slug).maybeSingle();
-
-  // Paralel: siblings + categoryPath (baseProduct'a bağımlı, birbirine değil)
-  const siblingsPromise = (baseProduct?.brand && baseProduct?.model_family)
-    ? supabase
-        .from("products")
-        .select("id, slug, title, brand, image_url, specs, category_id, model_family, variant_storage, variant_color, source")
-        .eq("brand", baseProduct.brand)
-        .eq("model_family", baseProduct.model_family)
-        .then(r => r.data)
-    : Promise.resolve(null);
-  const categoryPathPromise = fetchCategoryPath(baseProduct?.category_id ?? null);
-
-  const [siblingsData, categoryPath] = await Promise.all([siblingsPromise, categoryPathPromise]);
-  const siblings = (siblingsData && siblingsData.length > 0) ? siblingsData : (baseProduct ? [baseProduct] : []);
-
-  // Normalize: "128 GB" / "128GB" / "128 gb" → "128 GB"
-  const normalizeStorage = (s: string | null | undefined): string | null => {
-    if (!s) return null;
-    const m = s.trim().match(/^(\d+(?:[.,]\d+)?)\s*(gb|tb|mb)\b/i);
-    if (m) return `${m[1].replace(",", ".")} ${m[2].toUpperCase()}`;
-    return s.trim().replace(/\s+/g, " ");
-  };
-  const normalizeColor = (c: string | null | undefined): string | null => {
-    if (!c) return null;
-    return c.trim().replace(/\s+/g, " ").toLowerCase().replace(/\b\w/g, ch => ch.toUpperCase());
-  };
-
-  // Variant matrix: (storage, color) -> product row[] — normalize key ile dedup
-  const variantMap = new Map<string, typeof siblings>();
-  for (const s of siblings) {
-    const key = `${normalizeStorage(s.variant_storage) ?? ""}|${normalizeColor(s.variant_color) ?? ""}`;
-    const arr = variantMap.get(key) ?? [];
-    arr.push(s);
-    variantMap.set(key, arr);
-  }
-
-  const storages = [...new Set(siblings.map(s => normalizeStorage(s.variant_storage)).filter(Boolean) as string[])]
-    .sort((a, b) => {
-      const na = parseInt(a, 10);
-      const nb = parseInt(b, 10);
-      const unitA = a.toUpperCase().includes("TB") ? 1000 : 1;
-      const unitB = b.toUpperCase().includes("TB") ? 1000 : 1;
-      return (na * unitA) - (nb * unitB);
-    });
-  const colors = [...new Set(siblings.map(s => normalizeColor(s.variant_color)).filter(Boolean) as string[])].sort();
-
-  // Seçili variant
-  const selectedStorage = storageParam ?? baseProduct?.variant_storage ?? storages[0] ?? null;
-  const selectedColor = colorParam ?? baseProduct?.variant_color ?? colors[0] ?? null;
-  const selectedKey = `${selectedStorage ?? ""}|${selectedColor ?? ""}`;
-  const selectedProducts = variantMap.get(selectedKey) ?? (baseProduct ? [baseProduct] : []);
-  const product = selectedProducts[0] ?? baseProduct;
-
-  // Source-trust: en güvenilir görsel için siblings içinden en iyi source'u bul
-  // (PttAVM satıcılarının yanlış görsellerini bypass et)
-  const sourceTrust = (src: string | null | undefined): number => {
-    if (!src) return 0;
-    if (src === "mediamarkt") return 100;
-    if (src === "vatan") return 80;
-    if (src === "trendyol" || src === "hepsiburada") return 70;
-    if (src === "amazon") return 60;
-    if (src === "n11") return 50;
-    if (src === "pttavm") return 30;
-    return 40;
-  };
-  const trustedImageSibling = [...selectedProducts, ...siblings]
-    .filter(s => s?.image_url)
-    .sort((a, b) => sourceTrust((b as { source?: string }).source) - sourceTrust((a as { source?: string }).source))[0];
-  const trustedImageUrl = trustedImageSibling?.image_url ?? product?.image_url ?? null;
-
-  // Variants meta (her variant'ın min fiyatı için count lazım — basit count yeterli)
-  const variants = [...variantMap.entries()].map(([key, arr]) => {
-    const [st, col] = key.split("|");
-    return {
-      storage: st || null,
-      color: col || null,
-      count: arr.length,
-      minPrice: null as number | null,
-      anyInStock: true,
-    };
-  });
-
-  // Seçili variant'ın tüm product id'lerinden fiyatlar + history + reviews paralel
-  const variantIds = selectedProducts.map(p => p.id).filter(Boolean);
-  type PriceRow = {
-    id: string; product_id: string; price: number;
-    affiliate_url: string | null; store_id: string;
-    stores: { name: string; url: string | null } | null;
-    products: { specs: Record<string, unknown> | null } | null;
-  };
-
-  const historyIds = variantIds.length > 0 ? variantIds : (product?.id ? [product.id] : []);
-  const pricesPromise = variantIds.length > 0
-    ? supabase.from("prices").select("*, stores(name, url), products(specs)").in("product_id", variantIds).order("price", { ascending: true }).then(r => r.data)
-    : Promise.resolve([]);
-  const historyPromise = historyIds.length > 0
-    ? supabase.from("price_history").select("recorded_at, price, stores(name)").in("product_id", historyIds).order("recorded_at", { ascending: true }).limit(300).then(r => r.data)
-    : Promise.resolve([]);
-  const reviewsPromise = product?.id
-    ? supabase.from("community_posts").select("rating").eq("product_id", product.id).is("parent_id", null).not("rating", "is", null).then(r => r.data)
-    : Promise.resolve([]);
-
-  const [pricesData, historyData, reviewsData] = await Promise.all([pricesPromise, historyPromise, reviewsPromise]);
-  const pricesRaw: PriceRow[] = (pricesData ?? []) as PriceRow[];
-
-  // Aynı product_id'de birden fazla fiyat varsa en düşüğünü tut
-  // (ama PttAVM gibi marketplace'ler aynı ürünü farklı merchant'larla satıyor —
-  // her listing farklı product_id → hepsini göster, sadece 1 row/product_id/store)
-  // Store name hesaplama (PttAVM → merchant name ile göster)
-  const storeDisplayName = (p: PriceRow): string => {
-    const base = p.stores?.name ?? "";
-    const merchant = (p.products?.specs as Record<string, unknown> | null)?.merchant;
-    if (base === "PttAVM" && typeof merchant === "string" && merchant.length > 0) {
-      return `${merchant} (PttAVM)`;
-    }
-    return base;
-  };
-
-  // (product_id, effective store display) bazında dedup — her merchant ayrı listelenir
-  const pricesByProd = new Map<string, PriceRow>();
-  for (const p of pricesRaw) {
-    const key = `${p.product_id}|${storeDisplayName(p) || p.store_id}`;
-    const existing = pricesByProd.get(key);
-    if (!existing || p.price < existing.price) pricesByProd.set(key, p);
-  }
-  const prices = [...pricesByProd.values()].sort((a, b) => a.price - b.price);
-
-  const history = historyData;
-  const reviews = reviewsData;
-  const reviewCount = reviews?.length || 0;
-  const avgRating = reviewCount > 0
-    ? Math.round(reviews!.reduce((acc, r) => acc + (r.rating || 0), 0) / reviewCount)
-    : 0;
+  const product = await loadProduct(slug);
 
   if (!product) {
-    return (
-      <main>
-        <Header />
-        <div className="max-w-6xl mx-auto px-6 py-20 text-center">
-          <h1 className="font-bold text-2xl mb-4">Urun bulunamadi</h1>
-          <Link href="/" className="text-[#E8460A]">Anasayfaya don</Link>
-        </div>
-        <Footer />
-      </main>
-    );
+    notFound();
   }
 
-  const minPrice = prices && prices.length > 0 ? prices[0].price : null;
-  const cheapestStore = prices && prices.length > 0 ? storeDisplayName(prices[0]) : null;
+  const minPrice = Math.min(...product.listings.map((l) => l.price));
+  const maxPrice = Math.max(...product.listings.map((l) => l.price));
+  const primaryImage = product.image_url ?? product.images?.[0] ?? null;
+
+  const productJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.title,
+    ...(primaryImage && { image: product.images ?? [primaryImage] }),
+    ...(product.description && { description: product.description }),
+    ...(product.brand && {
+      brand: { "@type": "Brand", name: product.brand },
+    }),
+    ...(product.category && { category: product.category.name }),
+    ...(product.model_family && { model: product.model_family }),
+    sku: product.id,
+    offers: {
+      "@type": "AggregateOffer",
+      priceCurrency: "TRY",
+      lowPrice: minPrice,
+      highPrice: maxPrice,
+      offerCount: product.listings.length,
+      availability: "https://schema.org/InStock",
+    },
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      {
+        "@type": "ListItem",
+        position: 1,
+        name: "Anasayfa",
+        item: "https://birtavsiye.net/",
+      },
+      ...(product.category
+        ? [
+            {
+              "@type": "ListItem",
+              position: 2,
+              name: product.category.name,
+              item: `https://birtavsiye.net/kategori/${product.category.slug}`,
+            },
+          ]
+        : []),
+      {
+        "@type": "ListItem",
+        position: product.category ? 3 : 2,
+        name: product.title,
+        item: `https://birtavsiye.net/urun/${product.slug}`,
+      },
+    ],
+  };
+
+  const initialListings = product.listings.map((l) => ({
+    listing_id: l.listing_id,
+    source: l.source,
+    cached_price: l.price,
+  }));
 
   return (
-    <main className="bg-white min-h-screen">
-      <Header />
-      <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-6">
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+      />
 
-        {/* Breadcrumb */}
-        <nav aria-label="Breadcrumb" className="flex flex-wrap gap-2 text-xs md:text-sm text-gray-400 mb-4 md:mb-5">
-          <Link href="/" className="hover:text-[#E8460A] flex-shrink-0">Anasayfa</Link>
-          {categoryPath.map((c) => (
-            <span key={c.id} className="flex gap-2">
-              <span className="flex-shrink-0">/</span>
-              <Link href={`/anasayfa/${categoryPath.slice(0, categoryPath.indexOf(c) + 1).map(x => x.slug).join("/")}`} className="hover:text-[#E8460A] flex-shrink-0">{c.name}</Link>
-            </span>
-          ))}
-          {product.brand && (
-            <span className="flex gap-2">
-              <span className="flex-shrink-0">/</span>
-              <Link
-                href={categoryPath.length > 0
-                  ? `/anasayfa/${categoryPath.map(c => c.slug).join("/")}/${brandToSlug(product.brand)}`
-                  : `/marka/${brandToSlug(product.brand)}`}
-                className="hover:text-[#E8460A] flex-shrink-0"
-              >
-                {product.brand}
-              </Link>
-            </span>
+      <article className="product-page">
+        <nav className="breadcrumb" aria-label="Navigasyon">
+          <a href="/">Anasayfa</a>
+          {product.category && (
+            <>
+              <span aria-hidden="true"> › </span>
+              <a href={`/kategori/${product.category.slug}`}>{product.category.name}</a>
+            </>
           )}
-          {product.brand && product.model_family && (
-            <span className="flex gap-2">
-              <span className="flex-shrink-0">/</span>
-              <Link
-                href={`/marka/${brandToSlug(product.brand)}/${modelFamilyToSlug(product.model_family)}`}
-                className="hover:text-[#E8460A] flex-shrink-0"
-              >
-                {product.model_family}
-              </Link>
-            </span>
-          )}
-          <span className="flex gap-2 min-w-0">
-            <span className="flex-shrink-0">/</span>
-            <span className="text-gray-700 truncate">{product.title}</span>
-          </span>
+          <span aria-hidden="true"> › </span>
+          <span>{product.title}</span>
         </nav>
 
-        {/* Üst Bölüm: Resim + Bilgi + Fiyat */}
-        <div className="bg-white rounded-2xl p-3 sm:p-5 md:p-6 mb-4 md:mb-6 shadow-sm">
-          <div className="grid gap-5 md:gap-6 lg:gap-8 grid-cols-1 md:grid-cols-2 lg:[grid-template-columns:2fr_3fr_2fr]">
-            <ProductGallery imageUrl={trustedImageUrl} />
-            <div className="space-y-5">
-              <ProductInfo product={product} avgRating={avgRating} reviewCount={reviewCount} />
-              {(storages.length > 1 || colors.length > 1) && (
-                <div className="border-t border-gray-100 pt-4">
-                  <VariantSwitcher
-                    slug={slug}
-                    storages={storages}
-                    colors={colors}
-                    selectedStorage={selectedStorage}
-                    selectedColor={selectedColor}
-                    variants={variants}
-                  />
-                </div>
-              )}
-            </div>
-            <div className="lg:sticky lg:top-20 md:col-span-2 lg:col-span-1">
-              <div className="bg-white border-2 border-gray-100 rounded-2xl overflow-hidden shadow-sm">
-                <div className="bg-gray-900 px-5 py-5">
-                  <div className="text-xs text-gray-400 mb-1">En ucuz fiyat{cheapestStore ? ` - ${cheapestStore}` : ""}</div>
-                  <div className="font-extrabold text-3xl text-white">
-                    {minPrice ? Number(minPrice).toLocaleString("tr-TR") + " TL" : "Fiyat bekleniyor"}
-                  </div>
-                </div>
-                {cheapestStore && prices && prices.length > 0 && (
-                  <a href={prices[0].affiliate_url || prices[0].stores?.url || "#"} target="_blank" rel="nofollow sponsored"
-                    className="block w-full bg-[#E8460A] text-white py-3 text-sm font-bold hover:bg-[#C93A08] transition-all text-center">
-                    {cheapestStore} sitesine git →
-                  </a>
-                )}
-                <div>
-                  {prices?.map((p, i) => (
-                    <div key={p.id} className={`flex items-center gap-2 sm:gap-3 px-3 sm:px-4 py-3 border-b border-gray-50 last:border-0 ${i % 2 === 0 ? "bg-white" : "bg-gray-50/50"}`}>
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${i === 0 ? "bg-yellow-100 text-yellow-700" : i === 1 ? "bg-gray-100 text-gray-500" : "bg-orange-50 text-orange-600"}`}>
-                        {i + 1}
-                      </div>
-                      <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
-                        <StoreLogo name={p.stores?.name ?? ""} size={18} />
-                        <span className="text-xs sm:text-sm font-medium text-gray-800 truncate">{storeDisplayName(p)}</span>
-                      </div>
-                      <div className="text-right flex-shrink-0">
-                        <div className="font-bold text-xs sm:text-sm whitespace-nowrap">{Number(p.price).toLocaleString("tr-TR")} TL</div>
-                        {i === 0 && <div className="text-[10px] sm:text-xs text-green-600 font-medium">En ucuz</div>}
-                        {i > 0 && minPrice && (
-                          <div className="text-[10px] sm:text-xs text-red-400">+{(Number(p.price) - Number(minPrice)).toLocaleString("tr-TR")} TL</div>
-                        )}
-                      </div>
-                      <a href={p.affiliate_url || p.stores?.url || "#"} target="_blank" rel="nofollow sponsored"
-                        className="bg-orange-50 text-[#E8460A] text-xs px-3 py-2 rounded-lg font-semibold hover:bg-[#E8460A] hover:text-white transition-all flex-shrink-0 min-h-11 min-w-11 flex items-center justify-center">
-                        Git
-                      </a>
-                    </div>
-                  ))}
-                </div>
-                <PriceAlertModal productId={product.id} currentPrice={minPrice} />
+        <div className="product-header">
+          <div className="product-gallery">
+            {primaryImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={primaryImage}
+                alt={product.title}
+                className="product-primary-image"
+              />
+            ) : (
+              <div className="product-image-placeholder" aria-hidden="true">
+                {product.category?.name?.charAt(0) ?? "?"}
               </div>
+            )}
+          </div>
+
+          <div className="product-summary">
+            <h1 className="product-title">{product.title}</h1>
+            {product.brand && <p className="product-brand">{product.brand}</p>}
+
+            <div className="product-price-summary">
+              <span className="product-price-label">En düşük fiyat</span>
+              <span className="product-price-value">
+                {new Intl.NumberFormat("tr-TR", {
+                  style: "currency",
+                  currency: "TRY",
+                  minimumFractionDigits: 2,
+                }).format(minPrice)}
+              </span>
+              <span className="product-price-count">
+                {product.listings.length} mağaza
+              </span>
             </div>
+
+            {product.description && (
+              <p className="product-description">{product.description}</p>
+            )}
           </div>
         </div>
 
-        {/* Teknik Özellikler sadece tab'da gösteriliyor (CommunitySection) */}
+        <LivePriceComparison
+          productId={product.id}
+          productTitle={product.title}
+          stores={product.stores}
+          initialListings={initialListings}
+        />
 
-        {/* Fiyat Geçmişi */}
-        {history && history.length > 0 && (
-          <div className="bg-white rounded-2xl p-3 sm:p-5 md:p-6 mb-4 md:mb-6 shadow-sm overflow-hidden">
-            <PriceHistoryChart history={history as any} />
-          </div>
+        {product.specs && Object.keys(product.specs).length > 0 && (
+          <section className="product-specs">
+            <h2>Özellikler</h2>
+            <SpecsTable specs={product.specs} />
+          </section>
         )}
+      </article>
 
-        {/* Yorumlar Bölümü - tam genişlik */}
-        <div className="bg-white rounded-2xl p-3 sm:p-5 md:p-6 shadow-sm">
-          <CommunitySection
-            productId={product.id}
-            specs={product.specs}
-            categoryId={product.category_id}
-          />
-        </div>
-
-      </div>
-      <PriceRefresher productId={product.id} />
-      <Footer />
-    </main>
+      <style>{PRODUCT_PAGE_STYLES}</style>
+    </>
   );
 }
+
+function SpecsTable({ specs }: { specs: Record<string, any> }) {
+  const rows = flattenSpecs(specs);
+  if (rows.length === 0) return null;
+
+  return (
+    <table className="specs-table">
+      <tbody>
+        {rows.map(({ key, value }) => (
+          <tr key={key}>
+            <th scope="row">{humanizeKey(key)}</th>
+            <td>{formatSpecValue(value)}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+function flattenSpecs(
+  obj: Record<string, any>,
+  prefix = ""
+): Array<{ key: string; value: any }> {
+  const result: Array<{ key: string; value: any }> = [];
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === null || v === undefined) continue;
+    const fullKey = prefix ? `${prefix}.${k}` : k;
+    if (typeof v === "object" && !Array.isArray(v)) {
+      result.push(...flattenSpecs(v, fullKey));
+    } else {
+      result.push({ key: fullKey, value: v });
+    }
+  }
+  return result;
+}
+
+function humanizeKey(key: string): string {
+  const lastSegment = key.split(".").pop() ?? key;
+  return lastSegment
+    .replace(/_/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function formatSpecValue(v: any): string {
+  if (typeof v === "boolean") return v ? "Var" : "Yok";
+  if (Array.isArray(v)) return v.join(", ");
+  return String(v);
+}
+
+function truncate(s: string, max: number): string {
+  if (s.length <= max) return s;
+  return s.slice(0, max - 1) + "…";
+}
+
+const PRODUCT_PAGE_STYLES = `
+  .product-page { max-width: 1200px; margin: 0 auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 24px; }
+  .breadcrumb { font-size: 0.875rem; color: var(--text-muted, #6b7280); }
+  .breadcrumb a { color: var(--text-muted, #6b7280); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--text, #111); text-decoration: underline; }
+  .product-header { display: grid; grid-template-columns: minmax(280px, 1fr) 2fr; gap: 32px; }
+  @media (max-width: 768px) { .product-header { grid-template-columns: 1fr; gap: 20px; } }
+  .product-gallery { display: flex; justify-content: center; align-items: flex-start; }
+  .product-primary-image { width: 100%; max-width: 400px; aspect-ratio: 1; object-fit: contain; background: #fff; border: 1px solid var(--border, #e5e7eb); border-radius: 12px; padding: 16px; }
+  .product-image-placeholder { width: 100%; max-width: 400px; aspect-ratio: 1; background: var(--surface-subtle, #f9fafb); border: 1px solid var(--border, #e5e7eb); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 4rem; color: var(--text-muted, #9ca3af); font-weight: 700; }
+  .product-summary { display: flex; flex-direction: column; gap: 16px; }
+  .product-title { margin: 0; font-size: 1.625rem; font-weight: 700; color: var(--text, #111); line-height: 1.3; }
+  .product-brand { margin: 0; font-size: 0.9375rem; color: var(--text-muted, #6b7280); }
+  .product-price-summary { display: flex; flex-direction: column; gap: 2px; padding: 16px; background: var(--accent-soft, #fef2f2); border-radius: 8px; align-self: flex-start; }
+  .product-price-label { font-size: 0.75rem; color: var(--text-muted, #6b7280); text-transform: uppercase; letter-spacing: 0.05em; }
+  .product-price-value { font-size: 1.75rem; font-weight: 700; color: var(--accent, #dc2626); line-height: 1.1; }
+  .product-price-count { font-size: 0.8125rem; color: var(--text-muted, #6b7280); }
+  .product-description { margin: 0; font-size: 0.9375rem; line-height: 1.6; color: var(--text-subtle, #374151); }
+  .product-specs { padding: 20px; background: var(--surface, #fff); border: 1px solid var(--border, #e5e7eb); border-radius: 12px; }
+  .product-specs h2 { margin: 0 0 12px; font-size: 1.125rem; font-weight: 600; }
+  .specs-table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
+  .specs-table th, .specs-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-subtle, #f3f4f6); }
+  .specs-table th { font-weight: 500; color: var(--text-muted, #6b7280); width: 40%; }
+  .specs-table td { color: var(--text, #111); }
+`;
