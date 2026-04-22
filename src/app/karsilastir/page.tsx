@@ -1,286 +1,457 @@
-"use client";
-import { useState, useRef, useCallback } from "react";
-import Link from "next/link";
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
-import StoreLogo from "../components/ui/StoreLogo";
+/**
+ * Product comparison page: /karsilastir?ids=id1,id2,id3
+ * Side-by-side comparison of 2-4 products in same/compatible category.
+ */
 
-type Price = {
-  id: string;
-  price: number;
-  affiliate_url?: string;
-  stores: { name: string; url: string };
-};
+import { notFound } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
+import type { Metadata } from "next";
 
-type Product = {
+type ComparisonProduct = {
   id: string;
-  title: string;
   slug: string;
-  brand: string;
-  image_url?: string;
-  prices: Price[];
+  title: string;
+  brand: string | null;
+  model_family: string | null;
+  variant_storage: string | null;
+  variant_color: string | null;
+  image_url: string | null;
+  specs: Record<string, any> | null;
+  category_id: string;
+  category_name: string;
+  category_slug: string;
+  min_price: number | null;
+  listing_count: number;
 };
 
-const STORE_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
-  Trendyol:    { bg: "bg-orange-50",  text: "text-orange-700",  dot: "bg-orange-400" },
-  MediaMarkt:  { bg: "bg-red-50",     text: "text-red-700",     dot: "bg-red-500" },
-  PttAVM:      { bg: "bg-yellow-50",  text: "text-yellow-700",  dot: "bg-yellow-500" },
-  Hepsiburada: { bg: "bg-orange-50",  text: "text-orange-800",  dot: "bg-orange-500" },
+async function loadComparison(productIds: string[]): Promise<{
+  products: ComparisonProduct[];
+  categoryMatch: boolean;
+}> {
+  if (productIds.length < 2 || productIds.length > 4) {
+    return { products: [], categoryMatch: false };
+  }
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  );
+
+  const { data, error } = await supabase
+    .from("products")
+    .select(`
+      id, slug, title, brand, model_family, variant_storage, variant_color,
+      image_url, specs, category_id,
+      category:categories!inner(id, slug, name),
+      listings!inner(price, is_active)
+    `)
+    .in("id", productIds)
+    .eq("is_active", true);
+
+  if (error || !data) return { products: [], categoryMatch: false };
+
+  const products: ComparisonProduct[] = (data as any[]).map((p) => {
+    const activePrices = p.listings
+      .filter((l: any) => l.is_active)
+      .map((l: any) => Number(l.price));
+    return {
+      id: p.id,
+      slug: p.slug,
+      title: p.title,
+      brand: p.brand,
+      model_family: p.model_family,
+      variant_storage: p.variant_storage,
+      variant_color: p.variant_color,
+      image_url: p.image_url,
+      specs: p.specs,
+      category_id: p.category_id,
+      category_name: p.category.name,
+      category_slug: p.category.slug,
+      min_price: activePrices.length > 0 ? Math.min(...activePrices) : null,
+      listing_count: activePrices.length,
+    };
+  });
+
+  const ordered = productIds
+    .map((id) => products.find((p) => p.id === id))
+    .filter((p): p is ComparisonProduct => p !== undefined);
+
+  const categoryMatch = new Set(ordered.map((p) => p.category_id)).size === 1;
+  return { products: ordered, categoryMatch };
+}
+
+type ComparisonAttribute = {
+  key: string;
+  label: string;
+  values: Array<{ productId: string; display: string; raw: any }>;
+  winnerIds: string[];
+  comparisonType: "higher" | "lower" | "boolean" | "categorical";
 };
 
-const SORT_OPTIONS = [
-  { value: "ucuz",   label: "En Ucuz" },
-  { value: "pahali", label: "En Pahalı" },
-  { value: "magaza", label: "Çok Mağaza" },
-];
+const ATTRIBUTE_LABELS: Record<string, { label: string; type: ComparisonAttribute["comparisonType"] }> = {
+  "display.size_inches": { label: "Ekran Boyutu (inç)", type: "higher" },
+  "display.resolution": { label: "Çözünürlük", type: "categorical" },
+  "display.refresh_rate_hz": { label: "Yenileme Hızı (Hz)", type: "higher" },
+  "display.technology": { label: "Ekran Teknolojisi", type: "categorical" },
+  "processor.name": { label: "İşlemci", type: "categorical" },
+  "processor.cores": { label: "Çekirdek Sayısı", type: "higher" },
+  "memory.ram_gb": { label: "RAM (GB)", type: "higher" },
+  "memory.storage_gb": { label: "Depolama (GB)", type: "higher" },
+  "camera.main_mp": { label: "Ana Kamera (MP)", type: "higher" },
+  "camera.front_mp": { label: "Ön Kamera (MP)", type: "higher" },
+  "camera.telephoto_mp": { label: "Telefoto (MP)", type: "higher" },
+  "battery.capacity_mah": { label: "Batarya (mAh)", type: "higher" },
+  "battery.charging_w": { label: "Şarj Gücü (W)", type: "higher" },
+  "physical.weight_g": { label: "Ağırlık (g)", type: "lower" },
+  "physical.water_resistance": { label: "Su Dayanımı", type: "categorical" },
+  "physical.colors": { label: "Renkler", type: "categorical" },
+  "connectivity.5g": { label: "5G", type: "boolean" },
+  "connectivity.nfc": { label: "NFC", type: "boolean" },
+  "connectivity.wifi": { label: "Wi-Fi", type: "categorical" },
+  "connectivity.bluetooth": { label: "Bluetooth", type: "categorical" },
+  "graphics.discrete": { label: "Ekran Kartı", type: "categorical" },
+  "storage.type": { label: "Depolama Tipi", type: "categorical" },
+  "battery.claimed_hours": { label: "Pil Ömrü (saat)", type: "higher" },
+  "os.name": { label: "İşletim Sistemi", type: "categorical" },
+};
 
-export default function KarsilastirSayfasi() {
-  const [query, setQuery]       = useState("");
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading]   = useState(false);
-  const [searched, setSearched] = useState(false);
-  const [sort, setSort]         = useState("ucuz");
-  const [minP, setMinP]         = useState("");
-  const [maxP, setMaxP]         = useState("");
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+function buildComparisonAttributes(products: ComparisonProduct[]): ComparisonAttribute[] {
+  const flatSpecs = products.map((p) => ({
+    productId: p.id,
+    flat: p.specs ? flattenObject(p.specs) : {},
+  }));
 
-  const search = useCallback(async (q: string) => {
-    if (!q.trim()) { setProducts([]); setSearched(false); return; }
-    setLoading(true);
-    setSearched(true);
-    const res = await fetch(`/api/public/products?q=${encodeURIComponent(q)}&limit=48`)
-      .then(r => r.json()).catch(() => null);
-    const data = res?.products;
-
-    if (data) {
-      const enriched: Product[] = (data as any[]).map(p => ({
-        ...p,
-        prices: (p.prices || [])
-          .filter((pr: any) => pr.price > 0)
-          .sort((a: any, b: any) => a.price - b.price),
-      })).filter(p => p.prices.length > 0);
-      setProducts(enriched);
+  const keyCount = new Map<string, number>();
+  for (const { flat } of flatSpecs) {
+    for (const k of Object.keys(flat)) {
+      keyCount.set(k, (keyCount.get(k) ?? 0) + 1);
     }
-    setLoading(false);
-  }, []);
+  }
 
-  const handleInput = (val: string) => {
-    setQuery(val);
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(() => search(val), 400);
+  const candidateKeys = Array.from(keyCount.entries())
+    .filter(([k, count]) => count >= 2 && ATTRIBUTE_LABELS[k])
+    .map(([k]) => k);
+
+  const orderedKeys = Object.keys(ATTRIBUTE_LABELS).filter((k) => candidateKeys.includes(k));
+
+  const attributes: ComparisonAttribute[] = [];
+
+  for (const key of orderedKeys) {
+    const meta = ATTRIBUTE_LABELS[key];
+    const values = flatSpecs.map(({ productId, flat }) => ({
+      productId,
+      display: formatValue(flat[key], meta.type),
+      raw: flat[key],
+    }));
+
+    const winnerIds = determineWinners(values, meta.type);
+    attributes.push({ key, label: meta.label, values, winnerIds, comparisonType: meta.type });
+  }
+
+  return attributes;
+}
+
+function determineWinners(
+  values: Array<{ productId: string; raw: any }>,
+  type: ComparisonAttribute["comparisonType"]
+): string[] {
+  const valid = values.filter((v) => v.raw !== null && v.raw !== undefined);
+  if (valid.length < 2) return [];
+
+  switch (type) {
+    case "higher": {
+      const nums = valid
+        .map((v) => ({ id: v.productId, n: parseNumber(v.raw) }))
+        .filter((x): x is { id: string; n: number } => x.n !== null);
+      if (nums.length < 2) return [];
+      const max = Math.max(...nums.map((x) => x.n));
+      return nums.filter((x) => max - x.n < max * 0.02).map((x) => x.id);
+    }
+    case "lower": {
+      const nums = valid
+        .map((v) => ({ id: v.productId, n: parseNumber(v.raw) }))
+        .filter((x): x is { id: string; n: number } => x.n !== null);
+      if (nums.length < 2) return [];
+      const min = Math.min(...nums.map((x) => x.n));
+      return nums.filter((x) => x.n - min < min * 0.02).map((x) => x.id);
+    }
+    case "boolean": {
+      const truthy = valid.filter((v) => Boolean(v.raw));
+      if (truthy.length > 0 && truthy.length < valid.length) {
+        return truthy.map((v) => v.productId);
+      }
+      return [];
+    }
+    case "categorical":
+      return [];
+  }
+}
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ ids?: string }>;
+}): Promise<Metadata> {
+  const { ids } = await searchParams;
+  const productIds = (ids ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+
+  if (productIds.length < 2) {
+    return { title: "Karşılaştırma — birtavsiye" };
+  }
+
+  const { products } = await loadComparison(productIds);
+  if (products.length < 2) {
+    return { title: "Karşılaştırma — birtavsiye" };
+  }
+
+  const titles = products.map((p) => p.title).join(" vs ");
+  return {
+    title: truncate(`${titles} Karşılaştırma — birtavsiye`, 60),
+    description: truncate(
+      `${titles} ürünlerini yan yana karşılaştır. Fiyat, özellik ve mağaza bilgisi tek sayfada.`,
+      160
+    ),
+    alternates: {
+      canonical: `/karsilastir?ids=${productIds.join(",")}`,
+    },
   };
+}
 
-  const filtered = products
-    .filter(p => {
-      const cheap = p.prices[0]?.price ?? 0;
-      if (minP && cheap < Number(minP)) return false;
-      if (maxP && cheap > Number(maxP)) return false;
-      return true;
-    })
-    .sort((a, b) => {
-      if (sort === "ucuz")   return (a.prices[0]?.price ?? Infinity) - (b.prices[0]?.price ?? Infinity);
-      if (sort === "pahali") return (b.prices[0]?.price ?? 0) - (a.prices[0]?.price ?? 0);
-      if (sort === "magaza") return b.prices.length - a.prices.length;
-      return 0;
-    });
+export default async function ComparisonPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ids?: string }>;
+}) {
+  const { ids } = await searchParams;
+  const productIds = (ids ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+
+  if (productIds.length < 2) {
+    return (
+      <div className="comparison-error">
+        <h1>En az 2 ürün seçin</h1>
+        <p>Karşılaştırma sayfasına ürün seçmeden gelinmiş. Bir kategori sayfasından 2-4 ürün seçerek karşılaştırabilirsiniz.</p>
+        <a href="/" className="btn">Anasayfaya dön</a>
+        <style>{COMPARISON_STYLES}</style>
+      </div>
+    );
+  }
+
+  const { products, categoryMatch } = await loadComparison(productIds);
+
+  if (products.length < 2) {
+    notFound();
+  }
+
+  if (!categoryMatch) {
+    return (
+      <div className="comparison-error">
+        <h1>Bu ürünler karşılaştırılamaz</h1>
+        <p>Seçtiğiniz ürünler farklı kategorilerde. Adil bir karşılaştırma için aynı kategorideki ürünleri seçin.</p>
+        <ul>
+          {products.map((p) => (
+            <li key={p.id}>
+              <a href={`/urun/${p.slug}`}>{p.title}</a> — {p.category_name}
+            </li>
+          ))}
+        </ul>
+        <a href="/" className="btn">Anasayfaya dön</a>
+        <style>{COMPARISON_STYLES}</style>
+      </div>
+    );
+  }
+
+  const attributes = buildComparisonAttributes(products);
+  const categoryName = products[0].category_name;
+
+  const priced = products.filter((p) => p.min_price !== null);
+  const cheapestId = priced.length > 0
+    ? priced.reduce((a, b) => (a.min_price! < b.min_price! ? a : b)).id
+    : null;
 
   return (
-    <main className="bg-white min-h-screen">
-      <Header />
+    <article className="comparison-page">
+      <header className="comparison-header">
+        <nav className="breadcrumb" aria-label="Navigasyon">
+          <a href="/">Anasayfa</a>
+          <span aria-hidden="true"> › </span>
+          <a href={`/kategori/${products[0].category_slug}`}>{categoryName}</a>
+          <span aria-hidden="true"> › </span>
+          <span>Karşılaştırma</span>
+        </nav>
+        <h1>{products.map((p) => p.title).join(" vs ")}</h1>
+        <p className="subtitle">{products.length} ürün yan yana</p>
+      </header>
 
-      {/* Arama hero */}
-      <div className="bg-white border-b border-gray-100">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-10">
-          <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 mb-1 text-center">Fiyat Karşılaştır</h1>
-          <p className="text-xs sm:text-sm text-gray-400 text-center mb-4 sm:mb-6">
-            Tüm mağazaların fiyatlarını tek ekranda gör
-          </p>
-          <div className="flex items-center gap-2 sm:gap-3 bg-[#F5F4F0] rounded-2xl px-3 sm:px-4 py-3 border border-gray-200 focus-within:border-[#E8460A] focus-within:ring-2 focus-within:ring-[#E8460A]/10 transition-all">
-            <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input
-              type="text"
-              value={query}
-              onChange={e => handleInput(e.target.value)}
-              placeholder="Ürün adı veya marka girin… (örn: iPhone 15, Samsung TV)"
-              className="flex-1 bg-transparent text-sm outline-none text-gray-800 placeholder:text-gray-400"
-              autoFocus
-            />
-            {query && (
-              <button onClick={() => { setQuery(""); setProducts([]); setSearched(false); }}
-                className="text-gray-300 hover:text-gray-500 transition-colors text-lg leading-none">✕</button>
-            )}
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-[1200px] mx-auto px-3 sm:px-6 py-4 sm:py-6">
-
-        {/* Filtre + sıralama */}
-        {searched && (
-          <div className="flex flex-wrap items-center gap-3 mb-5">
-            <div className="flex items-center gap-1 bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs">
-              <span className="text-gray-400 font-medium mr-1">Sırala:</span>
-              {SORT_OPTIONS.map(o => (
-                <button key={o.value} onClick={() => setSort(o.value)}
-                  className={`px-2.5 py-1 rounded-lg font-semibold transition-all ${sort === o.value ? "bg-[#E8460A] text-white" : "text-gray-500 hover:bg-gray-50"}`}>
-                  {o.label}
-                </button>
-              ))}
-            </div>
-            <div className="flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs">
-              <span className="text-gray-400 font-medium">Fiyat:</span>
-              <input type="number" placeholder="Min ₺" value={minP} onChange={e => setMinP(e.target.value)}
-                className="w-20 outline-none text-gray-700 placeholder:text-gray-300 text-xs" />
-              <span className="text-gray-300">—</span>
-              <input type="number" placeholder="Max ₺" value={maxP} onChange={e => setMaxP(e.target.value)}
-                className="w-20 outline-none text-gray-700 placeholder:text-gray-300 text-xs" />
-            </div>
-            {!loading && (
-              <span className="ml-auto text-xs text-gray-400 font-medium">{filtered.length} ürün</span>
-            )}
-          </div>
-        )}
-
-        {/* Spinner */}
-        {loading && (
-          <div className="flex items-center justify-center py-24">
-            <div className="w-8 h-8 border-2 border-[#E8460A] border-t-transparent rounded-full animate-spin" />
-          </div>
-        )}
-
-        {/* Sonuç yok */}
-        {!loading && searched && filtered.length === 0 && (
-          <div className="bg-white rounded-2xl border border-gray-200 py-20 text-center">
-            <div className="text-4xl mb-3">🔍</div>
-            <div className="text-sm font-semibold text-gray-600 mb-1">Sonuç bulunamadı</div>
-            <div className="text-xs text-gray-400">Farklı anahtar kelimeler deneyin</div>
-          </div>
-        )}
-
-        {/* Boş başlangıç */}
-        {!loading && !searched && (
-          <div className="bg-white rounded-2xl border border-gray-200 py-24 text-center">
-            <div className="text-5xl mb-4">💰</div>
-            <div className="text-base font-bold text-gray-700 mb-2">En İyi Fiyatı Bul</div>
-            <div className="text-sm text-gray-400 mb-5">
-              Ürün adını yukarıya yazın, tüm mağaza fiyatlarını karşılaştırın
-            </div>
-            <div className="flex items-center justify-center gap-2 flex-wrap">
-              {["iPhone 15", "Samsung Galaxy", "MacBook", "Dyson", "AirPods"].map(s => (
-                <button key={s} onClick={() => { setQuery(s); search(s); }}
-                  className="px-3 py-1.5 bg-gray-100 hover:bg-orange-50 hover:text-[#E8460A] text-gray-600 text-xs font-semibold rounded-xl transition-all">
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Ürün listesi */}
-        {!loading && filtered.length > 0 && (
-          <div className="space-y-3">
-            {filtered.map(p => {
-              const cheapest = p.prices[0];
-              const cheapestPrice = cheapest?.price ?? 0;
-              return (
-                <div key={p.id} className="bg-white rounded-2xl border border-gray-100 hover:shadow-md transition-all overflow-hidden">
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 sm:p-4">
-
-                    {/* Üst: resim + başlık (mobile) / sol (desktop) */}
-                    <div className="flex items-start gap-3 sm:contents">
-                      <Link href={"/urun/" + p.slug} className="flex-shrink-0">
-                        <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-50 rounded-xl overflow-hidden border border-gray-100 flex items-center justify-center">
-                          {p.image_url
-                            ? <img src={p.image_url} alt={p.title} className="w-full h-full object-contain p-2" />
-                            : <span className="text-2xl sm:text-3xl">📦</span>}
-                        </div>
-                      </Link>
-
-                      <div className="flex-1 min-w-0 sm:hidden">
-                        <div className="text-[10px] font-bold text-[#E8460A] uppercase tracking-wider mb-0.5">{p.brand}</div>
-                        <Link href={"/urun/" + p.slug}>
-                          <h2 className="text-sm font-bold text-gray-900 hover:text-[#E8460A] transition-colors line-clamp-2 leading-snug cursor-pointer">
-                            {p.title}
-                          </h2>
-                        </Link>
-                        <div className="mt-1 text-xl font-extrabold text-gray-900 leading-none">
-                          {Number(cheapestPrice).toLocaleString("tr-TR")}
-                          <span className="text-xs font-normal text-gray-400 ml-0.5">₺</span>
-                          <span className="ml-2 text-[10px] text-emerald-600 font-semibold">{cheapest.stores?.name}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Orta: Başlık + fiyat rozetleri */}
-                    <div className="flex-1 min-w-0">
-                      <div className="hidden sm:block">
-                        <div className="text-[10px] font-bold text-[#E8460A] uppercase tracking-wider mb-0.5">{p.brand}</div>
-                        <Link href={"/urun/" + p.slug}>
-                          <h2 className="text-sm font-bold text-gray-900 hover:text-[#E8460A] transition-colors line-clamp-2 leading-snug mb-2.5 cursor-pointer">
-                            {p.title}
-                          </h2>
-                        </Link>
-                      </div>
-
-                      {/* Mağaza fiyat rozetleri */}
-                      <div className="flex flex-wrap gap-1.5">
-                        {p.prices.map((pr, i) => {
-                          const sc = STORE_COLORS[pr.stores?.name] ?? { bg: "bg-gray-50", text: "text-gray-600", dot: "bg-gray-300" };
-                          const diff = i > 0 ? pr.price - cheapestPrice : 0;
-                          return (
-                            <a key={pr.id}
-                              href={pr.affiliate_url || pr.stores?.url || "#"}
-                              target="_blank" rel="nofollow sponsored"
-                              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all hover:shadow-sm min-h-11 ${sc.bg} ${sc.text} ${i === 0 ? "border-emerald-200 ring-1 ring-emerald-100" : "border-gray-100"}`}>
-                              <StoreLogo name={pr.stores?.name} size={14} />
-                              <span>{pr.stores?.name}</span>
-                              <span className={`font-extrabold ${i === 0 ? "text-emerald-700" : ""}`}>
-                                {Number(pr.price).toLocaleString("tr-TR")} ₺
-                              </span>
-                              {i === 0 && <span className="text-[9px] text-emerald-600 font-bold bg-emerald-50 border border-emerald-200 px-1 rounded">EN UCUZ</span>}
-                              {i > 0 && diff > 0 && <span className="text-[10px] text-red-400">+{diff.toLocaleString("tr-TR")}</span>}
-                            </a>
-                          );
-                        })}
-                      </div>
-                    </div>
-
-                    {/* Sağ: fiyat + CTA (desktop only) - mobile'da alt CTA */}
-                    <div className="hidden sm:block flex-shrink-0 text-right pl-2 border-l border-gray-100 ml-2">
-                      <div className="text-2xl font-extrabold text-gray-900 leading-none">
-                        {Number(cheapestPrice).toLocaleString("tr-TR")}
-                        <span className="text-sm font-normal text-gray-400 ml-0.5">₺</span>
-                      </div>
-                      <div className="text-[10px] text-emerald-600 font-semibold mb-2.5">{cheapest.stores?.name}</div>
-                      <a href={cheapest.affiliate_url || cheapest.stores?.url || "#"}
-                        target="_blank" rel="nofollow sponsored"
-                        className="inline-flex items-center gap-1 px-3.5 py-2 bg-[#E8460A] text-white text-xs font-bold rounded-xl hover:bg-[#C93A08] transition-all shadow-sm min-h-11">
-                        Siteye Git →
-                      </a>
-                      <div className="mt-1.5">
-                        <Link href={"/urun/" + p.slug}
-                          className="text-[10px] text-gray-400 hover:text-[#E8460A] transition-colors font-medium">
-                          Detay & Yorumlar
-                        </Link>
-                      </div>
-                    </div>
-
-                    {/* Mobile CTA (full-width buton) */}
-                    <a href={cheapest.affiliate_url || cheapest.stores?.url || "#"}
-                      target="_blank" rel="nofollow sponsored"
-                      className="sm:hidden flex items-center justify-center gap-1 w-full px-3.5 py-3 bg-[#E8460A] text-white text-sm font-bold rounded-xl hover:bg-[#C93A08] transition-all shadow-sm min-h-11">
-                      {cheapest.stores?.name} sitesine git →
+      <div className="comparison-table-wrapper">
+        <table className="comparison-table">
+          <thead>
+            <tr>
+              <th scope="col" className="label-col"></th>
+              {products.map((p) => (
+                <th key={p.id} scope="col" className="product-col">
+                  <div className="product-head">
+                    {p.image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={p.image_url} alt={p.title} className="product-img" />
+                    ) : (
+                      <div className="product-img-placeholder" aria-hidden="true" />
+                    )}
+                    <a href={`/urun/${p.slug}`} className="product-link">
+                      {p.title}
                     </a>
+                    {p.brand && <span className="product-brand">{p.brand}</span>}
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            <tr className="row-price">
+              <th scope="row">En Düşük Fiyat</th>
+              {products.map((p) => (
+                <td key={p.id} className={p.id === cheapestId ? "cell-winner" : ""}>
+                  {p.min_price !== null ? (
+                    <>
+                      <strong>{formatTL(p.min_price)}</strong>
+                      <span className="price-meta">{p.listing_count} mağaza</span>
+                      {p.id === cheapestId && <span className="winner-chip">En Uygun</span>}
+                    </>
+                  ) : (
+                    <span className="na">Fiyat yok</span>
+                  )}
+                </td>
+              ))}
+            </tr>
+
+            {products.some((p) => p.variant_storage) && (
+              <tr>
+                <th scope="row">Depolama</th>
+                {products.map((p) => (
+                  <td key={p.id}>{p.variant_storage ?? <span className="na">—</span>}</td>
+                ))}
+              </tr>
+            )}
+            {products.some((p) => p.variant_color) && (
+              <tr>
+                <th scope="row">Renk</th>
+                {products.map((p) => (
+                  <td key={p.id}>{p.variant_color ?? <span className="na">—</span>}</td>
+                ))}
+              </tr>
+            )}
+
+            {attributes.map((attr) => (
+              <tr key={attr.key}>
+                <th scope="row">{attr.label}</th>
+                {attr.values.map((v) => {
+                  const isWinner = attr.winnerIds.includes(v.productId);
+                  return (
+                    <td key={v.productId} className={isWinner ? "cell-winner" : ""}>
+                      {v.display || <span className="na">—</span>}
+                      {isWinner && attr.winnerIds.length < products.length && (
+                        <span className="winner-check" aria-label="Bu daha iyi">✓</span>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+
+          <tfoot>
+            <tr>
+              <th scope="row"></th>
+              {products.map((p) => (
+                <td key={p.id}>
+                  <a href={`/urun/${p.slug}`} className="cta">
+                    Ürün Detayı
+                  </a>
+                </td>
+              ))}
+            </tr>
+          </tfoot>
+        </table>
       </div>
-      <Footer />
-    </main>
+
+      <style>{COMPARISON_STYLES}</style>
+    </article>
   );
 }
+
+function flattenObject(obj: Record<string, any>, prefix = ""): Record<string, any> {
+  const out: Record<string, any> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (v === null || v === undefined) continue;
+    const key = prefix ? `${prefix}.${k}` : k;
+    if (typeof v === "object" && !Array.isArray(v)) {
+      Object.assign(out, flattenObject(v, key));
+    } else {
+      out[key] = v;
+    }
+  }
+  return out;
+}
+
+function formatValue(v: any, type: ComparisonAttribute["comparisonType"]): string {
+  if (v === null || v === undefined) return "";
+  if (type === "boolean") return v ? "Var" : "Yok";
+  if (Array.isArray(v)) return v.join(", ");
+  return String(v);
+}
+
+function parseNumber(v: unknown): number | null {
+  if (typeof v === "number" && !isNaN(v)) return v;
+  if (typeof v === "string") {
+    const parsed = parseFloat(v);
+    return isNaN(parsed) ? null : parsed;
+  }
+  return null;
+}
+
+function formatTL(n: number): string {
+  return new Intl.NumberFormat("tr-TR", {
+    style: "currency",
+    currency: "TRY",
+    minimumFractionDigits: 2,
+  }).format(n);
+}
+
+function truncate(s: string, max: number): string {
+  return s.length <= max ? s : s.slice(0, max - 1) + "…";
+}
+
+const COMPARISON_STYLES = `
+  .comparison-page { max-width: 1400px; margin: 0 auto; padding: 24px 16px; }
+  .comparison-header { margin-bottom: 24px; }
+  .breadcrumb { font-size: 0.875rem; color: var(--text-muted, #6b7280); margin-bottom: 12px; }
+  .breadcrumb a { color: var(--text-muted, #6b7280); text-decoration: none; }
+  .breadcrumb a:hover { color: var(--text, #111); text-decoration: underline; }
+  .comparison-header h1 { margin: 0 0 4px; font-size: 1.5rem; line-height: 1.3; }
+  .subtitle { margin: 0; color: var(--text-muted, #6b7280); font-size: 0.9375rem; }
+  .comparison-table-wrapper { overflow-x: auto; border: 1px solid var(--border, #e5e7eb); border-radius: 12px; background: #fff; }
+  .comparison-table { width: 100%; border-collapse: collapse; min-width: 640px; }
+  .comparison-table th, .comparison-table td { padding: 12px 16px; border-bottom: 1px solid var(--border-subtle, #f3f4f6); text-align: left; vertical-align: top; }
+  .comparison-table tbody tr:last-child th, .comparison-table tbody tr:last-child td { border-bottom: 1px solid var(--border, #e5e7eb); }
+  .label-col { width: 18%; min-width: 140px; background: var(--surface-subtle, #f9fafb); font-weight: 500; color: var(--text-muted, #6b7280); font-size: 0.875rem; }
+  .product-col { padding: 16px; text-align: center; border-left: 1px solid var(--border-subtle, #f3f4f6); background: var(--surface-subtle, #f9fafb); }
+  .product-head { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .product-img, .product-img-placeholder { width: 100px; height: 100px; object-fit: contain; background: #fff; border-radius: 8px; }
+  .product-img-placeholder { background: linear-gradient(135deg, #f3f4f6, #e5e7eb); }
+  .product-link { font-size: 0.875rem; font-weight: 500; color: var(--text, #111); text-decoration: none; line-height: 1.3; }
+  .product-link:hover { text-decoration: underline; }
+  .product-brand { font-size: 0.75rem; color: var(--text-muted, #6b7280); }
+  .comparison-table tbody td { font-size: 0.9375rem; color: var(--text, #111); border-left: 1px solid var(--border-subtle, #f3f4f6); }
+  .comparison-table tbody th { font-weight: 500; color: var(--text-muted, #6b7280); font-size: 0.875rem; background: var(--surface-subtle, #fafafa); }
+  .cell-winner { background: var(--success-soft, #ecfdf5); font-weight: 500; position: relative; }
+  .winner-check { display: inline-block; margin-left: 6px; color: var(--success, #059669); font-weight: 700; }
+  .winner-chip { display: inline-block; margin-left: 8px; padding: 2px 8px; background: var(--accent, #dc2626); color: #fff; font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 4px; font-weight: 600; }
+  .row-price strong { font-size: 1.125rem; font-weight: 700; color: var(--accent, #dc2626); display: block; }
+  .price-meta { font-size: 0.75rem; color: var(--text-muted, #6b7280); }
+  .na { color: var(--text-muted, #9ca3af); font-style: italic; }
+  .cta { display: inline-block; padding: 8px 16px; background: var(--accent, #dc2626); color: #fff; font-size: 0.875rem; text-decoration: none; border-radius: 6px; font-weight: 500; }
+  .cta:hover { background: var(--accent-hover, #b91c1c); }
+  .comparison-table tfoot td { text-align: center; padding: 16px; background: var(--surface-subtle, #f9fafb); }
+  .comparison-error { max-width: 600px; margin: 60px auto; padding: 32px; text-align: center; }
+  .comparison-error h1 { margin: 0 0 12px; font-size: 1.25rem; }
+  .comparison-error .btn { display: inline-block; margin-top: 16px; padding: 10px 20px; background: var(--accent, #dc2626); color: #fff; text-decoration: none; border-radius: 8px; }
+`;
