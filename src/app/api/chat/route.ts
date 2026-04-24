@@ -290,10 +290,25 @@ export async function POST(req: Request) {
 
   try {
     const body = await req.json();
-    const message = (body?.message || "").toString().trim();
+    const rawMessage = (body?.message || "").toString().trim();
     const userId = body?.userId || null;
     const history = Array.isArray(body?.history) ? body.history : [];
     const chatSessionId = typeof body?.chatSessionId === "string" ? body.chatSessionId : null;
+    const image =
+      typeof body?.image === "string" && body.image.startsWith("data:image/")
+        ? body.image
+        : null;
+
+    // Görsel eklenmişse mesajı zenginleştir (vision modeli henüz yok — text hint)
+    const message = image
+      ? rawMessage
+        ? `${rawMessage}\n[Not: Kullanıcı bir ürün görseli paylaştı, görsel içeriği şu an sadece metinsel olarak işlenebiliyor.]`
+        : "[Kullanıcı bir görsel paylaştı ama mesaj yazmadı — hangi kategoride ürün aradığını sor.]"
+      : rawMessage;
+
+    if (image) {
+      console.log(`[/api/chat] image attached (${image.length} bytes, prefix=${image.slice(5, 20)}...)`);
+    }
 
     if (!message) {
       return NextResponse.json(
