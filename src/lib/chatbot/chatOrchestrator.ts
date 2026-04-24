@@ -40,6 +40,8 @@ export type OrchestratorInput = {
   categoryTaxonomy: string[];
   // Supabase client
   sb: SupabaseClient;
+  // Önceki konuşma (proaktif sohbet için, opsiyonel)
+  conversationHistory?: Array<{ role: string; content: string }>;
 };
 
 export type LegacySearchResult = {
@@ -98,6 +100,7 @@ async function runFastPath(
     knowledgeChunks: [],
     products: mapProductsForResponse(searchResult.products),
     searchMethod: searchResult.method,
+    conversationHistory: input.conversationHistory || [],
   });
 
   return {
@@ -132,7 +135,8 @@ async function runSlowPath(
   const intent = await parseIntent(
     input.userMessage,
     knowledgeChunks,
-    input.categoryTaxonomy
+    input.categoryTaxonomy,
+    input.conversationHistory || []
   );
 
   // 3. Off-topic veya çok genel ş search yapma, direkt yanıt üret
@@ -143,6 +147,7 @@ async function runSlowPath(
       knowledgeChunks,
       products: [],
       searchMethod: "failed",
+      conversationHistory: input.conversationHistory || [],
     });
 
     return {
@@ -183,6 +188,7 @@ async function runSlowPath(
     knowledgeChunks,
     products: mapProductsForResponse(finalProducts),
     searchMethod: smartResults.length > 0 ? "hybrid" : "failed",
+    conversationHistory: input.conversationHistory || [],
   });
 
   return {

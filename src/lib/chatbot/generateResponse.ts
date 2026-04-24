@@ -26,6 +26,7 @@ export type ResponseInput = {
   knowledgeChunks: KnowledgeChunk[];         // boÅ olabilir
   products: ProductForResponse[];            // boÅ olabilir
   searchMethod: "vector" | "keyword" | "hybrid" | "specs" | "failed";
+  conversationHistory?: Array<{ role: string; content: string }>;  // proaktif sohbet
 };
 
 export type ProductForResponse = {
@@ -125,7 +126,15 @@ export async function generateResponse(input: ResponseInput): Promise<string> {
 function buildPromptMessages(input: ResponseInput): ChatMessage[] {
   const userPromptParts: string[] = [];
 
-  userPromptParts.push(`KULLANICI MESAJI: "${input.userMessage}"`);
+  // Önceki konuşma context'i (proaktif sohbet için)
+  if (input.conversationHistory && input.conversationHistory.length > 0) {
+    const historyText = input.conversationHistory
+      .map(m => `${m.role === 'user' ? 'Kullanıcı' : 'Sen'}: ${m.content}`)
+      .join('\n');
+    userPromptParts.push(`ÖNCEKİ KONUŞMA:\n${historyText}`);
+  }
+
+  userPromptParts.push(`YENİ KULLANICI MESAJI: "${input.userMessage}"`);
 
   // Intent context (sadece slow path varsa)
   if (input.intent && input.intent.confidence > 0.4) {
@@ -223,18 +232,15 @@ function formatProducts(products: ProductForResponse[]): string {
 /**
  * Ãok genel sorgu â netleÅtirici sor.
  */
-function buildVagueResponse(_input: ResponseInput): string {
-  return `Sana yardım etmek isterim ama biraz daha detay verir misin?
+function buildVagueResponse(input: ResponseInput): string {
+  // KB'den bağlam varsa kullan (proaktif)
+  const kbHint = input.knowledgeChunks[0]?.title || input.knowledgeChunks[0]?.topic || "";
 
-Hangi kategoride bakıyorsun?
-- 📱 Elektronik
-- 👕 Giyim
-- 💄 Kozmetik
-- 🏠 Beyaz eşya
-- 🍫 Gıda
-- 🧸 Anne-bebek
+  if (kbHint) {
+    return `${kbHint} ile ilgili mi arıyorsun? Biraz daha detay verirsen daha iyi öneri yapabilirim. Örneğin marka, bütçe veya özellik söyleyebilirsin.`;
+  }
 
-Veya doğrudan ürün adı yazabilirsin (örn: "iPhone 15", "lavanta deodorant").`;
+  return `Sana yardım etmek isterim. Biraz daha detay verirsen daha iyi öneri yapabilirim — örneğin marka, bütçe veya bir özellik söyleyebilirsin. Ya da doğrudan ürün adı yaz (örn: "iPhone 15", "lavanta deodorant").`;
 }
 
 /**

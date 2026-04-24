@@ -79,9 +79,21 @@ KURALLAR:
 - must_have ile nice_to_have ayrımı önemli: must_have kesin gereken, nice_to_have tercih
 
 ÖZEL DURUMLAR:
-- şok genel sorgu ("bir şey öner") ş is_too_vague: true
-- Alakasız sorgu ("saat kaç") ş is_off_topic: true
-- Spesifik ürün adı ş category_slug + brand + semantic_keywords doldur
+- Çok genel sorgu ("bir şey öner") → is_too_vague: true
+- Alakasız sorgu ("saat kaç") → is_off_topic: true
+- Spesifik ürün adı → category_slug + brand + semantic_keywords doldur
+
+ÖNEMLİ VAGUE KURALI:
+- Tek kelime kategori adı ("telefon", "laptop", "ayakkabı", "deodorant", "buzdolabı", "kulaklık")
+  VAGUE DEĞİLDİR → kategori sorgusu olarak yorumla:
+  * category_slug: ilgili kategori
+  * semantic_keywords: [aynı kelime + ilgili kavramlar]
+  * is_too_vague: false
+- Sadece şunlar VAGUE'dir:
+  * Tek kelime ama ürünle alakasız: "merhaba", "test", "evet", "hadi"
+  * Çok soyut: "bir şey", "öneri", "yardım"
+- Önceki konuşmayla anlam kazanan kısa mesaj VAGUE DEĞİLDİR:
+  Örnek: önceki "telefon" → şimdi "Apple" → kombine: Apple telefon arama
 
 ÇIKTI FORMATI:
 {
@@ -111,19 +123,30 @@ KURALLAR:
 export function buildIntentParserPrompt(
   message: string,
   knowledgeChunks: KnowledgeChunk[],
-  categoryTaxonomy: string[]
+  categoryTaxonomy: string[],
+  conversationHistory: Array<{ role: string; content: string }> = []
 ): string {
   const kbContext = formatKnowledgeContext(knowledgeChunks);
   const taxonomySample = formatTaxonomy(categoryTaxonomy);
+
+  // Önceki konuşma context'i (proaktif sohbet için)
+  const historyContext = conversationHistory.length > 0
+    ? `\nÖNCEKİ KONUŞMA:\n${conversationHistory
+        .map(m => `${m.role === 'user' ? 'Kullanıcı' : 'Sen'}: ${m.content}`)
+        .join('\n')}\n`
+    : '';
 
   return `GEÇERLİ KATEGORİLER (category_slug için bunlardan seç):
 ${taxonomySample}
 
 BİLGİ KAYNAKLARI (konuyla ilgili Türkçe sözlük):
 ${kbContext}
-
-KULLANICI MESAJI:
+${historyContext}
+YENİ KULLANICI MESAJI:
 "${message}"
+
+Önceki konuşmayı dikkate alarak kullanıcının niyetini çıkar. Eğer önceki
+mesajlar bağlam veriyorsa (örn: "telefon" sonra "Apple"), bunu birleştir.
 
 GÖREV:
 Yukarıdaki bilgiyi kullanarak kullanıcının arama niyetini çıkar. Bilgi

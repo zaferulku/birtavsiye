@@ -91,10 +91,12 @@ function hashChunks(chunks: KnowledgeChunk[]): string {
 export async function parseIntent(
   message: string,
   knowledgeChunks: KnowledgeChunk[],
-  categoryTaxonomy: string[]
+  categoryTaxonomy: string[],
+  conversationHistory: Array<{ role: string; content: string }> = []
 ): Promise<StructuredIntent> {
-  // Cache check
-  const key = cacheKey(message, hashChunks(knowledgeChunks));
+  // Cache check (history hash'e dahil — farklı geçmiş = farklı yorum)
+  const historyHash = conversationHistory.map(m => m.content.slice(0, 30)).join("|").slice(0, 80);
+  const key = cacheKey(message, hashChunks(knowledgeChunks) + "::" + historyHash);
   const cached = cacheGet(key);
   if (cached) {
     return cached;
@@ -104,7 +106,8 @@ export async function parseIntent(
   const userPrompt = buildIntentParserPrompt(
     message,
     knowledgeChunks,
-    categoryTaxonomy
+    categoryTaxonomy,
+    conversationHistory
   );
 
   // Model chain: NVIDIA ş Groq ş Gemini

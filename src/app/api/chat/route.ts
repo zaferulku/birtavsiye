@@ -279,6 +279,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     const message = (body?.message || "").toString().trim();
     const userId = body?.userId || null;
+    const history = Array.isArray(body?.history) ? body.history : [];
 
     if (!message) {
       return NextResponse.json(
@@ -331,6 +332,7 @@ export async function POST(req: Request) {
       },
       categoryTaxonomy,
       sb,
+      conversationHistory: history,
     });
 
     // ----- 4. agent_decisions log -----
