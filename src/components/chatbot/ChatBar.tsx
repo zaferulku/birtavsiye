@@ -6,11 +6,49 @@
  * v1'den fark: history backend'e gÃ¶nderiliyor (proaktif sohbet iÃ§in)
  */
 
-import { useState, useRef, useCallback, type ChangeEvent, type KeyboardEvent } from "react";
+import { useState, useRef, useCallback, useEffect, type ChangeEvent, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useChatStore } from "../../lib/chatbot/useChatStore";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
+
+// Minimal tipler — Web Speech API resmi DOM types'ta değil, tarayıcı-scope
+type SpeechRecognitionAlternative = { transcript: string; confidence: number };
+type SpeechRecognitionResult = {
+  readonly length: number;
+  readonly isFinal: boolean;
+  [index: number]: SpeechRecognitionAlternative;
+};
+type SpeechRecognitionResultList = {
+  readonly length: number;
+  [index: number]: SpeechRecognitionResult;
+};
+type SpeechRecognitionEvent = { results: SpeechRecognitionResultList; resultIndex: number };
+type SpeechRecognitionErrorEvent = { error: string; message?: string };
+
+interface SpeechRecognitionInstance {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onresult: ((e: SpeechRecognitionEvent) => void) | null;
+  onerror: ((e: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+
+type SpeechRecognitionCtor = new () => SpeechRecognitionInstance;
+
+function getSpeechRecognitionCtor(): SpeechRecognitionCtor | null {
+  if (typeof window === "undefined") return null;
+  const w = window as unknown as {
+    SpeechRecognition?: SpeechRecognitionCtor;
+    webkitSpeechRecognition?: SpeechRecognitionCtor;
+  };
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+}
 
 // ============================================================================
 // Icons
@@ -66,6 +104,12 @@ export function ChatBar() {
   const getHistoryForBackend = useChatStore((s) => s.getHistoryForBackend);
   const pendingImage = useChatStore((s) => s.pendingImage);
   const setPendingImage = useChatStore((s) => s.setPendingImage);
+  const isRecording = useChatStore((s) => s.isRecording);
+  const setRecording = useChatStore((s) => s.setRecording);
+
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const transcriptBaseRef = useRef<string>("");
 
   const isLoading = status === "sending" || status === "streaming";
 
@@ -154,9 +198,97 @@ export function ChatBar() {
     setImageError(null);
   };
 
-  const handleMicClick = () => {
-    console.log("[ChatBar] mic clicked — voice input (TODO Parça 7)");
-  };
+  const stopRecognition = useCallback(() => {
+    const rec = recognitionRef.current;
+    if (rec) {
+      try { rec.stop(); } catch { /* noop */ }
+    }
+    recognitionRef.current = null;
+    setRecording(false);
+  }, [setRecording]);
+
+  const handleMicClick = useCallback(() => {
+    setVoiceError(null);
+
+    if (isRecording) {
+      stopRecognition();
+      return;
+    }
+
+    const Ctor = getSpeechRecognitionCtor();
+    if (!Ctor) {
+      setVoiceError("Tarayıcın sesli girişi desteklemiyor. Chrome veya Edge dene.");
+      return;
+    }
+
+    let recognition: SpeechRecognitionInstance;
+    try {
+      recognition = new Ctor();
+    } catch {
+      setVoiceError("Mikrofon başlatılamadı.");
+      return;
+    }
+
+    recognition.lang = "tr-TR";
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    transcriptBaseRef.current = text;
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let interim = "";
+      let finalText = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        const piece = result[0]?.transcript ?? "";
+        if (result.isFinal) finalText += piece;
+        else interim += piece;
+      }
+      const base = transcriptBaseRef.current;
+      const joined = (base + " " + (finalText || interim)).trim();
+      setText(joined);
+      if (finalText) transcriptBaseRef.current = joined;
+    };
+
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      const code = event.error;
+      if (code === "not-allowed" || code === "service-not-allowed") {
+        setVoiceError("Mikrofon erişimine izin ver. Tarayıcı ayarlarından kontrol edebilirsin.");
+      } else if (code === "no-speech") {
+        setVoiceError("Ses algılanmadı, tekrar dene.");
+      } else if (code === "aborted") {
+        // manuel durdurma — hata değil
+      } else {
+        setVoiceError(`Ses tanımada sorun: ${code}`);
+      }
+      stopRecognition();
+    };
+
+    recognition.onend = () => {
+      setRecording(false);
+      recognitionRef.current = null;
+    };
+
+    try {
+      recognition.start();
+      recognitionRef.current = recognition;
+      setRecording(true);
+    } catch {
+      setVoiceError("Mikrofon başlatılamadı, tekrar dene.");
+      stopRecognition();
+    }
+  }, [isRecording, text, setRecording, stopRecognition]);
+
+  useEffect(() => {
+    return () => {
+      const rec = recognitionRef.current;
+      if (rec) {
+        try { rec.abort(); } catch { /* noop */ }
+      }
+      recognitionRef.current = null;
+    };
+  }, []);
 
   return (
     <div
@@ -203,6 +335,15 @@ export function ChatBar() {
         </div>
       )}
 
+      {voiceError && (
+        <div
+          role="alert"
+          className="mb-2 text-center text-xs text-red-600 bg-red-50 border border-red-200 rounded-full px-3 py-1.5"
+        >
+          {voiceError}
+        </div>
+      )}
+
       <div className="flex items-center gap-2 bg-white rounded-full shadow-lg border border-gray-200 px-3 py-2 transition-all focus-within:shadow-xl focus-within:border-gray-300">
         <button
           type="button"
@@ -231,9 +372,14 @@ export function ChatBar() {
           type="button"
           onClick={handleMicClick}
           disabled={isLoading}
-          className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          aria-label="Sesli komut"
-          title="Mikrofona bas, konuş"
+          className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+            isRecording
+              ? "bg-red-500 text-white hover:bg-red-600 animate-pulse"
+              : "text-gray-600 hover:bg-gray-100"
+          }`}
+          aria-label={isRecording ? "Kaydı durdur" : "Sesli komut"}
+          aria-pressed={isRecording}
+          title={isRecording ? "Kaydı durdurmak için tıkla" : "Mikrofona bas, konuş"}
         >
           <MicIcon className="w-5 h-5" />
         </button>
