@@ -21,7 +21,7 @@ export async function GET(req: Request) {
 
   let q = supabaseAdmin
     .from("products")
-    .select("id,title,slug,brand,image_url,model_family,prices(price)")
+    .select("id,title,slug,brand,image_url,model_family,prices:listings(price, is_active, in_stock)")
     .eq("category_id", thisProd.category_id)
     .neq("id", productId)
     .limit(40);
@@ -31,7 +31,12 @@ export async function GET(req: Request) {
   const { data, error } = await q;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const list = data ?? [];
+  const list = (data ?? []).map((product) => ({
+    ...product,
+    prices: ((product.prices as Array<{ price: number | string; is_active?: boolean | null; in_stock?: boolean | null }> | null) ?? [])
+      .filter((listing) => listing.is_active !== false && listing.in_stock !== false)
+      .map((listing) => ({ price: Number(listing.price) })),
+  }));
   const byFamily = new Map<string, typeof list[number]>();
   const noFamily: typeof list = [];
   for (const p of list) {

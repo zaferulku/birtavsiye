@@ -43,7 +43,7 @@ export async function GET(req: Request) {
 
   let query = supabaseAdmin
     .from("products")
-    .select("id, title, slug, brand, image_url, category_id, model_family, variant_storage, variant_color, source, prices(price)")
+    .select("id, title, slug, brand, image_url, category_id, model_family, variant_storage, variant_color, prices:listings(price, is_active, in_stock)")
     .range(offset, offset + limit - 1)
     .order("created_at", { ascending: false });
 
@@ -54,8 +54,15 @@ export async function GET(req: Request) {
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
+  const products = (data ?? []).map((product) => ({
+    ...product,
+    prices: ((product.prices as Array<{ price: number | string; is_active?: boolean | null; in_stock?: boolean | null }> | null) ?? [])
+      .filter((listing) => listing.is_active !== false && listing.in_stock !== false)
+      .map((listing) => ({ price: Number(listing.price) })),
+  }));
+
   return NextResponse.json(
-    { products: data ?? [] },
+    { products },
     { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" } }
   );
 }
