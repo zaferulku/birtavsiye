@@ -74,6 +74,7 @@ export function ChatBar() {
     // History snapshot ALDIKTAN SONRA navigate
     // (yeni mesaj eklendi, getHistoryForBackend onu hariÃ§ tutar)
     const history = getHistoryForBackend();
+    const chatSessionId = useChatStore.getState().chatSessionId;
 
     router.push(`/sonuclar?q=${encodeURIComponent(message)}`);
 
@@ -81,7 +82,7 @@ export function ChatBar() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, history }),
+        body: JSON.stringify({ message, history, chatSessionId }),
       });
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);

@@ -1,29 +1,29 @@
 /**
- * Chatbot Global State (Zustand) â v2
+ * Chatbot Global State (Zustand) â v3 (persist + session_id)
  *
- * Yeni Ã¶zellikler:
- *   - KonuÅma geÃ§miÅi backend'e gÃ¶nderilir (proaktif/sÃ¼rdÃ¼rÃ¼lebilir sohbet)
- *   - Inactivity timeout (15dk hareketsizlik â konuÅma sonlanÄ±r)
+ * v3 eklentileri:
+ *   - Zustand persist middleware (sessionStorage)
+ *     â router.push sÄ±rasÄ±nda state kÄ±rÄ±lmasÄ±nÄ± Ã¶nler (ChatPanel aÃ§Ä±lmÄ±yor fix'i)
+ *     â tab kapanÄ±nca state silinir (kullanÄ±cÄ± kararÄ±: kapatÄ±nca sil)
+ *   - chatSessionId (race condition fix iÃ§in feedback)
+ *
+ * v2'den korunanlar:
+ *   - KonuÅma geÃ§miÅi backend'e gÃ¶nderilir (proaktif sohbet)
+ *   - Inactivity timeout (15dk)
  *   - KÃ¼Ã§Ã¼ltme: konuÅma korunur
  *   - Kapatma (X): konuÅma silinir
- *   - Yeni sohbet butonu: manuel sÄ±fÄ±rlama
- *
- * YaÅam dÃ¶ngÃ¼sÃ¼:
- *   - addUserMessage Ã§aÄrÄ±ldÄ±ÄÄ±nda activity timer reset
- *   - 15dk yeni mesaj yoksa â conversationEnded = true
- *   - closePanel â tÃ¼m state silinir (clearMessages dahil)
- *   - minimizePanel â state korunur
- *   - openPanel â eÄer ended ise yeni sohbet baÅlatÄ±lÄ±r
+ *   - Yeni sohbet butonu
  */
 
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 // ============================================================================
 // Config
 // ============================================================================
 
 const INACTIVITY_TIMEOUT_MS = 15 * 60 * 1000; // 15 dakika
-const HISTORY_FOR_BACKEND = 8; // backend'e son 8 mesaj gÃ¶nder (4 tur)
+const HISTORY_FOR_BACKEND = 8;
 
 // ============================================================================
 // Types
@@ -58,39 +58,45 @@ export type ChatStatus = "idle" | "sending" | "streaming" | "error";
 // ============================================================================
 
 interface ChatStore {
-  // Mesajlar
+  // ----- Mesajlar -----
   messages: ChatMessage[];
-  addUserMessage: (content: string, attachmentType?: ChatMessage["attachmentType"], attachmentPreview?: string | null) => string;
+  addUserMessage: (
+    content: string,
+    attachmentType?: ChatMessage["attachmentType"],
+    attachmentPreview?: string | null
+  ) => string;
   addAssistantMessage: (content: string) => void;
   clearMessages: () => void;
   startNewConversation: () => void;
-
-  // Backend iÃ§in history slice
   getHistoryForBackend: () => Array<{ role: string; content: string }>;
 
-  // Panel durumu
+  // ----- Panel -----
   panelState: PanelState;
   openPanel: () => void;
-  closePanel: () => void;        // konuÅmayÄ± SÄ°LER
-  minimizePanel: () => void;     // konuÅmayÄ± korur
+  closePanel: () => void;
+  minimizePanel: () => void;
 
-  // Ãnerilen Ã¼rÃ¼nler
+  // ----- ÃrÃ¼nler -----
   recommendedProducts: RecommendedProduct[];
   lastQuery: string | null;
   setRecommendations: (products: RecommendedProduct[], query: string) => void;
   clearRecommendations: () => void;
 
-  // Status
+  // ----- Status -----
   status: ChatStatus;
   errorMessage: string | null;
   setStatus: (status: ChatStatus, errorMessage?: string | null) => void;
 
-  // Inactivity / lifecycle
+  // ----- Lifecycle -----
   conversationEnded: boolean;
   lastActivityAt: number;
-  checkInactivity: () => void;       // periyodik Ã§aÄrÄ±lÄ±r
+  checkInactivity: () => void;
 
-  // Ses/gÃ¶rsel
+  // ----- Session ID (race condition fix) -----
+  chatSessionId: string;
+  rotateSessionId: () => void;
+
+  // ----- Ses/gÃ¶rsel -----
   isRecording: boolean;
   setRecording: (recording: boolean) => void;
   pendingImage: string | null;
@@ -105,172 +111,191 @@ function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
+function generateSessionId(): string {
+  return `sess_${Date.now()}_${Math.random().toString(36).slice(2, 12)}`;
+}
+
 // ============================================================================
 // Store
 // ============================================================================
 
-export const useChatStore = create<ChatStore>((set, get) => ({
-  // ----- Mesajlar -----
-  messages: [],
-
-  addUserMessage: (content, attachmentType = null, attachmentPreview = null) => {
-    const state = get();
-
-    // KonuÅma sona ermiÅse, yeni sohbet baÅlat (mesajlarÄ± temizle)
-    let newMessages = state.messages;
-    if (state.conversationEnded) {
-      newMessages = [];
-    }
-
-    const id = generateId();
-    const message: ChatMessage = {
-      id,
-      role: "user",
-      content,
-      timestamp: Date.now(),
-      attachmentType,
-      attachmentPreview,
-    };
-
-    set({
-      messages: [...newMessages, message],
-      panelState: state.panelState === "closed" ? "open" : state.panelState,
-      status: "sending",
-      errorMessage: null,
-      conversationEnded: false,
-      lastActivityAt: Date.now(),
-    });
-
-    return id;
-  },
-
-  addAssistantMessage: (content) => {
-    const message: ChatMessage = {
-      id: generateId(),
-      role: "assistant",
-      content,
-      timestamp: Date.now(),
-    };
-    set((state) => ({
-      messages: [...state.messages, message],
-      status: "idle",
-      lastActivityAt: Date.now(),
-    }));
-  },
-
-  clearMessages: () => {
-    set({
+export const useChatStore = create<ChatStore>()(
+  persist(
+    (set, get) => ({
+      // ----- Mesajlar -----
       messages: [],
-      recommendedProducts: [],
-      lastQuery: null,
-      status: "idle",
-      errorMessage: null,
-      conversationEnded: false,
-    });
-  },
 
-  startNewConversation: () => {
-    get().clearMessages();
-  },
+      addUserMessage: (content, attachmentType = null, attachmentPreview = null) => {
+        const state = get();
+        let newMessages = state.messages;
+        let newSessionId = state.chatSessionId;
 
-  // ----- Backend history slice -----
-  // Son N mesajÄ± backend'e gÃ¶nderir (proaktif sohbet iÃ§in)
-  getHistoryForBackend: () => {
-    const messages = get().messages;
-    // Son N mesaj (en gÃ¼ncel mesaj henÃ¼z backend'e gÃ¶nderilmedi, onu hariÃ§ tut)
-    // Bu fonksiyon ChatBar'da addUserMessage'dan SONRA Ã§aÄrÄ±lÄ±r,
-    // o yÃ¼zden son mesaj zaten user'Ä±n yeni mesajÄ±dÄ±r â onu hariÃ§ tut
-    const historicalOnly = messages.slice(0, -1);
-    return historicalOnly
-      .slice(-HISTORY_FOR_BACKEND)
-      .map((m) => ({ role: m.role, content: m.content }));
-  },
+        // KonuÅma sona ermiÅse, yeni session
+        if (state.conversationEnded) {
+          newMessages = [];
+          newSessionId = generateSessionId();
+        }
 
-  // ----- Panel durumu -----
-  panelState: "closed",
+        const id = generateId();
+        const message: ChatMessage = {
+          id,
+          role: "user",
+          content,
+          timestamp: Date.now(),
+          attachmentType,
+          attachmentPreview,
+        };
 
-  openPanel: () => {
-    // KonuÅma sona ermiÅse panel aÃ§Ä±ldÄ±ÄÄ±nda otomatik temizleme YOK
-    // (kullanÄ±cÄ± eski geÃ§miÅe bakmak isteyebilir)
-    // Sadece bir sonraki mesaj geldiÄinde temizlenir (addUserMessage iÃ§inde)
-    set({ panelState: "open" });
-  },
+        set({
+          messages: [...newMessages, message],
+          panelState: state.panelState === "closed" ? "open" : state.panelState,
+          status: "sending",
+          errorMessage: null,
+          conversationEnded: false,
+          lastActivityAt: Date.now(),
+          chatSessionId: newSessionId,
+        });
 
-  closePanel: () => {
-    // KAPATMA = SÄ°LME
-    set({
+        return id;
+      },
+
+      addAssistantMessage: (content) => {
+        const message: ChatMessage = {
+          id: generateId(),
+          role: "assistant",
+          content,
+          timestamp: Date.now(),
+        };
+        set((state) => ({
+          messages: [...state.messages, message],
+          status: "idle",
+          lastActivityAt: Date.now(),
+        }));
+      },
+
+      clearMessages: () => {
+        set({
+          messages: [],
+          recommendedProducts: [],
+          lastQuery: null,
+          status: "idle",
+          errorMessage: null,
+          conversationEnded: false,
+          chatSessionId: generateSessionId(),
+        });
+      },
+
+      startNewConversation: () => {
+        get().clearMessages();
+      },
+
+      getHistoryForBackend: () => {
+        const messages = get().messages;
+        const historicalOnly = messages.slice(0, -1);
+        return historicalOnly
+          .slice(-HISTORY_FOR_BACKEND)
+          .map((m) => ({ role: m.role, content: m.content }));
+      },
+
+      // ----- Panel -----
       panelState: "closed",
-      messages: [],
+
+      openPanel: () => set({ panelState: "open" }),
+
+      closePanel: () => {
+        // KAPATMA = SÄ°LME
+        set({
+          panelState: "closed",
+          messages: [],
+          recommendedProducts: [],
+          lastQuery: null,
+          status: "idle",
+          errorMessage: null,
+          conversationEnded: false,
+          lastActivityAt: Date.now(),
+          chatSessionId: generateSessionId(),
+        });
+      },
+
+      minimizePanel: () => set({ panelState: "minimized" }),
+
+      // ----- ÃrÃ¼nler -----
       recommendedProducts: [],
       lastQuery: null,
+
+      setRecommendations: (products, query) =>
+        set({ recommendedProducts: products, lastQuery: query }),
+
+      clearRecommendations: () => set({ recommendedProducts: [], lastQuery: null }),
+
+      // ----- Status -----
       status: "idle",
       errorMessage: null,
+      setStatus: (status, errorMessage = null) => set({ status, errorMessage }),
+
+      // ----- Lifecycle -----
       conversationEnded: false,
       lastActivityAt: Date.now(),
-    });
-  },
 
-  minimizePanel: () => {
-    // KÃÃÃLTME = KORUMA (mesajlar dokunulmaz)
-    set({ panelState: "minimized" });
-  },
+      checkInactivity: () => {
+        const state = get();
+        if (state.conversationEnded) return;
+        if (state.messages.length === 0) return;
 
-  // ----- Ãnerilen Ã¼rÃ¼nler -----
-  recommendedProducts: [],
-  lastQuery: null,
+        const elapsed = Date.now() - state.lastActivityAt;
+        if (elapsed >= INACTIVITY_TIMEOUT_MS) {
+          const closingMessage: ChatMessage = {
+            id: generateId(),
+            role: "assistant",
+            content:
+              "Bir süredir mesaj atmadın. Yeni bir şey aramak istersen yazmaya devam edebilirsin — ya da pencereyi kapatıp sıfırdan başlayabilirsin.",
+            timestamp: Date.now(),
+          };
+          set({
+            conversationEnded: true,
+            messages: [...state.messages, closingMessage],
+          });
+        }
+      },
 
-  setRecommendations: (products, query) => {
-    set({
-      recommendedProducts: products,
-      lastQuery: query,
-    });
-  },
+      // ----- Session ID -----
+      chatSessionId: generateSessionId(),
+      rotateSessionId: () => set({ chatSessionId: generateSessionId() }),
 
-  clearRecommendations: () => {
-    set({ recommendedProducts: [], lastQuery: null });
-  },
-
-  // ----- Status -----
-  status: "idle",
-  errorMessage: null,
-  setStatus: (status, errorMessage = null) => set({ status, errorMessage }),
-
-  // ----- Inactivity / lifecycle -----
-  conversationEnded: false,
-  lastActivityAt: Date.now(),
-
-  checkInactivity: () => {
-    const state = get();
-    if (state.conversationEnded) return;
-    if (state.messages.length === 0) return;
-
-    const elapsed = Date.now() - state.lastActivityAt;
-    if (elapsed >= INACTIVITY_TIMEOUT_MS) {
-      // KonuÅmayÄ± sonlandÄ±r, ama mesajlarÄ± silme (kullanÄ±cÄ± geri dÃ¶nÃ¼p bakabilsin)
-      // Bot otomatik son mesaj ekler (UI bunu fark eder)
-      const closingMessage: ChatMessage = {
-        id: generateId(),
-        role: "assistant",
-        content:
-          "Bir süredir mesaj atmadın. Yeni bir şey aramak istersen yazmaya devam edebilirsin — ya da pencereyi kapatıp sıfırdan başlayabilirsin.",
-        timestamp: Date.now(),
-      };
-      set({
-        conversationEnded: true,
-        messages: [...state.messages, closingMessage],
-      });
+      // ----- Ses/gÃ¶rsel -----
+      isRecording: false,
+      setRecording: (recording) => set({ isRecording: recording }),
+      pendingImage: null,
+      setPendingImage: (image) => set({ pendingImage: image }),
+    }),
+    {
+      name: "birtavsiye-chat",
+      storage: createJSONStorage(() => {
+        // SSR-safe: window yoksa boÅ storage
+        if (typeof window === "undefined") {
+          return {
+            getItem: () => null,
+            setItem: () => {},
+            removeItem: () => {},
+          };
+        }
+        return sessionStorage;
+      }),
+      partialize: (state) => ({
+        messages: state.messages,
+        panelState: state.panelState,
+        recommendedProducts: state.recommendedProducts,
+        lastQuery: state.lastQuery,
+        conversationEnded: state.conversationEnded,
+        lastActivityAt: state.lastActivityAt,
+        chatSessionId: state.chatSessionId,
+      }),
     }
-  },
-
-  // ----- Ses/gÃ¶rsel -----
-  isRecording: false,
-  setRecording: (recording) => set({ isRecording: recording }),
-  pendingImage: null,
-  setPendingImage: (image) => set({ pendingImage: image }),
-}));
+  )
+);
 
 // ============================================================================
-// Selectors (performance iÃ§in)
+// Selectors
 // ============================================================================
 
 export const useChatMessages = () => useChatStore((s) => s.messages);
@@ -278,18 +303,20 @@ export const useChatPanel = () => useChatStore((s) => s.panelState);
 export const useChatStatus = () => useChatStore((s) => s.status);
 export const useRecommendations = () => useChatStore((s) => s.recommendedProducts);
 export const useConversationEnded = () => useChatStore((s) => s.conversationEnded);
+export const useChatSessionId = () => useChatStore((s) => s.chatSessionId);
 
 // ============================================================================
-// Inactivity ticker (component-side useEffect ile baÅlatÄ±lÄ±r)
+// Inactivity ticker
 // ============================================================================
 
 let inactivityInterval: ReturnType<typeof setInterval> | null = null;
 
 export function startInactivityWatcher() {
   if (inactivityInterval) return;
+  if (typeof window === "undefined") return;
   inactivityInterval = setInterval(() => {
     useChatStore.getState().checkInactivity();
-  }, 60 * 1000); // Dakikada bir kontrol
+  }, 60 * 1000);
 }
 
 export function stopInactivityWatcher() {

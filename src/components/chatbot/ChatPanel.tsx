@@ -188,6 +188,7 @@ function PanelInputBar() {
 
     // History snapshot ALDIKTAN SONRA navigate (yeni mesaj zaten eklendi)
     const history = getHistoryForBackend();
+    const chatSessionId = useChatStore.getState().chatSessionId;
 
     router.push(`/sonuclar?q=${encodeURIComponent(message)}`);
 
@@ -195,7 +196,7 @@ function PanelInputBar() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, history }),
+        body: JSON.stringify({ message, history, chatSessionId }),
       });
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);

@@ -83,15 +83,28 @@ function detectFeedback(message: string): FeedbackType {
 async function recordFeedback(
   userId: string | null,
   feedbackType: "wrong" | "more",
-  sessionContext: Record<string, unknown>
+  sessionContext: Record<string, unknown>,
+  chatSessionId: string | null = null
 ): Promise<void> {
-  const { data: lastDecision } = await sb
+  if (!chatSessionId) {
+    // Session yoksa global son karar → race condition risk (fallback davranış)
+    console.warn("[recordFeedback] chatSessionId yok, global son kararı alıyor");
+  }
+
+  // Session-scoped: bu sohbetin son kararı
+  let query = sb
     .from("agent_decisions")
     .select("id")
     .eq("agent_name", "chatbot-search")
     .order("timestamp", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .limit(1);
+
+  if (chatSessionId) {
+    // input_data.chatSessionId match (JSONB path)
+    query = query.eq("input_data->>chatSessionId", chatSessionId);
+  }
+
+  const { data: lastDecision } = await query.maybeSingle();
 
   if (!lastDecision) return;
 
@@ -280,6 +293,7 @@ export async function POST(req: Request) {
     const message = (body?.message || "").toString().trim();
     const userId = body?.userId || null;
     const history = Array.isArray(body?.history) ? body.history : [];
+    const chatSessionId = typeof body?.chatSessionId === "string" ? body.chatSessionId : null;
 
     if (!message) {
       return NextResponse.json(
@@ -292,7 +306,7 @@ export async function POST(req: Request) {
     const feedback = detectFeedback(message);
 
     if (feedback) {
-      await recordFeedback(userId, feedback, { message });
+      await recordFeedback(userId, feedback, { message, chatSessionId }, chatSessionId);
 
       const reply =
         feedback === "wrong"
@@ -339,7 +353,7 @@ export async function POST(req: Request) {
     try {
       await sb.from("agent_decisions").insert({
         agent_name: "chatbot-search",
-        input_data: { message, userId },
+        input_data: { message, userId, chatSessionId },
         output_data: {
           method: orchResult.method,
           path: orchResult.pathDecision.path,
