@@ -1,113 +1,48 @@
 /**
  * LivePriceComparison — Product detail page price comparison card
- * Uses SSE (via useLivePrices hook) to progressively populate data.
+ * Pure presentational: receives merged rows + loading state from parent (ProductDetailShell).
  */
 
 "use client";
 
-import { useMemo } from "react";
-import { useLivePrices, type ListingState, type StoreLiveData } from "@/lib/scrapers/live/useLivePrices";
-
-type Store = {
-  id: string;
-  slug: string;
-  name: string;
-  logo_url: string | null;
-};
-
-type InitialListing = {
-  listing_id: string;
-  source: string;
-  cached_price: number | null;
-};
+import { formatTL, type MergedOfferRow } from "@/app/components/urun/offerUtils";
 
 type Props = {
-  productId: string;
   productTitle: string;
-  stores: Record<string, Store>;
-  initialListings: InitialListing[];
+  rows: MergedOfferRow[];
+  isLoading: boolean;
+  isDone: boolean;
+  successful: number;
+  failed: number;
+  refresh: () => void;
 };
 
 export function LivePriceComparison({
-  productId,
-  productTitle,
-  stores,
-  initialListings,
+  productTitle: _productTitle,
+  rows,
+  isLoading,
+  isDone,
+  successful,
+  failed,
+  refresh,
 }: Props) {
-  const { listings, isLoading, isDone, successful, failed, refresh } = useLivePrices(productId);
-
-  const merged = useMemo(() => {
-    const result: Array<{
-      listing_id: string;
-      source: string;
-      store: Store | null;
-      state: ListingState;
-      displayPrice: number | null;
-      totalPrice: number | null;
-      isCached: boolean;
-    }> = [];
-
-    for (const il of initialListings) {
-      const liveState = listings[il.listing_id];
-      const store = stores[il.source] ?? null;
-
-      if (liveState) {
-        const data = liveState.data;
-        result.push({
-          listing_id: il.listing_id,
-          source: il.source,
-          store,
-          state: liveState,
-          displayPrice: data?.price ?? il.cached_price,
-          totalPrice: data ? computeTotal(data) : il.cached_price,
-          isCached: false,
-        });
-      } else {
-        result.push({
-          listing_id: il.listing_id,
-          source: il.source,
-          store,
-          state: {
-            listing_id: il.listing_id,
-            source: il.source,
-            status: "pending",
-            data: null,
-            error: null,
-          },
-          displayPrice: il.cached_price,
-          totalPrice: il.cached_price,
-          isCached: true,
-        });
-      }
-    }
-
-    return result.sort((a, b) => {
-      const aInStock = a.state.data?.in_stock !== false;
-      const bInStock = b.state.data?.in_stock !== false;
-      if (aInStock !== bInStock) return aInStock ? -1 : 1;
-      const aPrice = a.totalPrice ?? Infinity;
-      const bPrice = b.totalPrice ?? Infinity;
-      return aPrice - bPrice;
-    });
-  }, [initialListings, listings, stores]);
-
-  const minPrice = merged
-    .map((m) => m.totalPrice)
-    .filter((p): p is number => p !== null)
-    .sort((a, b) => a - b)[0];
+  const minPrice = rows
+    .map((row) => row.totalPrice)
+    .filter((price): price is number => price !== null)
+    .sort((left, right) => left - right)[0];
 
   return (
     <section className="live-price-comparison">
       <header className="lpc-header">
         <div className="lpc-header-left">
           <h2 className="lpc-title">Mağaza Fiyatları</h2>
-          {merged.length > 0 && (
+          {rows.length > 0 && (
             <p className="lpc-subtitle">
-              {merged.length} mağaza
+              {rows.length} mağaza
               {minPrice !== undefined && (
                 <>
                   {" · "}
-                  <strong>{formatTL(minPrice)}'dan başlıyor</strong>
+                  <strong>{formatTL(minPrice)}&apos;dan başlıyor</strong>
                 </>
               )}
             </p>
@@ -118,6 +53,7 @@ export function LivePriceComparison({
           onClick={refresh}
           disabled={isLoading}
           aria-label="Fiyatları yenile"
+          type="button"
         >
           {isLoading ? (
             <span className="lpc-loading-indicator">Güncelleniyor…</span>
@@ -128,8 +64,12 @@ export function LivePriceComparison({
       </header>
 
       <ul className="lpc-list">
-        {merged.map((row) => (
-          <StoreRow key={row.listing_id} row={row} isMinPrice={row.totalPrice === minPrice} />
+        {rows.map((row) => (
+          <StoreRow
+            key={row.listing_id}
+            row={row}
+            isMinPrice={row.totalPrice !== null && row.totalPrice === minPrice}
+          />
         ))}
       </ul>
 
@@ -140,7 +80,7 @@ export function LivePriceComparison({
             {failed > 0 && ` · ${failed} mağaza fiyatı alınamadı`}
           </span>
           <span className="lpc-disclaimer">
-            Fiyatlar son dakika güncellemeleri yansıtır. Taksit ve kampanya detayları mağazada gösterilir.
+            Fiyatlar son dakika güncellemelerini yansıtır. Taksit ve kampanya detayları mağazada gösterilir.
           </span>
         </footer>
       )}
@@ -151,26 +91,20 @@ export function LivePriceComparison({
 }
 
 type StoreRowProps = {
-  row: {
-    listing_id: string;
-    source: string;
-    store: Store | null;
-    state: ListingState;
-    displayPrice: number | null;
-    totalPrice: number | null;
-    isCached: boolean;
-  };
+  row: MergedOfferRow;
   isMinPrice: boolean;
 };
 
 function StoreRow({ row, isMinPrice }: StoreRowProps) {
-  const { state, store, displayPrice, isCached } = row;
+  const { state, store, displayPrice, isCached, fallback_url } = row;
   const storeName = store?.name ?? row.source;
   const data = state.data;
 
   const isError = state.status === "error";
   const isPending = state.status === "pending";
   const isOutOfStock = data?.in_stock === false;
+
+  const storeUrl = data?.affiliate_url ?? fallback_url ?? null;
 
   return (
     <li className={`lpc-row ${isError ? "lpc-row--error" : ""} ${isOutOfStock ? "lpc-row--oos" : ""}`}>
@@ -234,9 +168,9 @@ function StoreRow({ row, isMinPrice }: StoreRowProps) {
           </div>
         )}
 
-        {!isError && !isOutOfStock && data?.affiliate_url && (
+        {!isError && !isOutOfStock && storeUrl && (
           <a
-            href={data.affiliate_url}
+            href={storeUrl}
             target="_blank"
             rel="noopener noreferrer nofollow sponsored"
             className="lpc-cta"
@@ -244,7 +178,7 @@ function StoreRow({ row, isMinPrice }: StoreRowProps) {
             Mağazaya Git →
           </a>
         )}
-        {!isError && !isOutOfStock && !data?.affiliate_url && (
+        {!isError && !isOutOfStock && !storeUrl && (
           <span className="lpc-cta-disabled" aria-hidden="true">
             Bağlantı yok
           </span>
@@ -252,19 +186,6 @@ function StoreRow({ row, isMinPrice }: StoreRowProps) {
       </div>
     </li>
   );
-}
-
-function formatTL(amount: number): string {
-  return new Intl.NumberFormat("tr-TR", {
-    style: "currency",
-    currency: "TRY",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
-}
-
-function computeTotal(data: StoreLiveData): number {
-  return data.price + (data.shipping_price && !data.free_shipping ? data.shipping_price : 0);
 }
 
 const STYLES = `
