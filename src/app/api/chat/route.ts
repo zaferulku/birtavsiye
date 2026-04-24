@@ -211,12 +211,13 @@ async function searchProducts(userQuery: string): Promise<SearchResult> {
     };
   }
 
-  // Kategori filtreli ILIKE araması
+  // Kategori filtreli ILIKE araması — listings JOIN ile gerçek fiyat
   let query = sb
     .from("products")
     .select(`
       id, title, slug, brand, model_family, image_url,
-      category:categories!inner(slug)
+      category:categories!inner(slug),
+      listings!inner(price, is_active)
     `)
     .eq("is_active", true);
 
@@ -245,11 +246,16 @@ async function searchProducts(userQuery: string): Promise<SearchResult> {
     };
   }
 
-  // Rank by keyword match count
+  // Rank by keyword match count — gerçek fiyat listings JOIN'den
   const ranked = (kwData ?? [])
     .map(p => {
       const t = (p.title ?? "").toLowerCase();
       const hits = keywords.filter(w => t.includes(w)).length;
+      const listings = (Array.isArray(p.listings) ? p.listings : []) as Array<{ price: number | null; is_active: boolean }>;
+      const activePrices = listings
+        .filter(l => l.is_active && typeof l.price === "number" && l.price > 0)
+        .map(l => l.price as number);
+      const minPrice = activePrices.length > 0 ? Math.min(...activePrices) : 0;
       return {
         id: p.id,
         title: p.title,
@@ -258,12 +264,12 @@ async function searchProducts(userQuery: string): Promise<SearchResult> {
         model_family: p.model_family,
         category_slug: (Array.isArray(p.category) ? p.category[0]?.slug : (p.category as { slug: string } | null)?.slug) ?? null,
         image_url: p.image_url,
-        min_price: 0, // Keyword search'te fiyat yok, gelecekte JOIN eklenecek
-        listing_count: 0,
+        min_price: minPrice,
+        listing_count: activePrices.length,
         similarity: hits / keywords.length,
       };
     })
-    .filter(p => p.similarity > 0)
+    .filter(p => p.similarity > 0 && p.listing_count > 0)
     .sort((a, b) => b.similarity - a.similarity)
     .slice(0, 6);
 
