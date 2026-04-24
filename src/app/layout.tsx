@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
-import { DM_Sans, Syne } from "next/font/google";
 import "./globals.css";
 import SessionProviderWrapper from "./components/SessionProviderWrapper";
-import { ChatWidget } from "@/components/ChatWidget";
-
-const dmSans = DM_Sans({ subsets: ["latin"], variable: "--font-dm-sans" });
-const syne = Syne({ subsets: ["latin"], variable: "--font-syne" });
+import { ChatBar } from "@/components/chatbot/ChatBar";
 
 export const metadata: Metadata = {
   title: {
@@ -29,9 +25,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="tr">
-      <body className={`${dmSans.variable} ${syne.variable} antialiased`}>
+      <body className="antialiased">
         <SessionProviderWrapper>{children}</SessionProviderWrapper>
-        <ChatWidget />
+        <ChatBar />
       </body>
     </html>
   );
