@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { supabaseAdmin } from "@/lib/supabaseServer";
-import { getActiveOfferCount, getActiveListings, getLowestActivePrice } from "@/lib/listingSignals";
+import {
+  formatFreshnessLabel,
+  getActiveOfferCount,
+  getActiveListings,
+  getFreshestSeenAt,
+  getLowestActivePrice,
+} from "@/lib/listingSignals";
 
-type Price = { price: number; source?: string | null };
+type Price = { price: number; source?: string | null; last_seen?: string | null };
 type Product = {
   id: string;
   title: string;
@@ -23,7 +29,7 @@ async function loadProducts(): Promise<Product[]> {
   const { data, error } = await supabaseAdmin
     .from("products")
     .select(
-      "id, title, slug, brand, image_url, prices:listings(price, source, is_active, in_stock)"
+      "id, title, slug, brand, image_url, prices:listings(price, source, last_seen, is_active, in_stock)"
     )
     .eq("is_active", true)
     .order("created_at", { ascending: false })
@@ -42,6 +48,8 @@ async function loadProducts(): Promise<Product[]> {
     image_url: string | null;
     prices?: Array<{
       price: number | string;
+      source?: string | null;
+      last_seen?: string | null;
       is_active?: boolean | null;
       in_stock?: boolean | null;
     }> | null;
@@ -55,6 +63,7 @@ async function loadProducts(): Promise<Product[]> {
       prices: getActiveListings(product.prices).map((listing) => ({
         price: listing.price,
         source: listing.source,
+        last_seen: listing.last_seen,
       }))
         .filter((listing) => Number.isFinite(listing.price) && listing.price > 0),
     }))
@@ -83,6 +92,7 @@ function buildSections(products: Product[]) {
 
 function ProductCard({ product }: { product: Product }) {
   const lowestPrice = getLowestPrice(product);
+  const freshestSeenAt = getFreshestSeenAt(product.prices);
 
   return (
     <Link href={`/urun/${product.slug}`}>
@@ -111,6 +121,9 @@ function ProductCard({ product }: { product: Product }) {
           <div className="text-xs sm:text-sm font-bold text-gray-900">
             {lowestPrice.toLocaleString("tr-TR")}
             <span className="text-[10px] font-normal text-gray-400"> TL</span>
+          </div>
+          <div className="mt-1 text-[10px] text-gray-400">
+            Son fiyat: {formatFreshnessLabel(freshestSeenAt)}
           </div>
         </div>
       </div>

@@ -7,8 +7,10 @@ import Link from "next/link";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import {
+  formatFreshnessLabel,
   getActiveOfferCount,
   getActiveListings,
+  getFreshestSeenAt,
   getLowestActivePrice,
 } from "../../lib/listingSignals";
 
@@ -23,7 +25,7 @@ type Product = {
   model_family?: string | null;
   variant_storage?: string | null;
   variant_color?: string | null;
-  prices?: { price: number; source?: string | null; is_active?: boolean | null; in_stock?: boolean | null }[];
+  prices?: { price: number; source?: string | null; last_seen?: string | null; is_active?: boolean | null; in_stock?: boolean | null }[];
   _variantCount?: number;
 };
 
@@ -59,7 +61,7 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
     let queryBuilder = supabase
       .from("products")
       .select(
-        "id, title, slug, brand, description, image_url, category_id, model_family, variant_storage, variant_color, prices:listings(price, source, is_active, in_stock)"
+        "id, title, slug, brand, description, image_url, category_id, model_family, variant_storage, variant_color, prices:listings(price, source, last_seen, is_active, in_stock)"
       )
       .limit(200);
 
@@ -80,6 +82,7 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
         prices: getActiveListings(product.prices).map((listing) => ({
           price: listing.price,
           source: listing.source,
+          last_seen: listing.last_seen,
         })),
       }));
 
@@ -306,6 +309,7 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
               {filteredResults.map((product) => {
                 const minPrice = getLowestActivePrice(product.prices);
                 const offerCount = getActiveOfferCount(product.prices);
+                const freshestSeenAt = getFreshestSeenAt(product.prices);
                 return (
                   <Link href={`/urun/${product.slug}`} key={product.id}>
                     <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-lg hover:border-[#E8460A]/30 transition-all cursor-pointer group">
@@ -331,16 +335,21 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
                             : product.title}
                         </div>
                         {minPrice !== null ? (
-                          <div className="flex items-baseline justify-between gap-2">
-                            <div className="text-sm font-bold text-gray-900">
-                              {minPrice.toLocaleString("tr-TR")}{" "}
-                              <span className="text-xs font-normal text-gray-400">TL</span>
+                          <div>
+                            <div className="flex items-baseline justify-between gap-2">
+                              <div className="text-sm font-bold text-gray-900">
+                                {minPrice.toLocaleString("tr-TR")}{" "}
+                                <span className="text-xs font-normal text-gray-400">TL</span>
+                              </div>
+                              {offerCount > 1 && (
+                                <span className="text-[9px] text-gray-500 font-medium bg-gray-100 rounded-full px-1.5 py-0.5">
+                                  {offerCount} satici
+                                </span>
+                              )}
                             </div>
-                            {offerCount > 1 && (
-                              <span className="text-[9px] text-gray-500 font-medium bg-gray-100 rounded-full px-1.5 py-0.5">
-                                {offerCount} satici
-                              </span>
-                            )}
+                            <div className="mt-1 text-[10px] text-gray-400">
+                              Son fiyat: {formatFreshnessLabel(freshestSeenAt)}
+                            </div>
                           </div>
                         ) : (
                           <div className="text-xs text-[#E8460A] font-medium">Fiyatlari Karsilastir -&gt;</div>

@@ -101,3 +101,20 @@ export function getBestSourceTrust(
   const sources = getUniqueActiveSources(listings, sourceFilter);
   return sources.length > 0 ? Math.max(...sources.map((source) => sourceTrustScore(source))) : 0;
 }
+
+export function formatFreshnessLabel(value: string | null): string {
+  if (!value) return "Bilinmiyor";
+
+  const diffMs = Date.now() - new Date(value).getTime();
+  const diffMinutes = Math.max(0, Math.floor(diffMs / (1000 * 60)));
+
+  if (diffMinutes < 60) return `${Math.max(diffMinutes, 1)} dk once`;
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours} sa once`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 30) return `${diffDays} gun once`;
+
+  return new Date(value).toLocaleDateString("tr-TR");
+}
