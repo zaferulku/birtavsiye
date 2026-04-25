@@ -1,4 +1,5 @@
 import type { ListingState, StoreLiveData } from "@/lib/scrapers/live/useLivePrices";
+import { sourceTrustScore } from "@/lib/listingSignals";
 
 export type StoreDefinition = {
   id: string;
@@ -11,6 +12,7 @@ export type InitialListing = {
   listing_id: string;
   source: string;
   cached_price: number | null;
+  last_seen?: string | null;
   fallback_url?: string | null;
 };
 
@@ -22,6 +24,7 @@ export type MergedOfferRow = {
   displayPrice: number | null;
   totalPrice: number | null;
   isCached: boolean;
+  last_seen: string | null;
   fallback_url: string | null;
 };
 
@@ -37,6 +40,9 @@ export function formatTL(amount: number): string {
 export function computeTotal(data: StoreLiveData): number {
   return data.price + (data.shipping_price && !data.free_shipping ? data.shipping_price : 0);
 }
+
+// Re-export (ProductBestOfferCard ./offerUtils üzerinden alıyor)
+export { sourceTrustScore };
 
 export function mergeOfferRows(
   initialListings: InitialListing[],
@@ -64,6 +70,7 @@ export function mergeOfferRows(
         displayPrice: liveData?.price ?? initialListing.cached_price,
         totalPrice: liveData ? computeTotal(liveData) : initialListing.cached_price,
         isCached: !liveState,
+        last_seen: initialListing.last_seen ?? null,
         fallback_url: initialListing.fallback_url ?? null,
       } satisfies MergedOfferRow;
     })

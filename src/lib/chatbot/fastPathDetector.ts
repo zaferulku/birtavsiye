@@ -61,13 +61,24 @@ export function detectPath(
     };
   }
 
-  // Sinyal 2: Marka + varyant (depolama veya renk)
-  // "iPhone 128GB", "Samsung siyah" gibi
+  // Sinyal 2: Marka + varyant (renk/depolama) → SLOW path
+  // "siyah iphone", "iPhone 256GB" — variant filtreleme smart_search v2'de
+  // yapılıyor; fast path direct vector match'i renk/storage'a bakmıyor.
   if (parsed.brand && (parsed.variant_storage || parsed.variant_color)) {
     return {
-      path: "fast",
-      reason: "brand_and_variant_detected",
+      path: "slow",
+      reason: "brand_and_variant_needs_filter",
       confidence: 0.9,
+    };
+  }
+
+  // Sinyal 2b: Raw mesajda renk veya storage kelimesi → SLOW path
+  // (parseQuery yakalamamış olabilir; smart_search v2 variant filter gerek)
+  if (hasVariantKeyword(normalized)) {
+    return {
+      path: "slow",
+      reason: "variant_keyword_in_message",
+      confidence: 0.85,
     };
   }
 
@@ -150,6 +161,32 @@ export function detectPath(
  * Model numarası pattern'i tespit et.
  * Örnek: "A52s", "S24", "278550 EI", "M3 Pro", "Note 12"
  */
+/**
+ * Renk veya storage keyword'ü içeriyorsa varyant filtresi gerekir.
+ * smart_search v2 variant_color_patterns + variant_storage_patterns kullanır.
+ */
+function hasVariantKeyword(text: string): boolean {
+  const colors = [
+    "siyah", "beyaz", "gri", "mavi", "kırmızı", "yeşil", "sarı",
+    "pembe", "mor", "turuncu", "kahve", "lacivert", "bordo",
+    "altın", "gümüş", "krem", "bej", "şeffaf", "lila", "mat",
+    "black", "white", "blue", "red", "green", "yellow",
+    "pink", "purple", "gold", "silver",
+    "jet", "rose",
+  ];
+  const storagePatterns = [
+    /\b\d+\s?gb\b/i,
+    /\b\d+\s?tb\b/i,
+    /\b\d+\s?mb\b/i,
+  ];
+  const colorPattern = new RegExp(
+    `\\b(${colors.map(escapeRegex).join("|")})\\b`,
+    "i"
+  );
+  if (colorPattern.test(text)) return true;
+  return storagePatterns.some((p) => p.test(text));
+}
+
 function hasModelNumberPattern(text: string): boolean {
   // Büyük harf + sayı kombinasyonu (en az 2 karakter)
   const patterns = [
