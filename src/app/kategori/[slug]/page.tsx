@@ -11,8 +11,10 @@ import { getCategoryQueryHint, resolveCategorySlug } from "../../../lib/category
 import {
   getActiveListings,
   getActiveOfferCount,
+  getFreshestSeenAt,
   getLowestActivePrice,
   getUniqueActiveSources,
+  formatFreshnessLabel,
   sourceTrustScore,
 } from "../../../lib/listingSignals";
 
@@ -23,6 +25,7 @@ type ListingRow = {
   source?: string | null;
   is_active?: boolean | null;
   in_stock?: boolean | null;
+  last_seen?: string | null;
 };
 
 export default async function KategoriSayfasi({ params, searchParams }: {
@@ -87,7 +90,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   // Variant dedup için daha geniş bir havuz çekip in-memory birleştiriyoruz
   let query = supabase
     .from("products")
-    .select("id, title, slug, brand, description, image_url, model_family, variant_storage, variant_color, prices:listings(price, source, is_active, in_stock)", { count: "exact" })
+    .select("id, title, slug, brand, description, image_url, model_family, variant_storage, variant_color, prices:listings(price, source, is_active, in_stock, last_seen)", { count: "exact" })
     .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""]);
 
   if (marka) query = query.eq("brand", marka);
@@ -516,6 +519,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                       ? priceList.reduce((m, x) => (x.price ?? Infinity) < (m.price ?? Infinity) ? x : m, priceList[0])
                       : null;
                     const offerCount = getActiveOfferCount(p.prices, kaynak ?? null);
+                    const freshestSeenAt = getFreshestSeenAt(p.prices, kaynak ?? null);
                     return (
                       <div className="bg-white border border-[#E8E4DF] rounded-2xl overflow-hidden hover:shadow-lg hover:border-[#E8460A]/30 transition-all group">
                         <div className="h-44 bg-white flex items-center justify-center overflow-hidden">
@@ -532,14 +536,19 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                               : p.title}
                           </div>
                           {minPrice ? (
+                            <>
                             <div className="flex items-baseline justify-between gap-2">
                               <div className="text-sm font-bold text-gray-900">{Number(minPrice.price).toLocaleString("tr-TR")} <span className="text-xs font-normal text-gray-400">₺</span></div>
                               {offerCount > 1 && (
                                 <span className="text-[9px] text-gray-500 font-medium bg-gray-100 rounded-full px-1.5 py-0.5">
-                                  {p._variantCount} satıcı
+                                  {offerCount} satıcı
                                 </span>
                               )}
                             </div>
+                            <div className="mt-1 text-[10px] text-gray-400">
+                              Son fiyat: {formatFreshnessLabel(freshestSeenAt)}
+                            </div>
+                            </>
                           ) : (
                             <div className="text-xs text-[#E8460A] font-semibold">Fiyatları Karşılaştır →</div>
                           )}
