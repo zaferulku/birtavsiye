@@ -4,8 +4,18 @@ import Footer from "../layout/Footer";
 import Link from "next/link";
 import Image from "next/image";
 import { fetchCategoryPath } from "../../../lib/categoryTree";
+import {
+  getLowestActivePrice,
+  getUniqueActiveSources,
+  sourceTrustScore,
+} from "../../../lib/listingSignals";
 
-type PriceRow = { price: number };
+type PriceRow = {
+  price: number;
+  source: string | null;
+  is_active?: boolean | null;
+  in_stock?: boolean | null;
+};
 type Row = {
   id: string;
   slug: string;
@@ -15,7 +25,6 @@ type Row = {
   variant_storage: string | null;
   variant_color: string | null;
   category_id: string | null;
-  source: string | null;
   specs: Record<string, unknown> | null;
   prices: PriceRow[] | null;
 };
@@ -35,24 +44,13 @@ function isAccessoryTitle(title: string | null | undefined): boolean {
   return patterns.some(re => re.test(t));
 }
 
-const sourceTrust = (src: string | null): number => {
-  if (!src) return 0;
-  if (src === "mediamarkt") return 100;
-  if (src === "vatan") return 80;
-  if (src === "trendyol" || src === "hepsiburada") return 70;
-  if (src === "amazon") return 60;
-  if (src === "n11") return 50;
-  if (src === "pttavm") return 30;
-  return 40;
-};
-
 export default async function ModelPageView({ brand, model }: { brand: string; model: string }) {
   const brandGuess = brand.replace(/-/g, " ");
   const modelGuess = model.replace(/-/g, " ");
 
   const { data } = await supabase
     .from("products")
-    .select("id, slug, title, brand, image_url, variant_storage, variant_color, category_id, source, specs, prices(price)")
+    .select("id, slug, title, brand, image_url, variant_storage, variant_color, category_id, specs, prices:listings(price, source, is_active, in_stock)")
     .ilike("brand", brandGuess)
     .ilike("model_family", modelGuess)
     .limit(200);
@@ -83,8 +81,12 @@ export default async function ModelPageView({ brand, model }: { brand: string; m
   const categoryPath = dominantCatId ? await fetchCategoryPath(dominantCatId) : [];
 
   const minPriceOf = (r: Row): number => {
-    const list = r.prices ?? [];
-    return list.length > 0 ? Math.min(...list.map(x => x.price)) : Infinity;
+    return getLowestActivePrice(r.prices) ?? Infinity;
+  };
+
+  const trustOf = (row: Row): number => {
+    const sources = getUniqueActiveSources(row.prices);
+    return sources.length > 0 ? Math.max(...sources.map((source) => sourceTrustScore(source ?? null))) : 0;
   };
 
   const legitByTitleInitial = rows.filter(r => !isAccessoryTitle(r.title));
@@ -112,8 +114,8 @@ export default async function ModelPageView({ brand, model }: { brand: string; m
     }
     existing.count += 1;
     if (mp < existing.minPrice) existing.minPrice = mp;
-    const curTrust = sourceTrust(existing.rep.source);
-    const newTrust = sourceTrust(r.source);
+    const curTrust = trustOf(existing.rep);
+    const newTrust = trustOf(r);
     if (newTrust > curTrust || (newTrust === curTrust && mp < minPriceOf(existing.rep))) {
       existing.rep = r;
       existing.image = r.image_url;

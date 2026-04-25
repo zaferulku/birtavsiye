@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { getUserFromRequest } from "../../../lib/apiAuth";
 
-const BASE_URL        = process.env.NEXTAUTH_URL || "http://localhost:3000";
+const BASE_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET;
 
 function getSupabase() {
@@ -11,45 +12,59 @@ function getSupabase() {
   );
 }
 
-const STORE_SOURCE: Record<string, string> = {
-  Trendyol:    "trendyol",
-  MediaMarkt:  "mediamarkt",
-  PttAVM:      "pttavm",
-  Hepsiburada: "hepsiburada",
-};
+const SUPPORTED_SOURCES = new Set([
+  "trendyol",
+  "hepsiburada",
+  "mediamarkt",
+  "pttavm",
+  "vatan",
+]);
 
 export async function GET(request: NextRequest) {
+  const internalSecret = request.headers.get("x-internal-secret");
+  const user = await getUserFromRequest(request);
+  if (internalSecret !== INTERNAL_SECRET && !user) {
+    return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
+  }
+
   const productId = request.nextUrl.searchParams.get("productId");
   if (!productId) return NextResponse.json({ error: "productId gerekli" }, { status: 400 });
+  if (!INTERNAL_SECRET) {
+    return NextResponse.json({ error: "INTERNAL_API_SECRET tanimli degil" }, { status: 500 });
+  }
 
   const sb = getSupabase();
 
-  const { data: product } = await sb
+  const { data: product, error: productError } = await sb
     .from("products")
     .select("id, title, category_id")
     .eq("id", productId)
     .single();
 
-  if (!product) return NextResponse.json({ error: "Ürün bulunamadı" }, { status: 404 });
+  if (productError) return NextResponse.json({ error: productError.message }, { status: 500 });
+  if (!product) return NextResponse.json({ error: "Urun bulunamadi" }, { status: 404 });
 
-  const { data: prices } = await sb
-    .from("prices")
-    .select("stores(name)")
-    .eq("product_id", productId);
+  const { data: listings, error: listingsError } = await sb
+    .from("listings")
+    .select("source")
+    .eq("product_id", productId)
+    .eq("is_active", true);
 
-  const stores = [...new Set(
-    (prices ?? []).map((p: any) => p.stores?.name as string).filter(Boolean)
+  if (listingsError) return NextResponse.json({ error: listingsError.message }, { status: 500 });
+
+  const sources = [...new Set(
+    (listings ?? [])
+      .map((listing) => listing.source)
+      .filter((source): source is string => Boolean(source) && SUPPORTED_SOURCES.has(source))
   )];
 
   await Promise.allSettled(
-    stores.map(storeName => {
-      const source = STORE_SOURCE[storeName];
-      if (!source) return Promise.resolve(null);
-      return fetch(`${BASE_URL}/api/sync`, {
+    sources.map((source) =>
+      fetch(`${BASE_URL}/api/sync`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-internal-secret": INTERNAL_SECRET ?? "",
+          "x-internal-secret": INTERNAL_SECRET,
         },
         body: JSON.stringify({
           source,
@@ -57,9 +72,9 @@ export async function GET(request: NextRequest) {
           page: 1,
           category_id: product.category_id ?? undefined,
         }),
-      });
-    })
+      })
+    )
   );
 
-  return NextResponse.json({ ok: true, stores });
+  return NextResponse.json({ ok: true, stores: sources, sources });
 }

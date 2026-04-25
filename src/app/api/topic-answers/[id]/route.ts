@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabaseServer";
 import { getUserFromRequest } from "../../../../lib/apiAuth";
+import { adjustTopicAnswerCount } from "../../../../lib/forumCounters";
 
 export const runtime = "nodejs";
 
@@ -53,17 +54,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   const { error } = await supabaseAdmin.from("topic_answers").delete().eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  const { data: t } = await supabaseAdmin
-    .from("topics")
-    .select("answer_count")
-    .eq("id", existing.topic_id)
-    .maybeSingle();
-  if (t) {
-    await supabaseAdmin
-      .from("topics")
-      .update({ answer_count: Math.max((t.answer_count || 1) - 1, 0) })
-      .eq("id", existing.topic_id);
-  }
+  await adjustTopicAnswerCount(existing.topic_id, -1);
 
   return NextResponse.json({ ok: true });
 }

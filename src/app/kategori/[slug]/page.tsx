@@ -7,20 +7,37 @@ import { fetchCategoryPath, fetchChildCategories, fetchDescendantIds } from "../
 import SortDropdown from "../../components/kategori/SortDropdown";
 import FilterModal from "../../components/kategori/FilterModal";
 import { CATEGORY_IMAGE_OVERRIDES } from "../../../lib/categoryImageOverrides";
+import { getCategoryQueryHint, resolveCategorySlug } from "../../../lib/categoryAliases";
+import {
+  getActiveListings,
+  getActiveOfferCount,
+  getLowestActivePrice,
+  getUniqueActiveSources,
+  sourceTrustScore,
+} from "../../../lib/listingSignals";
 
 export const revalidate = 60;
+
+type ListingRow = {
+  price?: number | null;
+  source?: string | null;
+  is_active?: boolean | null;
+  in_stock?: boolean | null;
+};
 
 export default async function KategoriSayfasi({ params, searchParams }: {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ marka?: string; model?: string; q?: string; siralama?: string; hafiza?: string; renk?: string; min?: string; max?: string; kaynak?: string }>;
 }) {
   const { slug } = await params;
+  const resolvedSlug = resolveCategorySlug(slug);
   const { marka, model, q, siralama, hafiza, renk, min, max, kaynak } = await searchParams;
+  const effectiveQuery = q ?? getCategoryQueryHint(slug);
 
   const { data: category } = await supabase
     .from("categories")
     .select("*")
-    .eq("slug", slug)
+    .eq("slug", resolvedSlug)
     .maybeSingle();
 
   // Paralel: ancestors + children + descendants (birbirine bağımlı değil, hepsi category.id'ye)
@@ -42,27 +59,21 @@ export default async function KategoriSayfasi({ params, searchParams }: {
     if (allDescIds.length > 0) {
       const { data: prodData } = await supabase
         .from("products")
-        .select("image_url, category_id, source")
+        .select("image_url, category_id, prices:listings(source, is_active, in_stock)")
         .in("category_id", allDescIds)
         .not("image_url", "is", null)
         .order("created_at", { ascending: false })
         .limit(2000);
-      const trust = (s: string | null): number => {
-        if (!s) return 0;
-        if (s === "mediamarkt") return 100;
-        if (s === "vatan") return 80;
-        if (s === "trendyol" || s === "hepsiburada") return 70;
-        if (s === "amazon") return 60;
-        if (s === "n11") return 50;
-        if (s === "pttavm") return 20;
-        return 40;
-      };
       // Her child için en güvenilir source'un görselini seç
       const bestPerChild = new Map<string, { url: string; trustScore: number }>();
       for (const row of prodData ?? []) {
         const childId = row.category_id ? catToChild.get(row.category_id) : null;
         if (!childId || !row.image_url) continue;
-        const t = trust(row.source as string | null);
+        const sources = (((row.prices as ListingRow[] | null) ?? [])
+          .filter((listing) => listing.is_active !== false && listing.in_stock !== false)
+          .map((listing) => listing.source)
+          .filter(Boolean)) as string[];
+        const t = sources.length > 0 ? Math.max(...sources.map(sourceTrustScore)) : 0;
         const cur = bestPerChild.get(childId);
         if (!cur || t > cur.trustScore) {
           bestPerChild.set(childId, { url: row.image_url, trustScore: t });
@@ -76,13 +87,12 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   // Variant dedup için daha geniş bir havuz çekip in-memory birleştiriyoruz
   let query = supabase
     .from("products")
-    .select("id, title, slug, brand, description, image_url, model_family, variant_storage, variant_color, source, prices(price)", { count: "exact" })
+    .select("id, title, slug, brand, description, image_url, model_family, variant_storage, variant_color, prices:listings(price, source, is_active, in_stock)", { count: "exact" })
     .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""]);
 
   if (marka) query = query.eq("brand", marka);
   if (model) query = query.eq("model_family", model);
-  if (q) query = query.ilike("title", `%${q}%`);
-  if (kaynak) query = query.eq("source", kaynak);
+  if (effectiveQuery) query = query.ilike("title", `%${effectiveQuery}%`);
 
   if (siralama === "az") query = query.order("title", { ascending: true });
   else if (siralama === "za") query = query.order("title", { ascending: false });
@@ -91,7 +101,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   // Paralel: ana ürün query + marka/model count (aynı descendantIds kullanıyor)
   const allBrandsPromise = supabase
     .from("products")
-    .select("brand, model_family, source")
+    .select("brand, model_family, prices:listings(source, is_active, in_stock)")
     .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""]);
   const mainPromise = query.limit(300);
   const [mainRes, allRes] = await Promise.all([mainPromise, allBrandsPromise]);
@@ -100,9 +110,17 @@ export default async function KategoriSayfasi({ params, searchParams }: {
 
   // Aynı (brand, model_family) birden fazla kayıt varsa sadece en ucuzunu listele
   type Row = NonNullable<typeof rawProducts>[number];
+  type ProductCard = Row & { _variantCount?: number };
+  const visibleListingsOf = (p: { prices: ListingRow[] | null | undefined }) =>
+    getActiveListings(p.prices, kaynak ?? null);
+  const allSourcesOf = (p: { prices: ListingRow[] | null | undefined }): string[] =>
+    getUniqueActiveSources(p.prices);
+  const visibleSourcesOf = (p: { prices: ListingRow[] | null | undefined }): string[] =>
+    getUniqueActiveSources(p.prices, kaynak ?? null);
+  const filteredRawProducts = (rawProducts ?? []).filter((product) => !kaynak || visibleListingsOf(product).length > 0);
   const familyGroups = new Map<string, Row[]>();
   const singletons: Row[] = [];
-  for (const p of rawProducts ?? []) {
+  for (const p of filteredRawProducts) {
     if (p.brand && p.model_family) {
       const key = `${p.brand}|${p.model_family}`;
       const arr = familyGroups.get(key) ?? [];
@@ -114,28 +132,20 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   }
 
   const minPriceOf = (p: Row): number => {
-    const list = (p.prices as { price: number }[] | undefined) ?? [];
-    return list.length > 0 ? Math.min(...list.map(x => x.price)) : Infinity;
+    return getLowestActivePrice(p.prices, kaynak ?? null) ?? Infinity;
   };
-
-  const srcTrust = (s: string | null | undefined): number => {
-    if (!s) return 0;
-    if (s === "mediamarkt") return 100;
-    if (s === "vatan") return 80;
-    if (s === "trendyol" || s === "hepsiburada") return 70;
-    if (s === "amazon") return 60;
-    if (s === "n11") return 50;
-    if (s === "pttavm") return 20;
-    return 40;
-  };
-  const dedupedRepresentatives: (Row & { _variantCount?: number })[] = [];
+  const dedupedRepresentatives: ProductCard[] = [];
   for (const arr of familyGroups.values()) {
     const sortedByPrice = arr.slice().sort((a, b) => minPriceOf(a) - minPriceOf(b));
     const withImage = arr.filter(x => (x as { image_url?: string | null }).image_url);
     const imageSource = (withImage.length > 0 ? withImage : arr)
       .slice()
-      .sort((a, b) => srcTrust((b as { source?: string }).source) - srcTrust((a as { source?: string }).source))[0];
-    const uniqSources = new Set(arr.map(x => (x as { source?: string | null }).source).filter(Boolean));
+      .sort((a, b) => {
+        const trustB = Math.max(0, ...visibleSourcesOf(b).map(sourceTrustScore));
+        const trustA = Math.max(0, ...visibleSourcesOf(a).map(sourceTrustScore));
+        return trustB - trustA;
+      })[0];
+    const uniqSources = new Set(arr.flatMap((product) => visibleSourcesOf(product)));
     const rep = {
       ...sortedByPrice[0],
       image_url: (imageSource as { image_url?: string | null })?.image_url ?? sortedByPrice[0].image_url,
@@ -144,22 +154,21 @@ export default async function KategoriSayfasi({ params, searchParams }: {
     dedupedRepresentatives.push(rep);
   }
 
-  let products = [...dedupedRepresentatives, ...singletons];
+  let products: ProductCard[] = [...dedupedRepresentatives, ...singletons];
 
   // Filtreler
   if (hafiza) {
-    products = products.filter(p => (p as any).variant_storage === hafiza);
+    products = products.filter(p => p.variant_storage === hafiza);
   }
   if (renk) {
-    products = products.filter(p => (p as any).variant_color === renk);
+    products = products.filter(p => p.variant_color === renk);
   }
   const minN = min ? Number(min) : null;
   const maxN = max ? Number(max) : null;
   if (minN != null || maxN != null) {
     products = products.filter(p => {
-      const list = ((p as any).prices ?? []) as { price: number }[];
-      if (list.length === 0) return false;
-      const mp = Math.min(...list.map(x => x.price));
+      const mp = getLowestActivePrice(p.prices, kaynak ?? null);
+      if (mp === null) return false;
       if (minN != null && mp < minN) return false;
       if (maxN != null && mp > maxN) return false;
       return true;
@@ -167,13 +176,11 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   }
 
   // Fiyata göre sıralama
-  const getMin = (p: typeof products[number]): number => {
-    const list = ((p as any).prices ?? []) as { price: number }[];
-    return list.length > 0 ? Math.min(...list.map(x => x.price)) : Infinity;
-  };
+  const getMin = (p: ProductCard): number => getLowestActivePrice(p.prices, kaynak ?? null) ?? Infinity;
   if (siralama === "ucuz") products.sort((a, b) => getMin(a) - getMin(b));
   else if (siralama === "pahali") products.sort((a, b) => getMin(b) - getMin(a));
 
+  const filteredProductCount = products.length;
   products = products.slice(0, 96);
 
   // Filtre seçenekleri (sidebar için)
@@ -191,7 +198,9 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   const brandCounts: Record<string, number> = {};
   const modelsByBrand: Record<string, Record<string, number>> = {};
   const sourceCounts: Record<string, number> = {};
-  (allProducts || []).forEach(p => {
+  const countBaseProducts = ((allProducts || []) as Array<{ brand?: string | null; model_family?: string | null; prices?: ListingRow[] | null }>)
+    .filter((product) => !kaynak || getActiveListings(product.prices, kaynak).length > 0);
+  countBaseProducts.forEach(p => {
     if (p.brand) {
       brandCounts[p.brand] = (brandCounts[p.brand] || 0) + 1;
       if (p.model_family) {
@@ -199,8 +208,11 @@ export default async function KategoriSayfasi({ params, searchParams }: {
         modelsByBrand[p.brand][p.model_family] = (modelsByBrand[p.brand][p.model_family] || 0) + 1;
       }
     }
-    const src = (p as { source?: string | null }).source;
-    if (src) sourceCounts[src] = (sourceCounts[src] || 0) + 1;
+  });
+  ((allProducts || []) as Array<{ prices?: ListingRow[] | null }>).forEach((p) => {
+    for (const src of allSourcesOf({ prices: p.prices ?? null })) {
+      sourceCounts[src] = (sourceCounts[src] || 0) + 1;
+    }
   });
   const SOURCE_LABELS: Record<string, string> = {
     mediamarkt: "MediaMarkt",
@@ -225,9 +237,9 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   const subLabel =
     rootSlug === "moda" ? "Ürün Tipi" :
     rootSlug === "ev-yasam" ? "Tip" :
-    rootSlug === "kozmetik" ? "Ürün" :
+    rootSlug === "kozmetik-bakim" ? "Ürün" :
     rootSlug === "kitap-hobi" ? "Tip" :
-    rootSlug === "evcil-hayvan" ? "Tip" :
+    rootSlug === "pet-shop" ? "Tip" :
     rootSlug === "anne-bebek" ? "Tip" :
     rootSlug === "spor-outdoor" ? "Tip" :
     rootSlug === "otomotiv" ? "Tip" :
@@ -268,7 +280,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
           </nav>
           <div className="flex items-center justify-between gap-3">
             <h1 className="font-extrabold text-lg sm:text-2xl text-gray-900 min-w-0 truncate">{category.name}</h1>
-            <span className="text-xs sm:text-sm text-gray-500 flex-shrink-0">{count || 0} ürün</span>
+            <span className="text-xs sm:text-sm text-gray-500 flex-shrink-0">{kaynak || hafiza || renk || min || max ? filteredProductCount : count || 0} ürün</span>
           </div>
         </div>
       </div>
@@ -327,7 +339,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
               {/* Sol: Filtreler sidebar */}
               <aside className="w-full md:w-60 flex-shrink-0 space-y-3">
                 {/* Aktif filtreler (varsa) clear linki */}
-                {(marka || model || q || hafiza || renk || min || max) && (
+                {(marka || model || q || hafiza || renk || min || max || kaynak) && (
                   <Link href={`/kategori/${slug}${siralama ? "?siralama=" + siralama : ""}`}>
                     <div className="text-xs text-[#E8460A] font-semibold hover:underline cursor-pointer px-1">
                       × Filtreleri temizle
@@ -337,17 +349,17 @@ export default async function KategoriSayfasi({ params, searchParams }: {
 
                 {/* Marka */}
                 {brands.length > 1 && (
-                  <div className="bg-white rounded-2xl border border-[#E8E4DF] overflow-hidden">
-                    <div className="px-4 py-3 border-b border-[#E8E4DF]">
-                      <div className="font-bold text-sm text-gray-800">Marka</div>
-                    </div>
-                    <div className="py-2 max-h-60 overflow-y-auto">
-                      <Link href={buildUrl({ marka: null })}>
-                        <div className={`flex items-center justify-between px-4 py-2 text-sm cursor-pointer transition-colors ${!marka ? "text-slate-900 font-semibold bg-slate-100" : "text-gray-700 hover:bg-gray-50"}`}>
-                          <span>Tümü</span>
-                          <span className="text-xs text-gray-400">{count || 0}</span>
-                        </div>
-                      </Link>
+            <div className="bg-white rounded-2xl border border-[#E8E4DF] overflow-hidden">
+              <div className="px-4 py-3 border-b border-[#E8E4DF]">
+                <div className="font-bold text-sm text-gray-800">Marka</div>
+              </div>
+              <div className="py-2 max-h-60 overflow-y-auto">
+                <Link href={buildUrl({ marka: null })}>
+                  <div className={`flex items-center justify-between px-4 py-2 text-sm cursor-pointer transition-colors ${!marka ? "text-slate-900 font-semibold bg-slate-100" : "text-gray-700 hover:bg-gray-50"}`}>
+                    <span>Tümü</span>
+                    <span className="text-xs text-gray-400">{kaynak ? filteredProductCount : count || 0}</span>
+                  </div>
+                </Link>
                       {brands.map((b) => {
                         const isSelected = marka === b.name;
                         return (
@@ -458,7 +470,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                       </span>
                     )}
                     {(marka || hafiza || renk) && " · "}
-                    {products?.length || 0} ürün
+                    {filteredProductCount} ürün
                   </div>
                   <div className="flex items-center gap-2">
                     <FilterModal
@@ -499,10 +511,11 @@ export default async function KategoriSayfasi({ params, searchParams }: {
               {products.map((p) => (
                 <Link href={"/urun/" + p.slug} key={p.id}>
                   {(() => {
-                    const priceList = (p as any).prices as { price: number }[] | undefined;
+                    const priceList = visibleListingsOf(p);
                     const minPrice = priceList?.length
-                      ? priceList.reduce((m: { price: number }, x: { price: number }) => x.price < m.price ? x : m, priceList[0])
+                      ? priceList.reduce((m, x) => (x.price ?? Infinity) < (m.price ?? Infinity) ? x : m, priceList[0])
                       : null;
+                    const offerCount = getActiveOfferCount(p.prices, kaynak ?? null);
                     return (
                       <div className="bg-white border border-[#E8E4DF] rounded-2xl overflow-hidden hover:shadow-lg hover:border-[#E8460A]/30 transition-all group">
                         <div className="h-44 bg-white flex items-center justify-center overflow-hidden">
@@ -514,16 +527,16 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                         <div className="p-3 pb-2">
                           <div className="text-[10px] font-bold text-[#E8460A] uppercase tracking-wider mb-0.5">{p.brand}</div>
                           <div className="text-xs font-medium text-gray-800 leading-snug line-clamp-2 min-h-[2.5rem] mb-2">
-                            {(p as any).model_family && (p as any).brand
-                              ? `${(p as any).brand} ${(p as any).model_family}`
+                            {p.model_family && p.brand
+                              ? `${p.brand} ${p.model_family}`
                               : p.title}
                           </div>
                           {minPrice ? (
                             <div className="flex items-baseline justify-between gap-2">
                               <div className="text-sm font-bold text-gray-900">{Number(minPrice.price).toLocaleString("tr-TR")} <span className="text-xs font-normal text-gray-400">₺</span></div>
-                              {(p as any)._variantCount > 1 && (
+                              {offerCount > 1 && (
                                 <span className="text-[9px] text-gray-500 font-medium bg-gray-100 rounded-full px-1.5 py-0.5">
-                                  {(p as any)._variantCount} satıcı
+                                  {p._variantCount} satıcı
                                 </span>
                               )}
                             </div>

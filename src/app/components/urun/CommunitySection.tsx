@@ -114,6 +114,10 @@ export default function CommunitySection({
   }, [fetchPosts, productId]);
 
   useEffect(() => {
+    if (hideSimilarProducts || !categoryId) {
+      return;
+    }
+
     fetch(`/api/public/products/similar?product_id=${productId}`)
       .then((result) => result.json())
       .then((response) => {
@@ -122,9 +126,13 @@ export default function CommunitySection({
         }
       })
       .catch(() => {});
-  }, [categoryId, productId]);
+  }, [categoryId, hideSimilarProducts, productId]);
 
   useEffect(() => {
+    if (hideRecommendations) {
+      return;
+    }
+
     fetch(`/api/public/topics?product_id=${productId}&limit=20`)
       .then((result) => result.json())
       .then((response) => {
@@ -133,7 +141,7 @@ export default function CommunitySection({
         }
       })
       .catch(() => {});
-  }, [productId]);
+  }, [hideRecommendations, productId]);
 
   const topLevelPosts = useMemo(
     () => posts.filter((post) => !post.parent_id),

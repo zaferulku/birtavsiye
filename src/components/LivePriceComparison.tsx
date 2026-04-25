@@ -18,7 +18,7 @@ type Props = {
 };
 
 export function LivePriceComparison({
-  productTitle: _productTitle,
+  productTitle,
   rows,
   isLoading,
   isDone,
@@ -32,7 +32,7 @@ export function LivePriceComparison({
     .sort((left, right) => left - right)[0];
 
   return (
-    <section className="live-price-comparison">
+    <section className="live-price-comparison" aria-label={`${productTitle} magaza fiyatlari`}>
       <header className="lpc-header">
         <div className="lpc-header-left">
           <h2 className="lpc-title">Mağaza Fiyatları</h2>

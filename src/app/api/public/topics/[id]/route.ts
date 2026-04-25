@@ -10,7 +10,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
 
   const { data: topic, error } = await supabaseAdmin
     .from("topics")
-    .select("*")
+    .select("id, title, body, user_id, user_name, category, votes, answer_count, created_at, product_slug, product_title, product_brand, gender_filter")
     .eq("id", id)
     .maybeSingle();
 
@@ -27,8 +27,24 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
     author_gender = p?.gender ?? null;
   }
 
+  const safeTopic = {
+    id: topic.id,
+    title: topic.title,
+    body: topic.body,
+    user_name: topic.user_name,
+    category: topic.category,
+    votes: topic.votes,
+    answer_count: topic.answer_count,
+    created_at: topic.created_at,
+    product_slug: topic.product_slug,
+    product_title: topic.product_title,
+    product_brand: topic.product_brand,
+    gender_filter: topic.gender_filter,
+    author_gender,
+  };
+
   return NextResponse.json(
-    { topic: { ...topic, author_gender } },
+    { topic: safeTopic },
     { headers: { "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60" } }
   );
 }

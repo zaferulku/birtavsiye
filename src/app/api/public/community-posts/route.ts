@@ -11,7 +11,7 @@ export async function GET(req: Request) {
 
   const { data, error } = await supabaseAdmin
     .from("community_posts")
-    .select("*")
+    .select("id, user_name, body, created_at, parent_id, votes, downvotes, rating")
     .eq("product_id", product_id)
     .order("created_at", { ascending: true });
 

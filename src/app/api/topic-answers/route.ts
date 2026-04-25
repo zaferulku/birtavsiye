@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../lib/supabaseServer";
 import { getUserFromRequest } from "../../../lib/apiAuth";
+import { adjustTopicAnswerCount } from "../../../lib/forumCounters";
 
 export const runtime = "nodejs";
 
@@ -27,11 +28,7 @@ export async function POST(req: Request) {
     .single();
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // answer_count increment
-  const { data: t } = await supabaseAdmin.from("topics").select("answer_count").eq("id", topic_id).maybeSingle();
-  if (t) {
-    await supabaseAdmin.from("topics").update({ answer_count: (t.answer_count || 0) + 1 }).eq("id", topic_id);
-  }
+  await adjustTopicAnswerCount(topic_id, 1);
 
   return NextResponse.json({ answer: data });
 }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import SessionProviderWrapper from "./components/SessionProviderWrapper";
 import { ChatBar } from "@/components/chatbot/ChatBar";
+import { ChatPanel } from "@/components/chatbot/ChatPanel";
 
 export const metadata: Metadata = {
   title: {
@@ -28,6 +29,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="antialiased">
         <SessionProviderWrapper>{children}</SessionProviderWrapper>
         <ChatBar />
+        <ChatPanel />
       </body>
     </html>
   );

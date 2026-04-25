@@ -4,6 +4,7 @@ import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
 import ProductDetailShell from "../../components/urun/ProductDetailShell";
 import type {
+  PriceInsightsPayload,
   SimilarProduct,
   RecommendationTopic,
 } from "../../components/urun/ProductDetailShell";
@@ -34,9 +35,11 @@ type ProductPageData = {
     price: number;
     source_url: string | null;
     affiliate_url: string | null;
+    last_seen: string | null;
   }>;
   stores: Record<string, StoreDefinition>;
   reviewSummary: ReviewSummary;
+  priceInsights: PriceInsightsPayload;
 };
 
 type ProductListingRow = {
@@ -45,6 +48,7 @@ type ProductListingRow = {
   source_url: string | null;
   affiliate_url: string | null;
   price: number | string;
+  last_seen: string | null;
 };
 
 type ProductRow = {
@@ -67,6 +71,12 @@ type ReviewRow = {
   body: string;
   parent_id: string | null;
   rating: number | null;
+};
+
+type PriceHistoryRow = {
+  listing_id: string;
+  price: number | string;
+  recorded_at: string;
 };
 
 type SimilarProductRow = {
@@ -181,7 +191,7 @@ async function loadProduct(slug: string): Promise<ProductPageData | null> {
       id, slug, title, brand, model_family, variant_storage, variant_color,
       description, image_url, images, specs,
       category:categories!inner(id, slug, name),
-      listings!inner(id, source, source_url, affiliate_url, price, is_active)
+      listings!inner(id, source, source_url, affiliate_url, price, last_seen, is_active)
     `)
     .eq("slug", slug)
     .eq("is_active", true)
@@ -192,8 +202,19 @@ async function loadProduct(slug: string): Promise<ProductPageData | null> {
 
   const productRow = product as unknown as ProductRow;
   const sources = [...new Set(productRow.listings.map((listing) => listing.source))];
+  const listingIds = productRow.listings.map((listing) => listing.id);
+  const historySinceIso = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
+  const priceHistoryPromise =
+    listingIds.length > 0
+      ? supabaseAdmin
+          .from("price_history")
+          .select("listing_id, price, recorded_at")
+          .in("listing_id", listingIds)
+          .gte("recorded_at", historySinceIso)
+          .order("recorded_at", { ascending: true })
+      : Promise.resolve({ data: [] as PriceHistoryRow[], error: null });
 
-  const [{ data: storesData }, { data: reviewRows }] = await Promise.all([
+  const [{ data: storesData }, { data: reviewRows }, { data: historyRows }] = await Promise.all([
     supabaseAdmin
       .from("stores")
       .select("id, slug, name, logo_url")
@@ -202,6 +223,7 @@ async function loadProduct(slug: string): Promise<ProductPageData | null> {
       .from("community_posts")
       .select("body, parent_id, rating")
       .eq("product_id", productRow.id),
+    priceHistoryPromise,
   ]);
 
   const stores: Record<string, StoreDefinition> = {};
@@ -210,6 +232,11 @@ async function loadProduct(slug: string): Promise<ProductPageData | null> {
   }
 
   const reviewSummary = computeReviewSummary(reviewRows ?? []);
+  const priceInsights = buildPriceInsights(
+    productRow.listings,
+    (historyRows as PriceHistoryRow[] | null) ?? [],
+    stores
+  );
 
   return {
     ...productRow,
@@ -219,9 +246,11 @@ async function loadProduct(slug: string): Promise<ProductPageData | null> {
       price: Number(listing.price),
       source_url: listing.source_url ?? null,
       affiliate_url: listing.affiliate_url ?? null,
+      last_seen: listing.last_seen ?? null,
     })),
     stores,
     reviewSummary,
+    priceInsights,
   };
 }
 
@@ -359,6 +388,7 @@ export default async function ProductPage({
     listing_id: listing.listing_id,
     source: listing.source,
     cached_price: listing.price,
+    last_seen: listing.last_seen ?? null,
     fallback_url: listing.affiliate_url || listing.source_url || null,
   }));
 
@@ -395,6 +425,7 @@ export default async function ProductPage({
         initialReviewSummary={product.reviewSummary}
         similarProducts={similarProducts}
         recommendations={recommendations}
+        priceInsights={product.priceInsights}
       />
 
       <Footer />
@@ -425,4 +456,208 @@ function computeReviewSummary(rows: ReviewRow[]): ReviewSummary {
 function truncate(value: string, max: number): string {
   if (value.length <= max) return value;
   return `${value.slice(0, max - 1)}…`;
+}
+
+function buildPriceInsights(
+  listings: ProductListingRow[],
+  historyRows: PriceHistoryRow[],
+  stores: Record<string, StoreDefinition>
+): PriceInsightsPayload {
+  const listingById = new Map(
+    listings.map((listing) => [listing.id, { source: listing.source }])
+  );
+
+  const currentPrices = listings
+    .map((listing) => Number(listing.price))
+    .filter((price) => Number.isFinite(price));
+
+  const currentLowPrice =
+    currentPrices.length > 0 ? Math.min(...currentPrices) : null;
+
+  const history = historyRows
+    .map((row) => {
+      const listing = listingById.get(row.listing_id);
+      const price = Number(row.price);
+      if (!listing || !Number.isFinite(price)) return null;
+
+      return {
+        recorded_at: row.recorded_at,
+        price,
+        stores: {
+          name: stores[listing.source]?.name ?? formatSourceName(listing.source),
+        },
+      };
+    })
+    .filter(
+      (
+        row
+      ): row is {
+        recorded_at: string;
+        price: number;
+        stores: { name: string };
+      } => Boolean(row)
+    );
+
+  const dailyLowMap = new Map<string, number>();
+  for (const row of history) {
+    const dayKey = row.recorded_at.slice(0, 10);
+    const currentValue = dailyLowMap.get(dayKey);
+    if (currentValue === undefined || row.price < currentValue) {
+      dailyLowMap.set(dayKey, row.price);
+    }
+  }
+
+  if (currentLowPrice !== null) {
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const existingToday = dailyLowMap.get(todayKey);
+    if (existingToday === undefined || currentLowPrice < existingToday) {
+      dailyLowMap.set(todayKey, currentLowPrice);
+    }
+  }
+
+  const cutoff30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+  const cutoff90 = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
+  const dailyLows = [...dailyLowMap.entries()].sort(([left], [right]) =>
+    left.localeCompare(right)
+  );
+  const lows30 = dailyLows
+    .filter(([date]) => date >= cutoff30)
+    .map(([, price]) => price);
+  const lows90 = dailyLows
+    .filter(([date]) => date >= cutoff90)
+    .map(([, price]) => price);
+
+  const lowest30d = lows30.length > 0 ? Math.min(...lows30) : currentLowPrice;
+  const average90d =
+    lows90.length > 0
+      ? lows90.reduce((sum, price) => sum + price, 0) / lows90.length
+      : null;
+
+  const vsLowest30dPct = toDeltaPercent(currentLowPrice, lowest30d);
+  const vsAverage90dPct = toDeltaPercent(currentLowPrice, average90d);
+  const verdict = buildPriceVerdict(
+    currentLowPrice,
+    lowest30d,
+    average90d,
+    vsLowest30dPct,
+    vsAverage90dPct
+  );
+
+  return {
+    history,
+    currentLowPrice,
+    lowest30d,
+    average90d,
+    vsLowest30dPct,
+    vsAverage90dPct,
+    verdictTitle: verdict.title,
+    verdictBody: verdict.body,
+    verdictTone: verdict.tone,
+  };
+}
+
+function buildPriceVerdict(
+  currentLowPrice: number | null,
+  lowest30d: number | null,
+  average90d: number | null,
+  vsLowest30dPct: number | null,
+  vsAverage90dPct: number | null
+): {
+  title: string;
+  body: string;
+  tone: "good" | "neutral" | "watch";
+} {
+  if (currentLowPrice === null) {
+    return {
+      title: "Teklif bekleniyor",
+      body: "Bu urun icin aktif fiyat teklifi henuz gorunmuyor.",
+      tone: "neutral",
+    };
+  }
+
+  if (lowest30d === null && average90d === null) {
+    return {
+      title: "Gecmis yeni olusuyor",
+      body: "Yeterli fiyat gecmisi birikmedigi icin simdilik bugunku en dusuk teklif takip edilmeli.",
+      tone: "neutral",
+    };
+  }
+
+  if (vsLowest30dPct !== null && vsLowest30dPct <= 2) {
+    return {
+      title: "Guclu fiyat seviyesi",
+      body: "Guncel en dusuk fiyat son 30 gunun dip seviyesine cok yakin. Acil ihtiyac varsa guvenle takip edilebilecek bir bantta.",
+      tone: "good",
+    };
+  }
+
+  if (vsAverage90dPct !== null && vsAverage90dPct <= -5) {
+    return {
+      title: "Ortalamanin altinda",
+      body: "Guncel teklif son 90 gun ortalamasinin belirgin altinda. Kampanya veya kupon detayi varsa firsat guclenebilir.",
+      tone: "good",
+    };
+  }
+
+  if (vsLowest30dPct !== null && vsLowest30dPct >= 12) {
+    return {
+      title: "Biraz yuksek gorunuyor",
+      body: "Guncel fiyat son 30 gun dip seviyesinin belirgin ustunde. Aciliyet yoksa alarm kurup izlemek daha mantikli olabilir.",
+      tone: "watch",
+    };
+  }
+
+  if (vsAverage90dPct !== null && vsAverage90dPct >= 8) {
+    return {
+      title: "Takip etmeye deger",
+      body: "Bu teklif kendi ortalamasina gore pahaliya yakin. Bir sonraki fiyat dususunu beklemek tasarruf saglayabilir.",
+      tone: "watch",
+    };
+  }
+
+  return {
+    title: "Normal fiyat bandi",
+    body: "Guncel teklif son donemin normal fiyat araliginda. Magaza guven sinyalleri ve kargo toplami ile birlikte karar vermek en dogrusu olur.",
+    tone: "neutral",
+  };
+}
+
+function toDeltaPercent(
+  currentValue: number | null,
+  referenceValue: number | null
+): number | null {
+  if (
+    currentValue === null ||
+    referenceValue === null ||
+    !Number.isFinite(currentValue) ||
+    !Number.isFinite(referenceValue) ||
+    referenceValue <= 0
+  ) {
+    return null;
+  }
+
+  return ((currentValue - referenceValue) / referenceValue) * 100;
+}
+
+function formatSourceName(source: string): string {
+  if (!source) return "Magaza";
+
+  const predefined: Record<string, string> = {
+    amazon: "Amazon TR",
+    hepsiburada: "Hepsiburada",
+    mediamarkt: "MediaMarkt",
+    n11: "n11",
+    pttavm: "PttAVM",
+    trendyol: "Trendyol",
+    vatan: "Vatan Bilgisayar",
+  };
+
+  if (predefined[source]) return predefined[source];
+
+  return source.charAt(0).toUpperCase() + source.slice(1);
 }

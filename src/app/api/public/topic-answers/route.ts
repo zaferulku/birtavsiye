@@ -18,7 +18,7 @@ export async function GET(req: Request) {
 
   const { data, error } = await supabaseAdmin
     .from("topic_answers")
-    .select("id, topic_id, user_id, user_name, body, votes, gender, created_at, parent_id")
+    .select("id, topic_id, user_name, body, votes, gender, created_at, parent_id")
     .in("topic_id", ids)
     .order("votes", { ascending: false });
 

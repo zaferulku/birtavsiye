@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabaseServer";
+import {
+  getActiveOfferCount,
+  getActiveListings,
+  getLowestActivePrice,
+  getUniqueActiveSources,
+} from "../../../../lib/listingSignals";
 
 export const runtime = "nodejs";
 export const revalidate = 60;
@@ -43,7 +49,7 @@ export async function GET(req: Request) {
 
   let query = supabaseAdmin
     .from("products")
-    .select("id, title, slug, brand, image_url, category_id, model_family, variant_storage, variant_color, prices:listings(price, is_active, in_stock)")
+    .select("id, title, slug, brand, image_url, category_id, model_family, variant_storage, variant_color, prices:listings(price, source, is_active, in_stock)")
     .range(offset, offset + limit - 1)
     .order("created_at", { ascending: false });
 
@@ -56,9 +62,18 @@ export async function GET(req: Request) {
 
   const products = (data ?? []).map((product) => ({
     ...product,
-    prices: ((product.prices as Array<{ price: number | string; is_active?: boolean | null; in_stock?: boolean | null }> | null) ?? [])
-      .filter((listing) => listing.is_active !== false && listing.in_stock !== false)
-      .map((listing) => ({ price: Number(listing.price) })),
+    prices: getActiveListings(
+      ((product.prices as Array<{ price: number | string; source?: string | null; is_active?: boolean | null; in_stock?: boolean | null }> | null) ?? [])
+    ).map((listing) => ({ price: listing.price, source: listing.source })),
+    min_price: getLowestActivePrice(
+      (product.prices as Array<{ price: number | string; source?: string | null; is_active?: boolean | null; in_stock?: boolean | null }> | null) ?? []
+    ),
+    offer_count: getActiveOfferCount(
+      (product.prices as Array<{ price: number | string; source?: string | null; is_active?: boolean | null; in_stock?: boolean | null }> | null) ?? []
+    ),
+    sources: getUniqueActiveSources(
+      (product.prices as Array<{ price: number | string; source?: string | null; is_active?: boolean | null; in_stock?: boolean | null }> | null) ?? []
+    ),
   }));
 
   return NextResponse.json(

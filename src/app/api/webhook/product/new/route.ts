@@ -23,7 +23,7 @@ export async function POST(req: Request) {
   // Fetch product + current category slug
   const { data: product } = await supabaseAdmin
     .from("products")
-    .select("id, title, slug, brand, image_url, specs, price:prices(price), category_id, categories(slug)")
+    .select("id, title, slug, brand, image_url, specs, category_id, categories(slug)")
     .eq("id", product_id)
     .single();
 

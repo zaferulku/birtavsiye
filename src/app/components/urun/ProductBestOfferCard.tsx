@@ -1,7 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
-import { formatTL, pickBestOffer, type MergedOfferRow } from "./offerUtils";
+import {
+  formatTL,
+  pickBestOffer,
+  sourceTrustScore,
+  type MergedOfferRow,
+} from "./offerUtils";
 
 type Props = {
   rows: MergedOfferRow[];
@@ -11,6 +16,7 @@ type Props = {
 
 export default function ProductBestOfferCard({ rows, isLoading, refresh }: Props) {
   const bestOffer = useMemo(() => pickBestOffer(rows), [rows]);
+  const trust = useMemo(() => buildOfferTrust(rows, bestOffer), [rows, bestOffer]);
 
   if (!bestOffer) {
     return (
@@ -90,6 +96,14 @@ export default function ProductBestOfferCard({ rows, isLoading, refresh }: Props
             {isOutOfStock ? "Stokta yok" : "Aktif teklif"}
           </dd>
         </div>
+        <div className="flex items-start justify-between gap-3">
+          <dt className="text-[#8C837B]">Guven sinyali</dt>
+          <dd className={`text-right font-semibold ${trust.colorClass}`}>{trust.label}</dd>
+        </div>
+        <div className="flex items-start justify-between gap-3">
+          <dt className="text-[#8C837B]">Son gorulme</dt>
+          <dd className="text-right font-semibold text-[#171412]">{trust.freshnessLabel}</dd>
+        </div>
         {data?.shipping_price !== null && data?.shipping_price !== undefined && (
           <div className="flex items-start justify-between gap-3">
             <dt className="text-[#8C837B]">Kargo</dt>
@@ -115,6 +129,13 @@ export default function ProductBestOfferCard({ rows, isLoading, refresh }: Props
         </div>
       )}
 
+      <div className="mt-4 rounded-xl border border-[#F0E5DD] bg-[#FAF7F4] px-4 py-3">
+        <div className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8C837B]">
+          Guven notu aciklamasi
+        </div>
+        <p className="mt-2 text-sm leading-6 text-[#5F5952]">{trust.summary}</p>
+      </div>
+
       {destinationUrl && !isOutOfStock ? (
         <a
           href={destinationUrl}
@@ -131,4 +152,96 @@ export default function ProductBestOfferCard({ rows, isLoading, refresh }: Props
       )}
     </aside>
   );
+}
+
+function buildOfferTrust(rows: MergedOfferRow[], bestOffer: MergedOfferRow | null) {
+  if (!bestOffer) {
+    return {
+      score: 0,
+      label: "Yetersiz veri",
+      colorClass: "text-[#8C837B]",
+      freshnessLabel: "Bilinmiyor",
+      summary: "Henuz yeterli kaynak veya tazelik sinyali yok.",
+    };
+  }
+
+  const uniqueSourceCount = new Set(rows.map((row) => row.source)).size;
+  const baseScore = sourceTrustScore(bestOffer.source);
+  const freshnessBonus = freshnessBonusFromIso(bestOffer.last_seen);
+  const shippingBonus =
+    bestOffer.state.data?.shipping_price != null || bestOffer.state.data?.free_shipping ? 6 : 0;
+  const sellerBonus = bestOffer.state.data?.seller_name ? 4 : 0;
+  const linkBonus = (bestOffer.state.data?.affiliate_url ?? bestOffer.fallback_url) ? 4 : 0;
+  const diversityBonus = uniqueSourceCount >= 4 ? 10 : uniqueSourceCount >= 2 ? 5 : 0;
+
+  const score = Math.max(
+    0,
+    Math.min(100, baseScore + freshnessBonus + shippingBonus + sellerBonus + linkBonus + diversityBonus)
+  );
+
+  const freshnessLabel = formatFreshness(bestOffer.last_seen);
+
+  if (score >= 85) {
+    return {
+      score,
+      label: "Guclu",
+      colorClass: "text-[#15803D]",
+      freshnessLabel,
+      summary:
+        "Kaynak kalitesi yuksek, teklif yeni gorulmus ve temel alisveris sinyalleri net. Bu not resmi magaza puani degil; kaynak tipi ve veri tazeliginden uretilir.",
+    };
+  }
+
+  if (score >= 65) {
+    return {
+      score,
+      label: "Iyi",
+      colorClass: "text-[#1D4ED8]",
+      freshnessLabel,
+      summary:
+        "Teklif kullanisli gorunuyor ama satin almadan once magaza sayfasinda teslimat, satici ve iade detaylarini tekrar kontrol etmek mantikli olur.",
+    };
+  }
+
+  if (score >= 45) {
+    return {
+      score,
+      label: "Dikkatli bak",
+      colorClass: "text-[#B45309]",
+      freshnessLabel,
+      summary:
+        "Kaynak veya veri tazeligi orta seviyede. Fiyat iyi olsa bile kargo ve satici ayrintilarini acip dogrulamak daha guvenli olur.",
+    };
+  }
+
+  return {
+    score,
+    label: "Temkinli",
+    colorClass: "text-[#B42318]",
+    freshnessLabel,
+    summary:
+      "Bu sinyal zayif. Teklif eski olabilir ya da kaynak guvenilirligi dusuk olabilir. Satin almadan once ayni urunun diger magaza tekliflerini de karsilastir.",
+  };
+}
+
+function freshnessBonusFromIso(value: string | null): number {
+  if (!value) return 0;
+  const diffHours = (Date.now() - new Date(value).getTime()) / (1000 * 60 * 60);
+  if (diffHours <= 6) return 10;
+  if (diffHours <= 24) return 6;
+  if (diffHours <= 48) return 3;
+  return 0;
+}
+
+function formatFreshness(value: string | null): string {
+  if (!value) return "Bilinmiyor";
+
+  const diffMs = Date.now() - new Date(value).getTime();
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+
+  if (diffHours < 1) return "1 saatten yeni";
+  if (diffHours < 24) return `${diffHours} saat once`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays} gun once`;
 }

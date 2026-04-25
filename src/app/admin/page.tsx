@@ -5,6 +5,59 @@ import { useRouter } from "next/navigation";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 
+type PriceHealthListing = {
+  id: string;
+  source: string | null;
+  price: number | null;
+  last_seen: string | null;
+  source_url: string | null;
+  source_product_id: string | null;
+  is_active: boolean | null;
+  in_stock: boolean | null;
+};
+
+type PriceHealthAlert = {
+  key:
+    | "history_stalled"
+    | "stale_active_listings"
+    | "missing_identity_listings"
+    | "invalid_price_listings"
+    | "unsupported_active_sources";
+  severity: "warn" | "error";
+  count: number;
+  title: string;
+  description: string;
+  action: string;
+};
+
+type PriceHealthResponse = {
+  status: "ok" | "warn" | "error";
+  generated_at: string;
+  stale_after_hours: number;
+  summary: {
+    active_listings: number;
+    stale_active_listings: number;
+    missing_identity_listings: number;
+    invalid_price_listings: number;
+    unsupported_active_sources: number;
+    history_rows_last_24h: number;
+  };
+  alerts: PriceHealthAlert[];
+  product: null | {
+    id: string;
+    title: string;
+    slug: string;
+    brand: string | null;
+    total_listings: number;
+    active_listings: number;
+    stale_active_listings: number;
+    missing_identity_listings: number;
+    invalid_price_listings: number;
+    unsupported_active_sources: number;
+    listings: PriceHealthListing[];
+  };
+};
+
 export default function AdminPanel() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -27,6 +80,9 @@ export default function AdminPanel() {
   const [priceSaving, setPriceSaving] = useState(false);
   const [priceSuccess, setPriceSuccess] = useState("");
   const [priceError, setPriceError] = useState("");
+  const [priceHealth, setPriceHealth] = useState<PriceHealthResponse | null>(null);
+  const [priceHealthLoading, setPriceHealthLoading] = useState(false);
+  const [priceHealthError, setPriceHealthError] = useState("");
 
   // CSV import
   const [csvText, setCsvText] = useState("");
@@ -58,15 +114,23 @@ export default function AdminPanel() {
   }, []);
 
   useEffect(() => {
+    if (!loading && !priceHealth && !priceHealthLoading) {
+      loadPriceHealth(priceProductId || undefined);
+    }
+  }, [loading, priceHealth, priceHealthLoading, priceProductId]);
+
+  useEffect(() => {
     if (activeTab === "fiyatler") {
       loadStoresAndPrices();
     }
   }, [activeTab]);
 
   useEffect(() => {
+    if (activeTab !== "fiyatler") return;
     if (priceProductId) loadProductPrices(priceProductId);
     else setPriceProductPrices([]);
-  }, [priceProductId]);
+    loadPriceHealth(priceProductId || undefined);
+  }, [priceProductId, activeTab]);
 
   const getAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -115,6 +179,27 @@ export default function AdminPanel() {
     setPriceProductPrices(res?.prices || []);
   };
 
+  const loadPriceHealth = async (productId?: string) => {
+    const auth = await getAuth();
+    if (!auth) return;
+    setPriceHealthLoading(true);
+    setPriceHealthError("");
+    try {
+      const suffix = productId ? `?product_id=${encodeURIComponent(productId)}` : "";
+      const response = await fetch(`/api/admin/prices/health${suffix}`, { headers: auth });
+      const json = await response.json().catch(() => null);
+      if (!response.ok) {
+        setPriceHealthError(json?.error || "Saglik ozeti yuklenemedi");
+        return;
+      }
+      setPriceHealth(json as PriceHealthResponse);
+    } catch {
+      setPriceHealthError("Saglik ozeti yuklenemedi");
+    } finally {
+      setPriceHealthLoading(false);
+    }
+  };
+
   const handleAddPrice = async () => {
     if (!priceProductId || !storeName.trim() || !priceValue) {
       setPriceError("Ürün, mağaza adı ve fiyat zorunlu!");
@@ -159,6 +244,7 @@ export default function AdminPanel() {
     if (!auth) return;
     await fetch(`/api/admin/prices?id=${priceId}`, { method: "DELETE", headers: auth });
     setPriceProductPrices(prev => prev.filter(p => p.id !== priceId));
+    loadPriceHealth(priceProductId || undefined);
   };
 
   const handleTitleChange = (val: string) => {
@@ -352,6 +438,11 @@ export default function AdminPanel() {
     loadProducts();
   };
 
+  const formatHealthTime = (value?: string | null) => {
+    if (!value) return "Henuz gorulmedi";
+    return new Date(value).toLocaleString("tr-TR");
+  };
+
   if (loading) return (
     <main><Header />
       <div className="max-w-6xl mx-auto px-6 py-20 text-center text-gray-400">Yükleniyor...</div>
@@ -372,7 +463,20 @@ export default function AdminPanel() {
               className={`px-5 py-3 text-sm font-medium border-b-2 transition-all ${
                 activeTab === t ? "border-[#E8460A] text-[#E8460A]" : "border-transparent text-gray-500"
               }`}>
-              {label}
+              <span className="inline-flex items-center gap-2">
+                <span>{label}</span>
+                {t === "fiyatler" && priceHealth && priceHealth.status !== "ok" && (
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                      priceHealth.status === "error"
+                        ? "bg-red-100 text-red-700"
+                        : "bg-amber-100 text-amber-700"
+                    }`}
+                  >
+                    {priceHealth.alerts.length || "!"}
+                  </span>
+                )}
+              </span>
             </button>
           ))}
         </div>
@@ -609,6 +713,158 @@ export default function AdminPanel() {
 
         {activeTab === "fiyatler" && (
           <div className="space-y-5">
+            <div className={`border rounded-2xl p-5 ${
+              priceHealth?.status === "error"
+                ? "bg-red-50 border-red-200"
+                : priceHealth?.status === "warn"
+                  ? "bg-amber-50 border-amber-200"
+                  : "bg-green-50 border-green-200"
+            }`}>
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <div>
+                  <h2 className="font-bold text-base text-gray-900">Fiyat Akışı Sağlık Özeti</h2>
+                  <div className="text-xs text-gray-600 mt-1">
+                    Aktif listing, stale veri ve eksik kimlik alanlarını kontrol eder.
+                    {priceHealth ? ` Son tarama: ${formatHealthTime(priceHealth.generated_at)}.` : ""}
+                  </div>
+                </div>
+                <button
+                  onClick={() => loadPriceHealth(priceProductId || undefined)}
+                  disabled={priceHealthLoading}
+                  className="text-xs font-semibold border border-gray-300 bg-white rounded-lg px-3 py-2 hover:border-[#E8460A] hover:text-[#E8460A] transition-all disabled:opacity-50"
+                >
+                  {priceHealthLoading ? "Yenileniyor..." : "Yenile"}
+                </button>
+              </div>
+
+              {priceHealthError && (
+                <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl mb-4">
+                  {priceHealthError}
+                </div>
+              )}
+
+              {priceHealth ? (
+                <>
+                  <div className="space-y-2 mb-4">
+                    {priceHealth.alerts.length > 0 ? (
+                      priceHealth.alerts.map((alert) => (
+                        <div
+                          key={alert.key}
+                          className={`rounded-xl border px-4 py-3 ${
+                            alert.severity === "error"
+                              ? "bg-red-50 border-red-200"
+                              : "bg-amber-50 border-amber-200"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <div className={`text-sm font-semibold ${
+                                alert.severity === "error" ? "text-red-700" : "text-amber-800"
+                              }`}>
+                                {alert.title}
+                              </div>
+                              <div className="text-xs text-gray-700 mt-1">{alert.description}</div>
+                              <div className="text-xs text-gray-600 mt-2">Aksiyon: {alert.action}</div>
+                            </div>
+                            <div className={`text-xs font-bold whitespace-nowrap ${
+                              alert.severity === "error" ? "text-red-700" : "text-amber-700"
+                            }`}>
+                              {alert.count > 0 ? `${alert.count} kayit` : "Kontrol et"}
+                            </div>
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="bg-white/80 border border-white rounded-xl px-4 py-3 text-sm text-green-700">
+                        Su an fiyat akisini bloke eden aktif bir uyari yok.
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                    {[
+                      ["Aktif Listing", priceHealth.summary.active_listings, "text-gray-900"],
+                      ["Stale Aktif", priceHealth.summary.stale_active_listings, "text-amber-700"],
+                      ["Kimlik Eksik", priceHealth.summary.missing_identity_listings, "text-amber-700"],
+                      ["Hatalı Fiyat", priceHealth.summary.invalid_price_listings, "text-red-600"],
+                      ["Desteksiz Kaynak", priceHealth.summary.unsupported_active_sources, "text-amber-700"],
+                      ["24s History", priceHealth.summary.history_rows_last_24h, "text-gray-900"],
+                    ].map(([label, value, tone]) => (
+                      <div key={String(label)} className="bg-white/80 border border-white rounded-xl p-4">
+                        <div className="text-xs uppercase tracking-wide text-gray-500">{label}</div>
+                        <div className={`text-2xl font-bold mt-2 ${String(tone)}`}>{value}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {priceHealth.product && (
+                    <div className="mt-4 bg-white/80 border border-gray-200 rounded-xl p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <div className="text-sm font-semibold text-gray-900">{priceHealth.product.title}</div>
+                          <div className="text-xs text-gray-500">
+                            {(priceHealth.product.brand || "Marka yok")} · {priceHealth.product.slug}
+                          </div>
+                        </div>
+                        <a
+                          href={"/urun/" + priceHealth.product.slug}
+                          target="_blank"
+                          className="text-xs text-[#E8460A] border border-[#E8460A] rounded-lg px-2 py-1 hover:bg-orange-50 transition-all"
+                        >
+                          Ürünü Aç
+                        </a>
+                      </div>
+
+                      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mt-4">
+                        {[
+                          ["Toplam", priceHealth.product.total_listings],
+                          ["Aktif", priceHealth.product.active_listings],
+                          ["Stale", priceHealth.product.stale_active_listings],
+                          ["Kimlik Eksik", priceHealth.product.missing_identity_listings],
+                          ["Hatalı Fiyat", priceHealth.product.invalid_price_listings],
+                        ].map(([label, value]) => (
+                          <div key={String(label)} className="border border-gray-100 rounded-xl p-3 bg-white">
+                            <div className="text-xs text-gray-500">{label}</div>
+                            <div className="text-lg font-bold text-gray-900 mt-1">{value}</div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {priceHealth.product.listings.length > 0 && (
+                        <div className="mt-4 border border-gray-100 rounded-xl overflow-hidden">
+                          {priceHealth.product.listings.map((listing, i) => (
+                            <div
+                              key={listing.id}
+                              className={`flex items-center gap-3 px-4 py-3 border-b border-gray-50 last:border-0 ${
+                                i % 2 === 0 ? "bg-white" : "bg-gray-50/40"
+                              }`}
+                            >
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium text-gray-800">{listing.source || "Kaynak yok"}</div>
+                                <div className="text-xs text-gray-400 truncate">
+                                  {listing.source_url || listing.source_product_id || "Kimlik bilgisi eksik"}
+                                </div>
+                              </div>
+                              <div className="text-xs text-gray-500 whitespace-nowrap">
+                                {listing.price != null ? `${Number(listing.price).toLocaleString("tr-TR")} TL` : "Fiyat yok"}
+                              </div>
+                              <div className="text-xs text-gray-400 whitespace-nowrap">
+                                {formatHealthTime(listing.last_seen)}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-sm text-gray-500">
+                  {priceHealthLoading ? "Saglik ozeti yukleniyor..." : "Henuz saglik verisi yok."}
+                </div>
+              )}
+            </div>
+
             {/* Ürün Seç */}
             <div className="bg-white border border-gray-200 rounded-2xl p-5">
               <h2 className="font-bold text-base mb-3">Ürün Seç</h2>

@@ -8,6 +8,7 @@ import { fetchDescendantIds, modelFamilyToSlug } from "../../lib/categoryTree";
 import type { Metadata } from "next";
 import KategoriSayfasi from "../kategori/[slug]/page";
 import ModelPageView from "../components/marka/ModelPageView";
+import { resolveCategorySlug } from "../../lib/categoryAliases";
 
 export const revalidate = 120;
 
@@ -31,7 +32,7 @@ async function resolveSegments(segments: string[]) {
   let idx = 0;
 
   while (idx < segments.length) {
-    const seg = segments[idx];
+    const seg = resolveCategorySlug(segments[idx]);
     const cat = bySlug.get(seg);
     if (!cat) break;
     if (categories.length > 0) {
@@ -94,13 +95,21 @@ export default async function Page({ params, searchParams }: PageProps) {
 
     const { data: productsData } = await supabase
       .from("products")
-      .select("id, slug, brand, model_family, image_url, category_id, source, prices(price)")
+      .select("id, slug, brand, model_family, image_url, category_id, prices:listings(price, is_active, in_stock)")
       .ilike("brand", brandGuess)
       .in("category_id", descendantIds.length > 0 ? descendantIds : [leafCategory?.id ?? ""])
       .not("model_family", "is", null)
       .limit(1000);
 
-    type Row = { id: string; slug: string; brand: string | null; model_family: string | null; image_url: string | null; category_id: string | null; source: string | null; prices: { price: number }[] | null };
+    type Row = {
+      id: string;
+      slug: string;
+      brand: string | null;
+      model_family: string | null;
+      image_url: string | null;
+      category_id: string | null;
+      prices: { price: number; is_active?: boolean | null; in_stock?: boolean | null }[] | null;
+    };
     const rows = (productsData ?? []) as unknown as Row[];
 
     if (rows.length === 0) {
@@ -124,7 +133,7 @@ export default async function Page({ params, searchParams }: PageProps) {
     for (const p of rows) {
       const mf = p.model_family!;
       if (GENERIC_EXCLUDE.test(mf)) continue;
-      const priceList = p.prices ?? [];
+      const priceList = (p.prices ?? []).filter((listing) => listing.is_active !== false && listing.in_stock !== false);
       const minP = priceList.length > 0 ? Math.min(...priceList.map(x => x.price)) : Infinity;
       const existing = groups.get(mf);
       if (!existing) {

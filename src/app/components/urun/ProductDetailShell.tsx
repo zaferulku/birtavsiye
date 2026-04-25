@@ -7,6 +7,7 @@ import { LivePriceComparison } from "@/components/LivePriceComparison";
 import CommunitySection, { type ReviewSummary } from "./CommunitySection";
 import ProductBestOfferCard from "./ProductBestOfferCard";
 import ProductGallery from "./ProductGallery";
+import PriceInsightsPanel from "./PriceInsightsPanel";
 import SpecsTable from "./SpecsTable";
 import {
   formatTL,
@@ -55,6 +56,22 @@ export type RecommendationTopic = {
   created_at: string;
 };
 
+export type PriceInsightsPayload = {
+  history: Array<{
+    recorded_at: string;
+    price: number;
+    stores: { name: string };
+  }>;
+  currentLowPrice: number | null;
+  lowest30d: number | null;
+  average90d: number | null;
+  vsLowest30dPct: number | null;
+  vsAverage90dPct: number | null;
+  verdictTitle: string;
+  verdictBody: string;
+  verdictTone: "good" | "neutral" | "watch";
+};
+
 type TabId = "yorumlar" | "ozellikler" | "benzer" | "tavsiyeler";
 
 type Props = {
@@ -64,6 +81,7 @@ type Props = {
   initialReviewSummary: ReviewSummary;
   similarProducts?: SimilarProduct[];
   recommendations?: RecommendationTopic[];
+  priceInsights?: PriceInsightsPayload;
 };
 
 export default function ProductDetailShell({
@@ -73,6 +91,7 @@ export default function ProductDetailShell({
   initialReviewSummary,
   similarProducts = [],
   recommendations = [],
+  priceInsights,
 }: Props) {
   const [reviewSummary, setReviewSummary] = useState(initialReviewSummary);
   const [activeTab, setActiveTab] = useState<TabId>("yorumlar");
@@ -100,6 +119,19 @@ export default function ProductDetailShell({
     product.category ? { label: "Kategori", value: product.category.name } : null,
   ].filter(Boolean) as Array<{ label: string; value: string }>;
 
+  const openCommentsTab = () => {
+    setActiveTab("yorumlar");
+    window.setTimeout(() => {
+      scrollToId("urun-yorumlari");
+    }, 0);
+  };
+
+  const openPriceSection = () => {
+    window.setTimeout(() => {
+      scrollToId("magaza-fiyatlari");
+    }, 0);
+  };
+
   return (
     <article className="mx-auto flex w-full max-w-[1180px] flex-col gap-6 px-4 py-6">
       <nav className="flex flex-wrap items-center gap-2 text-xs text-[#8B847C]" aria-label="Navigasyon">
@@ -122,34 +154,22 @@ export default function ProductDetailShell({
         <div className="space-y-4">
           <ProductGallery imageUrl={primaryImage} />
 
-          <div className="rounded-[22px] border border-[#E8E4DF] bg-white p-4 shadow-sm">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <h2 className="text-base font-bold text-[#171412]">Urun Yorumlari</h2>
-                <p className="mt-1 text-sm text-[#6D655E]">
-                  Kullanici puanlari ve tavsiye forumunda urune etiketlenen paylasimlar.
-                </p>
-              </div>
-              <div className="rounded-full bg-[#FFF3EE] px-3 py-1 text-sm font-semibold text-[#E8460A]">
-                {reviewSummary.ratingCount > 0 ? reviewSummary.average.toFixed(1) : "—"}
-              </div>
-            </div>
-
-            <div className="mt-4 flex items-center gap-2">
-              <Stars rating={reviewSummary.average} />
-              <span className="text-sm text-[#4D4741]">
-                {reviewSummary.ratingCount} puanlama · {reviewSummary.commentCount} yorum
-              </span>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => scrollToId("urun-yorumlari")}
-              className="mt-4 w-full rounded-xl border border-[#E8E4DF] px-4 py-3 text-sm font-semibold text-[#171412] transition hover:border-[#E8460A] hover:text-[#E8460A]"
-            >
-              Yorumlara git
-            </button>
-          </div>
+          {priceInsights && (
+            <PriceInsightsPanel
+              history={priceInsights.history}
+              currentLowPrice={priceInsights.currentLowPrice}
+              lowest30d={priceInsights.lowest30d}
+              average90d={priceInsights.average90d}
+              vsLowest30dPct={priceInsights.vsLowest30dPct}
+              vsAverage90dPct={priceInsights.vsAverage90dPct}
+              verdictTitle={priceInsights.verdictTitle}
+              verdictBody={priceInsights.verdictBody}
+              verdictTone={priceInsights.verdictTone}
+              variant="compact"
+              primaryActionLabel="Tekliflere git"
+              onPrimaryAction={openPriceSection}
+            />
+          )}
         </div>
 
         <div className="space-y-5">
@@ -166,13 +186,13 @@ export default function ProductDetailShell({
 
             <button
               type="button"
-              onClick={() => scrollToId("urun-yorumlari")}
+              onClick={openCommentsTab}
               className="mt-3 inline-flex items-center gap-3 rounded-full border border-[#EFE7DF] bg-white px-3 py-2 text-sm text-[#5E5750] transition hover:border-[#E8460A] hover:text-[#E8460A]"
             >
               <Stars rating={reviewSummary.average} />
               {reviewSummary.ratingCount > 0 ? (
                 <span>
-                  {reviewSummary.average.toFixed(1)} / 5 · {reviewSummary.ratingCount} degerlendirme
+                  {reviewSummary.average.toFixed(1)} / 5 - {reviewSummary.ratingCount} degerlendirme
                 </span>
               ) : (
                 <span>Ilk degerlendirmeyi yap</span>
@@ -186,7 +206,7 @@ export default function ProductDetailShell({
                 En dusuk fiyat
               </div>
               <div className="mt-1 text-xl font-black text-[#E8460A]">
-                {lowestKnownPrice !== null ? formatTL(lowestKnownPrice) : "—"}
+                {lowestKnownPrice !== null ? formatTL(lowestKnownPrice) : "-"}
               </div>
             </div>
             <div className="rounded-2xl border border-[#EFE7DF] bg-white p-4">
@@ -224,20 +244,22 @@ export default function ProductDetailShell({
         <ProductBestOfferCard rows={offerRows} isLoading={isLoading} refresh={refresh} />
       </div>
 
-      <LivePriceComparison
-        productTitle={product.title}
-        rows={offerRows}
-        isLoading={isLoading}
-        isDone={isDone}
-        successful={successful}
-        failed={failed}
-        refresh={refresh}
-      />
+      <div id="magaza-fiyatlari">
+        <LivePriceComparison
+          productTitle={product.title}
+          rows={offerRows}
+          isLoading={isLoading}
+          isDone={isDone}
+          successful={successful}
+          failed={failed}
+          refresh={refresh}
+        />
+      </div>
 
       <section className="rounded-[22px] border border-[#E8E4DF] bg-white shadow-sm" id="urun-sekmeler">
         <div
           role="tablist"
-          aria-label="Ürün detay sekmeleri"
+          aria-label="Urun detay sekmeleri"
           className="flex flex-wrap gap-1 border-b border-[#EFE7DF] px-3 pt-3"
         >
           <TabButton
@@ -248,13 +270,13 @@ export default function ProductDetailShell({
           />
           <TabButton
             id="ozellikler"
-            label="Teknik Özellikler"
+            label="Teknik Ozellikler"
             active={activeTab === "ozellikler"}
             onSelect={setActiveTab}
           />
           <TabButton
             id="benzer"
-            label={`Benzer Ürünler${similarProducts.length > 0 ? ` (${similarProducts.length})` : ""}`}
+            label={`Benzer Urunler${similarProducts.length > 0 ? ` (${similarProducts.length})` : ""}`}
             active={activeTab === "benzer"}
             onSelect={setActiveTab}
           />
@@ -268,7 +290,7 @@ export default function ProductDetailShell({
 
         <div className="p-4 sm:p-6">
           {activeTab === "yorumlar" && (
-            <div id="urun-yorumlari" role="tabpanel" aria-labelledby="tab-yorumlar">
+            <div id="panel-yorumlar" role="tabpanel" aria-labelledby="tab-yorumlar">
               <CommunitySection
                 productId={product.id}
                 productTitle={product.title}
@@ -281,23 +303,23 @@ export default function ProductDetailShell({
           )}
 
           {activeTab === "ozellikler" && (
-            <div id="urun-teknik-ozellikler" role="tabpanel" aria-labelledby="tab-ozellikler">
+            <div id="panel-ozellikler" role="tabpanel" aria-labelledby="tab-ozellikler">
               {product.specs && Object.keys(product.specs).length > 0 ? (
                 <SpecsTable specs={product.specs} />
               ) : (
-                <p className="text-sm text-[#6D655E]">Bu ürün için teknik özellik bilgisi bulunmuyor.</p>
+                <p className="text-sm text-[#6D655E]">Bu urun icin teknik ozellik bilgisi bulunmuyor.</p>
               )}
             </div>
           )}
 
           {activeTab === "benzer" && (
-            <div role="tabpanel" aria-labelledby="tab-benzer">
+            <div id="panel-benzer" role="tabpanel" aria-labelledby="tab-benzer">
               <SimilarProductsList items={similarProducts} />
             </div>
           )}
 
           {activeTab === "tavsiyeler" && (
-            <div role="tabpanel" aria-labelledby="tab-tavsiyeler">
+            <div id="panel-tavsiyeler" role="tabpanel" aria-labelledby="tab-tavsiyeler">
               <RecommendationsList
                 items={recommendations}
                 productSlug={product.slug}
@@ -343,17 +365,13 @@ function TabButton({
 
 function SimilarProductsList({ items }: { items: SimilarProduct[] }) {
   if (items.length === 0) {
-    return (
-      <p className="text-sm text-[#6D655E]">Bu ürünün benzeri henüz listelenmedi.</p>
-    );
+    return <p className="text-sm text-[#6D655E]">Bu urunun benzeri henuz listelenmedi.</p>;
   }
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
       {items.map((item) => {
-        const variantLabel = [item.variant_storage, item.variant_color]
-          .filter(Boolean)
-          .join(" · ");
+        const variantLabel = [item.variant_storage, item.variant_color].filter(Boolean).join(" - ");
         return (
           <Link
             key={item.id}
@@ -379,13 +397,9 @@ function SimilarProductsList({ items }: { items: SimilarProduct[] }) {
               <span className="line-clamp-2 text-sm font-semibold text-[#171412] group-hover:text-[#E8460A]">
                 {item.title}
               </span>
-              {variantLabel && (
-                <span className="text-xs text-[#8A8179]">{variantLabel}</span>
-              )}
+              {variantLabel && <span className="text-xs text-[#8A8179]">{variantLabel}</span>}
               {item.min_price !== null && (
-                <span className="mt-auto text-sm font-bold text-[#E8460A]">
-                  {formatTL(item.min_price)}
-                </span>
+                <span className="mt-auto text-sm font-bold text-[#E8460A]">{formatTL(item.min_price)}</span>
               )}
             </div>
           </Link>
@@ -408,13 +422,13 @@ function RecommendationsList({
     return (
       <div className="flex flex-col items-start gap-3 rounded-2xl border border-dashed border-[#E8E4DF] bg-[#FAF7F4] p-5 text-sm text-[#6D655E]">
         <p>
-          <strong className="text-[#171412]">{productTitle}</strong> için henüz tavsiye paylaşımı yok.
+          <strong className="text-[#171412]">{productTitle}</strong> icin henuz tavsiye paylasimi yok.
         </p>
         <Link
-          href={`/tavsiyeler/yeni?product=${encodeURIComponent(productSlug)}`}
+          href={`/tavsiyeler?product=${encodeURIComponent(productSlug)}`}
           className="rounded-full bg-[#E8460A] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#c53a07]"
         >
-          İlk tavsiyeyi sen yaz
+          Ilk tavsiyeyi sen yaz
         </Link>
       </div>
     );
@@ -425,17 +439,15 @@ function RecommendationsList({
       {items.map((topic) => (
         <li key={topic.id}>
           <Link
-            href={`/tavsiyeler/${topic.id}`}
+            href={`/tavsiye/${topic.id}`}
             className="flex flex-col gap-2 rounded-2xl border border-[#EFE7DF] bg-white p-4 transition hover:border-[#E8460A] hover:shadow-sm"
           >
             <h3 className="text-base font-semibold text-[#171412]">{topic.title}</h3>
-            {topic.body && (
-              <p className="line-clamp-2 text-sm text-[#5E5750]">{topic.body}</p>
-            )}
+            {topic.body && <p className="line-clamp-2 text-sm text-[#5E5750]">{topic.body}</p>}
             <div className="flex flex-wrap items-center gap-3 text-xs text-[#8A8179]">
               {topic.user_name && <span>{topic.user_name}</span>}
               {typeof topic.votes === "number" && <span>▲ {topic.votes}</span>}
-              {typeof topic.answer_count === "number" && <span>{topic.answer_count} yanıt</span>}
+              {typeof topic.answer_count === "number" && <span>{topic.answer_count} yanit</span>}
               <span>{new Date(topic.created_at).toLocaleDateString("tr-TR")}</span>
             </div>
           </Link>

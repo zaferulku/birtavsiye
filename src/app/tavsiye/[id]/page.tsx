@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
+import type { User } from "@supabase/supabase-js";
 import { useParams } from "next/navigation";
 import { supabase } from "../../../lib/supabase";
 import Header from "../../components/layout/Header";
@@ -9,14 +10,15 @@ import { GenderSymbol } from "../../components/ui/GenderIcon";
 
 type Topic = {
   id: string; title: string; body: string;
-  user_id?: string | null; user_name: string; category: string;
+  user_name: string; category: string;
   votes: number; answer_count: number; created_at: string;
   product_slug?: string | null; product_title?: string | null; product_brand?: string | null; product_id?: string | null;
   author_gender?: string | null;
+  gender_filter?: string | null;
 };
 
 type Answer = {
-  id: string; topic_id: string; user_id: string;
+  id: string; topic_id: string;
   user_name: string; gender: string; body: string;
   votes: number; created_at: string;
   parent_id?: string | null;
@@ -72,12 +74,13 @@ export default function TavsiyeDetay() {
   const [topic, setTopic] = useState<Topic | null>(null);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [popular, setPopular] = useState<PopularTopic[]>([]);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [userGender, setUserGender] = useState("");
   const [userName, setUserName] = useState("");
   const [answerText, setAnswerText] = useState("");
   const [loading, setLoading] = useState(false);
   const [userVotes, setUserVotes] = useState<Record<string, number>>({});
+  const [ownedAnswerIds, setOwnedAnswerIds] = useState<Record<string, boolean>>({});
   const [topicVote, setTopicVote] = useState<number>(0);
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
   const [replyOpen, setReplyOpen] = useState<Record<string, boolean>>({});
@@ -89,17 +92,40 @@ export default function TavsiyeDetay() {
   const mainReplyRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    fetchAll();
-    fetchPopular();
+    const loadInitialData = async () => {
+      const [tRes, aRes, popularRes] = await Promise.all([
+        fetch(`/api/public/topics/${id}`).then(r => r.json()).catch(() => null),
+        fetch(`/api/public/topic-answers?topic_id=${id}`).then(r => r.json()).catch(() => null),
+        fetch("/api/public/topics?popular=1&limit=10").then(r => r.json()).catch(() => null),
+      ]);
+
+      if (tRes?.topic) setTopic(tRes.topic as Topic);
+      const ans = (aRes?.answers as Answer[] | undefined) || [];
+      const sorted = [...ans].sort((x, y) => new Date(x.created_at).getTime() - new Date(y.created_at).getTime());
+      setAnswers(sorted);
+      const topLevel = sorted.filter(x => !x.parent_id);
+      const sorted2 = [...topLevel].sort((x, y) => (y.votes || 0) - (x.votes || 0)).slice(0, 2);
+      setTop2Ids(sorted2.map(x => x.id));
+      if (Array.isArray(popularRes?.topics)) setPopular(popularRes.topics as PopularTopic[]);
+    };
+
+    void loadInitialData();
     supabase.auth.getSession().then(async ({ data: sdata }) => {
       const session = sdata.session;
-      if (!session?.user || !session.access_token) return;
+      if (!session?.user || !session.access_token) {
+        setUser(null);
+        setOwnedAnswerIds({});
+        setUserVotes({});
+        setTopicVote(0);
+        return;
+      }
       setUser(session.user);
       const auth = { Authorization: `Bearer ${session.access_token}` };
-      const [pRes, vRes, tvRes] = await Promise.all([
+      const [pRes, vRes, tvRes, ownRes] = await Promise.all([
         fetch("/api/me/profile", { headers: auth }).then(r => r.json()).catch(() => null),
         fetch("/api/me/answer-votes", { headers: auth }).then(r => r.json()).catch(() => null),
         fetch(`/api/me/topic-vote?topic_id=${id}`, { headers: auth }).then(r => r.json()).catch(() => null),
+        fetch(`/api/me/topic-answers?topic_id=${id}`, { headers: auth }).then(r => r.json()).catch(() => null),
       ]);
       const profile = pRes?.profile;
       setUserGender(profile?.gender || "");
@@ -108,6 +134,8 @@ export default function TavsiyeDetay() {
       const votes = vRes?.votes as { answer_id: string; vote: number }[] | undefined;
       if (votes) setUserVotes(Object.fromEntries(votes.map(v => [v.answer_id, v.vote])));
       if (typeof tvRes?.vote === "number") setTopicVote(tvRes.vote);
+      const answerIds = ownRes?.answer_ids as string[] | undefined;
+      if (answerIds) setOwnedAnswerIds(Object.fromEntries(answerIds.map(answerId => [answerId, true])));
     });
 
     const channel = supabase.channel(`answers-${id}`)
@@ -130,15 +158,25 @@ export default function TavsiyeDetay() {
     setTop2Ids(sorted2.map(x => x.id));
   };
 
-  const fetchPopular = async () => {
-    const res = await fetch("/api/public/topics?popular=1&limit=10").then(r => r.json()).catch(() => null);
-    if (Array.isArray(res?.topics)) setPopular(res.topics as PopularTopic[]);
-  };
-
   const getAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.access_token) return null;
     return { Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json" } as const;
+  };
+
+  const fetchOwnedAnswerIds = async (authHeaders?: { Authorization: string } | null) => {
+    const auth = authHeaders ?? await getAuth();
+    if (!auth) {
+      setOwnedAnswerIds({});
+      return;
+    }
+
+    const res = await fetch(`/api/me/topic-answers?topic_id=${id}`, { headers: auth })
+      .then(r => r.json())
+      .catch(() => null);
+    const answerIds = res?.answer_ids as string[] | undefined;
+    if (!answerIds) return;
+    setOwnedAnswerIds(Object.fromEntries(answerIds.map(answerId => [answerId, true])));
   };
 
   const handleAnswer = async () => {
@@ -153,6 +191,7 @@ export default function TavsiyeDetay() {
     }
     setAnswerText(""); setLoading(false);
     await fetchAll();
+    await fetchOwnedAnswerIds(auth ? { Authorization: auth.Authorization } : null);
   };
 
   const handleEdit = async (answerId: string) => {
@@ -178,6 +217,11 @@ export default function TavsiyeDetay() {
       await fetch(`/api/topic-answers/${answerId}`, { method: "DELETE", headers: auth });
     }
     setAnswers(prev => prev.filter(a => a.id !== answerId));
+    setOwnedAnswerIds(prev => {
+      const next = { ...prev };
+      delete next[answerId];
+      return next;
+    });
     const newCount = Math.max((topic?.answer_count || 1) - 1, 0);
     setTopic(prev => prev ? { ...prev, answer_count: newCount } : prev);
     if (!parentId) setEditingId(null);
@@ -198,6 +242,7 @@ export default function TavsiyeDetay() {
     setReplyOpen(prev => ({ ...prev, [parentId]: false }));
     setReplyLoading(prev => ({ ...prev, [parentId]: false }));
     await fetchAll();
+    await fetchOwnedAnswerIds(auth ? { Authorization: auth.Authorization } : null);
   };
 
   const handleTopicVote = async (voteValue: 1 | -1) => {
@@ -512,7 +557,7 @@ export default function TavsiyeDetay() {
 
                           {user && (
                             <div className="ml-auto flex items-center gap-2">
-                              {user.id === a.user_id && (
+                              {ownedAnswerIds[a.id] && (
                                 <>
                                   <button
                                     onClick={() => { setEditingId(a.id); setEditText(a.body); setReplyOpen(prev => ({ ...prev, [a.id]: false })); }}
@@ -622,7 +667,7 @@ export default function TavsiyeDetay() {
                                       className={`flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full font-semibold border transition-all ${rv === -1 ? "bg-stone-100 border-stone-300 text-stone-600" : "bg-white border-gray-200 text-gray-400 hover:border-red-300 hover:text-red-500"}`}>
                                       👎 {r.votes < 0 ? Math.abs(r.votes) : 0}
                                     </button>
-                                    {user?.id === r.user_id && (
+                                    {ownedAnswerIds[r.id] && (
                                       <>
                                         <button onClick={() => { setEditingId(r.id); setEditText(r.body); }}
                                           className="text-[11px] text-gray-400 hover:text-blue-500 font-semibold transition-colors cursor-pointer">

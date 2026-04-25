@@ -1,10 +1,16 @@
 "use client";
-import { useState, useEffect, Suspense } from "react";
+
+import { useState, useEffect, Suspense, useEffectEvent } from "react";
 import { supabase } from "../../lib/supabase";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
+import {
+  getActiveOfferCount,
+  getActiveListings,
+  getLowestActivePrice,
+} from "../../lib/listingSignals";
 
 type Product = {
   id: string;
@@ -17,42 +23,44 @@ type Product = {
   model_family?: string | null;
   variant_storage?: string | null;
   variant_color?: string | null;
-  prices?: { price: number; stores: { name: string }[] }[];
+  prices?: { price: number; source?: string | null; is_active?: boolean | null; in_stock?: boolean | null }[];
   _variantCount?: number;
 };
 
 const popularSearches = [
-  "iPhone 16", "Samsung Galaxy", "MacBook", "AirPods",
-  "PlayStation 5", "Xbox", "iPad", "Dyson",
+  "iPhone 16",
+  "Samsung Galaxy",
+  "MacBook",
+  "AirPods",
+  "PlayStation 5",
+  "Xbox",
+  "iPad",
+  "Dyson",
 ];
 
-function AramaIcerik() {
-  const searchParams = useSearchParams();
+function AramaIcerik({ initialQuery }: { initialQuery: string }) {
   const router = useRouter();
-  const q = searchParams.get("q") || "";
-  const [query, setQuery] = useState(q);
+  const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState("varsayilan");
   const [selectedBrand, setSelectedBrand] = useState("");
 
-  useEffect(() => {
-    setQuery(q);
-    if (q) search(q);
-    else setResults([]);
-  }, [q]);
-
-  const search = async (term: string) => {
+  const search = useEffectEvent(async (term: string) => {
     if (!term.trim()) return;
     setLoading(true);
 
     const { data: categoryData } = await supabase
-      .from("categories").select("id").ilike("name", "%" + term + "%");
-    const categoryIds = categoryData?.map((c) => c.id) || [];
+      .from("categories")
+      .select("id")
+      .ilike("name", `%${term}%`);
+    const categoryIds = categoryData?.map((category) => category.id) || [];
 
     let queryBuilder = supabase
       .from("products")
-      .select("id, title, slug, brand, description, image_url, category_id, model_family, variant_storage, variant_color, prices(price,stores(name))")
+      .select(
+        "id, title, slug, brand, description, image_url, category_id, model_family, variant_storage, variant_color, prices:listings(price, source, is_active, in_stock)"
+      )
       .limit(200);
 
     if (categoryIds.length > 0) {
@@ -67,159 +75,218 @@ function AramaIcerik() {
 
     const { data } = await queryBuilder;
     if (data) {
-      // Variant dedup: aynı (brand, model_family) için tek temsilci (en ucuz fiyatlı)
+      const normalized = (data as Product[]).map((product) => ({
+        ...product,
+        prices: getActiveListings(product.prices).map((listing) => ({
+          price: listing.price,
+          source: listing.source,
+        })),
+      }));
+
       const familyGroups = new Map<string, Product[]>();
       const singletons: Product[] = [];
-      for (const p of data as Product[]) {
-        if (p.brand && p.model_family) {
-          const key = `${p.brand}|${p.model_family}`;
+      for (const product of normalized) {
+        if (product.brand && product.model_family) {
+          const key = `${product.brand}|${product.model_family}`;
           const arr = familyGroups.get(key) ?? [];
-          arr.push(p);
+          arr.push(product);
           familyGroups.set(key, arr);
         } else {
-          singletons.push(p);
+          singletons.push(product);
         }
       }
-      const minPriceOf = (p: Product): number => {
-        const list = p.prices ?? [];
-        return list.length > 0 ? Math.min(...list.map(x => x.price)) : Infinity;
-      };
+
+      const minPriceOf = (product: Product): number => getLowestActivePrice(product.prices) ?? Infinity;
+
       const dedupped: Product[] = [];
       for (const arr of familyGroups.values()) {
-        const sorted = arr.slice().sort((a, b) => minPriceOf(a) - minPriceOf(b));
-        dedupped.push({ ...sorted[0], _variantCount: arr.length });
+        const sorted = arr.slice().sort((left, right) => minPriceOf(left) - minPriceOf(right));
+        const offerCount = arr.reduce((count, product) => count + getActiveOfferCount(product.prices), 0);
+        dedupped.push({ ...sorted[0], _variantCount: offerCount || arr.length });
       }
+
       setResults([...dedupped, ...singletons].slice(0, 48));
     }
+
     setLoading(false);
+  });
+
+  useEffect(() => {
+    if (initialQuery) void search(initialQuery);
+  }, [initialQuery]);
+
+  const handleSearch = (event: React.FormEvent) => {
+    event.preventDefault();
+    if (query.trim()) router.push(`/ara?q=${encodeURIComponent(query)}`);
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (query.trim()) router.push("/ara?q=" + encodeURIComponent(query));
-  };
-
-  // Filtreleme ve sıralama
-  const brands = [...new Set(results.map((p) => p.brand))].filter(Boolean);
+  const brands = [...new Set(results.map((product) => product.brand))].filter(Boolean);
 
   const filteredResults = results
-    .filter((p) => selectedBrand === "" || p.brand === selectedBrand)
-    .sort((a, b) => {
-      if (sortBy === "a-z") return a.title.localeCompare(b.title);
-      if (sortBy === "z-a") return b.title.localeCompare(a.title);
+    .filter((product) => selectedBrand === "" || product.brand === selectedBrand)
+    .sort((left, right) => {
+      if (sortBy === "ucuz") {
+        return (getLowestActivePrice(left.prices) ?? Infinity) - (getLowestActivePrice(right.prices) ?? Infinity);
+      }
+      if (sortBy === "pahali") {
+        return (getLowestActivePrice(right.prices) ?? -Infinity) - (getLowestActivePrice(left.prices) ?? -Infinity);
+      }
+      if (sortBy === "magaza") {
+        return getActiveOfferCount(right.prices) - getActiveOfferCount(left.prices);
+      }
+      if (sortBy === "a-z") return left.title.localeCompare(right.title);
+      if (sortBy === "z-a") return right.title.localeCompare(left.title);
       return 0;
     });
 
   return (
     <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-6">
-
-      {/* Arama Formu */}
       <form onSubmit={handleSearch} className="flex gap-2 sm:gap-3 mb-4 md:mb-6">
         <div className="flex-1 flex items-center bg-white border-2 border-gray-200 rounded-xl px-3 sm:px-4 gap-2 sm:gap-3 h-12 focus-within:border-[#E8460A] transition-all min-w-0">
-          <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="w-4 h-4 text-gray-400 flex-shrink-0"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
           </svg>
-          <input type="text" value={query} onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ürün, kategori veya marka ara..."
+          <input
+            type="text"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Urun, kategori veya marka ara..."
             className="flex-1 bg-transparent text-sm outline-none text-gray-800 placeholder:text-gray-400 min-w-0"
-            autoFocus />
+            autoFocus
+          />
           {query && (
-            <button type="button" onClick={() => { setQuery(""); router.push("/ara?q="); }}
-              className="text-gray-400 hover:text-gray-600 text-lg flex-shrink-0 min-w-11 min-h-11 flex items-center justify-center">×</button>
+            <button
+              type="button"
+              onClick={() => {
+                setQuery("");
+                router.push("/ara?q=");
+              }}
+              className="text-gray-400 hover:text-gray-600 text-lg flex-shrink-0 min-w-11 min-h-11 flex items-center justify-center"
+            >
+              x
+            </button>
           )}
         </div>
-        <button type="submit"
-          className="bg-[#E8460A] text-white px-4 sm:px-8 h-12 rounded-xl text-sm font-bold hover:bg-[#C93A08] transition-all flex-shrink-0">
+        <button
+          type="submit"
+          className="bg-[#E8460A] text-white px-4 sm:px-8 h-12 rounded-xl text-sm font-bold hover:bg-[#C93A08] transition-all flex-shrink-0"
+        >
           Ara
         </button>
       </form>
 
-      {/* Sonuç yok — popüler aramalar */}
-      {!q && !loading && (
+      {!initialQuery && !loading && (
         <div className="text-center py-12">
-          <div className="text-5xl mb-4">🔍</div>
+          <div className="text-5xl mb-4">Ara</div>
           <div className="text-base font-bold text-gray-800 mb-2">Ne aramak istersiniz?</div>
           <div className="text-sm text-gray-500 mb-8">Urun adi, marka veya kategori yazin</div>
           <div className="flex flex-wrap gap-2 justify-center">
-            {popularSearches.map((s) => (
-              <button key={s} onClick={() => router.push("/ara?q=" + encodeURIComponent(s))}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-600 hover:border-[#E8460A] hover:text-[#E8460A] transition-all">
-                {s}
+            {popularSearches.map((term) => (
+              <button
+                key={term}
+                onClick={() => router.push(`/ara?q=${encodeURIComponent(term)}`)}
+                className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-600 hover:border-[#E8460A] hover:text-[#E8460A] transition-all"
+              >
+                {term}
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* Yükleniyor */}
       {loading && (
         <div className="text-center py-16">
-          <div className="text-4xl mb-3 animate-pulse">🔍</div>
+          <div className="text-4xl mb-3 animate-pulse">Ara</div>
           <div className="text-sm text-gray-500">Araniyor...</div>
         </div>
       )}
 
-      {/* Sonuç yok */}
-      {!loading && q && results.length === 0 && (
+      {!loading && initialQuery && results.length === 0 && (
         <div className="text-center py-16">
-          <div className="text-5xl mb-4">😕</div>
+          <div className="text-5xl mb-4">Sonuc yok</div>
           <div className="text-base font-bold text-gray-800 mb-2">
-            "{q}" icin sonuc bulunamadi
+            &quot;{initialQuery}&quot; icin sonuc bulunamadi
           </div>
           <div className="text-sm text-gray-500 mb-6">Farkli bir kelime deneyin</div>
           <div className="flex flex-wrap gap-2 justify-center">
-            {popularSearches.map((s) => (
-              <button key={s} onClick={() => router.push("/ara?q=" + encodeURIComponent(s))}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-600 hover:border-[#E8460A] hover:text-[#E8460A] transition-all">
-                {s}
+            {popularSearches.map((term) => (
+              <button
+                key={term}
+                onClick={() => router.push(`/ara?q=${encodeURIComponent(term)}`)}
+                className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-600 hover:border-[#E8460A] hover:text-[#E8460A] transition-all"
+              >
+                {term}
               </button>
             ))}
           </div>
         </div>
       )}
 
-      {/* Sonuçlar */}
       {!loading && filteredResults.length > 0 && (
         <div className="flex flex-col md:flex-row gap-4 md:gap-6">
-
-          {/* Sol - Filtreler */}
           <div className="w-full md:w-56 flex-shrink-0">
             <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sticky top-24">
               <h3 className="font-bold text-sm text-gray-900 mb-4">Filtrele</h3>
 
-              {/* Sıralama */}
               <div className="mb-4">
                 <div className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Siralama</div>
                 {[
                   { value: "varsayilan", label: "Varsayilan" },
+                  { value: "ucuz", label: "En Ucuz" },
+                  { value: "pahali", label: "En Pahali" },
+                  { value: "magaza", label: "En Fazla Magaza" },
                   { value: "a-z", label: "A-Z" },
                   { value: "z-a", label: "Z-A" },
-                ].map((s) => (
-                  <button key={s.value} onClick={() => setSortBy(s.value)}
+                ].map((sort) => (
+                  <button
+                    key={sort.value}
+                    onClick={() => setSortBy(sort.value)}
                     className={`w-full text-left px-3 py-2 rounded-lg text-xs mb-1 transition-all ${
-                      sortBy === s.value ? "bg-orange-50 text-[#E8460A] font-semibold" : "text-gray-600 hover:bg-gray-50"
-                    }`}>
-                    {s.label}
+                      sortBy === sort.value
+                        ? "bg-orange-50 text-[#E8460A] font-semibold"
+                        : "text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {sort.label}
                   </button>
                 ))}
               </div>
 
-              {/* Marka */}
               {brands.length > 1 && (
                 <div>
                   <div className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Marka</div>
-                  <button onClick={() => setSelectedBrand("")}
+                  <button
+                    onClick={() => setSelectedBrand("")}
                     className={`w-full text-left px-3 py-2 rounded-lg text-xs mb-1 transition-all ${
-                      selectedBrand === "" ? "bg-orange-50 text-[#E8460A] font-semibold" : "text-gray-600 hover:bg-gray-50"
-                    }`}>
+                      selectedBrand === ""
+                        ? "bg-orange-50 text-[#E8460A] font-semibold"
+                        : "text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
                     Tumu ({results.length})
                   </button>
-                  {brands.map((b) => (
-                    <button key={b} onClick={() => setSelectedBrand(b)}
+                  {brands.map((brand) => (
+                    <button
+                      key={brand}
+                      onClick={() => setSelectedBrand(brand)}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs mb-1 transition-all ${
-                        selectedBrand === b ? "bg-orange-50 text-[#E8460A] font-semibold" : "text-gray-600 hover:bg-gray-50"
-                      }`}>
-                      {b} ({results.filter(p => p.brand === b).length})
+                        selectedBrand === brand
+                          ? "bg-orange-50 text-[#E8460A] font-semibold"
+                          : "text-gray-600 hover:bg-gray-50"
+                      }`}
+                    >
+                      {brand} ({results.filter((product) => product.brand === brand).length})
                     </button>
                   ))}
                 </div>
@@ -227,47 +294,56 @@ function AramaIcerik() {
             </div>
           </div>
 
-          {/* Sag - Sonuçlar */}
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-4">
               <div className="text-sm text-gray-500">
-                <span className="font-bold text-gray-900">{filteredResults.length}</span> sonuc bulundu —{" "}
-                <span className="text-[#E8460A] font-medium">"{q}"</span>
+                <span className="font-bold text-gray-900">{filteredResults.length}</span> sonuc bulundu -{" "}
+                <span className="text-[#E8460A] font-medium">&quot;{initialQuery}&quot;</span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-              {filteredResults.map((p) => {
-                const minPrice = p.prices?.length
-                  ? p.prices.reduce((m, x) => x.price < m.price ? x : m, p.prices[0])
-                  : null;
+              {filteredResults.map((product) => {
+                const minPrice = getLowestActivePrice(product.prices);
+                const offerCount = getActiveOfferCount(product.prices);
                 return (
-                  <Link href={"/urun/" + p.slug} key={p.id}>
+                  <Link href={`/urun/${product.slug}`} key={product.id}>
                     <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-lg hover:border-[#E8460A]/30 transition-all cursor-pointer group">
                       <div className="aspect-square bg-gray-50 overflow-hidden">
-                        {p.image_url ? (
-                          <img src={p.image_url} alt={p.title}
-                            className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300" />
+                        {product.image_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={product.image_url}
+                            alt={product.title}
+                            className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
+                          />
                         ) : (
-                          <div className="w-full h-full flex items-center justify-center text-4xl">📦</div>
+                          <div className="w-full h-full flex items-center justify-center text-4xl">?</div>
                         )}
                       </div>
                       <div className="p-3">
-                        <div className="text-xs font-bold text-[#E8460A] uppercase tracking-wide mb-1">{p.brand}</div>
-                        <div className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug mb-2">
-                          {p.model_family && p.brand ? `${p.brand} ${p.model_family}` : p.title}
+                        <div className="text-xs font-bold text-[#E8460A] uppercase tracking-wide mb-1">
+                          {product.brand}
                         </div>
-                        {minPrice ? (
+                        <div className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug mb-2">
+                          {product.model_family && product.brand
+                            ? `${product.brand} ${product.model_family}`
+                            : product.title}
+                        </div>
+                        {minPrice !== null ? (
                           <div className="flex items-baseline justify-between gap-2">
-                            <div className="text-sm font-bold text-gray-900">{minPrice.price.toLocaleString("tr-TR")} <span className="text-xs font-normal text-gray-400">₺</span></div>
-                            {p._variantCount && p._variantCount > 1 && (
+                            <div className="text-sm font-bold text-gray-900">
+                              {minPrice.toLocaleString("tr-TR")}{" "}
+                              <span className="text-xs font-normal text-gray-400">TL</span>
+                            </div>
+                            {offerCount > 1 && (
                               <span className="text-[9px] text-gray-500 font-medium bg-gray-100 rounded-full px-1.5 py-0.5">
-                                {p._variantCount} satıcı
+                                {offerCount} satici
                               </span>
                             )}
                           </div>
                         ) : (
-                          <div className="text-xs text-[#E8460A] font-medium">Fiyatları Karşılaştır →</div>
+                          <div className="text-xs text-[#E8460A] font-medium">Fiyatlari Karsilastir -&gt;</div>
                         )}
                       </div>
                     </div>
@@ -282,12 +358,19 @@ function AramaIcerik() {
   );
 }
 
+function AramaSayfasiIcerik() {
+  const searchParams = useSearchParams();
+  const q = searchParams.get("q") || "";
+
+  return <AramaIcerik key={q} initialQuery={q} />;
+}
+
 export default function AramaSayfasi() {
   return (
     <main className="bg-white min-h-screen">
       <Header />
       <Suspense fallback={<div className="text-center py-20 text-gray-400">Yukleniyor...</div>}>
-        <AramaIcerik />
+        <AramaSayfasiIcerik />
       </Suspense>
       <Footer />
     </main>

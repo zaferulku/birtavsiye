@@ -10,10 +10,12 @@ export async function GET(req: Request) {
   const category = url.searchParams.get("category");
   const product_id = url.searchParams.get("product_id");
   const popular = url.searchParams.get("popular") === "1";
+  const topicSelect =
+    "id, title, body, user_name, category, votes, answer_count, created_at, product_slug, product_title, product_brand, gender_filter";
 
   let q = supabaseAdmin
     .from("topics")
-    .select(popular ? "id,title,category,votes,answer_count,created_at" : "*")
+    .select(popular ? "id, title, category, votes, answer_count, created_at" : topicSelect)
     .limit(limit);
 
   q = popular
