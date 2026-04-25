@@ -141,7 +141,7 @@ export function ChatBar() {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const data = await response.json();
-      addAssistantMessage(data.reply || "Yanıt alınamadı.");
+      addAssistantMessage(data.reply || "Yanıt alınamadı.", data.suggestions ?? null);
 
       if (Array.isArray(data.products)) {
         setRecommendations(data.products, message);

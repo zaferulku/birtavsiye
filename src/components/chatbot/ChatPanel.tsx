@@ -13,11 +13,12 @@
  *   - conversationEnded durumunda input gÃ¶rÃ¼nÃ¼r ama Ã¶zel UI ile
  */
 
-import { useEffect, useRef, useState, KeyboardEvent } from "react";
+import { useCallback, useEffect, useRef, useState, KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   useChatStore,
   type ChatMessage,
+  type Suggestion,
   startInactivityWatcher,
   stopInactivityWatcher,
 } from "../../lib/chatbot/useChatStore";
@@ -82,6 +83,9 @@ function SendIcon({ className = "" }: { className?: string }) {
 
 function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === "user";
+  // Chip click ile gönderilen mesajlarda displayLabel UI'da gösterilir,
+  // content backend history'sinde tam değer olarak korunur.
+  const display = message.displayLabel || message.content;
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-3`}>
       <div
@@ -92,8 +96,42 @@ function MessageBubble({ message }: { message: ChatMessage }) {
             : "bg-gray-100 text-gray-900 rounded-bl-md"}
         `}
       >
-        {message.content}
+        {display}
       </div>
+    </div>
+  );
+}
+
+function ChipRow({
+  suggestions,
+  onClick,
+  disabled,
+}: {
+  suggestions: Suggestion[];
+  onClick: (s: Suggestion) => void;
+  disabled?: boolean;
+}) {
+  return (
+    <div className="flex flex-wrap gap-1.5 mt-1 mb-3 px-1" role="group" aria-label="Hızlı seçenekler">
+      {suggestions.map((s, i) => (
+        <button
+          key={`${s.value}-${i}`}
+          type="button"
+          onClick={() => onClick(s)}
+          disabled={disabled}
+          className="
+            inline-flex items-center gap-1
+            px-3 py-1.5 rounded-full
+            bg-gray-100 hover:bg-gray-200
+            text-xs text-gray-800
+            border border-gray-200 hover:border-gray-300
+            transition-colors disabled:opacity-50 disabled:cursor-not-allowed
+          "
+        >
+          {s.icon && <span aria-hidden="true">{s.icon}</span>}
+          <span>{s.label}</span>
+        </button>
+      ))}
     </div>
   );
 }
@@ -182,37 +220,37 @@ function PanelInputBar() {
   const handleSend = async () => {
     const message = text.trim();
     if (!message || isLoading) return;
-
-    addUserMessage(message);
     setText("");
+    await sendMessage(message, null);
+  };
 
-    // History snapshot ALDIKTAN SONRA navigate (yeni mesaj zaten eklendi)
+  // Hem text input hem chip click bunu kullanır.
+  // displayLabel: chip click'te "En popüler" gibi kısa label, content
+  // backend'e tam value olarak gider.
+  async function sendMessage(value: string, displayLabel: string | null) {
+    addUserMessage(value, null, null, displayLabel);
     const history = getHistoryForBackend();
     const chatSessionId = useChatStore.getState().chatSessionId;
-
-    router.push(`/sonuclar?q=${encodeURIComponent(message)}`);
+    router.push(`/sonuclar?q=${encodeURIComponent(value)}`);
 
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, history, chatSessionId }),
+        body: JSON.stringify({ message: value, history, chatSessionId }),
       });
-
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
       const data = await response.json();
-      addAssistantMessage(data.reply || "Yanıt alınamadı.");
-
+      addAssistantMessage(data.reply || "Yanıt alınamadı.", data.suggestions ?? null);
       if (Array.isArray(data.products)) {
-        setRecommendations(data.products, message);
+        setRecommendations(data.products, value);
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Bilinmeyen hata";
       setStatus("error", errorMsg);
       addAssistantMessage("Üzgünüm, bir sorun oluştu. Tekrar dener misin?");
     }
-  };
+  }
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -263,6 +301,7 @@ function PanelInputBar() {
 // ============================================================================
 
 export function ChatPanel() {
+  const router = useRouter();
   const panelState = useChatStore((s) => s.panelState);
   const messages = useChatStore((s) => s.messages);
   const status = useChatStore((s) => s.status);
@@ -270,8 +309,51 @@ export function ChatPanel() {
   const minimizePanel = useChatStore((s) => s.minimizePanel);
   const closePanel = useChatStore((s) => s.closePanel);
   const startNewConversation = useChatStore((s) => s.startNewConversation);
+  const addUserMessage = useChatStore((s) => s.addUserMessage);
+  const addAssistantMessage = useChatStore((s) => s.addAssistantMessage);
+  const setRecommendations = useChatStore((s) => s.setRecommendations);
+  const setStatus = useChatStore((s) => s.setStatus);
+  const getHistoryForBackend = useChatStore((s) => s.getHistoryForBackend);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const handleChipClick = useCallback(
+    async (s: Suggestion) => {
+      if (status === "sending" || status === "streaming") return;
+      // displayLabel kısa UI metni, content backend'e tam value
+      addUserMessage(s.value, null, null, s.label);
+      const history = getHistoryForBackend();
+      const chatSessionId = useChatStore.getState().chatSessionId;
+      router.push(`/sonuclar?q=${encodeURIComponent(s.value)}`);
+
+      try {
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: s.value, history, chatSessionId }),
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        addAssistantMessage(data.reply || "Yanıt alınamadı.", data.suggestions ?? null);
+        if (Array.isArray(data.products)) {
+          setRecommendations(data.products, s.value);
+        }
+      } catch (err) {
+        const errorMsg = err instanceof Error ? err.message : "Bilinmeyen hata";
+        setStatus("error", errorMsg);
+        addAssistantMessage("Üzgünüm, bir sorun oluştu. Tekrar dener misin?");
+      }
+    },
+    [
+      status,
+      addUserMessage,
+      addAssistantMessage,
+      setRecommendations,
+      setStatus,
+      getHistoryForBackend,
+      router,
+    ]
+  );
 
   // ----- Auto scroll -----
   useEffect(() => {
@@ -392,9 +474,25 @@ export function ChatPanel() {
             <EmptyState />
           ) : (
             <>
-              {messages.map((msg) => (
-                <MessageBubble key={msg.id} message={msg} />
-              ))}
+              {messages.map((msg, idx) => {
+                const isLastAssistant =
+                  idx === messages.length - 1 &&
+                  msg.role === "assistant" &&
+                  Array.isArray(msg.suggestions) &&
+                  msg.suggestions.length > 0;
+                return (
+                  <div key={msg.id}>
+                    <MessageBubble message={msg} />
+                    {isLastAssistant && msg.suggestions && (
+                      <ChipRow
+                        suggestions={msg.suggestions}
+                        onClick={handleChipClick}
+                        disabled={status === "sending" || status === "streaming"}
+                      />
+                    )}
+                  </div>
+                );
+              })}
               {(status === "sending" || status === "streaming") && <TypingIndicator />}
               <div ref={messagesEndRef} aria-hidden="true" />
             </>

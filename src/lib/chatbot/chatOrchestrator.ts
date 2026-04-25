@@ -25,6 +25,7 @@ import { parseIntent } from "./intentParserRuntime";
 import { aiEmbed } from "../ai/aiClient";
 import { generateResponse, type ProductForResponse } from "./generateResponse";
 import type { StructuredIntent } from "./intentParser";
+import { buildSuggestions, type Suggestion } from "./suggestionBuilder";
 
 // ============================================================================
 // Types
@@ -59,6 +60,7 @@ export type OrchestratorOutput = {
   intent: StructuredIntent | null;
   kbChunkCount: number;
   latencyMs: number;
+  suggestions?: Suggestion[] | null;
 };
 
 // ============================================================================
@@ -103,6 +105,14 @@ async function runFastPath(
     conversationHistory: input.conversationHistory || [],
   });
 
+  const suggestions = await buildSuggestions({
+    userMessage: input.userMessage,
+    intent: null,
+    products: mapProductsForResponse(searchResult.products),
+    conversationHistory: input.conversationHistory || [],
+    sb: input.sb,
+  });
+
   return {
     response,
     products: searchResult.products,
@@ -111,6 +121,7 @@ async function runFastPath(
     intent: null,
     kbChunkCount: 0,
     latencyMs: Date.now() - startTime,
+    suggestions,
   };
 }
 
@@ -150,6 +161,14 @@ async function runSlowPath(
       conversationHistory: input.conversationHistory || [],
     });
 
+    const suggestions = await buildSuggestions({
+      userMessage: input.userMessage,
+      intent,
+      products: [],
+      conversationHistory: input.conversationHistory || [],
+      sb: input.sb,
+    });
+
     return {
       response,
       products: [],
@@ -158,6 +177,7 @@ async function runSlowPath(
       intent,
       kbChunkCount: knowledgeChunks.length,
       latencyMs: Date.now() - startTime,
+      suggestions,
     };
   }
 
@@ -191,6 +211,14 @@ async function runSlowPath(
     conversationHistory: input.conversationHistory || [],
   });
 
+  const suggestions = await buildSuggestions({
+    userMessage: input.userMessage,
+    intent,
+    products: mapProductsForResponse(finalProducts),
+    conversationHistory: input.conversationHistory || [],
+    sb: input.sb,
+  });
+
   return {
     response,
     products: finalProducts,
@@ -199,6 +227,7 @@ async function runSlowPath(
     intent,
     kbChunkCount: knowledgeChunks.length,
     latencyMs: Date.now() - startTime,
+    suggestions,
   };
 }
 

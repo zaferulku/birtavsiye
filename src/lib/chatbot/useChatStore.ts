@@ -17,6 +17,9 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import type { Suggestion } from "./suggestionBuilder";
+
+export type { Suggestion };
 
 // ============================================================================
 // Config
@@ -36,6 +39,12 @@ export type ChatMessage = {
   timestamp: number;
   attachmentType?: "image" | "voice" | null;
   attachmentPreview?: string | null;
+  // Chip butonları (yalnızca assistant mesajlarında, son mesajda render edilir)
+  suggestions?: Suggestion[] | null;
+  // UI override: chip click ile gönderilen mesajlarda content backend'e
+  // tam değer gider (örn "siyah telefon en popüler"), displayLabel UI'da
+  // kısa görünür (örn "En popüler").
+  displayLabel?: string | null;
 };
 
 export type RecommendedProduct = {
@@ -63,9 +72,10 @@ interface ChatStore {
   addUserMessage: (
     content: string,
     attachmentType?: ChatMessage["attachmentType"],
-    attachmentPreview?: string | null
+    attachmentPreview?: string | null,
+    displayLabel?: string | null
   ) => string;
-  addAssistantMessage: (content: string) => void;
+  addAssistantMessage: (content: string, suggestions?: Suggestion[] | null) => void;
   clearMessages: () => void;
   startNewConversation: () => void;
   getHistoryForBackend: () => Array<{ role: string; content: string }>;
@@ -125,7 +135,7 @@ export const useChatStore = create<ChatStore>()(
       // ----- Mesajlar -----
       messages: [],
 
-      addUserMessage: (content, attachmentType = null, attachmentPreview = null) => {
+      addUserMessage: (content, attachmentType = null, attachmentPreview = null, displayLabel = null) => {
         const state = get();
         let newMessages = state.messages;
         let newSessionId = state.chatSessionId;
@@ -144,6 +154,7 @@ export const useChatStore = create<ChatStore>()(
           timestamp: Date.now(),
           attachmentType,
           attachmentPreview,
+          displayLabel,
         };
 
         set({
@@ -159,12 +170,13 @@ export const useChatStore = create<ChatStore>()(
         return id;
       },
 
-      addAssistantMessage: (content) => {
+      addAssistantMessage: (content, suggestions = null) => {
         const message: ChatMessage = {
           id: generateId(),
           role: "assistant",
           content,
           timestamp: Date.now(),
+          suggestions: suggestions ?? null,
         };
         set((state) => ({
           messages: [...state.messages, message],

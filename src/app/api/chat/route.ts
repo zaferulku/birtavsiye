@@ -400,6 +400,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       reply: orchResult.response,
       products: orchResult.products,
+      suggestions: orchResult.suggestions ?? null,
       meta: {
         method: orchResult.method,
         latency_ms: Date.now() - startTime,
