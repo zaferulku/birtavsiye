@@ -3,6 +3,7 @@ import { supabaseAdmin } from "../../../../lib/supabaseServer";
 import {
   getActiveOfferCount,
   getActiveListings,
+  getFreshestSeenAt,
   getLowestActivePrice,
   getUniqueActiveSources,
 } from "../../../../lib/listingSignals";
@@ -49,7 +50,7 @@ export async function GET(req: Request) {
 
   let query = supabaseAdmin
     .from("products")
-    .select("id, title, slug, brand, image_url, category_id, model_family, variant_storage, variant_color, prices:listings(price, source, is_active, in_stock)")
+    .select("id, title, slug, brand, image_url, category_id, model_family, variant_storage, variant_color, prices:listings(price, source, last_seen, is_active, in_stock)")
     .range(offset, offset + limit - 1)
     .order("created_at", { ascending: false });
 
@@ -63,16 +64,19 @@ export async function GET(req: Request) {
   const products = (data ?? []).map((product) => ({
     ...product,
     prices: getActiveListings(
-      ((product.prices as Array<{ price: number | string; source?: string | null; is_active?: boolean | null; in_stock?: boolean | null }> | null) ?? [])
+      ((product.prices as Array<{ price: number | string; source?: string | null; last_seen?: string | null; is_active?: boolean | null; in_stock?: boolean | null }> | null) ?? [])
     ).map((listing) => ({ price: listing.price, source: listing.source })),
     min_price: getLowestActivePrice(
-      (product.prices as Array<{ price: number | string; source?: string | null; is_active?: boolean | null; in_stock?: boolean | null }> | null) ?? []
+      (product.prices as Array<{ price: number | string; source?: string | null; last_seen?: string | null; is_active?: boolean | null; in_stock?: boolean | null }> | null) ?? []
     ),
     offer_count: getActiveOfferCount(
-      (product.prices as Array<{ price: number | string; source?: string | null; is_active?: boolean | null; in_stock?: boolean | null }> | null) ?? []
+      (product.prices as Array<{ price: number | string; source?: string | null; last_seen?: string | null; is_active?: boolean | null; in_stock?: boolean | null }> | null) ?? []
     ),
     sources: getUniqueActiveSources(
-      (product.prices as Array<{ price: number | string; source?: string | null; is_active?: boolean | null; in_stock?: boolean | null }> | null) ?? []
+      (product.prices as Array<{ price: number | string; source?: string | null; last_seen?: string | null; is_active?: boolean | null; in_stock?: boolean | null }> | null) ?? []
+    ),
+    freshest_seen_at: getFreshestSeenAt(
+      (product.prices as Array<{ price: number | string; source?: string | null; last_seen?: string | null; is_active?: boolean | null; in_stock?: boolean | null }> | null) ?? []
     ),
   }));
 
