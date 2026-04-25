@@ -459,13 +459,15 @@ async function main() {
           description: product.description,
           specs: product.specs,
           image_url: product.image_url,
-          source: product.source,
-          source_url: product.source_url,
           model_code: product.model_code,
           model_family: llmResult.data.model_family,
           variant_storage: llmResult.data.variant_storage,
           variant_color: llmResult.data.variant_color,
           is_active: true,
+          // Audit alanları (Faz 1)
+          classified_at: new Date().toISOString(),
+          classified_by: "faz1-classifier",
+          quality_score: llmResult.data.confidence,
           // embedding NULL — sonra backfill-embeddings.mjs ile doldurulacak
         };
         
