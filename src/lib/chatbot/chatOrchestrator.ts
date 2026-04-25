@@ -235,14 +235,24 @@ const STORAGE_KEYS = new Set([
 // LLM tutarsızlığında semantic_keywords içinden renk yakalamak için.
 // Intent parser bazen "siyah"ı must_have_specs.renk yerine
 // semantic_keywords'e atıyor — bu sözlük JS-side fallback için.
-const COLOR_WORDS = new Set([
-  "siyah", "beyaz", "gri", "mavi", "kırmızı", "yeşil", "sarı",
-  "pembe", "mor", "turuncu", "kahve", "lacivert", "bordo",
-  "altın", "gümüş", "krem", "bej", "şeffaf", "lila", "mat",
-  "black", "white", "blue", "red", "green", "yellow",
-  "pink", "purple", "gold", "silver", "rose",
-]);
+// 35 Türkçe (diacritic'li + diacritic'siz) + 16 İngilizce.
+const COLOR_WORDS = [
+  // TR diacritic'li
+  "siyah", "beyaz", "kırmızı", "mavi", "yeşil", "sarı", "mor",
+  "pembe", "gri", "kahverengi", "kahve", "turuncu", "lacivert",
+  "bej", "krem", "altın", "gümüş", "bronz", "bordo", "şampanya",
+  "antrasit", "lila", "fuşya", "turkuaz", "jet", "şeffaf", "mat", "rose",
+  // TR diacritic'siz (LLM bazen normalize ediyor)
+  "kirmizi", "yesil", "sari", "altin", "gumus", "sampanya", "fusya",
+  // EN
+  "black", "white", "red", "blue", "green", "yellow", "purple",
+  "pink", "gray", "grey", "brown", "orange", "navy", "beige",
+  "gold", "silver",
+];
+// Substring match — "siyahı"/"siyahtaki" gibi varyantları yakalar.
+// Storage pattern hem standalone hem inline (regex global ile matchAll).
 const STORAGE_PATTERN = /^(\d+(?:[.,]\d+)?)\s*(GB|TB|MB)$/i;
+const STORAGE_INLINE_PATTERN = /\b(\d+)\s*(GB|TB|MB)\b/gi;
 
 function buildStoragePatterns(value: string, into: string[]): void {
   const s = value.trim();
@@ -295,13 +305,25 @@ function extractVariantPatterns(
       if (typeof kw !== "string") continue;
       const lower = kw.toLowerCase().trim();
       if (!lower) continue;
-      // Color word match
-      if (colors.length === 0 && COLOR_WORDS.has(lower)) {
-        colors.push(`%${lower}%`);
+      // Color: substring match — "siyahı", "kırmızı dağı" gibi varyantlar
+      if (colors.length === 0) {
+        for (const c of COLOR_WORDS) {
+          if (lower === c || lower.includes(c)) {
+            colors.push(`%${c}%`);
+            break;
+          }
+        }
       }
-      // Storage pattern match
-      if (storages.length === 0 && STORAGE_PATTERN.test(lower)) {
-        buildStoragePatterns(lower, storages);
+      // Storage: standalone OR inline (kw="iphone 256GB" → 256GB yakalar)
+      if (storages.length === 0) {
+        if (STORAGE_PATTERN.test(lower)) {
+          buildStoragePatterns(lower, storages);
+        } else {
+          const matches = [...lower.matchAll(STORAGE_INLINE_PATTERN)];
+          for (const m of matches) {
+            buildStoragePatterns(`${m[1]}${m[2].toUpperCase()}`, storages);
+          }
+        }
       }
     }
   }

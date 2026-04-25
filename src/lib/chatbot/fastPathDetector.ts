@@ -166,24 +166,28 @@ export function detectPath(
  * smart_search v2 variant_color_patterns + variant_storage_patterns kullanır.
  */
 function hasVariantKeyword(text: string): boolean {
+  // Türkçe karakterleri Latin'e indirgeme YOK — substring match kullan,
+  // word boundary regex Türkçe ı/ş/ğ ile patlıyor (Latin-only \b).
   const colors = [
-    "siyah", "beyaz", "gri", "mavi", "kırmızı", "yeşil", "sarı",
-    "pembe", "mor", "turuncu", "kahve", "lacivert", "bordo",
-    "altın", "gümüş", "krem", "bej", "şeffaf", "lila", "mat",
+    "siyah", "beyaz", "gri", "mavi", "kırmızı", "kirmizi", "yeşil", "yesil",
+    "sarı", "sari", "pembe", "mor", "turuncu", "kahverengi", "kahve",
+    "lacivert", "bordo", "altın", "altin", "gümüş", "gumus", "bronz",
+    "krem", "bej", "şeffaf", "seffaf", "lila", "mat",
+    "şampanya", "sampanya", "antrasit", "fuşya", "fusya", "turkuaz", "jet",
     "black", "white", "blue", "red", "green", "yellow",
-    "pink", "purple", "gold", "silver",
-    "jet", "rose",
+    "pink", "purple", "gold", "silver", "rose", "navy", "beige",
+    "gray", "grey", "brown", "orange",
   ];
+  const lower = text.toLowerCase();
+  for (const c of colors) {
+    if (lower.includes(c)) return true;
+  }
+  // Storage (sayı + GB/TB/MB) — ASCII, regex sorunsuz
   const storagePatterns = [
-    /\b\d+\s?gb\b/i,
-    /\b\d+\s?tb\b/i,
-    /\b\d+\s?mb\b/i,
+    /\d+\s?gb/i,
+    /\d+\s?tb/i,
+    /\d+\s?mb/i,
   ];
-  const colorPattern = new RegExp(
-    `\\b(${colors.map(escapeRegex).join("|")})\\b`,
-    "i"
-  );
-  if (colorPattern.test(text)) return true;
   return storagePatterns.some((p) => p.test(text));
 }
 
