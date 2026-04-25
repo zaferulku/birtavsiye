@@ -5,6 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { fetchCategoryPath } from "../../../lib/categoryTree";
 import {
+  formatFreshnessLabel,
+  getFreshestSeenAt,
   getLowestActivePrice,
   getUniqueActiveSources,
   sourceTrustScore,
@@ -15,6 +17,7 @@ type PriceRow = {
   source: string | null;
   is_active?: boolean | null;
   in_stock?: boolean | null;
+  last_seen?: string | null;
 };
 type Row = {
   id: string;
@@ -50,7 +53,7 @@ export default async function ModelPageView({ brand, model }: { brand: string; m
 
   const { data } = await supabase
     .from("products")
-    .select("id, slug, title, brand, image_url, variant_storage, variant_color, category_id, specs, prices:listings(price, source, is_active, in_stock)")
+    .select("id, slug, title, brand, image_url, variant_storage, variant_color, category_id, specs, prices:listings(price, source, last_seen, is_active, in_stock)")
     .ilike("brand", brandGuess)
     .ilike("model_family", modelGuess)
     .limit(200);
@@ -166,7 +169,9 @@ export default async function ModelPageView({ brand, model }: { brand: string; m
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4">
-          {variants.map((v, i) => (
+          {variants.map((v, i) => {
+            const freshestSeenAt = getFreshestSeenAt(v.rep.prices);
+            return (
             <Link key={i} href={`/urun/${v.rep.slug}`} className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md hover:border-gray-300 transition group">
               <div className="relative aspect-square bg-white">
                 {v.image ? (
@@ -185,13 +190,16 @@ export default async function ModelPageView({ brand, model }: { brand: string; m
                   )}
                 </div>
                 {isFinite(v.minPrice) ? (
-                  <div className="font-bold text-sm">{v.minPrice.toLocaleString("tr-TR")} <span className="text-[10px] font-normal text-gray-400">TL&apos;den</span></div>
+                  <div>
+                    <div className="font-bold text-sm">{v.minPrice.toLocaleString("tr-TR")} <span className="text-[10px] font-normal text-gray-400">TL&apos;den</span></div>
+                    <div className="mt-1 text-[10px] text-gray-400">Son fiyat: {formatFreshnessLabel(freshestSeenAt)}</div>
+                  </div>
                 ) : (
                   <div className="text-xs text-gray-400">Fiyat yok</div>
                 )}
               </div>
             </Link>
-          ))}
+          )})}
         </div>
       </div>
       <Footer />
