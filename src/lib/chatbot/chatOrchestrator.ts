@@ -228,9 +228,41 @@ const COLOR_KEYS = new Set([
 const STORAGE_KEYS = new Set([
   "depolama", "Depolama", "storage", "Storage", "hafıza", "Hafıza",
   "kapasite", "Kapasite", "gb", "GB",
+  "hafiza", "Hafiza", "dahili_hafiza", "dahili_hafıza",
+  "internal_storage", "memory", "Memory",
 ]);
 
-function extractVariantPatterns(specs: Record<string, string[] | string | number>): {
+// LLM tutarsızlığında semantic_keywords içinden renk yakalamak için.
+// Intent parser bazen "siyah"ı must_have_specs.renk yerine
+// semantic_keywords'e atıyor — bu sözlük JS-side fallback için.
+const COLOR_WORDS = new Set([
+  "siyah", "beyaz", "gri", "mavi", "kırmızı", "yeşil", "sarı",
+  "pembe", "mor", "turuncu", "kahve", "lacivert", "bordo",
+  "altın", "gümüş", "krem", "bej", "şeffaf", "lila", "mat",
+  "black", "white", "blue", "red", "green", "yellow",
+  "pink", "purple", "gold", "silver", "rose",
+]);
+const STORAGE_PATTERN = /^(\d+(?:[.,]\d+)?)\s*(GB|TB|MB)$/i;
+
+function buildStoragePatterns(value: string, into: string[]): void {
+  const s = value.trim();
+  if (!s) return;
+  const m = s.match(STORAGE_PATTERN);
+  if (m) {
+    const num = m[1];
+    const unit = m[2].toUpperCase();
+    into.push(`%${num}${unit}%`);
+    into.push(`%${num} ${unit}%`);
+  } else {
+    into.push(`%${s.replace(/\s+/g, "")}%`);
+    into.push(`%${s}%`);
+  }
+}
+
+function extractVariantPatterns(
+  specs: Record<string, string[] | string | number>,
+  semanticKeywords: string[] = []
+): {
   variant_color_patterns: string[] | null;
   variant_storage_patterns: string[] | null;
   remaining_specs: Record<string, string[] | string | number>;
@@ -249,24 +281,28 @@ function extractVariantPatterns(specs: Record<string, string[] | string | number
       }
     } else if (STORAGE_KEYS.has(key)) {
       for (const v of values) {
-        if (typeof v !== "string") continue;
-        const s = v.trim();
-        if (!s) continue;
-        // Hem boşluklu hem boşluksuz pattern üret: "256 GB" ve "256GB"
-        const noSpace = s.replace(/\s+/g, "");
-        const withSpaceMatch = s.match(/^(\d+(?:[.,]\d+)?)\s*(GB|TB|MB)/i);
-        if (withSpaceMatch) {
-          const num = withSpaceMatch[1];
-          const unit = withSpaceMatch[2].toUpperCase();
-          storages.push(`%${num}${unit}%`);
-          storages.push(`%${num} ${unit}%`);
-        } else {
-          storages.push(`%${noSpace}%`);
-          storages.push(`%${s}%`);
-        }
+        if (typeof v === "string") buildStoragePatterns(v, storages);
       }
     } else {
       remaining[key] = val;
+    }
+  }
+
+  // Fallback: must_have_specs renk/storage içermiyorsa semantic_keywords'e bak
+  // (LLM bazen renk kelimesini specs yerine keyword olarak atıyor)
+  if (colors.length === 0 || storages.length === 0) {
+    for (const kw of semanticKeywords) {
+      if (typeof kw !== "string") continue;
+      const lower = kw.toLowerCase().trim();
+      if (!lower) continue;
+      // Color word match
+      if (colors.length === 0 && COLOR_WORDS.has(lower)) {
+        colors.push(`%${lower}%`);
+      }
+      // Storage pattern match
+      if (storages.length === 0 && STORAGE_PATTERN.test(lower)) {
+        buildStoragePatterns(lower, storages);
+      }
     }
   }
 
@@ -288,12 +324,14 @@ async function runSmartSearch(
     throw new Error(`Embedding dim mismatch: ${embed.dimensions}`);
   }
 
-  // Variant patterns'i must_have_specs'ten ayıkla (renk/storage kolonlara)
+  // Variant patterns'i must_have_specs'ten ayıkla (renk/storage kolonlara).
+  // semantic_keywords fallback olarak verilir — LLM bazen rengi
+  // must_have_specs yerine keyword listesine atıyor.
   const {
     variant_color_patterns,
     variant_storage_patterns,
     remaining_specs,
-  } = extractVariantPatterns(intent.must_have_specs);
+  } = extractVariantPatterns(intent.must_have_specs, intent.semantic_keywords);
 
   // RPC parametreleri
   const params = {
