@@ -91,17 +91,28 @@ function SendIcon({ className = "" }: { className?: string }) {
 function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === "user";
   const display = message.displayLabel || message.content;
+  const hasImage = message.attachmentType === "image" && message.attachmentPreview;
   return (
     <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-2.5`}>
-      <div
-        className={`
-          max-w-[85%] px-3.5 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap
-          ${isUser
-            ? "bg-black text-white rounded-br-md"
-            : "bg-gray-100 text-gray-900 rounded-bl-md"}
-        `}
-      >
-        {display}
+      <div className="max-w-[85%] flex flex-col gap-2 items-end">
+        {hasImage && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={message.attachmentPreview as string}
+            alt="Yüklenen görsel"
+            className="rounded-xl max-w-full max-h-48 object-cover border border-gray-200"
+          />
+        )}
+        <div
+          className={`
+            px-3.5 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap
+            ${isUser
+              ? "bg-black text-white rounded-br-md"
+              : "bg-gray-100 text-gray-900 rounded-bl-md"}
+          `}
+        >
+          {display}
+        </div>
       </div>
     </div>
   );

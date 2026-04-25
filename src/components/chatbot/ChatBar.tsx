@@ -19,9 +19,46 @@
  * sonraki iterasyonda bu UI üzerine yeniden bağlanacak.
  */
 
-import { useState, useRef, useCallback, useEffect, KeyboardEvent } from "react";
+import { useState, useRef, useCallback, useEffect, KeyboardEvent, ChangeEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useChatStore } from "../../lib/chatbot/useChatStore";
+
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
+
+// Web Speech API tipleri (resmi DOM types'ta yok)
+type SpeechRecognitionAlternative = { transcript: string; confidence: number };
+type SpeechRecognitionResult = {
+  readonly length: number;
+  readonly isFinal: boolean;
+  [index: number]: SpeechRecognitionAlternative;
+};
+type SpeechRecognitionResultList = {
+  readonly length: number;
+  [index: number]: SpeechRecognitionResult;
+};
+type SpeechRecognitionEvent = { results: SpeechRecognitionResultList; resultIndex: number };
+type SpeechRecognitionErrorEvent = { error: string; message?: string };
+interface SpeechRecognitionInstance {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  maxAlternatives: number;
+  onresult: ((e: SpeechRecognitionEvent) => void) | null;
+  onerror: ((e: SpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  start(): void;
+  stop(): void;
+  abort(): void;
+}
+type SpeechRecognitionCtor = new () => SpeechRecognitionInstance;
+function getSpeechRecognitionCtor(): SpeechRecognitionCtor | null {
+  if (typeof window === "undefined") return null;
+  const w = window as unknown as {
+    SpeechRecognition?: SpeechRecognitionCtor;
+    webkitSpeechRecognition?: SpeechRecognitionCtor;
+  };
+  return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null;
+}
 
 // ============================================================================
 // Icons
@@ -145,6 +182,9 @@ export function ChatBar() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [text, setText] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const transcriptBaseRef = useRef<string>("");
 
   const status = useChatStore((s) => s.status);
   const addUserMessage = useChatStore((s) => s.addUserMessage);
@@ -153,8 +193,21 @@ export function ChatBar() {
   const setStatus = useChatStore((s) => s.setStatus);
   const openPanel = useChatStore((s) => s.openPanel);
   const getHistoryForBackend = useChatStore((s) => s.getHistoryForBackend);
+  const isRecording = useChatStore((s) => s.isRecording);
+  const setRecording = useChatStore((s) => s.setRecording);
 
   const isLoading = status === "sending" || status === "streaming";
+
+  // Cleanup recognition on unmount
+  useEffect(() => {
+    return () => {
+      const rec = recognitionRef.current;
+      if (rec) {
+        try { rec.abort(); } catch { /* noop */ }
+      }
+      recognitionRef.current = null;
+    };
+  }, []);
 
   const handleSend = useCallback(async () => {
     const message = text.trim();
@@ -205,27 +258,143 @@ export function ChatBar() {
     fileInputRef.current?.click();
   };
 
-  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelected = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = "";
     if (!file) return;
 
-    // TODO Parça 6 (gerçek impl önceki commit'te vardı, v3 placeholder):
-    // FileReader → base64 → fetch body.image; preview pill UI
-    console.log("[ChatBar] Foto seçildi:", file.name);
+    if (!file.type.startsWith("image/")) {
+      addAssistantMessage("Lütfen bir resim dosyası seç (jpg, png, webp).");
+      openPanel();
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      addAssistantMessage("Görsel 5 MB'tan büyük olamaz.");
+      openPanel();
+      return;
+    }
 
-    addUserMessage(`📷 ${file.name}`);
+    let base64: string;
+    try {
+      base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Dosya okunamadı"));
+        reader.readAsDataURL(file);
+      });
+    } catch {
+      addAssistantMessage("Görsel okunamadı, tekrar dene.");
+      openPanel();
+      return;
+    }
+
+    const message = text.trim() || "Bu görseli analiz et, ne ürün?";
+    addUserMessage(message, "image", base64);
     openPanel();
-    addAssistantMessage(
-      "Fotoğraf yükleme özelliği yakında! Şimdilik metin ile aramaya devam edebilirsin."
-    );
+    setText("");
 
-    e.target.value = "";
+    const history = getHistoryForBackend();
+    const chatSessionId = useChatStore.getState().chatSessionId;
+    router.push(`/sonuclar?q=${encodeURIComponent(message)}`);
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, history, chatSessionId, image: base64 }),
+      });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+      addAssistantMessage(data.reply || "Yanıt alınamadı.", data.suggestions ?? null);
+      if (Array.isArray(data.products)) {
+        setRecommendations(data.products, message);
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Bilinmeyen hata";
+      setStatus("error", errorMsg);
+      addAssistantMessage("Görsel yüklenirken bir sorun oluştu, tekrar dener misin?");
+    }
   };
 
-  const handleMicClick = () => {
-    // TODO Parça 7 (gerçek SpeechRecognition impl önceki commit'te vardı)
-    console.log("[ChatBar] Mic clicked - TODO");
-  };
+  const stopRecognition = useCallback(() => {
+    const rec = recognitionRef.current;
+    if (rec) {
+      try { rec.stop(); } catch { /* noop */ }
+    }
+    recognitionRef.current = null;
+    setRecording(false);
+  }, [setRecording]);
+
+  const handleMicClick = useCallback(() => {
+    setVoiceError(null);
+
+    if (isRecording) {
+      stopRecognition();
+      return;
+    }
+
+    const Ctor = getSpeechRecognitionCtor();
+    if (!Ctor) {
+      setVoiceError("Tarayıcın sesli girişi desteklemiyor. Chrome veya Edge dene.");
+      return;
+    }
+
+    let recognition: SpeechRecognitionInstance;
+    try {
+      recognition = new Ctor();
+    } catch {
+      setVoiceError("Mikrofon başlatılamadı.");
+      return;
+    }
+
+    recognition.lang = "tr-TR";
+    recognition.continuous = false;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    transcriptBaseRef.current = text;
+
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
+      let interim = "";
+      let finalText = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const result = event.results[i];
+        const piece = result[0]?.transcript ?? "";
+        if (result.isFinal) finalText += piece;
+        else interim += piece;
+      }
+      const base = transcriptBaseRef.current;
+      const joined = (base + " " + (finalText || interim)).trim();
+      setText(joined);
+      if (finalText) transcriptBaseRef.current = joined;
+    };
+
+    recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+      const code = event.error;
+      if (code === "not-allowed" || code === "service-not-allowed") {
+        setVoiceError("Mikrofon erişimine izin ver.");
+      } else if (code === "no-speech") {
+        setVoiceError("Ses algılanmadı, tekrar dene.");
+      } else if (code !== "aborted") {
+        setVoiceError(`Ses tanımada sorun: ${code}`);
+      }
+      stopRecognition();
+    };
+
+    recognition.onend = () => {
+      setRecording(false);
+      recognitionRef.current = null;
+    };
+
+    try {
+      recognition.start();
+      recognitionRef.current = recognition;
+      setRecording(true);
+    } catch {
+      setVoiceError("Mikrofon başlatılamadı, tekrar dene.");
+      stopRecognition();
+    }
+  }, [isRecording, text, setRecording, stopRecognition]);
 
   const handlePlusClick = () => {
     setMenuOpen(prev => !prev);
@@ -238,15 +407,28 @@ export function ChatBar() {
       aria-label="Birtavsiye AI asistanı"
     >
       <div className="relative">
+        {voiceError && (
+          <div
+            role="alert"
+            className="mb-2 text-center text-xs text-red-600 bg-red-50 border border-red-200 rounded-full px-3 py-1.5 mx-auto max-w-md"
+          >
+            {voiceError}
+          </div>
+        )}
         <div className="flex items-center gap-2 bg-white rounded-full shadow-lg border border-gray-200 px-3 py-2 transition-all focus-within:shadow-xl focus-within:border-gray-300">
           {/* MİKROFON — SOLDA */}
           <button
             type="button"
             onClick={handleMicClick}
             disabled={isLoading}
-            className="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            aria-label="Sesli komut"
-            title="Mikrofona bas, konuş"
+            className={`flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              isRecording
+                ? "bg-red-500 text-white hover:bg-red-600 animate-pulse"
+                : "text-gray-600 hover:bg-gray-100"
+            }`}
+            aria-label={isRecording ? "Kaydı durdur" : "Sesli komut"}
+            aria-pressed={isRecording}
+            title={isRecording ? "Kaydı durdurmak için tıkla" : "Mikrofona bas, konuş"}
           >
             <MicIcon className="w-5 h-5" />
           </button>
