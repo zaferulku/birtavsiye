@@ -1,19 +1,26 @@
 "use client";
 
 /**
- * ChatPanel v2 â 320px saÄdan slide-in chat penceresi
+ * ChatPanel v3 — Sağ alt köşede 320×600px pop-up pencere
  *
- * Yeni Ã¶zellikler (v1'den fark):
- *   - GeniÅlik: 400px â 320px (kullanÄ±cÄ± isteÄi)
- *   - Panel iÃ§inde KENDÄ° INPUT BAR'Ä± (kullanÄ±cÄ± buradan da yazabilir)
- *   - "Yeni sohbet" butonu (+) header'da
- *   - Inactivity watcher mount (15dk hareketsizlik kontrolÃ¼)
- *   - KÃ¼Ã§Ã¼ltme = mesajlar korunur
- *   - Kapatma (X) = mesajlar silinir (store iÃ§inde)
- *   - conversationEnded durumunda input gÃ¶rÃ¼nÃ¼r ama Ã¶zel UI ile
+ * v2'den fark:
+ *   - Tam yükseklik (h-full) → 600px sabit yükseklik
+ *   - Sağ kenardan değil, sağ alt köşeden açılır
+ *   - ChatBar'ın üstünde durur (alt margin var)
+ *   - Köşeli kart görünümü (rounded-2xl, shadow-2xl)
+ *   - Mobilde tam ekran
+ *
+ * v2 özellikleri korunur:
+ *   - 320px genişlik
+ *   - Header'da: yeni sohbet (+), küçült (—), kapat (×) butonları
+ *   - Panel içi input bar
+ *   - Küçültme = mesajlar korunur
+ *   - Kapatma (×) = mesajlar silinir
+ *   - 15dk inactivity timeout
+ *   - Suggestion chip butonları (bot daraltıcı sohbet)
  */
 
-import { useCallback, useEffect, useRef, useState, KeyboardEvent } from "react";
+import { useEffect, useRef, useState, KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
 import {
   useChatStore,
@@ -29,15 +36,15 @@ import {
 
 function MinimizeIcon({ className = "" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-      <line x1="6" y1="12" x2="18" y2="12" />
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+      <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
   );
 }
 
 function CloseIcon({ className = "" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
       <line x1="6" y1="6" x2="18" y2="18" />
       <line x1="18" y1="6" x2="6" y2="18" />
     </svg>
@@ -62,7 +69,7 @@ function ChatIcon({ className = "" }: { className?: string }) {
 
 function PlusIcon({ className = "" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
       <line x1="12" y1="5" x2="12" y2="19" />
       <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
@@ -78,16 +85,14 @@ function SendIcon({ className = "" }: { className?: string }) {
 }
 
 // ============================================================================
-// Mesaj balonlarÄ±
+// Mesaj balonları
 // ============================================================================
 
 function MessageBubble({ message }: { message: ChatMessage }) {
   const isUser = message.role === "user";
-  // Chip click ile gönderilen mesajlarda displayLabel UI'da gösterilir,
-  // content backend history'sinde tam değer olarak korunur.
   const display = message.displayLabel || message.content;
   return (
-    <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-3`}>
+    <div className={`flex ${isUser ? "justify-end" : "justify-start"} mb-2.5`}>
       <div
         className={`
           max-w-[85%] px-3.5 py-2 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap
@@ -97,6 +102,20 @@ function MessageBubble({ message }: { message: ChatMessage }) {
         `}
       >
         {display}
+      </div>
+    </div>
+  );
+}
+
+function TypingIndicator() {
+  return (
+    <div className="flex justify-start mb-2.5">
+      <div className="bg-gray-100 rounded-2xl rounded-bl-md px-4 py-3">
+        <div className="flex items-center gap-1">
+          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+        </div>
       </div>
     </div>
   );
@@ -112,12 +131,12 @@ function ChipRow({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex flex-wrap gap-1.5 mt-1 mb-3 px-1" role="group" aria-label="Hızlı seçenekler">
+    <div className="flex flex-wrap gap-1.5 mt-1.5 mb-2 px-1" role="group" aria-label="Hızlı seçenekler">
       {suggestions.map((s, i) => (
         <button
           key={`${s.value}-${i}`}
           type="button"
-          onClick={() => onClick(s)}
+          onClick={() => !disabled && onClick(s)}
           disabled={disabled}
           className="
             inline-flex items-center gap-1
@@ -132,20 +151,6 @@ function ChipRow({
           <span>{s.label}</span>
         </button>
       ))}
-    </div>
-  );
-}
-
-function TypingIndicator() {
-  return (
-    <div className="flex justify-start mb-3">
-      <div className="bg-gray-100 rounded-2xl rounded-bl-md px-4 py-3">
-        <div className="flex items-center gap-1">
-          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
-        </div>
-      </div>
     </div>
   );
 }
@@ -167,7 +172,7 @@ function EmptyState() {
 }
 
 // ============================================================================
-// Minimized bar
+// Minimized bar (sağ alt küçük buton)
 // ============================================================================
 
 function MinimizedBar() {
@@ -201,7 +206,7 @@ function MinimizedBar() {
 }
 
 // ============================================================================
-// Panel iÃ§i input bar
+// Panel içi input bar
 // ============================================================================
 
 function PanelInputBar() {
@@ -220,37 +225,36 @@ function PanelInputBar() {
   const handleSend = async () => {
     const message = text.trim();
     if (!message || isLoading) return;
-    setText("");
-    await sendMessage(message, null);
-  };
 
-  // Hem text input hem chip click bunu kullanır.
-  // displayLabel: chip click'te "En popüler" gibi kısa label, content
-  // backend'e tam value olarak gider.
-  async function sendMessage(value: string, displayLabel: string | null) {
-    addUserMessage(value, null, null, displayLabel);
+    addUserMessage(message);
+    setText("");
+
     const history = getHistoryForBackend();
     const chatSessionId = useChatStore.getState().chatSessionId;
-    router.push(`/sonuclar?q=${encodeURIComponent(value)}`);
+
+    router.push(`/sonuclar?q=${encodeURIComponent(message)}`);
 
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: value, history, chatSessionId }),
+        body: JSON.stringify({ message, history, chatSessionId }),
       });
+
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
       const data = await response.json();
       addAssistantMessage(data.reply || "Yanıt alınamadı.", data.suggestions ?? null);
+
       if (Array.isArray(data.products)) {
-        setRecommendations(data.products, value);
+        setRecommendations(data.products, message);
       }
     } catch (err) {
       const errorMsg = err instanceof Error ? err.message : "Bilinmeyen hata";
       setStatus("error", errorMsg);
       addAssistantMessage("Üzgünüm, bir sorun oluştu. Tekrar dener misin?");
     }
-  }
+  };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -297,7 +301,7 @@ function PanelInputBar() {
 }
 
 // ============================================================================
-// ChatPanel (asÄ±l panel)
+// ChatPanel (asıl panel)
 // ============================================================================
 
 export function ChatPanel() {
@@ -317,44 +321,6 @@ export function ChatPanel() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const handleChipClick = useCallback(
-    async (s: Suggestion) => {
-      if (status === "sending" || status === "streaming") return;
-      // displayLabel kısa UI metni, content backend'e tam value
-      addUserMessage(s.value, null, null, s.label);
-      const history = getHistoryForBackend();
-      const chatSessionId = useChatStore.getState().chatSessionId;
-      router.push(`/sonuclar?q=${encodeURIComponent(s.value)}`);
-
-      try {
-        const response = await fetch("/api/chat", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: s.value, history, chatSessionId }),
-        });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data = await response.json();
-        addAssistantMessage(data.reply || "Yanıt alınamadı.", data.suggestions ?? null);
-        if (Array.isArray(data.products)) {
-          setRecommendations(data.products, s.value);
-        }
-      } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : "Bilinmeyen hata";
-        setStatus("error", errorMsg);
-        addAssistantMessage("Üzgünüm, bir sorun oluştu. Tekrar dener misin?");
-      }
-    },
-    [
-      status,
-      addUserMessage,
-      addAssistantMessage,
-      setRecommendations,
-      setStatus,
-      getHistoryForBackend,
-      router,
-    ]
-  );
-
   // ----- Auto scroll -----
   useEffect(() => {
     if (panelState === "open") {
@@ -362,17 +328,7 @@ export function ChatPanel() {
     }
   }, [messages, status, panelState]);
 
-  // ----- ESC ile kÃ¼Ã§Ã¼lt -----
-  useEffect(() => {
-    if (panelState !== "open") return;
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") minimizePanel();
-    };
-    window.addEventListener("keydown", handleEsc as any);
-    return () => window.removeEventListener("keydown", handleEsc as any);
-  }, [panelState, minimizePanel]);
-
-  // ----- Inactivity watcher (mount/unmount) -----
+  // ----- Inactivity watcher -----
   useEffect(() => {
     startInactivityWatcher();
     return () => stopInactivityWatcher();
@@ -384,6 +340,39 @@ export function ChatPanel() {
     startNewConversation();
   };
 
+  // ----- Chip click handler -----
+  const handleChipClick = async (s: Suggestion) => {
+    if (status === "sending" || status === "streaming") return;
+
+    addUserMessage(s.value, null, null, s.label);
+
+    const history = getHistoryForBackend();
+    const chatSessionId = useChatStore.getState().chatSessionId;
+
+    router.push(`/sonuclar?q=${encodeURIComponent(s.value)}`);
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: s.value, history, chatSessionId }),
+      });
+
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      const data = await response.json();
+      addAssistantMessage(data.reply || "Yanıt alınamadı.", data.suggestions ?? null);
+
+      if (Array.isArray(data.products)) {
+        setRecommendations(data.products, s.value);
+      }
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Bilinmeyen hata";
+      setStatus("error", errorMsg);
+      addAssistantMessage("Üzgünüm, bir sorun oluştu. Tekrar dener misin?");
+    }
+  };
+
   // ----- Render -----
 
   if (panelState === "closed") return null;
@@ -391,27 +380,28 @@ export function ChatPanel() {
 
   return (
     <>
-      {/* Mobil arka plan */}
+      {/* Mobil arka plan overlay */}
       <div
         className="md:hidden fixed inset-0 bg-black/30 z-40"
         onClick={minimizePanel}
         aria-hidden="true"
       />
 
-      {/* Panel */}
+      {/* Panel — DESKTOP: sağ alt köşe pop-up, MOBILE: tam ekran */}
       <aside
         className="
-          fixed top-0 right-0 z-40
-          h-full bg-white shadow-2xl border-l border-gray-200
-          flex flex-col
-          w-full md:w-[320px]
+          fixed z-40 bg-white shadow-2xl border border-gray-200
+          flex flex-col overflow-hidden
+          inset-0 rounded-none
+          md:inset-auto md:bottom-24 md:right-4
+          md:w-[320px] md:h-[600px] md:rounded-2xl
           animate-slide-in-right
         "
         role="complementary"
         aria-label="Birtavsiye AI sohbet penceresi"
       >
         {/* Header */}
-        <header className="flex items-center justify-between px-3 py-2.5 border-b border-gray-200 flex-shrink-0">
+        <header className="flex items-center justify-between px-3 py-2.5 border-b border-gray-200 flex-shrink-0 bg-white">
           <div className="flex items-center gap-2 min-w-0">
             <div className="w-7 h-7 rounded-full bg-black flex items-center justify-center flex-shrink-0">
               <ChatIcon className="w-3.5 h-3.5 text-white" />
@@ -435,7 +425,7 @@ export function ChatPanel() {
               <button
                 type="button"
                 onClick={handleNewConversation}
-                className="w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors"
                 aria-label="Yeni sohbet"
                 title="Yeni sohbet"
               >
@@ -445,16 +435,16 @@ export function ChatPanel() {
             <button
               type="button"
               onClick={minimizePanel}
-              className="w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
+              className="w-8 h-8 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors"
               aria-label="Küçült"
-              title="Küçült (ESC)"
+              title="Küçült"
             >
               <MinimizeIcon className="w-4 h-4" />
             </button>
             <button
               type="button"
               onClick={closePanel}
-              className="w-7 h-7 flex items-center justify-center rounded-full text-gray-500 hover:bg-gray-100 transition-colors"
+              className="w-8 h-8 flex items-center justify-center rounded-full text-gray-600 hover:bg-red-50 hover:text-red-600 active:bg-red-100 transition-colors"
               aria-label="Kapat (sohbeti sil)"
               title="Kapat — sohbet silinir"
             >
@@ -465,7 +455,7 @@ export function ChatPanel() {
 
         {/* Mesaj listesi */}
         <div
-          className="flex-1 overflow-y-auto px-3 py-3"
+          className="flex-1 overflow-y-auto px-3 py-3 bg-white"
           role="log"
           aria-live="polite"
           aria-label="Sohbet mesajları"
@@ -499,7 +489,7 @@ export function ChatPanel() {
           )}
         </div>
 
-        {/* Input bar (panel iÃ§i) */}
+        {/* Input bar */}
         <PanelInputBar />
       </aside>
     </>
