@@ -19,6 +19,8 @@ import {
   useChatStore,
   type RecommendedProduct,
 } from "@/lib/chatbot/useChatStore";
+import Header from "../components/layout/Header";
+import ToggleBar from "../components/home/ToggleBar";
 
 // ============================================================================
 // Product card
@@ -245,6 +247,8 @@ function SonuclarContent() {
 export default function SonuclarPage() {
   return (
     <main className="min-h-screen bg-white pb-32">
+      <Header />
+      <ToggleBar />
       <Suspense fallback={<div className="py-16 text-center text-gray-500">Yükleniyor...</div>}>
         <SonuclarContent />
       </Suspense>
