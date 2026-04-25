@@ -219,6 +219,64 @@ type SmartSearchRow = {
   match_source: string;
 };
 
+// Variant pattern extraction — must_have_specs içinden renk/depolama
+// key'lerini ayıklayıp ILIKE pattern'larına çevirir. smart_search v2 RPC
+// (migration 004) variant_color_patterns + variant_storage_patterns alır.
+const COLOR_KEYS = new Set([
+  "renk", "Renk", "color", "Color", "RENK", "COLOR",
+]);
+const STORAGE_KEYS = new Set([
+  "depolama", "Depolama", "storage", "Storage", "hafıza", "Hafıza",
+  "kapasite", "Kapasite", "gb", "GB",
+]);
+
+function extractVariantPatterns(specs: Record<string, string[] | string | number>): {
+  variant_color_patterns: string[] | null;
+  variant_storage_patterns: string[] | null;
+  remaining_specs: Record<string, string[] | string | number>;
+} {
+  const colors: string[] = [];
+  const storages: string[] = [];
+  const remaining: Record<string, string[] | string | number> = {};
+
+  for (const [key, val] of Object.entries(specs)) {
+    const values = Array.isArray(val) ? val : [String(val)];
+    if (COLOR_KEYS.has(key)) {
+      for (const v of values) {
+        if (typeof v === "string" && v.trim()) {
+          colors.push(`%${v.trim()}%`);
+        }
+      }
+    } else if (STORAGE_KEYS.has(key)) {
+      for (const v of values) {
+        if (typeof v !== "string") continue;
+        const s = v.trim();
+        if (!s) continue;
+        // Hem boşluklu hem boşluksuz pattern üret: "256 GB" ve "256GB"
+        const noSpace = s.replace(/\s+/g, "");
+        const withSpaceMatch = s.match(/^(\d+(?:[.,]\d+)?)\s*(GB|TB|MB)/i);
+        if (withSpaceMatch) {
+          const num = withSpaceMatch[1];
+          const unit = withSpaceMatch[2].toUpperCase();
+          storages.push(`%${num}${unit}%`);
+          storages.push(`%${num} ${unit}%`);
+        } else {
+          storages.push(`%${noSpace}%`);
+          storages.push(`%${s}%`);
+        }
+      }
+    } else {
+      remaining[key] = val;
+    }
+  }
+
+  return {
+    variant_color_patterns: colors.length > 0 ? Array.from(new Set(colors)) : null,
+    variant_storage_patterns: storages.length > 0 ? Array.from(new Set(storages)) : null,
+    remaining_specs: remaining,
+  };
+}
+
 async function runSmartSearch(
   sb: SupabaseClient,
   userMessage: string,
@@ -230,12 +288,19 @@ async function runSmartSearch(
     throw new Error(`Embedding dim mismatch: ${embed.dimensions}`);
   }
 
+  // Variant patterns'i must_have_specs'ten ayıkla (renk/storage kolonlara)
+  const {
+    variant_color_patterns,
+    variant_storage_patterns,
+    remaining_specs,
+  } = extractVariantPatterns(intent.must_have_specs);
+
   // RPC parametreleri
   const params = {
     query_embedding: embed.embedding,
     category_filter: intent.category_slug,
-    specs_must: Object.keys(intent.must_have_specs).length > 0
-      ? intent.must_have_specs
+    specs_must: Object.keys(remaining_specs).length > 0
+      ? remaining_specs
       : null,
     keyword_patterns: intent.semantic_keywords.length > 0
       ? intent.semantic_keywords
@@ -247,6 +312,8 @@ async function runSmartSearch(
       : null,
     match_count: 10,
     match_threshold: 0.3,
+    variant_color_patterns,
+    variant_storage_patterns,
   };
 
   const { data, error } = await sb.rpc("smart_search", params);
