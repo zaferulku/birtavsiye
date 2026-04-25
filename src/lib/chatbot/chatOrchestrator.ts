@@ -111,6 +111,7 @@ async function runFastPath(
     products: mapProductsForResponse(searchResult.products),
     conversationHistory: input.conversationHistory || [],
     sb: input.sb,
+    categorySlug: input.parsed?.category ?? null,
   });
 
   return {
@@ -217,6 +218,7 @@ async function runSlowPath(
     products: mapProductsForResponse(finalProducts),
     conversationHistory: input.conversationHistory || [],
     sb: input.sb,
+    categorySlug: intent?.category_slug ?? null,
   });
 
   return {

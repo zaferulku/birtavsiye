@@ -35,6 +35,7 @@ export type SuggestionContext = {
   conversationHistory: Array<{ role: string; content: string }>;
   sb?: SupabaseClient | null;
   categoryId?: string | null;
+  categorySlug?: string | null;
 };
 
 // ============================================================================
@@ -52,8 +53,9 @@ export async function buildSuggestions(
   // 2. Terminator phrase
   if (isTerminator(userMessage)) return null;
 
-  // 3. Vague intent → kategori chip'leri
-  if (intent?.is_too_vague || (!intent?.category_slug && products.length === 0)) {
+  // 3. Vague intent → kategori chip'leri (sadece ürün YOKSA)
+  // Ürün döndüyse kategori biliniyor demektir, marka chip'lerine düş.
+  if ((intent?.is_too_vague || !intent?.category_slug) && products.length === 0) {
     return buildCategorySuggestions();
   }
 
@@ -67,8 +69,9 @@ export async function buildSuggestions(
     return buildPopularFollowUpSuggestions(intent, products, userMessage);
   }
 
-  // 6. Az ürün → chip yok
-  if (products.length <= 6) return null;
+  // 6. Tek ürün/sıfır → chip yok (kullanıcı zaten istediğini buldu).
+  // 2+ ürün → daraltma sun.
+  if (products.length <= 1) return null;
 
   // 7. Marka belirsiz
   if (!intent?.brand_filter || intent.brand_filter.length === 0) {
@@ -150,15 +153,24 @@ async function buildBrandSuggestions(
   // Top markalar — sb varsa kategoriden, yoksa products'tan
   let topBrands: string[] = [];
 
-  if (ctx.sb && ctx.categoryId) {
+  // categorySlug üzerinden kategori-bazlı top markalar (Header'daki
+  // marka çeşitliliği için DB'den çek)
+  if (ctx.sb && (ctx.categoryId || ctx.categorySlug)) {
     try {
-      const { data } = await ctx.sb
+      let query = ctx.sb
         .from("products")
-        .select("brand")
-        .eq("category_id", ctx.categoryId)
+        .select("brand, category:categories!inner(slug)")
         .eq("is_active", true)
         .not("brand", "is", null)
         .limit(500);
+
+      if (ctx.categoryId) {
+        query = query.eq("category_id", ctx.categoryId);
+      } else if (ctx.categorySlug) {
+        query = query.eq("categories.slug", ctx.categorySlug);
+      }
+
+      const { data } = await query;
 
       if (data) {
         const counts: Record<string, number> = {};
