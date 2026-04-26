@@ -31,7 +31,9 @@
  * MULTI-MODEL FALLBACK CHAIN:
  *   gemini-flash-lite-latest (primary, hızlı, ucuz)
  *   gemini-2.0-flash (fallback)
- *   gemma-3-27b-it (last resort)
+ *
+ * NOT: gemma-3-27b-it kaldırıldı — JSON mode desteklemiyor (400 errors).
+ * Her çağrıda fail edip rate-limit harcıyordu.
  *
  * BRAND POLICY: AGRESİF
  *   Gemini her ürün için brand'i de doğrular/düzeltir.
@@ -54,7 +56,7 @@ const PROGRESS_INTERVAL = 10;   // Her N üründe progress log
 const MODEL_CHAIN = [
   { name: "gemini-flash-lite-latest", maxRetries: 2 },
   { name: "gemini-2.0-flash", maxRetries: 1 },
-  { name: "gemma-3-27b-it", maxRetries: 1 },
+  // gemma-3-27b-it kaldırıldı: JSON mode desteklemiyor, 400 errors
 ];
 
 const sb = createClient(
