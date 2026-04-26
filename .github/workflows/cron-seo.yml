@@ -1,0 +1,15 @@
+name: Cron — SEO Agent (daily 07)
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Call Vercel cron endpoint
+        run: |
+          curl -fsS -X GET             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"             "https://birtavsiye.net/api/cron/seo"

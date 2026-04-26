@@ -4,6 +4,7 @@ import { supabase } from "../../lib/supabase";
 import { useRouter } from "next/navigation";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
+import DuplicateProductPanel from "../components/admin/DuplicateProductPanel";
 
 type PriceHealthListing = {
   id: string;
@@ -482,6 +483,7 @@ export default function AdminPanel() {
         </div>
 
         {activeTab === "urunler" && (
+          <>
           <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden">
             {products.length === 0 ? (
               <div className="text-center py-16 text-sm text-gray-400">Henüz ürün yok</div>
@@ -505,6 +507,10 @@ export default function AdminPanel() {
               </div>
             ))}
           </div>
+          <div className="mt-5">
+            <DuplicateProductPanel onMerged={loadProducts} />
+          </div>
+          </>
         )}
 
         {activeTab === "ekle" && (
