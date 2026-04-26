@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, Suspense, useEffectEvent } from "react";
-import { supabase } from "../../lib/supabase";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Header from "../components/layout/Header";
@@ -12,14 +11,13 @@ import {
   getFreshestSeenAt,
   getLowestActivePrice,
 } from "../../lib/listingSignals";
-import { mergeClusteredProducts } from "../../lib/productCluster";
 
 type Product = {
   id: string;
   title: string;
   slug: string;
-  brand: string;
-  description: string;
+  brand: string | null;
+  description?: string;
   image_url?: string;
   category_id?: string;
   model_code?: string | null;
@@ -37,36 +35,6 @@ type Product = {
   }[];
 };
 
-type CategoryRow = {
-  id: string;
-  parent_id: string | null;
-  name: string;
-  slug: string;
-};
-
-type RawProductRow = {
-  id: string;
-  title: string;
-  slug: string;
-  brand: string;
-  description: string;
-  image_url?: string;
-  category_id?: string;
-  model_code?: string | null;
-  model_family?: string | null;
-  variant_storage?: string | null;
-  variant_color?: string | null;
-  created_at?: string | null;
-  prices?: Array<{
-    id: string;
-    price: number | string;
-    source?: string | null;
-    last_seen?: string | null;
-    is_active?: boolean | null;
-    in_stock?: boolean | null;
-  }>;
-};
-
 const popularSearches = [
   "iPhone 16",
   "Samsung Galaxy",
@@ -77,67 +45,6 @@ const popularSearches = [
   "iPad",
   "Dyson",
 ];
-
-const PRODUCT_SELECT =
-  "id, title, slug, brand, description, image_url, category_id, model_code, model_family, variant_storage, variant_color, created_at, prices:listings(id, price, source, last_seen, is_active, in_stock)";
-
-function normalizeSearchText(value: string | null | undefined): string {
-  return (value ?? "")
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\u0131/g, "i")
-    .replace(/\u0130/g, "I")
-    .toLowerCase()
-    .trim();
-}
-
-function expandMatchedCategoryIds(categories: CategoryRow[], term: string): string[] {
-  const normalizedTerm = normalizeSearchText(term);
-  if (!normalizedTerm) return [];
-
-  const matchedIds = new Set(
-    categories
-      .filter((category) => {
-        const haystacks = [category.name, category.slug].map((value) => normalizeSearchText(value));
-        return haystacks.some((value) => value.includes(normalizedTerm));
-      })
-      .map((category) => category.id)
-  );
-
-  if (matchedIds.size === 0) return [];
-
-  let foundChild = true;
-  while (foundChild) {
-    foundChild = false;
-    for (const category of categories) {
-      if (!category.parent_id || matchedIds.has(category.id) || !matchedIds.has(category.parent_id)) continue;
-      matchedIds.add(category.id);
-      foundChild = true;
-    }
-  }
-
-  return [...matchedIds];
-}
-
-function normalizeSearchResults(data: RawProductRow[]): Product[] {
-  return data.map((product) => ({
-    ...product,
-    prices: ((product.prices ?? []).map((listing) => ({
-      id: listing.id,
-      price: Number(listing.price),
-      source: listing.source ?? null,
-      last_seen: listing.last_seen ?? null,
-      is_active: listing.is_active ?? null,
-      in_stock: listing.in_stock ?? null,
-    }))).filter(
-      (listing) =>
-        listing.is_active !== false &&
-        listing.in_stock !== false &&
-        Number.isFinite(listing.price) &&
-        listing.price > 0
-    ),
-  }));
-}
 
 function AramaIcerik({ initialQuery }: { initialQuery: string }) {
   const router = useRouter();
@@ -151,46 +58,18 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
     if (!term.trim()) return;
     setLoading(true);
 
-    const [{ data: allCategories }, { data: textMatches }] = await Promise.all([
-      supabase.from("categories").select("id, parent_id, name, slug"),
-      supabase
-        .from("products")
-        .select(PRODUCT_SELECT)
-        .or(
-          [
-            `title.ilike.%${term}%`,
-            `brand.ilike.%${term}%`,
-            `description.ilike.%${term}%`,
-            `model_family.ilike.%${term}%`,
-            `model_code.ilike.%${term}%`,
-            `variant_storage.ilike.%${term}%`,
-            `variant_color.ilike.%${term}%`,
-          ].join(",")
-        )
-        .limit(200),
-    ]);
+    const response = await fetch(`/api/public/products?q=${encodeURIComponent(term)}&limit=48`, {
+      cache: "no-store",
+    });
 
-    const expandedCategoryIds = expandMatchedCategoryIds((allCategories ?? []) as CategoryRow[], term);
-    const { data: categoryMatches } =
-      expandedCategoryIds.length > 0
-        ? await supabase
-            .from("products")
-            .select(PRODUCT_SELECT)
-            .in("category_id", expandedCategoryIds)
-            .limit(200)
-        : { data: [] as RawProductRow[] };
-
-    const uniqueRows = new Map<string, RawProductRow>();
-    for (const product of [...((textMatches as RawProductRow[] | null) ?? []), ...((categoryMatches as RawProductRow[] | null) ?? [])]) {
-      uniqueRows.set(product.id, product);
+    if (!response.ok) {
+      setResults([]);
+      setLoading(false);
+      return;
     }
 
-    const normalized = normalizeSearchResults([...uniqueRows.values()]);
-    setResults(
-      mergeClusteredProducts(normalized)
-        .filter((product) => (product.prices?.length ?? 0) > 0)
-        .slice(0, 48)
-    );
+    const payload = (await response.json()) as { products?: Product[] };
+    setResults((payload.products ?? []).filter((product) => (product.prices?.length ?? 0) > 0));
 
     setLoading(false);
   });
