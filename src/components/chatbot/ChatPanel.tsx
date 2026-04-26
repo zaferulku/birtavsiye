@@ -242,6 +242,7 @@ function PanelInputBar() {
 
     const history = getHistoryForBackend();
     const chatSessionId = useChatStore.getState().chatSessionId;
+    const decisionId = useChatStore.getState().lastDecisionId;
 
     router.push(`/sonuclar?q=${encodeURIComponent(message)}`);
 
@@ -249,13 +250,17 @@ function PanelInputBar() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message, history, chatSessionId }),
+        body: JSON.stringify({ message, history, chatSessionId, decisionId }),
       });
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const data = await response.json();
       addAssistantMessage(data.reply || "Yanıt alınamadı.", data.suggestions ?? null);
+
+      if (typeof data?.meta?.decisionId === "number") {
+        useChatStore.getState().setLastDecisionId(data.meta.decisionId);
+      }
 
       if (Array.isArray(data.products)) {
         setRecommendations(data.products, message);
@@ -359,6 +364,7 @@ export function ChatPanel() {
 
     const history = getHistoryForBackend();
     const chatSessionId = useChatStore.getState().chatSessionId;
+    const decisionId = useChatStore.getState().lastDecisionId;
 
     router.push(`/sonuclar?q=${encodeURIComponent(s.value)}`);
 
@@ -366,13 +372,17 @@ export function ChatPanel() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: s.value, history, chatSessionId }),
+        body: JSON.stringify({ message: s.value, history, chatSessionId, decisionId }),
       });
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const data = await response.json();
       addAssistantMessage(data.reply || "Yanıt alınamadı.", data.suggestions ?? null);
+
+      if (typeof data?.meta?.decisionId === "number") {
+        useChatStore.getState().setLastDecisionId(data.meta.decisionId);
+      }
 
       if (Array.isArray(data.products)) {
         setRecommendations(data.products, s.value);

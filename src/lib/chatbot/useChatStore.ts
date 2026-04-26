@@ -106,6 +106,10 @@ interface ChatStore {
   chatSessionId: string;
   rotateSessionId: () => void;
 
+  // ----- Last decision id (race-safe feedback binding) -----
+  lastDecisionId: number | null;
+  setLastDecisionId: (id: number | null) => void;
+
   // ----- Ses/gÃ¶rsel -----
   isRecording: boolean;
   setRecording: (recording: boolean) => void;
@@ -139,11 +143,13 @@ export const useChatStore = create<ChatStore>()(
         const state = get();
         let newMessages = state.messages;
         let newSessionId = state.chatSessionId;
+        let newLastDecisionId = state.lastDecisionId;
 
         // KonuÅma sona ermiÅse, yeni session
         if (state.conversationEnded) {
           newMessages = [];
           newSessionId = generateSessionId();
+          newLastDecisionId = null;
         }
 
         const id = generateId();
@@ -165,6 +171,7 @@ export const useChatStore = create<ChatStore>()(
           conversationEnded: false,
           lastActivityAt: Date.now(),
           chatSessionId: newSessionId,
+          lastDecisionId: newLastDecisionId,
         });
 
         return id;
@@ -194,6 +201,7 @@ export const useChatStore = create<ChatStore>()(
           errorMessage: null,
           conversationEnded: false,
           chatSessionId: generateSessionId(),
+          lastDecisionId: null,
         });
       },
 
@@ -226,6 +234,7 @@ export const useChatStore = create<ChatStore>()(
           conversationEnded: false,
           lastActivityAt: Date.now(),
           chatSessionId: generateSessionId(),
+          lastDecisionId: null,
         });
       },
 
@@ -274,6 +283,10 @@ export const useChatStore = create<ChatStore>()(
       chatSessionId: generateSessionId(),
       rotateSessionId: () => set({ chatSessionId: generateSessionId() }),
 
+      // ----- Last decision id -----
+      lastDecisionId: null,
+      setLastDecisionId: (id) => set({ lastDecisionId: id }),
+
       // ----- Ses/gÃ¶rsel -----
       isRecording: false,
       setRecording: (recording) => set({ isRecording: recording }),
@@ -301,6 +314,7 @@ export const useChatStore = create<ChatStore>()(
         conversationEnded: state.conversationEnded,
         lastActivityAt: state.lastActivityAt,
         chatSessionId: state.chatSessionId,
+        lastDecisionId: state.lastDecisionId,
       }),
     }
   )
