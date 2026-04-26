@@ -8,3 +8,20 @@ tsconfig.tsbuildinfo
 tmp/
 
 .vercel
+
+# Scraper state
+scripts/scraper-state.json
+
+# Scraper artifacts
+mm-cat-html/
+mm-sample.html
+
+# Log artifacts
+logs/
+.codex-*.log
+
+# Backups
+backups/
+*.v1-backup
+.claude/agents_backup_*
+.claude/scheduled_tasks.lock
