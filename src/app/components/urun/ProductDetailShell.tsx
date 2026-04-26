@@ -113,7 +113,13 @@ export default function ProductDetailShell({
       .sort((left, right) => left - right)[0] ??
     null;
 
-  const primaryImage = product.image_url ?? product.images?.[0] ?? undefined;
+  const galleryImages = (() => {
+    const arr = product.images?.filter(Boolean) ?? [];
+    if (product.image_url && !arr.includes(product.image_url)) {
+      return [product.image_url, ...arr];
+    }
+    return arr.length > 0 ? arr : (product.image_url ? [product.image_url] : []);
+  })();
   const quickFacts = [
     product.brand ? { label: "Marka", value: product.brand } : null,
     product.variant_storage ? { label: "Depolama", value: product.variant_storage } : null,
@@ -154,7 +160,7 @@ export default function ProductDetailShell({
 
       <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)_320px]">
         <div className="space-y-4">
-          <ProductGallery imageUrl={primaryImage} />
+          <ProductGallery images={galleryImages} alt={product.title} />
 
           {priceInsights && (
             <PriceInsightsPanel
