@@ -1,4 +1,4 @@
-import { supabase } from "../../lib/supabase";
+import { supabaseAdmin } from "../../lib/supabaseServer";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import Link from "next/link";
@@ -22,11 +22,12 @@ async function resolveSegments(segments: string[]) {
   // "anasayfa" prefix'ini yok say (breadcrumb-as-URL konvansiyonu)
   if (segments[0] === "anasayfa") segments = segments.slice(1);
 
-  const { data: allCatsData } = await supabase
+  const { data: allCatsData } = await supabaseAdmin
     .from("categories")
     .select("id, slug, name, parent_id, icon");
   const allCats = (allCatsData ?? []) as CategoryNode[];
   const bySlug = new Map(allCats.map(c => [c.slug, c]));
+  const byId = new Map(allCats.map(c => [c.id, c]));
 
   const categories: CategoryNode[] = [];
   let idx = 0;
@@ -38,11 +39,23 @@ async function resolveSegments(segments: string[]) {
     if (categories.length > 0) {
       const prev = categories[categories.length - 1];
       if (cat.parent_id !== prev.id) break;
-    } else if (cat.parent_id) {
-      break;
     }
     categories.push(cat);
     idx++;
+  }
+
+  if (categories.length > 0 && categories[0].parent_id) {
+    const expanded: CategoryNode[] = [];
+    let currentParentId: string | null = categories[0].parent_id;
+
+    while (currentParentId) {
+      const parent = byId.get(currentParentId);
+      if (!parent) break;
+      expanded.unshift(parent);
+      currentParentId = parent.parent_id;
+    }
+
+    categories.unshift(...expanded);
   }
 
   const brandSlug = segments[idx] ?? null;
@@ -93,7 +106,7 @@ export default async function Page({ params, searchParams }: PageProps) {
   if (brandSlug && !modelSlug) {
     const brandGuess = brandSlug.replace(/-/g, " ");
 
-    const { data: productsData } = await supabase
+    const { data: productsData } = await supabaseAdmin
       .from("products")
       .select("id, slug, brand, model_family, image_url, category_id, prices:listings(price, is_active, in_stock)")
       .ilike("brand", brandGuess)

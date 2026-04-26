@@ -1,4 +1,4 @@
-import { supabase } from "../../../lib/supabase";
+import { supabaseAdmin } from "../../../lib/supabaseServer";
 import Header from "../layout/Header";
 import Footer from "../layout/Footer";
 import Link from "next/link";
@@ -51,7 +51,7 @@ export default async function ModelPageView({ brand, model }: { brand: string; m
   const brandGuess = brand.replace(/-/g, " ");
   const modelGuess = model.replace(/-/g, " ");
 
-  const { data } = await supabase
+  const { data } = await supabaseAdmin
     .from("products")
     .select("id, slug, title, brand, image_url, variant_storage, variant_color, category_id, specs, prices:listings(price, source, last_seen, is_active, in_stock)")
     .ilike("brand", brandGuess)

@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { supabaseAdmin } from "./supabaseServer";
 
 export type CategoryNode = {
   id: string;
@@ -14,7 +14,7 @@ let _fullCacheTs = 0;
 async function fetchAllCategoriesFull(): Promise<CategoryNode[]> {
   const now = Date.now();
   if (_fullCategoriesCache && now - _fullCacheTs < 60_000) return _fullCategoriesCache;
-  const { data } = await supabase.from("categories").select("id, slug, name, parent_id, icon");
+  const { data } = await supabaseAdmin.from("categories").select("id, slug, name, parent_id, icon");
   _fullCategoriesCache = (data ?? []) as CategoryNode[];
   _fullCacheTs = now;
   return _fullCategoriesCache;
@@ -53,7 +53,7 @@ export const brandToSlug = toSlug;
 export const modelFamilyToSlug = toSlug;
 
 export async function fetchChildCategories(parentId: string): Promise<CategoryNode[]> {
-  const { data } = await supabase
+  const { data } = await supabaseAdmin
     .from("categories")
     .select("id, slug, name, parent_id, icon")
     .eq("parent_id", parentId)
@@ -68,7 +68,7 @@ const CACHE_MS = 60_000;
 async function fetchAllCategoriesOnce() {
   const now = Date.now();
   if (_allCategoriesCache && now - _cacheTs < CACHE_MS) return _allCategoriesCache;
-  const { data } = await supabase.from("categories").select("id, parent_id");
+  const { data } = await supabaseAdmin.from("categories").select("id, parent_id");
   _allCategoriesCache = (data ?? []) as { id: string; parent_id: string | null }[];
   _cacheTs = now;
   return _allCategoriesCache;

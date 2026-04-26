@@ -1,9 +1,9 @@
-import { supabase } from "../../../lib/supabase";
+import { supabaseAdmin } from "../../../lib/supabaseServer";
 import Link from "next/link";
 import { fetchDescendantIds } from "../../../lib/categoryTree";
 
 export default async function Categories() {
-  const { data: roots } = await supabase
+  const { data: roots } = await supabaseAdmin
     .from("categories")
     .select("id, name, slug, icon")
     .is("parent_id", null)
@@ -12,7 +12,7 @@ export default async function Categories() {
   const rootsWithCount = await Promise.all(
     (roots || []).map(async (cat) => {
       const ids = await fetchDescendantIds(cat.id);
-      const { count } = await supabase
+      const { count } = await supabaseAdmin
         .from("products")
         .select("id", { count: "exact", head: true })
         .in("category_id", ids);

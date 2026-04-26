@@ -1,4 +1,4 @@
-import { supabase } from "../../../lib/supabase";
+import { supabaseAdmin } from "../../../lib/supabaseServer";
 import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
 import Link from "next/link";
@@ -37,7 +37,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   const { marka, model, q, siralama, hafiza, renk, min, max, kaynak } = await searchParams;
   const effectiveQuery = q ?? getCategoryQueryHint(slug);
 
-  const { data: category } = await supabase
+  const { data: category } = await supabaseAdmin
     .from("categories")
     .select("*")
     .eq("slug", resolvedSlug)
@@ -60,7 +60,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
     }
     const allDescIds = [...catToChild.keys()];
     if (allDescIds.length > 0) {
-      const { data: prodData } = await supabase
+      const { data: prodData } = await supabaseAdmin
         .from("products")
         .select("image_url, category_id, prices:listings(source, is_active, in_stock)")
         .in("category_id", allDescIds)
@@ -88,7 +88,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
 
 
   // Variant dedup için daha geniş bir havuz çekip in-memory birleştiriyoruz
-  let query = supabase
+  let query = supabaseAdmin
     .from("products")
     .select("id, title, slug, brand, description, image_url, model_family, variant_storage, variant_color, prices:listings(price, source, is_active, in_stock, last_seen)", { count: "exact" })
     .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""]);
@@ -102,7 +102,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   else query = query.order("created_at", { ascending: false });
 
   // Paralel: ana ürün query + marka/model count (aynı descendantIds kullanıyor)
-  const allBrandsPromise = supabase
+  const allBrandsPromise = supabaseAdmin
     .from("products")
     .select("brand, model_family, prices:listings(source, is_active, in_stock)")
     .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""]);
