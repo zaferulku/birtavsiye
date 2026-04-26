@@ -50,6 +50,8 @@ type ProductListingRow = {
   affiliate_url: string | null;
   price: number | string;
   last_seen: string | null;
+  is_active?: boolean | null;
+  in_stock?: boolean | null;
 };
 
 type ProductRow = {
@@ -195,18 +197,18 @@ async function loadProduct(slug: string): Promise<ProductPageData | null> {
       id, slug, title, brand, model_family, variant_storage, variant_color,
       description, image_url, images, specs,
       category:categories!inner(id, slug, name),
-      listings!inner(id, source, source_url, affiliate_url, price, last_seen, is_active)
+      listings(id, source, source_url, affiliate_url, price, last_seen, is_active, in_stock)
     `)
     .eq("slug", slug)
     .eq("is_active", true)
-    .eq("listings.is_active", true)
     .maybeSingle();
 
   if (error || !product) return null;
 
   const productRow = product as unknown as ProductRow;
-  const sources = [...new Set(productRow.listings.map((listing) => listing.source))];
-  const listingIds = productRow.listings.map((listing) => listing.id);
+  const activeListings = getRenderableListings(productRow.listings);
+  const sources = [...new Set(activeListings.map((listing) => listing.source))];
+  const listingIds = activeListings.map((listing) => listing.id);
   const historySinceIso = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
   const priceHistoryPromise =
     listingIds.length > 0
@@ -237,14 +239,14 @@ async function loadProduct(slug: string): Promise<ProductPageData | null> {
 
   const reviewSummary = computeReviewSummary(reviewRows ?? []);
   const priceInsights = buildPriceInsights(
-    productRow.listings,
+    activeListings,
     (historyRows as PriceHistoryRow[] | null) ?? [],
     stores
   );
 
   return {
     ...productRow,
-    listings: productRow.listings.map((listing) => ({
+    listings: activeListings.map((listing) => ({
       listing_id: listing.id,
       source: listing.source,
       price: Number(listing.price),
@@ -270,14 +272,25 @@ export async function generateMetadata({
     return { title: "Urun bulunamadi | birtavsiye" };
   }
 
-  const minPrice = Math.min(...product.listings.map((listing) => listing.price));
-  const priceFormatted = new Intl.NumberFormat("tr-TR", {
-    maximumFractionDigits: 0,
-  }).format(minPrice);
+  const minPrice = product.listings.length > 0
+    ? Math.min(...product.listings.map((listing) => listing.price))
+    : null;
+  const priceFormatted = minPrice !== null
+    ? new Intl.NumberFormat("tr-TR", {
+        maximumFractionDigits: 0,
+      }).format(minPrice)
+    : null;
 
-  const title = truncate(`${product.title} Fiyati | En Uygun ${priceFormatted} TL`, 60);
+  const title = truncate(
+    priceFormatted
+      ? `${product.title} Fiyati | En Uygun ${priceFormatted} TL`
+      : `${product.title} Ozellikleri ve Yorumlari | birtavsiye`,
+    60
+  );
   const description = truncate(
-    `${product.title} icin magaza fiyatlarini, teknik ozellikleri ve kullanici yorumlarini inceleyin. En dusuk fiyat ${priceFormatted} TL.`,
+    priceFormatted
+      ? `${product.title} icin magaza fiyatlarini, teknik ozellikleri ve kullanici yorumlarini inceleyin. En dusuk fiyat ${priceFormatted} TL.`
+      : `${product.title} icin teknik ozellikleri, kullanici yorumlarini ve benzer urun onerilerini inceleyin.`,
     160
   );
 
@@ -323,8 +336,12 @@ export default async function ProductPage({
     loadRecommendations(product.id),
   ]);
 
-  const minPrice = Math.min(...product.listings.map((listing) => listing.price));
-  const maxPrice = Math.max(...product.listings.map((listing) => listing.price));
+  const minPrice = product.listings.length > 0
+    ? Math.min(...product.listings.map((listing) => listing.price))
+    : null;
+  const maxPrice = product.listings.length > 0
+    ? Math.max(...product.listings.map((listing) => listing.price))
+    : null;
   const primaryImage = product.image_url ?? product.images?.[0] ?? null;
 
   const productJsonLd = {
@@ -349,14 +366,17 @@ export default async function ProductPage({
             reviewCount: product.reviewSummary.ratingCount,
           }
         : undefined,
-    offers: {
-      "@type": "AggregateOffer",
-      priceCurrency: "TRY",
-      lowPrice: minPrice,
-      highPrice: maxPrice,
-      offerCount: product.listings.length,
-      availability: "https://schema.org/InStock",
-    },
+    offers:
+      minPrice !== null && maxPrice !== null
+        ? {
+            "@type": "AggregateOffer",
+            priceCurrency: "TRY",
+            lowPrice: minPrice,
+            highPrice: maxPrice,
+            offerCount: product.listings.length,
+            availability: "https://schema.org/InStock",
+          }
+        : undefined,
   };
 
   const breadcrumbJsonLd = {
@@ -455,6 +475,20 @@ function computeReviewSummary(rows: ReviewRow[]): ReviewSummary {
     ratingCount: ratingRows.length,
     commentCount,
   };
+}
+
+function getRenderableListings(
+  listings: ProductListingRow[] | null | undefined
+): ProductListingRow[] {
+  return (listings ?? []).filter((listing) => {
+    const price = Number(listing.price);
+    return (
+      listing.is_active !== false &&
+      listing.in_stock !== false &&
+      Number.isFinite(price) &&
+      price > 0
+    );
+  });
 }
 
 function truncate(value: string, max: number): string {

@@ -15,7 +15,7 @@ type Product = {
   slug: string;
   brand: string | null;
   image_url: string | null;
-  prices: Price[];
+  listings: Price[];
 };
 
 const SECTIONS = [
@@ -29,11 +29,12 @@ async function loadProducts(): Promise<Product[]> {
   const { data, error } = await supabaseAdmin
     .from("products")
     .select(
-      "id, title, slug, brand, image_url, prices:listings(price, source, last_seen, is_active, in_stock)"
+      "id, title, slug, brand, image_url, listings:listings!inner(price, source, last_seen, is_active, in_stock)"
     )
     .eq("is_active", true)
+    .eq("listings.is_active", true)
     .order("created_at", { ascending: false })
-    .limit(64);
+    .limit(128);
 
   if (error) {
     console.error("[FeaturedProducts] product load failed:", error.message);
@@ -46,12 +47,12 @@ async function loadProducts(): Promise<Product[]> {
     slug: string;
     brand: string | null;
     image_url: string | null;
-    prices?: Array<{
-      price: number | string;
-      source?: string | null;
-      last_seen?: string | null;
-      is_active?: boolean | null;
-      in_stock?: boolean | null;
+      listings?: Array<{
+        price: number | string;
+        source?: string | null;
+        last_seen?: string | null;
+        is_active?: boolean | null;
+        in_stock?: boolean | null;
     }> | null;
   }>)
     .map((product) => ({
@@ -60,25 +61,25 @@ async function loadProducts(): Promise<Product[]> {
       slug: product.slug,
       brand: product.brand,
       image_url: product.image_url,
-      prices: getActiveListings(product.prices).map((listing) => ({
+      listings: getActiveListings(product.listings).map((listing) => ({
         price: listing.price,
         source: listing.source,
         last_seen: listing.last_seen,
       }))
         .filter((listing) => Number.isFinite(listing.price) && listing.price > 0),
     }))
-    .filter((product) => product.prices.length > 0);
+    .filter((product) => product.listings.length > 0);
 }
 
 function getLowestPrice(product: Product): number {
-  return getLowestActivePrice(product.prices) ?? Infinity;
+  return getLowestActivePrice(product.listings) ?? Infinity;
 }
 
 function buildSections(products: Product[]) {
   const latest = products.slice(0, 8);
   const value = [...products].sort((a, b) => getLowestPrice(a) - getLowestPrice(b)).slice(0, 8);
   const popular = [...products]
-    .sort((a, b) => getActiveOfferCount(b.prices) - getActiveOfferCount(a.prices))
+    .sort((a, b) => getActiveOfferCount(b.listings) - getActiveOfferCount(a.listings))
     .slice(0, 8);
   const picked = products.slice(8, 16);
 
@@ -92,7 +93,7 @@ function buildSections(products: Product[]) {
 
 function ProductCard({ product }: { product: Product }) {
   const lowestPrice = getLowestPrice(product);
-  const freshestSeenAt = getFreshestSeenAt(product.prices);
+  const freshestSeenAt = getFreshestSeenAt(product.listings);
 
   return (
     <Link href={`/urun/${product.slug}`}>
