@@ -26,6 +26,10 @@ import { aiEmbed } from "../ai/aiClient";
 import { generateResponse, type ProductForResponse } from "./generateResponse";
 import type { StructuredIntent } from "./intentParser";
 import { buildSuggestions, type Suggestion } from "./suggestionBuilder";
+import {
+  rerankKnownProducts,
+  type RankingScoreBreakdown,
+} from "../search/productRetrieval";
 
 // ============================================================================
 // Types
@@ -45,22 +49,76 @@ export type OrchestratorInput = {
   conversationHistory?: Array<{ role: string; content: string }>;
 };
 
+export type ChatProductResult = {
+  id: string;
+  title: string;
+  slug: string;
+  brand: string | null;
+  min_price: number | null;
+  listing_count: number;
+  model_family?: string | null;
+  category_slug?: string | null;
+  image_url?: string | null;
+  similarity?: number | null;
+  search_score?: number | null;
+  ranking_reasons?: string[] | null;
+  freshest_seen_at?: string | null;
+  sources?: string[] | null;
+  score_breakdown?: RankingScoreBreakdown | null;
+};
+
+export type CandidateTrace = {
+  id: string;
+  slug: string;
+  title: string;
+  brand: string | null;
+  min_price: number | null;
+  listing_count: number;
+  category_slug: string | null;
+  similarity: number | null;
+  search_score: number | null;
+  freshest_seen_at: string | null;
+  ranking_reasons: string[];
+  sources: string[];
+  score_breakdown: RankingScoreBreakdown | null;
+};
+
+export type RetrievalDiagnostics = {
+  path: "fast" | "slow";
+  retrieval_stage: string;
+  rerank_applied: boolean;
+  kb_chunk_count: number;
+  candidate_count: number;
+  top_candidates: CandidateTrace[];
+  pre_rerank_top_candidates?: CandidateTrace[];
+  vector_candidate_count?: number;
+  smart_search_count?: number;
+  smart_search_match_sources?: string[];
+  fallback_method?: LegacySearchResult["method"] | null;
+  filters?: Record<string, unknown>;
+};
+
 export type LegacySearchResult = {
-  products: any[];  // MatchedProduct from chat route
+  products: ChatProductResult[];
   method: "vector" | "keyword" | "failed";
-  filters: Record<string, any>;
+  filters: Record<string, unknown>;
   latencyMs: number;
+  diagnostics?: {
+    vector_candidate_count: number;
+    top_candidates: CandidateTrace[];
+  };
 };
 
 export type OrchestratorOutput = {
   response: string;
-  products: any[];
+  products: ChatProductResult[];
   method: string;          // "fast_vector" | "fast_keyword" | "slow_hybrid" | ...
   pathDecision: PathDecision;
   intent: StructuredIntent | null;
   kbChunkCount: number;
   latencyMs: number;
   suggestions?: Suggestion[] | null;
+  diagnostics: RetrievalDiagnostics;
 };
 
 // ============================================================================
@@ -123,6 +181,23 @@ async function runFastPath(
     kbChunkCount: 0,
     latencyMs: Date.now() - startTime,
     suggestions,
+    diagnostics: {
+      path: "fast",
+      retrieval_stage:
+        searchResult.method === "vector"
+          ? "shared_retrieval_ranked"
+          : searchResult.method === "keyword"
+            ? "shared_retrieval_keyword"
+            : "shared_retrieval_failed",
+      rerank_applied: searchResult.method !== "failed",
+      kb_chunk_count: 0,
+      candidate_count: searchResult.products.length,
+      top_candidates:
+        searchResult.diagnostics?.top_candidates ??
+        summarizeCandidateTraces(searchResult.products),
+      vector_candidate_count: searchResult.diagnostics?.vector_candidate_count ?? 0,
+      filters: searchResult.filters,
+    },
   };
 }
 
@@ -179,12 +254,22 @@ async function runSlowPath(
       kbChunkCount: knowledgeChunks.length,
       latencyMs: Date.now() - startTime,
       suggestions,
+      diagnostics: {
+        path: "slow",
+        retrieval_stage: intent.is_off_topic ? "off_topic" : "too_vague",
+        rerank_applied: false,
+        kb_chunk_count: knowledgeChunks.length,
+        candidate_count: 0,
+        top_candidates: [],
+        smart_search_count: 0,
+      },
     };
   }
 
   // 4. Smart search (hybrid: vector + JSONB specs + keyword)
   let smartResults: SmartSearchRow[] = [];
   let method = "slow_hybrid";
+  let rerankApplied = false;
 
   try {
     smartResults = await runSmartSearch(input.sb, input.userMessage, intent);
@@ -195,11 +280,37 @@ async function runSlowPath(
   }
 
   // 5. Smart search 0 sonuç ş mevcut searchProducts'a fallback
-  let finalProducts: any[] = smartResults;
+  let finalProducts: ChatProductResult[] = smartResults;
   if (smartResults.length === 0) {
     const fallback = await input.legacySearch(input.userMessage);
     finalProducts = fallback.products;
     method = `slow_fallback_${fallback.method}`;
+  } else {
+    try {
+      const reranked = await rerankKnownProducts({
+        sb: input.sb,
+        productIds: smartResults.map((product) => product.id),
+        query: input.userMessage,
+        categorySlug: intent.category_slug,
+        limit: smartResults.length,
+        priceMin: intent.price_range.min,
+        priceMax: intent.price_range.max,
+        vectorCandidates: smartResults.map((product) => ({
+          id: product.id,
+          similarity: Number(product.similarity ?? 0),
+        })),
+      });
+
+      if (reranked.products.length > 0) {
+        finalProducts = reranked.products;
+        method = "slow_hybrid_ranked";
+        rerankApplied = true;
+      }
+    } catch (err) {
+      console.warn(
+        `[orchestrator] slow rerank failed: ${err instanceof Error ? err.message : err}`
+      );
+    }
   }
 
   // 6. Response generation (KB context + intent + ürünler)
@@ -230,6 +341,34 @@ async function runSlowPath(
     kbChunkCount: knowledgeChunks.length,
     latencyMs: Date.now() - startTime,
     suggestions,
+    diagnostics: {
+      path: "slow",
+      retrieval_stage:
+        smartResults.length > 0
+          ? rerankApplied
+            ? "smart_search_then_rerank"
+            : "smart_search_raw"
+          : "legacy_fallback",
+      rerank_applied: rerankApplied,
+      kb_chunk_count: knowledgeChunks.length,
+      candidate_count: finalProducts.length,
+      top_candidates: summarizeCandidateTraces(finalProducts),
+      pre_rerank_top_candidates:
+        smartResults.length > 0 ? summarizeCandidateTraces(smartResults) : undefined,
+      smart_search_count: smartResults.length,
+      smart_search_match_sources:
+        smartResults.length > 0
+          ? Array.from(new Set(smartResults.map((product) => product.match_source)))
+          : [],
+      fallback_method:
+        smartResults.length === 0 ? extractFallbackMethod(method) : null,
+      filters: {
+        category_slug: intent.category_slug,
+        brand_filter: intent.brand_filter,
+        price_range: intent.price_range,
+        semantic_keywords: intent.semantic_keywords,
+      },
+    },
   };
 }
 
@@ -420,7 +559,7 @@ async function runSmartSearch(
 // Helpers
 // ============================================================================
 
-function mapProductsForResponse(products: any[]): ProductForResponse[] {
+function mapProductsForResponse(products: ChatProductResult[]): ProductForResponse[] {
   return products.slice(0, 5).map((p) => ({
     title: p.title,
     slug: p.slug,
@@ -428,4 +567,42 @@ function mapProductsForResponse(products: any[]): ProductForResponse[] {
     min_price: p.min_price,
     listing_count: p.listing_count ?? 0,
   }));
+}
+
+function summarizeCandidateTraces(
+  products: Array<
+    ChatProductResult & {
+      match_source?: string | null;
+    }
+  >,
+  limit = 5
+): CandidateTrace[] {
+  return products.slice(0, limit).map((product) => ({
+    id: product.id,
+    slug: product.slug,
+    title: product.title,
+    brand: product.brand,
+    min_price: product.min_price ?? null,
+    listing_count: product.listing_count ?? 0,
+    category_slug: product.category_slug ?? null,
+    similarity:
+      product.similarity != null && Number.isFinite(product.similarity)
+        ? Number(product.similarity)
+        : null,
+    search_score:
+      product.search_score != null && Number.isFinite(product.search_score)
+        ? Number(product.search_score)
+        : null,
+    freshest_seen_at: product.freshest_seen_at ?? null,
+    ranking_reasons: product.ranking_reasons ?? [],
+    sources: product.sources ?? [],
+    score_breakdown: product.score_breakdown ?? null,
+  }));
+}
+
+function extractFallbackMethod(method: string): LegacySearchResult["method"] | null {
+  if (method.endsWith("_vector")) return "vector";
+  if (method.endsWith("_keyword")) return "keyword";
+  if (method.endsWith("_failed")) return "failed";
+  return null;
 }
