@@ -25,3 +25,5 @@ backups/
 *.v1-backup
 .claude/agents_backup_*
 .claude/scheduled_tasks.lock
+.claude/settings.local.json
+.claude/settings.json
