@@ -15,6 +15,8 @@ export type StoreLiveData = {
   shipping_price: number | null;
   free_shipping: boolean;
   seller_name: string | null;
+  seller_rating?: number | null;
+  seller_review_count?: number | null;
   installment_hint: string | null;
   campaign_hint: string | null;
   affiliate_url: string | null;

@@ -7,11 +7,13 @@ import type {
   PriceInsightsPayload,
   SimilarProduct,
   RecommendationTopic,
+  VariantOption,
 } from "../../components/urun/ProductDetailShell";
 import { supabaseAdmin } from "@/lib/supabaseServer";
 import { getFreshestSeenAt, getLowestActivePrice } from "@/lib/listingSignals";
 import type { InitialListing, StoreDefinition } from "../../components/urun/offerUtils";
 import type { ReviewSummary } from "../../components/urun/CommunitySection";
+import { cleanProductTitle } from "@/lib/productTitle";
 
 type ProductPageData = {
   id: string;
@@ -42,6 +44,7 @@ type ProductPageData = {
   reviewSummary: ReviewSummary;
   priceInsights: PriceInsightsPayload;
   cluster_product_ids: string[];
+  variants: VariantOption[];
 };
 
 type ProductListingRow = {
@@ -100,12 +103,27 @@ type SimilarProductRow = {
   }>;
 };
 
+type VariantProductRow = {
+  id: string;
+  slug: string;
+  title: string;
+  image_url: string | null;
+  variant_storage: string | null;
+  variant_color: string | null;
+  listings: Array<{
+    price: number | string;
+    last_seen?: string | null;
+    is_active?: boolean | null;
+    in_stock?: boolean | null;
+  }>;
+};
+
 function rowsToSimilar(rows: SimilarProductRow[]): SimilarProduct[] {
   return rows.map((row) => {
     return {
       id: row.id,
       slug: row.slug,
-      title: row.title,
+      title: cleanProductTitle(row.title),
       image_url: row.image_url,
       variant_storage: row.variant_storage,
       variant_color: row.variant_color,
@@ -198,6 +216,89 @@ async function loadRecommendations(productIds: string[]): Promise<Recommendation
   return data as RecommendationTopic[];
 }
 
+async function loadVariantOptions(
+  brand: string | null,
+  modelFamily: string | null,
+  categoryId: string | null
+): Promise<VariantOption[]> {
+  if (!brand || !modelFamily || !categoryId) {
+    return [];
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("products")
+    .select(
+      "id, slug, title, image_url, variant_storage, variant_color, listings!inner(price, last_seen, is_active, in_stock)"
+    )
+    .eq("brand", brand)
+    .eq("model_family", modelFamily)
+    .eq("category_id", categoryId)
+    .eq("is_active", true)
+    .limit(48);
+
+  if (error || !data) {
+    return [];
+  }
+
+  const bestByVariant = new Map<string, VariantOption>();
+
+  for (const row of data as unknown as VariantProductRow[]) {
+    const listings = (row.listings ?? []).filter(
+      (listing) =>
+        listing.is_active !== false &&
+        listing.in_stock !== false &&
+        Number.isFinite(Number(listing.price)) &&
+        Number(listing.price) > 0
+    );
+    const minPrice = getLowestActivePrice(listings);
+    const freshestSeenAt = getFreshestSeenAt(listings);
+    const key = `${row.variant_storage ?? ""}|${row.variant_color ?? ""}`;
+
+    const candidate: VariantOption = {
+      id: row.id,
+      slug: row.slug,
+      title: cleanProductTitle(row.title),
+      image_url: row.image_url,
+      variant_storage: row.variant_storage,
+      variant_color: row.variant_color,
+      min_price: minPrice,
+      freshest_seen_at: freshestSeenAt,
+    };
+
+    const existing = bestByVariant.get(key);
+    if (!existing) {
+      bestByVariant.set(key, candidate);
+      continue;
+    }
+
+    const existingPrice = existing.min_price ?? Number.POSITIVE_INFINITY;
+    const candidatePrice = candidate.min_price ?? Number.POSITIVE_INFINITY;
+    if (candidatePrice < existingPrice) {
+      bestByVariant.set(key, candidate);
+      continue;
+    }
+
+    if (
+      candidatePrice === existingPrice &&
+      (candidate.freshest_seen_at ?? "") > (existing.freshest_seen_at ?? "")
+    ) {
+      bestByVariant.set(key, candidate);
+    }
+  }
+
+  return Array.from(bestByVariant.values()).sort((left, right) => {
+    const leftStorage = left.variant_storage ?? "";
+    const rightStorage = right.variant_storage ?? "";
+    if (leftStorage !== rightStorage) return leftStorage.localeCompare(rightStorage, "tr");
+
+    const leftColor = left.variant_color ?? "";
+    const rightColor = right.variant_color ?? "";
+    if (leftColor !== rightColor) return leftColor.localeCompare(rightColor, "tr");
+
+    return left.title.localeCompare(right.title, "tr");
+  });
+}
+
 async function loadProduct(slug: string): Promise<ProductPageData | null> {
   const { data: product, error } = await supabaseAdmin
     .from("products")
@@ -256,9 +357,16 @@ async function loadProduct(slug: string): Promise<ProductPageData | null> {
     (historyRows as PriceHistoryRow[] | null) ?? [],
     stores
   );
+  const variants = await loadVariantOptions(
+    productRow.brand,
+    productRow.model_family,
+    productRow.category?.id ?? null
+  );
+  const cleanedTitle = cleanProductTitle(productRow.title);
 
   return {
     ...productRow,
+    title: cleanedTitle,
     listings: activeListings.map((listing) => ({
       listing_id: listing.id,
       source: listing.source,
@@ -271,6 +379,7 @@ async function loadProduct(slug: string): Promise<ProductPageData | null> {
     reviewSummary,
     priceInsights,
     cluster_product_ids: clusterProductIds,
+    variants,
   };
 }
 
@@ -469,6 +578,7 @@ export default async function ProductPage({
         similarProducts={similarProducts}
         recommendations={recommendations}
         priceInsights={product.priceInsights}
+        variants={product.variants}
       />
 
       <Footer />

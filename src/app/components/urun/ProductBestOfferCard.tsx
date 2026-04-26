@@ -26,7 +26,7 @@ export default function ProductBestOfferCard({ rows, isLoading, refresh }: Props
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#A06B53]">
               En uygun teklif
             </p>
-            <h2 className="mt-1 text-lg font-bold text-[#171412]">Teklif aranıyor</h2>
+            <h2 className="mt-1 text-lg font-bold text-[#171412]">Teklif araniyor</h2>
           </div>
           <button
             type="button"
@@ -47,18 +47,32 @@ export default function ProductBestOfferCard({ rows, isLoading, refresh }: Props
   const data = bestOffer.state.data;
   const storeName = bestOffer.store?.name ?? bestOffer.source;
   const sellerName = data?.seller_name ?? storeName;
+  const sellerRating = data?.seller_rating ?? null;
+  const sellerReviewCount = data?.seller_review_count ?? null;
   const destinationUrl = data?.affiliate_url ?? bestOffer.fallback_url ?? null;
   const isOutOfStock = data?.in_stock === false;
 
   return (
     <aside className="rounded-[22px] border border-[#E8E4DF] bg-white p-5 shadow-sm xl:sticky xl:top-24">
       <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#A06B53]">
-            En uygun teklif
-          </p>
-          <h2 className="mt-1 text-lg font-bold text-[#171412]">{storeName}</h2>
+        <div className="flex items-start gap-3">
+          {bestOffer.store?.logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={bestOffer.store.logo_url}
+              alt={storeName}
+              className="mt-0.5 h-12 w-12 rounded-xl border border-[#F0E5DD] bg-white object-contain p-2"
+            />
+          ) : null}
+
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#A06B53]">
+              En uygun teklif
+            </p>
+            <h2 className="mt-1 text-lg font-bold text-[#171412]">{storeName}</h2>
+          </div>
         </div>
+
         <button
           type="button"
           onClick={refresh}
@@ -74,11 +88,15 @@ export default function ProductBestOfferCard({ rows, isLoading, refresh }: Props
           En dusuk fiyat
         </div>
         <div className="mt-1 text-[2rem] font-black leading-none text-[#E8460A]">
-          {bestOffer.displayPrice !== null ? formatTL(bestOffer.displayPrice) : "—"}
+          {bestOffer.displayPrice !== null ? formatTL(bestOffer.displayPrice) : "-"}
         </div>
-        {data?.original_price && bestOffer.displayPrice !== null && data.original_price > bestOffer.displayPrice && (
-          <div className="mt-1 text-sm text-[#8A6E63] line-through">{formatTL(data.original_price)}</div>
-        )}
+        {data?.original_price &&
+          bestOffer.displayPrice !== null &&
+          data.original_price > bestOffer.displayPrice && (
+            <div className="mt-1 text-sm text-[#8A6E63] line-through">
+              {formatTL(data.original_price)}
+            </div>
+          )}
       </div>
 
       <dl className="mt-4 space-y-3 text-sm">
@@ -90,6 +108,19 @@ export default function ProductBestOfferCard({ rows, isLoading, refresh }: Props
           <dt className="text-[#8C837B]">Satici</dt>
           <dd className="text-right font-semibold text-[#171412]">{sellerName}</dd>
         </div>
+        {(sellerRating !== null || sellerReviewCount !== null) && (
+          <div className="flex items-start justify-between gap-3">
+            <dt className="text-[#8C837B]">Satici puani</dt>
+            <dd className="text-right font-semibold text-[#171412]">
+              {sellerRating !== null ? `${sellerRating.toFixed(1)} / 5` : "-"}
+              {sellerReviewCount !== null && (
+                <span className="ml-1 text-xs font-medium text-[#8C837B]">
+                  ({sellerReviewCount.toLocaleString("tr-TR")} yorum)
+                </span>
+              )}
+            </dd>
+          </div>
+        )}
         <div className="flex items-start justify-between gap-3">
           <dt className="text-[#8C837B]">Durum</dt>
           <dd className={`text-right font-semibold ${isOutOfStock ? "text-[#B42318]" : "text-[#15803D]"}`}>
@@ -129,13 +160,6 @@ export default function ProductBestOfferCard({ rows, isLoading, refresh }: Props
         </div>
       )}
 
-      <div className="mt-4 rounded-xl border border-[#F0E5DD] bg-[#FAF7F4] px-4 py-3">
-        <div className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8C837B]">
-          Guven notu aciklamasi
-        </div>
-        <p className="mt-2 text-sm leading-6 text-[#5F5952]">{trust.summary}</p>
-      </div>
-
       {destinationUrl && !isOutOfStock ? (
         <a
           href={destinationUrl}
@@ -143,11 +167,11 @@ export default function ProductBestOfferCard({ rows, isLoading, refresh }: Props
           rel="noopener noreferrer nofollow sponsored"
           className="mt-5 flex w-full items-center justify-center rounded-xl bg-[#E8460A] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#C93A08]"
         >
-          Magazaya Git
+          Magazayi Gor
         </a>
       ) : (
         <div className="mt-5 rounded-xl border border-dashed border-[#E8E4DF] px-4 py-3 text-center text-sm text-[#8C837B]">
-          Bu teklif icin baglanti hazir degil
+          Bu teklif icin magaza baglantisi hazir degil
         </div>
       )}
     </aside>
@@ -161,7 +185,6 @@ function buildOfferTrust(rows: MergedOfferRow[], bestOffer: MergedOfferRow | nul
       label: "Yetersiz veri",
       colorClass: "text-[#8C837B]",
       freshnessLabel: "Bilinmiyor",
-      summary: "Henuz yeterli kaynak veya tazelik sinyali yok.",
     };
   }
 
@@ -187,8 +210,6 @@ function buildOfferTrust(rows: MergedOfferRow[], bestOffer: MergedOfferRow | nul
       label: "Guclu",
       colorClass: "text-[#15803D]",
       freshnessLabel,
-      summary:
-        "Kaynak kalitesi yuksek, teklif yeni gorulmus ve temel alisveris sinyalleri net. Bu not resmi magaza puani degil; kaynak tipi ve veri tazeliginden uretilir.",
     };
   }
 
@@ -198,8 +219,6 @@ function buildOfferTrust(rows: MergedOfferRow[], bestOffer: MergedOfferRow | nul
       label: "Iyi",
       colorClass: "text-[#1D4ED8]",
       freshnessLabel,
-      summary:
-        "Teklif kullanisli gorunuyor ama satin almadan once magaza sayfasinda teslimat, satici ve iade detaylarini tekrar kontrol etmek mantikli olur.",
     };
   }
 
@@ -209,8 +228,6 @@ function buildOfferTrust(rows: MergedOfferRow[], bestOffer: MergedOfferRow | nul
       label: "Dikkatli bak",
       colorClass: "text-[#B45309]",
       freshnessLabel,
-      summary:
-        "Kaynak veya veri tazeligi orta seviyede. Fiyat iyi olsa bile kargo ve satici ayrintilarini acip dogrulamak daha guvenli olur.",
     };
   }
 
@@ -219,8 +236,6 @@ function buildOfferTrust(rows: MergedOfferRow[], bestOffer: MergedOfferRow | nul
     label: "Temkinli",
     colorClass: "text-[#B42318]",
     freshnessLabel,
-    summary:
-      "Bu sinyal zayif. Teklif eski olabilir ya da kaynak guvenilirligi dusuk olabilir. Satin almadan once ayni urunun diger magaza tekliflerini de karsilastir.",
   };
 }
 

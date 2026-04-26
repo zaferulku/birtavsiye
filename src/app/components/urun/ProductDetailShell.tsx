@@ -6,8 +6,10 @@ import { useLivePrices } from "@/lib/scrapers/live/useLivePrices";
 import { LivePriceComparison } from "@/components/LivePriceComparison";
 import CommunitySection, { type ReviewSummary } from "./CommunitySection";
 import ProductBestOfferCard from "./ProductBestOfferCard";
+import ProductActionsBar from "./ProductActionsBar";
 import ProductGallery from "./ProductGallery";
 import PriceInsightsPanel from "./PriceInsightsPanel";
+import ProductVariantOptions from "./ProductVariantOptions";
 import SpecsTable from "./SpecsTable";
 import { formatFreshnessLabel } from "@/lib/listingSignals";
 import {
@@ -38,6 +40,17 @@ type ProductDetailModel = {
 };
 
 export type SimilarProduct = {
+  id: string;
+  slug: string;
+  title: string;
+  image_url: string | null;
+  variant_storage: string | null;
+  variant_color: string | null;
+  min_price: number | null;
+  freshest_seen_at?: string | null;
+};
+
+export type VariantOption = {
   id: string;
   slug: string;
   title: string;
@@ -84,6 +97,7 @@ type Props = {
   similarProducts?: SimilarProduct[];
   recommendations?: RecommendationTopic[];
   priceInsights?: PriceInsightsPayload;
+  variants?: VariantOption[];
 };
 
 export default function ProductDetailShell({
@@ -94,6 +108,7 @@ export default function ProductDetailShell({
   similarProducts = [],
   recommendations = [],
   priceInsights,
+  variants = [],
 }: Props) {
   const [reviewSummary, setReviewSummary] = useState(initialReviewSummary);
   const [activeTab, setActiveTab] = useState<TabId>("yorumlar");
@@ -112,6 +127,11 @@ export default function ProductDetailShell({
       .filter((price): price is number => price !== null)
       .sort((left, right) => left - right)[0] ??
     null;
+  const freshestListingSeenAt =
+    [...offerRows]
+      .map((row) => row.last_seen)
+      .filter((value): value is string => Boolean(value))
+      .sort((left, right) => right.localeCompare(left))[0] ?? null;
 
   const galleryImages = (() => {
     const arr = product.images?.filter(Boolean) ?? [];
@@ -206,9 +226,12 @@ export default function ProductDetailShell({
                 <span>Ilk degerlendirmeyi yap</span>
               )}
             </button>
+            <p className="mt-2 text-xs font-medium text-[#8A8179]">
+              Toplam yorum {reviewSummary.commentCount}
+            </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-2xl border border-[#EFE7DF] bg-[#FFF7F2] p-4">
               <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#B56B48]">
                 En dusuk fiyat
@@ -219,17 +242,20 @@ export default function ProductDetailShell({
             </div>
             <div className="rounded-2xl border border-[#EFE7DF] bg-white p-4">
               <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8A8179]">
-                Magaza sayisi
+                Son fiyat kontrolu
               </div>
-              <div className="mt-1 text-xl font-black text-[#171412]">{initialListings.length}</div>
-            </div>
-            <div className="rounded-2xl border border-[#EFE7DF] bg-white p-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8A8179]">
-                Toplam yorum
+              <div className="mt-1 text-xl font-black text-[#171412]">
+                {formatFreshnessLabel(freshestListingSeenAt)}
               </div>
-              <div className="mt-1 text-xl font-black text-[#171412]">{reviewSummary.commentCount}</div>
             </div>
           </div>
+
+          <ProductActionsBar
+            productId={product.id}
+            productSlug={product.slug}
+            productTitle={product.title}
+            currentPrice={lowestKnownPrice}
+          />
 
           <p className="text-sm leading-7 text-[#5E5750]">
             {product.description?.trim() || buildAutoDescription(product)}
@@ -247,6 +273,13 @@ export default function ProductDetailShell({
               ))}
             </div>
           )}
+
+          <ProductVariantOptions
+            currentSlug={product.slug}
+            currentStorage={product.variant_storage}
+            currentColor={product.variant_color}
+            variants={variants}
+          />
         </div>
 
         <ProductBestOfferCard rows={offerRows} isLoading={isLoading} refresh={refresh} />

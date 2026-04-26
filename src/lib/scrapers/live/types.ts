@@ -14,6 +14,8 @@ export type StoreLiveData = {
   shipping_price: number | null;
   free_shipping: boolean;
   seller_name: string | null;
+  seller_rating?: number | null;
+  seller_review_count?: number | null;
   installment_hint: string | null;         // "12 taksit" — short summary
   campaign_hint: string | null;            // "5000 TL üstü %10 indirim"
   affiliate_url: string | null;

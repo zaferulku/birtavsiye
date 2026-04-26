@@ -1,5 +1,5 @@
 /**
- * LivePriceComparison — Product detail page price comparison card
+ * LivePriceComparison - Product detail page price comparison card
  * Pure presentational: receives merged rows + loading state from parent (ProductDetailShell).
  */
 
@@ -35,14 +35,14 @@ export function LivePriceComparison({
     <section className="live-price-comparison" aria-label={`${productTitle} magaza fiyatlari`}>
       <header className="lpc-header">
         <div className="lpc-header-left">
-          <h2 className="lpc-title">Mağaza Fiyatları</h2>
+          <h2 className="lpc-title">Magaza Fiyatlari</h2>
           {rows.length > 0 && (
             <p className="lpc-subtitle">
-              {rows.length} mağaza
+              {rows.length} magaza
               {minPrice !== undefined && (
                 <>
                   {" · "}
-                  <strong>{formatTL(minPrice)}&apos;dan başlıyor</strong>
+                  <strong>{formatTL(minPrice)}&apos;dan basliyor</strong>
                 </>
               )}
             </p>
@@ -52,11 +52,11 @@ export function LivePriceComparison({
           className="lpc-refresh"
           onClick={refresh}
           disabled={isLoading}
-          aria-label="Fiyatları yenile"
+          aria-label="Fiyatlari yenile"
           type="button"
         >
           {isLoading ? (
-            <span className="lpc-loading-indicator">Güncelleniyor…</span>
+            <span className="lpc-loading-indicator">Guncelleniyor...</span>
           ) : (
             <span>↻ Yenile</span>
           )}
@@ -76,11 +76,11 @@ export function LivePriceComparison({
       {isDone && (
         <footer className="lpc-footer">
           <span className="lpc-stats">
-            {successful} mağaza güncellendi
-            {failed > 0 && ` · ${failed} mağaza fiyatı alınamadı`}
+            {successful} magaza guncellendi
+            {failed > 0 && ` · ${failed} magazada anlik kontrol basarisiz`}
           </span>
           <span className="lpc-disclaimer">
-            Fiyatlar son dakika güncellemelerini yansıtır. Taksit ve kampanya detayları mağazada gösterilir.
+            Fiyatlar son dakika guncellemelerini yansitir. Taksit ve kampanya detaylari magazada gosterilir.
           </span>
         </footer>
       )}
@@ -103,7 +103,6 @@ function StoreRow({ row, isMinPrice }: StoreRowProps) {
   const isError = state.status === "error";
   const isPending = state.status === "pending";
   const isOutOfStock = data?.in_stock === false;
-
   const storeUrl = data?.affiliate_url ?? fallback_url ?? null;
 
   return (
@@ -118,7 +117,14 @@ function StoreRow({ row, isMinPrice }: StoreRowProps) {
         <div className="lpc-store-info">
           <span className="lpc-store-name">{storeName}</span>
           {data?.seller_name && data.seller_name !== storeName && (
-            <span className="lpc-seller">Satıcı: {data.seller_name}</span>
+            <span className="lpc-seller">Satici: {data.seller_name}</span>
+          )}
+          {data?.seller_rating != null && (
+            <span className="lpc-seller">
+              {data.seller_rating.toFixed(1)} / 5
+              {typeof data?.seller_review_count === "number" &&
+                ` · ${data.seller_review_count.toLocaleString("tr-TR")} yorum`}
+            </span>
           )}
         </div>
       </div>
@@ -126,9 +132,9 @@ function StoreRow({ row, isMinPrice }: StoreRowProps) {
       <div className="lpc-details">
         {isError && (
           <span className="lpc-error-text">
-            Fiyat alınamadı
-            {row.state.error === "rate_limited" && " (sonra tekrar deneyin)"}
-            {row.state.error === "timeout" && " (zaman aşımı)"}
+            Anlik fiyat dogrulanamadi
+            {row.state.error === "rate_limited" && " (biraz sonra tekrar deneyin)"}
+            {row.state.error === "timeout" && " (yanit gecikti)"}
           </span>
         )}
         {!isError && isOutOfStock && <span className="lpc-oos-text">Stokta yok</span>}
@@ -152,7 +158,7 @@ function StoreRow({ row, isMinPrice }: StoreRowProps) {
           <div className={`lpc-price ${isMinPrice ? "lpc-price--best" : ""}`}>
             {isMinPrice && <span className="lpc-price-label">En uygun</span>}
             <span className="lpc-price-value">
-              {isPending && isCached && <span className="lpc-pending-dot" aria-label="Güncelleniyor" />}
+              {isPending && isCached && <span className="lpc-pending-dot" aria-label="Guncelleniyor" />}
               {formatTL(displayPrice)}
             </span>
             {data?.original_price && data.original_price > displayPrice && (
@@ -163,7 +169,7 @@ function StoreRow({ row, isMinPrice }: StoreRowProps) {
             )}
           </div>
         ) : (
-          <div className="lpc-price lpc-price--skeleton" aria-label="Fiyat yükleniyor">
+          <div className="lpc-price lpc-price--skeleton" aria-label="Fiyat yukleniyor">
             <span className="lpc-skeleton-bar" />
           </div>
         )}
@@ -175,12 +181,12 @@ function StoreRow({ row, isMinPrice }: StoreRowProps) {
             rel="noopener noreferrer nofollow sponsored"
             className="lpc-cta"
           >
-            Mağazaya Git →
+            Magazayi Gor
           </a>
         )}
         {!isError && !isOutOfStock && !storeUrl && (
           <span className="lpc-cta-disabled" aria-hidden="true">
-            Bağlantı yok
+            Baglanti hazir degil
           </span>
         )}
       </div>
@@ -200,7 +206,7 @@ const STYLES = `
   .lpc-list { list-style: none; margin: 0; padding: 0; }
   .lpc-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 16px; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border-subtle, #f3f4f6); }
   .lpc-row:last-child { border-bottom: none; }
-  .lpc-row--error { opacity: 0.6; }
+  .lpc-row--error { opacity: 0.75; }
   .lpc-row--oos { opacity: 0.7; }
   .lpc-store { display: flex; align-items: center; gap: 12px; min-width: 0; }
   .lpc-logo, .lpc-logo-placeholder { width: 48px; height: 48px; border-radius: 6px; object-fit: contain; }
