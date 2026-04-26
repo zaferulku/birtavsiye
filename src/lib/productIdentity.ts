@@ -409,6 +409,25 @@ function isStorageLikeToken(value: string): boolean {
   return /^(\d{1,4})(gb|tb|mb)$/i.test(value);
 }
 
+function normalizeModelCodeCandidate(value: string | null | undefined): string | null {
+  const compact = transliterate(value ?? "")
+    .toUpperCase()
+    .replace(/[()[\]{}]/g, " ")
+    .split(/[,;|]+/)[0]
+    ?.replace(/\s+/g, "")
+    .replace(/[^A-Z0-9/-]+/g, "")
+    .trim();
+
+  if (!compact) return null;
+  if (compact.length < 4) return null;
+  if (isStorageLikeToken(compact)) return null;
+  if (/^\d{4,}$/.test(compact)) return null;
+  if (!/[A-Z]/.test(compact) || !/\d/.test(compact)) return null;
+  if (/^(4K|8K|4G|5G|WIFI\d*|DDR\d)$/i.test(compact)) return null;
+
+  return compact;
+}
+
 function extractModelCode(title: string, specs?: SpecMap | null): string | null {
   const specCode = extractSpecValue(specs, [
     /\bmpn\b/i,
@@ -416,12 +435,16 @@ function extractModelCode(title: string, specs?: SpecMap | null): string | null 
     /\bmodel\b/i,
     /\bmodel kod\b/i,
     /\bmodel no\b/i,
+    /\bmodel numarasi\b/i,
+    /\burun kod\b/i,
+    /\bstok kod\b/i,
+    /\bparca numarasi\b/i,
     /\bpart number\b/i,
+    /\bproduct code\b/i,
+    /\bmanufacturer code\b/i,
   ]);
-  if (specCode) {
-    const cleaned = specCode.trim().toUpperCase();
-    if (/[A-Z]/.test(cleaned) && /\d/.test(cleaned)) return cleaned;
-  }
+  const normalizedSpecCode = normalizeModelCodeCandidate(specCode);
+  if (normalizedSpecCode) return normalizedSpecCode;
 
   const tokens = title
     .replace(/[()]/g, " ")
@@ -430,12 +453,8 @@ function extractModelCode(title: string, specs?: SpecMap | null): string | null 
     .filter(Boolean);
 
   for (const token of tokens) {
-    const cleaned = token.replace(/[^A-Za-z0-9/-]/g, "");
-    if (cleaned.length < 4) continue;
-    if (isStorageLikeToken(cleaned)) continue;
-    if (/^\d{4}$/.test(cleaned)) continue;
-    if (!/[A-Za-z]/.test(cleaned) || !/\d/.test(cleaned)) continue;
-    return cleaned.toUpperCase();
+    const cleaned = normalizeModelCodeCandidate(token);
+    if (cleaned) return cleaned;
   }
 
   return null;
@@ -615,6 +634,96 @@ function normalizeVariantCompatible(existingValue: string | null, incomingValue:
   return normalizeCompact(existingValue) === normalizeCompact(incomingValue);
 }
 
+function hasRandomSlugSuffix(slug: string | null | undefined): boolean {
+  return /-[a-z0-9]{4,6}$/i.test(slug ?? "");
+}
+
+function isStructuredExistingTitle(candidate: ExistingProductRow): boolean {
+  const composed = [
+    candidate.brand,
+    candidate.model_family,
+    candidate.variant_storage,
+    candidate.variant_color,
+  ]
+    .filter(Boolean)
+    .map((part) => normalizeText(part))
+    .join(" ")
+    .trim();
+
+  if (!composed) return false;
+  return normalizeText(candidate.title) === composed;
+}
+
+function getVariantScore(existingValue: string | null, incomingValue: string | null): number {
+  if (!incomingValue) return existingValue ? 0 : 2;
+  if (!existingValue) return 4;
+  return normalizeCompact(existingValue) === normalizeCompact(incomingValue) ? 12 : -40;
+}
+
+function getCandidateScore(
+  candidate: ExistingProductRow,
+  identity: ProductIdentity,
+  categoryId?: string
+): number {
+  let score = 0;
+
+  if (categoryId && candidate.category_id === categoryId) score += 40;
+  if (normalizeCompact(candidate.brand) === normalizeCompact(identity.brand)) score += 10;
+  if (normalizeCompact(candidate.slug) === normalizeCompact(identity.slug)) score += 30;
+  if (normalizeCompact(candidate.title) === normalizeCompact(identity.canonicalTitle)) score += 20;
+  if (
+    identity.modelCode &&
+    normalizeCompact(candidate.model_code) === normalizeCompact(identity.modelCode)
+  ) {
+    score += 35;
+  }
+  if (
+    identity.modelFamily &&
+    normalizeCompact(candidate.model_family) === normalizeCompact(identity.modelFamily)
+  ) {
+    score += 20;
+  }
+
+  score += getVariantScore(candidate.variant_storage, identity.variantStorage);
+  score += getVariantScore(candidate.variant_color, identity.variantColor);
+
+  if (candidate.image_url) score += 4;
+  if (candidate.model_code) score += 4;
+  if (candidate.model_family) score += 3;
+  if (isStructuredExistingTitle(candidate)) score += 5;
+  if (candidate.slug && !hasRandomSlugSuffix(candidate.slug)) score += 3;
+
+  return score;
+}
+
+function compareCandidateRank(
+  left: ExistingProductRow,
+  right: ExistingProductRow,
+  identity: ProductIdentity,
+  categoryId?: string
+): number {
+  const scoreDiff = getCandidateScore(right, identity, categoryId) - getCandidateScore(left, identity, categoryId);
+  if (scoreDiff !== 0) return scoreDiff;
+
+  const leftCompleteness = [
+    left.image_url,
+    left.model_code,
+    left.model_family,
+    left.variant_storage,
+    left.variant_color,
+  ].filter(Boolean).length;
+  const rightCompleteness = [
+    right.image_url,
+    right.model_code,
+    right.model_family,
+    right.variant_storage,
+    right.variant_color,
+  ].filter(Boolean).length;
+  if (rightCompleteness !== leftCompleteness) return rightCompleteness - leftCompleteness;
+
+  return left.id.localeCompare(right.id);
+}
+
 function chooseSingleCandidate(
   candidates: ExistingProductRow[],
   identity: ProductIdentity,
@@ -633,7 +742,19 @@ function chooseSingleCandidate(
   );
   if (slugMatch.length === 1) return slugMatch[0];
 
-  return null;
+  const ranked = [...candidates].sort((left, right) =>
+    compareCandidateRank(left, right, identity, categoryId)
+  );
+  const best = ranked[0];
+  if (!best) return null;
+
+  if (getCandidateScore(best, identity, categoryId) <= 0) {
+    return null;
+  }
+
+  // Deterministically prefer the strongest existing canonical candidate so new syncs
+  // do not keep opening fresh duplicates for the same product identity.
+  return best;
 }
 
 export function inferProductIdentity(input: InferIdentityInput): ProductIdentity {
