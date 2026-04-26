@@ -27,7 +27,11 @@ import { generateResponse, type ProductForResponse } from "./generateResponse";
 import type { StructuredIntent } from "./intentParser";
 import { buildSuggestions, type Suggestion } from "./suggestionBuilder";
 import {
+  getQueryRankingProfile,
+  isStrictIntentTerm,
   rerankKnownProducts,
+  splitSearchTerms,
+  type QueryRankingProfile,
   type RankingScoreBreakdown,
 } from "../search/productRetrieval";
 
@@ -86,11 +90,15 @@ export type CandidateTrace = {
 export type RetrievalDiagnostics = {
   path: "fast" | "slow";
   retrieval_stage: string;
+  query_profile?: QueryRankingProfile | null;
   rerank_applied: boolean;
   kb_chunk_count: number;
   candidate_count: number;
   top_candidates: CandidateTrace[];
   pre_rerank_top_candidates?: CandidateTrace[];
+  strict_term_count?: number;
+  supplemented_by_legacy?: boolean;
+  supplemental_candidate_count?: number;
   vector_candidate_count?: number;
   smart_search_count?: number;
   smart_search_match_sources?: string[];
@@ -106,6 +114,12 @@ export type LegacySearchResult = {
   diagnostics?: {
     vector_candidate_count: number;
     top_candidates: CandidateTrace[];
+    ranking?: {
+      query_profile: QueryRankingProfile;
+      term_count: number;
+      strict_term_count: number;
+      candidate_pool_size: number;
+    };
   };
 };
 
@@ -189,12 +203,14 @@ async function runFastPath(
           : searchResult.method === "keyword"
             ? "shared_retrieval_keyword"
             : "shared_retrieval_failed",
+      query_profile: searchResult.diagnostics?.ranking?.query_profile ?? null,
       rerank_applied: searchResult.method !== "failed",
       kb_chunk_count: 0,
       candidate_count: searchResult.products.length,
       top_candidates:
         searchResult.diagnostics?.top_candidates ??
         summarizeCandidateTraces(searchResult.products),
+      strict_term_count: searchResult.diagnostics?.ranking?.strict_term_count ?? 0,
       vector_candidate_count: searchResult.diagnostics?.vector_candidate_count ?? 0,
       filters: searchResult.filters,
     },
@@ -225,6 +241,9 @@ async function runSlowPath(
     input.categoryTaxonomy,
     input.conversationHistory || []
   );
+  const queryTerms = splitSearchTerms(input.userMessage);
+  const queryProfile = getQueryRankingProfile(queryTerms);
+  const strictTermCount = queryTerms.filter(isStrictIntentTerm).length;
 
   // 3. Off-topic veya çok genel ş search yapma, direkt yanıt üret
   if (intent.is_off_topic || (intent.is_too_vague && intent.confidence < 0.3)) {
@@ -257,10 +276,12 @@ async function runSlowPath(
       diagnostics: {
         path: "slow",
         retrieval_stage: intent.is_off_topic ? "off_topic" : "too_vague",
+        query_profile: queryProfile,
         rerank_applied: false,
         kb_chunk_count: knowledgeChunks.length,
         candidate_count: 0,
         top_candidates: [],
+        strict_term_count: strictTermCount,
         smart_search_count: 0,
       },
     };
@@ -270,6 +291,8 @@ async function runSlowPath(
   let smartResults: SmartSearchRow[] = [];
   let method = "slow_hybrid";
   let rerankApplied = false;
+  let supplementedByLegacy = false;
+  let supplementalCandidateCount = 0;
 
   try {
     smartResults = await runSmartSearch(input.sb, input.userMessage, intent);
@@ -287,23 +310,66 @@ async function runSlowPath(
     method = `slow_fallback_${fallback.method}`;
   } else {
     try {
+      const rerankProductIds = smartResults.map((product) => product.id);
+      let rerankVectorCandidates = smartResults.map((product) => ({
+        id: product.id,
+        similarity: Number(product.similarity ?? 0),
+      }));
+
+      const shouldSupplementWithLegacy =
+        queryProfile.mode === "specific" || strictTermCount > 0;
+
+      if (shouldSupplementWithLegacy) {
+        const supplemental = await input.legacySearch(input.userMessage);
+        supplementalCandidateCount = supplemental.products.length;
+
+        if (supplemental.products.length > 0) {
+          const mergedIds = new Set(rerankProductIds);
+          for (const product of supplemental.products) {
+            if (!mergedIds.has(product.id)) {
+              mergedIds.add(product.id);
+              rerankProductIds.push(product.id);
+            }
+          }
+
+          const vectorMap = new Map<string, number>();
+          for (const candidate of rerankVectorCandidates) {
+            vectorMap.set(candidate.id, Number(candidate.similarity ?? 0));
+          }
+          for (const product of supplemental.products) {
+            const similarity = Number(product.similarity ?? 0);
+            const existing = vectorMap.get(product.id);
+            if (existing == null || similarity > existing) {
+              vectorMap.set(product.id, similarity);
+            }
+          }
+
+          rerankVectorCandidates = Array.from(vectorMap.entries()).map(
+            ([id, similarity]) => ({
+              id,
+              similarity,
+            })
+          );
+          supplementedByLegacy = rerankProductIds.length > smartResults.length;
+        }
+      }
+
       const reranked = await rerankKnownProducts({
         sb: input.sb,
-        productIds: smartResults.map((product) => product.id),
+        productIds: rerankProductIds,
         query: input.userMessage,
         categorySlug: intent.category_slug,
-        limit: smartResults.length,
+        limit: Math.max(smartResults.length, supplementalCandidateCount, 12),
         priceMin: intent.price_range.min,
         priceMax: intent.price_range.max,
-        vectorCandidates: smartResults.map((product) => ({
-          id: product.id,
-          similarity: Number(product.similarity ?? 0),
-        })),
+        vectorCandidates: rerankVectorCandidates,
       });
 
       if (reranked.products.length > 0) {
         finalProducts = reranked.products;
-        method = "slow_hybrid_ranked";
+        method = supplementedByLegacy
+          ? "slow_hybrid_ranked_augmented"
+          : "slow_hybrid_ranked";
         rerankApplied = true;
       }
     } catch (err) {
@@ -346,15 +412,21 @@ async function runSlowPath(
       retrieval_stage:
         smartResults.length > 0
           ? rerankApplied
-            ? "smart_search_then_rerank"
+            ? supplementedByLegacy
+              ? "smart_search_plus_legacy_then_rerank"
+              : "smart_search_then_rerank"
             : "smart_search_raw"
           : "legacy_fallback",
+      query_profile: queryProfile,
       rerank_applied: rerankApplied,
       kb_chunk_count: knowledgeChunks.length,
       candidate_count: finalProducts.length,
       top_candidates: summarizeCandidateTraces(finalProducts),
       pre_rerank_top_candidates:
         smartResults.length > 0 ? summarizeCandidateTraces(smartResults) : undefined,
+      strict_term_count: strictTermCount,
+      supplemented_by_legacy: supplementedByLegacy,
+      supplemental_candidate_count: supplementalCandidateCount,
       smart_search_count: smartResults.length,
       smart_search_match_sources:
         smartResults.length > 0

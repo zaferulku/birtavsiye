@@ -75,6 +75,19 @@ export type RankingScoreBreakdown = {
   total: number;
 };
 
+export type QueryRankingProfile = {
+  mode: "specific" | "balanced" | "exploratory";
+  priceSensitive: boolean;
+  accessoryIntent: boolean;
+};
+
+export type RetrievalRankingDiagnostics = {
+  query_profile: QueryRankingProfile;
+  term_count: number;
+  strict_term_count: number;
+  candidate_pool_size: number;
+};
+
 export type RetrieveRankedProductsOptions = {
   sb: SupabaseClient;
   query?: string | null;
@@ -100,6 +113,23 @@ export type RerankKnownProductsOptions = {
   includeEmptyListings?: boolean;
   vectorCandidates?: VectorCandidate[];
 };
+
+export function isStrictIntentTerm(term: string): boolean {
+  if (!term) return false;
+  if (/\d/.test(term)) return true;
+  if (/^\d+(gb|tb|mp|hz|mah)$/.test(term)) return true;
+  return VARIANT_INTENT_TERMS.has(term) && !GENERIC_DISCOVERY_TERMS.has(term);
+}
+
+function isAnchorIntentTerm(term: string): boolean {
+  if (!term || term.length < 4) return false;
+  if (/\d/.test(term)) return false;
+  if (GENERIC_DISCOVERY_TERMS.has(term)) return false;
+  if (PRICE_SENSITIVE_TERMS.has(term)) return false;
+  if (VARIANT_INTENT_TERMS.has(term)) return false;
+  if (ACCESSORY_QUERY_HINTS.has(term)) return false;
+  return true;
+}
 
 export class CategoryNotFoundError extends Error {
   constructor(slug: string) {
@@ -191,12 +221,6 @@ const VARIANT_INTENT_TERMS = new Set([
   "silver",
   "titanyum",
 ]);
-
-type QueryRankingProfile = {
-  mode: "specific" | "balanced" | "exploratory";
-  priceSensitive: boolean;
-  accessoryIntent: boolean;
-};
 
 function normalizeSearchText(value: string | null | undefined): string {
   return (value ?? "")
@@ -349,6 +373,9 @@ function getProductSearchScore(
   let score = 0;
   let matchedTerms = 0;
   let missingTerms = 0;
+  let matchedStrictTerms = 0;
+  let missingStrictTerms = 0;
+  let matchedAnchorTerms = 0;
 
   for (const term of terms) {
     let matched = false;
@@ -386,10 +413,19 @@ function getProductSearchScore(
 
     if (!matched) {
       missingTerms += 1;
+      if (isStrictIntentTerm(term)) {
+        missingStrictTerms += 1;
+      }
       continue;
     }
 
     matchedTerms += 1;
+    if (isStrictIntentTerm(term)) {
+      matchedStrictTerms += 1;
+    }
+    if (isAnchorIntentTerm(term)) {
+      matchedAnchorTerms += 1;
+    }
 
     if (term === "telefon" && categorySlug === "akilli-telefon") {
       score += 22;
@@ -412,10 +448,20 @@ function getProductSearchScore(
 
   const coverage = matchedTerms / terms.length;
   const minCoverage =
-    profile.mode === "specific" ? 0.5 : profile.mode === "balanced" ? 0.4 : 0.25;
+    profile.mode === "specific" ? 0.6 : profile.mode === "balanced" ? 0.4 : 0.25;
 
   if (coverage < minCoverage) {
     return { score: -1, reasons: [] };
+  }
+
+  const anchorTerms = terms.filter(isAnchorIntentTerm);
+  if (anchorTerms.length > 0 && matchedAnchorTerms === 0 && profile.mode !== "exploratory") {
+    return { score: -1, reasons: [] };
+  }
+
+  if (anchorTerms.length > 0 && matchedAnchorTerms === anchorTerms.length) {
+    score += 6;
+    reasons.add("anchor-tam");
   }
 
   if (missingTerms > 0) {
@@ -427,6 +473,20 @@ function getProductSearchScore(
           : missingTerms * 2;
     score -= penalty;
     reasons.add(`eksik-terim:${missingTerms}`);
+  }
+
+  if (matchedStrictTerms > 0 && missingStrictTerms === 0) {
+    score += 8;
+    reasons.add("kritik-tam");
+  } else if (missingStrictTerms > 0) {
+    const strictPenalty =
+      profile.mode === "specific"
+        ? missingStrictTerms * 18
+        : profile.mode === "balanced"
+          ? missingStrictTerms * 10
+          : missingStrictTerms * 4;
+    score -= strictPenalty;
+    reasons.add(`eksik-kritik:${missingStrictTerms}`);
   }
 
   if (product.offer_count > 0) {
@@ -441,7 +501,7 @@ function getProductSearchScore(
   return { score, reasons: Array.from(reasons) };
 }
 
-function buildQueryRankingProfile(terms: string[]): QueryRankingProfile {
+export function getQueryRankingProfile(terms: string[]): QueryRankingProfile {
   if (terms.length === 0) {
     return {
       mode: "balanced",
@@ -594,7 +654,7 @@ function applyRankingSignals(
   priceMax: number | null | undefined
 ): RankedProduct[] {
   const categoryMap = new Map(categories.map((category) => [category.id, category]));
-  const profile = buildQueryRankingProfile(terms);
+  const profile = getQueryRankingProfile(terms);
 
   return products
     .map((product) => {
@@ -670,7 +730,9 @@ function applyRankingSignals(
         },
       };
     })
-    .filter((product) => product.search_score >= 0 || product.vector_similarity !== null)
+    .filter(
+      (product) => product.score_breakdown.lexical >= 0 || product.vector_similarity !== null
+    )
     .sort((left, right) => {
       if (right.search_score !== left.search_score) {
         return right.search_score - left.search_score;
@@ -683,6 +745,32 @@ function applyRankingSignals(
       }
       return (right.created_at ?? "").localeCompare(left.created_at ?? "");
     });
+}
+
+function relaxSearchTerms(terms: string[]): string[] {
+  const prioritized = terms.filter(
+    (term) => isAnchorIntentTerm(term) || isStrictIntentTerm(term)
+  );
+  const fallback = prioritized.length > 0 ? prioritized : terms.slice(0, 3);
+  return Array.from(new Set(fallback)).slice(0, Math.min(4, terms.length));
+}
+
+function buildRelaxedTermVariants(terms: string[]): string[][] {
+  const variants: string[][] = [];
+  const pushVariant = (candidate: string[]) => {
+    const normalized = Array.from(new Set(candidate)).filter(Boolean);
+    if (normalized.length === 0) return;
+    if (normalized.join("|") === terms.join("|")) return;
+    if (variants.some((entry) => entry.join("|") === normalized.join("|"))) return;
+    variants.push(normalized);
+  };
+
+  pushVariant(relaxSearchTerms(terms));
+  pushVariant(terms.filter(isAnchorIntentTerm));
+  pushVariant(terms.filter((term) => isAnchorIntentTerm(term) || isStrictIntentTerm(term)));
+  pushVariant(terms.slice(0, 2));
+
+  return variants;
 }
 
 function mergeRankedClusters(products: RankedProduct[]): RankedProduct[] {
@@ -785,7 +873,7 @@ async function loadSearchCategories(
 
 export async function retrieveRankedProducts(
   options: RetrieveRankedProductsOptions
-): Promise<{ products: RankedProduct[] }> {
+): Promise<{ products: RankedProduct[]; diagnostics: RetrievalRankingDiagnostics }> {
   const {
     sb,
     query,
@@ -800,6 +888,8 @@ export async function retrieveRankedProducts(
   } = options;
 
   const normalizedQuery = query?.trim() ?? "";
+  const queryTerms = splitSearchTerms(normalizedQuery);
+  const queryProfile = getQueryRankingProfile(queryTerms);
   const shouldLoadCategories = Boolean(categorySlug || normalizedQuery);
   const categories = await loadSearchCategories(sb, shouldLoadCategories);
 
@@ -822,7 +912,7 @@ export async function retrieveRankedProducts(
   let rows: SearchProductRow[] = [];
 
   if (normalizedQuery) {
-    const searchTerms = splitSearchTerms(normalizedQuery);
+    const searchTerms = queryTerms;
     const categoryMap = new Map(categories.map((category) => [category.id, category]));
     const uniqueRows = new Map<string, SearchProductRow>();
 
@@ -920,11 +1010,40 @@ export async function retrieveRankedProducts(
       priceMax
     );
 
-    rows = mergeRankedClusters(ranked)
+    let mergedRanked = mergeRankedClusters(ranked)
       .filter((product) => includeEmptyListings || product.prices.length > 0)
-      .slice(offset, offset + limit) as unknown as SearchProductRow[];
+      .slice(offset, offset + limit);
 
-    return { products: rows as unknown as RankedProduct[] };
+    if (mergedRanked.length === 0 && searchTerms.length > 2) {
+      for (const relaxedTerms of buildRelaxedTermVariants(searchTerms)) {
+        const relaxedRanked = applyRankingSignals(
+          normalizeProductRows(Array.from(uniqueRows.values()), categoryMap),
+          categories,
+          relaxedTerms,
+          vectorMap,
+          priceMin,
+          priceMax
+        );
+        mergedRanked = mergeRankedClusters(relaxedRanked)
+          .filter((product) => includeEmptyListings || product.prices.length > 0)
+          .slice(offset, offset + limit);
+        if (mergedRanked.length > 0) {
+          break;
+        }
+      }
+    }
+
+    rows = mergedRanked as unknown as SearchProductRow[];
+
+    return {
+      products: rows as unknown as RankedProduct[],
+      diagnostics: {
+        query_profile: queryProfile,
+        term_count: searchTerms.length,
+        strict_term_count: searchTerms.filter(isStrictIntentTerm).length,
+        candidate_pool_size: ranked.length,
+      },
+    };
   }
 
   let listQuery = sb
@@ -950,12 +1069,20 @@ export async function retrieveRankedProducts(
     .filter((product) => includeEmptyListings || product.prices.length > 0)
     .slice(offset, offset + limit);
 
-  return { products: listedProducts };
+  return {
+    products: listedProducts,
+    diagnostics: {
+      query_profile: queryProfile,
+      term_count: queryTerms.length,
+      strict_term_count: queryTerms.filter(isStrictIntentTerm).length,
+      candidate_pool_size: listedProducts.length,
+    },
+  };
 }
 
 export async function rerankKnownProducts(
   options: RerankKnownProductsOptions
-): Promise<{ products: RankedProduct[] }> {
+): Promise<{ products: RankedProduct[]; diagnostics: RetrievalRankingDiagnostics }> {
   const {
     sb,
     productIds,
@@ -972,9 +1099,19 @@ export async function rerankKnownProducts(
   const uniqueProductIds = Array.from(
     new Set(productIds.filter((id) => typeof id === "string" && id.length > 0))
   ).slice(0, 64);
+  const queryTerms = splitSearchTerms(query);
+  const queryProfile = getQueryRankingProfile(queryTerms);
 
   if (uniqueProductIds.length === 0) {
-    return { products: [] };
+    return {
+      products: [],
+      diagnostics: {
+        query_profile: queryProfile,
+        term_count: queryTerms.length,
+        strict_term_count: queryTerms.filter(isStrictIntentTerm).length,
+        candidate_pool_size: 0,
+      },
+    };
   }
 
   const shouldLoadCategories = Boolean(categorySlug || query);
@@ -1014,7 +1151,7 @@ export async function rerankKnownProducts(
   const ranked = applyRankingSignals(
     normalizeProductRows((result.data ?? []) as SearchProductRow[], categoryMap),
     categories,
-    splitSearchTerms(query),
+    queryTerms,
     vectorMap,
     priceMin,
     priceMax
@@ -1024,5 +1161,13 @@ export async function rerankKnownProducts(
     .filter((product) => includeEmptyListings || product.prices.length > 0)
     .slice(offset, offset + limit);
 
-  return { products: merged };
+  return {
+    products: merged,
+    diagnostics: {
+      query_profile: queryProfile,
+      term_count: queryTerms.length,
+      strict_term_count: queryTerms.filter(isStrictIntentTerm).length,
+      candidate_pool_size: ranked.length,
+    },
+  };
 }

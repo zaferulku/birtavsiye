@@ -8,8 +8,12 @@ import {
 } from "../../../lib/chatbot/chatOrchestrator";
 import { parseQuery, type CategoryRef } from "../../../lib/search/queryParser";
 import {
+  getQueryRankingProfile,
+  isStrictIntentTerm,
   retrieveRankedProducts,
+  splitSearchTerms,
   type RankedProduct,
+  type RetrievalRankingDiagnostics,
   type VectorCandidate,
 } from "../../../lib/search/productRetrieval";
 
@@ -88,6 +92,7 @@ type SearchResult = {
   diagnostics?: {
     vector_candidate_count: number;
     top_candidates: CandidateTrace[];
+    ranking?: RetrievalRankingDiagnostics;
   };
 };
 
@@ -272,7 +277,8 @@ async function searchProducts(userQuery: string): Promise<SearchResult> {
   }
 
   try {
-    const { products: rankedProducts } = await retrieveRankedProducts({
+    const { products: rankedProducts, diagnostics: rankingDiagnostics } =
+      await retrieveRankedProducts({
       sb,
       query: userQuery,
       categorySlug: parsed.category_slugs?.[0] ?? null,
@@ -299,9 +305,11 @@ async function searchProducts(userQuery: string): Promise<SearchResult> {
       diagnostics: {
         vector_candidate_count: vectorCandidates.length,
         top_candidates: summarizeRankedCandidates(rankedProducts),
+        ranking: rankingDiagnostics,
       },
     };
   } catch (error) {
+    const fallbackTerms = splitSearchTerms(userQuery);
     console.error(
       `[searchProducts] Shared retrieval failed: ${
         error instanceof Error ? error.message : String(error)
@@ -312,6 +320,16 @@ async function searchProducts(userQuery: string): Promise<SearchResult> {
       method: "failed",
       filters,
       latencyMs: Date.now() - startTime,
+      diagnostics: {
+        vector_candidate_count: vectorCandidates.length,
+        top_candidates: [],
+        ranking: {
+          query_profile: getQueryRankingProfile(fallbackTerms),
+          term_count: fallbackTerms.length,
+          strict_term_count: fallbackTerms.filter(isStrictIntentTerm).length,
+          candidate_pool_size: 0,
+        },
+      },
     };
   }
 }
