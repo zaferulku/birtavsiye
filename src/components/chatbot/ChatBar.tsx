@@ -103,6 +103,16 @@ function CameraIcon({ className = "" }: { className?: string }) {
   );
 }
 
+function ImageIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+      <circle cx="8.5" cy="8.5" r="1.5" />
+      <polyline points="21 15 16 10 5 21" />
+    </svg>
+  );
+}
+
 // ============================================================================
 // + Menu Component
 // ============================================================================
@@ -110,11 +120,13 @@ function CameraIcon({ className = "" }: { className?: string }) {
 function PlusMenu({
   isOpen,
   onClose,
-  onPhotoUpload,
+  onCameraOpen,
+  onGalleryOpen,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  onPhotoUpload: () => void;
+  onCameraOpen: () => void;
+  onGalleryOpen: () => void;
 }) {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -147,7 +159,7 @@ function PlusMenu({
       className="
         absolute bottom-full mb-2 right-0
         bg-white rounded-xl shadow-xl border border-gray-200
-        py-1 min-w-[180px] z-50
+        py-1 min-w-[200px] z-50
         animate-fade-in
       "
       role="menu"
@@ -155,18 +167,26 @@ function PlusMenu({
       <button
         type="button"
         onClick={() => {
-          onPhotoUpload();
+          onCameraOpen();
           onClose();
         }}
-        className="
-          w-full flex items-center gap-3 px-4 py-2.5
-          text-sm text-gray-800 hover:bg-gray-50
-          transition-colors
-        "
+        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-800 hover:bg-gray-50 transition-colors"
         role="menuitem"
       >
         <CameraIcon className="w-4 h-4 text-gray-600" />
-        <span>Fotoğraf yükle</span>
+        <span>Fotoğraf çek</span>
+      </button>
+      <button
+        type="button"
+        onClick={() => {
+          onGalleryOpen();
+          onClose();
+        }}
+        className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-800 hover:bg-gray-50 transition-colors border-t border-gray-100"
+        role="menuitem"
+      >
+        <ImageIcon className="w-4 h-4 text-gray-600" />
+        <span>Galeriden seç</span>
       </button>
     </div>
   );
@@ -179,7 +199,8 @@ function PlusMenu({
 export function ChatBar() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [text, setText] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
   const [voiceError, setVoiceError] = useState<string | null>(null);
@@ -259,8 +280,12 @@ export function ChatBar() {
     }
   };
 
-  const handlePhotoUpload = () => {
-    fileInputRef.current?.click();
+  const handleGalleryOpen = () => {
+    galleryInputRef.current?.click();
+  };
+
+  const handleCameraOpen = () => {
+    cameraInputRef.current?.click();
   };
 
   const handleFileSelected = async (e: ChangeEvent<HTMLInputElement>) => {
@@ -491,15 +516,26 @@ export function ChatBar() {
           <PlusMenu
             isOpen={menuOpen}
             onClose={() => setMenuOpen(false)}
-            onPhotoUpload={handlePhotoUpload}
+            onCameraOpen={handleCameraOpen}
+            onGalleryOpen={handleGalleryOpen}
           />
         </div>
 
-        {/* Gizli file input */}
+        {/* Galeriden seç */}
         <input
-          ref={fileInputRef}
+          ref={galleryInputRef}
           type="file"
           accept="image/*"
+          onChange={handleFileSelected}
+          className="hidden"
+          aria-hidden="true"
+        />
+        {/* Kamera çek (mobile arka kamera, desktop file picker fallback) */}
+        <input
+          ref={cameraInputRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
           onChange={handleFileSelected}
           className="hidden"
           aria-hidden="true"
