@@ -9,6 +9,7 @@ import type {
   RecommendationTopic,
 } from "../../components/urun/ProductDetailShell";
 import { supabaseAdmin } from "@/lib/supabaseServer";
+import { getFreshestSeenAt, getLowestActivePrice } from "@/lib/listingSignals";
 import type { InitialListing, StoreDefinition } from "../../components/urun/offerUtils";
 import type { ReviewSummary } from "../../components/urun/CommunitySection";
 
@@ -86,14 +87,16 @@ type SimilarProductRow = {
   image_url: string | null;
   variant_storage: string | null;
   variant_color: string | null;
-  listings: Array<{ price: number | string; is_active: boolean }>;
+  listings: Array<{
+    price: number | string;
+    last_seen?: string | null;
+    is_active?: boolean | null;
+    in_stock?: boolean | null;
+  }>;
 };
 
 function rowsToSimilar(rows: SimilarProductRow[]): SimilarProduct[] {
   return rows.map((row) => {
-    const prices = (row.listings ?? [])
-      .map((l) => Number(l.price))
-      .filter((n) => Number.isFinite(n));
     return {
       id: row.id,
       slug: row.slug,
@@ -101,7 +104,8 @@ function rowsToSimilar(rows: SimilarProductRow[]): SimilarProduct[] {
       image_url: row.image_url,
       variant_storage: row.variant_storage,
       variant_color: row.variant_color,
-      min_price: prices.length > 0 ? Math.min(...prices) : null,
+      min_price: getLowestActivePrice(row.listings),
+      freshest_seen_at: getFreshestSeenAt(row.listings),
     };
   });
 }
@@ -113,7 +117,7 @@ async function loadSimilarProducts(
   excludeId: string
 ): Promise<SimilarProduct[]> {
   const similarSelect =
-    "id, slug, title, image_url, variant_storage, variant_color, listings!inner(price, is_active)";
+    "id, slug, title, image_url, variant_storage, variant_color, listings!inner(price, last_seen, is_active, in_stock)";
 
   // 1st pass: same category + same brand + same model_family (true variants)
   if (brand && modelFamily && categoryId) {

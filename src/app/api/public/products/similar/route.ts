@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../../lib/supabaseServer";
+import { getFreshestSeenAt, getLowestActivePrice } from "../../../../../lib/listingSignals";
 
 export const runtime = "nodejs";
 export const revalidate = 60;
@@ -21,7 +22,7 @@ export async function GET(req: Request) {
 
   let q = supabaseAdmin
     .from("products")
-    .select("id,title,slug,brand,image_url,model_family,prices:listings(price, is_active, in_stock)")
+    .select("id,title,slug,brand,image_url,model_family,prices:listings(price, last_seen, is_active, in_stock)")
     .eq("category_id", thisProd.category_id)
     .neq("id", productId)
     .limit(40);
@@ -33,9 +34,15 @@ export async function GET(req: Request) {
 
   const list = (data ?? []).map((product) => ({
     ...product,
-    prices: ((product.prices as Array<{ price: number | string; is_active?: boolean | null; in_stock?: boolean | null }> | null) ?? [])
+    prices: ((product.prices as Array<{ price: number | string; last_seen?: string | null; is_active?: boolean | null; in_stock?: boolean | null }> | null) ?? [])
       .filter((listing) => listing.is_active !== false && listing.in_stock !== false)
-      .map((listing) => ({ price: Number(listing.price) })),
+      .map((listing) => ({ price: Number(listing.price), last_seen: listing.last_seen ?? null })),
+    min_price: getLowestActivePrice(
+      ((product.prices as Array<{ price: number | string; last_seen?: string | null; is_active?: boolean | null; in_stock?: boolean | null }> | null) ?? [])
+    ),
+    freshest_seen_at: getFreshestSeenAt(
+      ((product.prices as Array<{ price: number | string; last_seen?: string | null; is_active?: boolean | null; in_stock?: boolean | null }> | null) ?? [])
+    ),
   }));
   const byFamily = new Map<string, typeof list[number]>();
   const noFamily: typeof list = [];

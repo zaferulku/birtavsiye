@@ -9,6 +9,7 @@ import ProductBestOfferCard from "./ProductBestOfferCard";
 import ProductGallery from "./ProductGallery";
 import PriceInsightsPanel from "./PriceInsightsPanel";
 import SpecsTable from "./SpecsTable";
+import { formatFreshnessLabel } from "@/lib/listingSignals";
 import {
   formatTL,
   mergeOfferRows,
@@ -44,6 +45,7 @@ export type SimilarProduct = {
   variant_storage: string | null;
   variant_color: string | null;
   min_price: number | null;
+  freshest_seen_at?: string | null;
 };
 
 export type RecommendationTopic = {
@@ -399,7 +401,12 @@ function SimilarProductsList({ items }: { items: SimilarProduct[] }) {
               </span>
               {variantLabel && <span className="text-xs text-[#8A8179]">{variantLabel}</span>}
               {item.min_price !== null && (
-                <span className="mt-auto text-sm font-bold text-[#E8460A]">{formatTL(item.min_price)}</span>
+                <>
+                  <span className="mt-auto text-sm font-bold text-[#E8460A]">{formatTL(item.min_price)}</span>
+                  <span className="text-[10px] text-[#8A8179]">
+                    Son fiyat: {formatFreshnessLabel(item.freshest_seen_at ?? null)}
+                  </span>
+                </>
               )}
             </div>
           </Link>

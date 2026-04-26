@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../../../lib/supabase";
+import { formatFreshnessLabel } from "../../../lib/listingSignals";
 
 export type ReviewSummary = {
   average: number;
@@ -39,7 +40,9 @@ type SimilarProduct = {
   slug: string;
   brand: string | null;
   image_url?: string | null;
-  prices?: Array<{ price: number }>;
+  prices?: Array<{ price: number; last_seen?: string | null }>;
+  min_price?: number | null;
+  freshest_seen_at?: string | null;
 };
 
 type Props = {
@@ -683,9 +686,11 @@ export default function CommunitySection({
         ) : (
           <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {similarProducts.map((product) => {
-              const minPrice = product.prices?.length
-                ? product.prices.reduce((minimum, current) => (current.price < minimum.price ? current : minimum), product.prices[0])
-                : null;
+              const minPrice =
+                product.min_price ??
+                (product.prices?.length
+                  ? product.prices.reduce((minimum, current) => (current.price < minimum.price ? current : minimum), product.prices[0]).price
+                  : null);
 
               return (
                 <Link
@@ -716,7 +721,10 @@ export default function CommunitySection({
                       {product.title}
                     </h3>
                     <div className="text-base font-black text-[#171412]">
-                      {minPrice ? `${minPrice.price.toLocaleString("tr-TR")} TL` : "Fiyatlari incele"}
+                      {minPrice ? `${minPrice.toLocaleString("tr-TR")} TL` : "Fiyatlari incele"}
+                    </div>
+                    <div className="text-[10px] text-[#8A8179]">
+                      Son fiyat: {formatFreshnessLabel(product.freshest_seen_at ?? null)}
                     </div>
                   </div>
                 </Link>
