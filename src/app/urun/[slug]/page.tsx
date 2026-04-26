@@ -41,6 +41,7 @@ type ProductPageData = {
   stores: Record<string, StoreDefinition>;
   reviewSummary: ReviewSummary;
   priceInsights: PriceInsightsPayload;
+  cluster_product_ids: string[];
 };
 
 type ProductListingRow = {
@@ -59,6 +60,7 @@ type ProductRow = {
   slug: string;
   title: string;
   brand: string | null;
+  model_code: string | null;
   model_family: string | null;
   variant_storage: string | null;
   variant_color: string | null;
@@ -66,6 +68,7 @@ type ProductRow = {
   image_url: string | null;
   images: string[] | null;
   specs: Record<string, unknown> | null;
+  category_id: string | null;
   category: ProductPageData["category"];
   listings: ProductListingRow[];
 };
@@ -116,7 +119,7 @@ async function loadSimilarProducts(
   brand: string | null,
   modelFamily: string | null,
   categoryId: string | null,
-  excludeId: string
+  excludeIds: string[]
 ): Promise<SimilarProduct[]> {
   const similarSelect =
     "id, slug, title, image_url, variant_storage, variant_color, listings!inner(price, last_seen, is_active, in_stock)";
@@ -131,10 +134,11 @@ async function loadSimilarProducts(
       .eq("model_family", modelFamily)
       .eq("is_active", true)
       .eq("listings.is_active", true)
-      .neq("id", excludeId)
-      .limit(12);
+      .limit(24);
 
-    const rows = rowsToSimilar((data as unknown as SimilarProductRow[]) ?? []);
+    const rows = rowsToSimilar((data as unknown as SimilarProductRow[]) ?? []).filter(
+      (row) => !excludeIds.includes(row.id)
+    );
     if (rows.length >= 4) return rows;
 
     // 2nd pass: same category + same brand (any model_family)
@@ -145,10 +149,11 @@ async function loadSimilarProducts(
       .eq("brand", brand)
       .eq("is_active", true)
       .eq("listings.is_active", true)
-      .neq("id", excludeId)
-      .limit(12);
+      .limit(24);
 
-    const brandRows = rowsToSimilar((brandData as unknown as SimilarProductRow[]) ?? []);
+    const brandRows = rowsToSimilar((brandData as unknown as SimilarProductRow[]) ?? []).filter(
+      (row) => !excludeIds.includes(row.id)
+    );
     const merged = [...rows];
     for (const r of brandRows) {
       if (!merged.some((m) => m.id === r.id)) merged.push(r);
@@ -163,26 +168,29 @@ async function loadSimilarProducts(
       .eq("category_id", categoryId)
       .eq("is_active", true)
       .eq("listings.is_active", true)
-      .neq("id", excludeId)
-      .limit(12);
+      .limit(24);
 
-    const catRows = rowsToSimilar((catData as unknown as SimilarProductRow[]) ?? []);
+    const catRows = rowsToSimilar((catData as unknown as SimilarProductRow[]) ?? []).filter(
+      (row) => !excludeIds.includes(row.id)
+    );
     for (const r of catRows) {
       if (!merged.some((m) => m.id === r.id)) merged.push(r);
       if (merged.length >= 12) break;
     }
-    return merged;
+    return merged.slice(0, 12);
   }
 
   // Fallback: no category info — return empty rather than cross-category noise
   return [];
 }
 
-async function loadRecommendations(productId: string): Promise<RecommendationTopic[]> {
+async function loadRecommendations(productIds: string[]): Promise<RecommendationTopic[]> {
+  if (productIds.length === 0) return [];
+
   const { data, error } = await supabaseAdmin
     .from("topics")
     .select("id, title, body, user_name, votes, answer_count, created_at")
-    .eq("product_id", productId)
+    .in("product_id", productIds)
     .order("created_at", { ascending: false })
     .limit(8);
 
@@ -194,8 +202,9 @@ async function loadProduct(slug: string): Promise<ProductPageData | null> {
   const { data: product, error } = await supabaseAdmin
     .from("products")
     .select(`
-      id, slug, title, brand, model_family, variant_storage, variant_color,
+      id, slug, title, brand, model_code, model_family, variant_storage, variant_color,
       description, image_url, images, specs,
+      category_id,
       category:categories!inner(id, slug, name),
       listings(id, source, source_url, affiliate_url, price, last_seen, is_active, in_stock)
     `)
@@ -206,7 +215,11 @@ async function loadProduct(slug: string): Promise<ProductPageData | null> {
   if (error || !product) return null;
 
   const productRow = product as unknown as ProductRow;
-  const activeListings = getRenderableListings(productRow.listings);
+  const clusterRows = await loadExactClusterRows(productRow);
+  const clusterProductIds = clusterRows.map((row) => row.id);
+  const activeListings = dedupeListingsBySource(
+    getRenderableListings(clusterRows.flatMap((row) => row.listings ?? []))
+  );
   const sources = [...new Set(activeListings.map((listing) => listing.source))];
   const listingIds = activeListings.map((listing) => listing.id);
   const historySinceIso = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
@@ -228,7 +241,7 @@ async function loadProduct(slug: string): Promise<ProductPageData | null> {
     supabaseAdmin
       .from("community_posts")
       .select("body, parent_id, rating")
-      .eq("product_id", productRow.id),
+      .in("product_id", clusterProductIds),
     priceHistoryPromise,
   ]);
 
@@ -257,6 +270,7 @@ async function loadProduct(slug: string): Promise<ProductPageData | null> {
     stores,
     reviewSummary,
     priceInsights,
+    cluster_product_ids: clusterProductIds,
   };
 }
 
@@ -332,8 +346,13 @@ export default async function ProductPage({
   }
 
   const [similarProducts, recommendations] = await Promise.all([
-    loadSimilarProducts(product.brand, product.model_family, product.category?.id ?? null, product.id),
-    loadRecommendations(product.id),
+    loadSimilarProducts(
+      product.brand,
+      product.model_family,
+      product.category?.id ?? null,
+      product.cluster_product_ids
+    ),
+    loadRecommendations(product.cluster_product_ids),
   ]);
 
   const minPrice = product.listings.length > 0
@@ -477,6 +496,50 @@ function computeReviewSummary(rows: ReviewRow[]): ReviewSummary {
   };
 }
 
+async function loadExactClusterRows(product: ProductRow): Promise<ProductRow[]> {
+  if (!product.model_code && !product.model_family) {
+    return [product];
+  }
+
+  let query = supabaseAdmin
+    .from("products")
+    .select(`
+      id, slug, title, brand, model_code, model_family, variant_storage, variant_color,
+      description, image_url, images, specs, category_id,
+      category:categories(id, slug, name),
+      listings(id, source, source_url, affiliate_url, price, last_seen, is_active, in_stock)
+    `)
+    .eq("is_active", true)
+    .neq("id", product.id)
+    .limit(24);
+
+  if (product.model_code) {
+    query = query.eq("model_code", product.model_code);
+    if (product.brand) {
+      query = query.eq("brand", product.brand);
+    }
+  } else {
+    query = query.eq("model_family", product.model_family);
+    if (product.brand) {
+      query = query.eq("brand", product.brand);
+    }
+    if (product.category_id) {
+      query = query.eq("category_id", product.category_id);
+    }
+  }
+
+  const { data, error } = await query;
+  if (error || !data) {
+    return [product];
+  }
+
+  const siblings = (data as unknown as ProductRow[]).filter((candidate) =>
+    isExactClusterMatch(product, candidate)
+  );
+
+  return [product, ...siblings];
+}
+
 function getRenderableListings(
   listings: ProductListingRow[] | null | undefined
 ): ProductListingRow[] {
@@ -489,6 +552,95 @@ function getRenderableListings(
       price > 0
     );
   });
+}
+
+function dedupeListingsBySource(listings: ProductListingRow[]): ProductListingRow[] {
+  const bestBySource = new Map<string, ProductListingRow>();
+
+  for (const listing of listings) {
+    const existing = bestBySource.get(listing.source);
+    if (!existing || compareListingPriority(listing, existing) < 0) {
+      bestBySource.set(listing.source, listing);
+    }
+  }
+
+  return Array.from(bestBySource.values()).sort(compareListingPriority);
+}
+
+function compareListingPriority(left: ProductListingRow, right: ProductListingRow): number {
+  const leftPrice = Number(left.price);
+  const rightPrice = Number(right.price);
+  const leftHasPrice = Number.isFinite(leftPrice) && leftPrice > 0;
+  const rightHasPrice = Number.isFinite(rightPrice) && rightPrice > 0;
+  const leftInStock = left.in_stock !== false;
+  const rightInStock = right.in_stock !== false;
+
+  if (leftInStock !== rightInStock) return leftInStock ? -1 : 1;
+  if (leftHasPrice !== rightHasPrice) return leftHasPrice ? -1 : 1;
+  if (leftHasPrice && rightHasPrice && leftPrice !== rightPrice) return leftPrice - rightPrice;
+
+  const leftSeen = left.last_seen ? new Date(left.last_seen).getTime() : 0;
+  const rightSeen = right.last_seen ? new Date(right.last_seen).getTime() : 0;
+  if (leftSeen !== rightSeen) return rightSeen - leftSeen;
+
+  const leftHasUrl = Boolean(left.affiliate_url || left.source_url);
+  const rightHasUrl = Boolean(right.affiliate_url || right.source_url);
+  if (leftHasUrl !== rightHasUrl) return leftHasUrl ? -1 : 1;
+
+  return left.id.localeCompare(right.id);
+}
+
+function isExactClusterMatch(base: ProductRow, candidate: ProductRow): boolean {
+  if (base.id === candidate.id) return true;
+
+  if (
+    base.category_id &&
+    candidate.category_id &&
+    base.category_id !== candidate.category_id
+  ) {
+    return false;
+  }
+
+  const baseBrand = normalizeIdentityPart(base.brand);
+  const candidateBrand = normalizeIdentityPart(candidate.brand);
+  if (baseBrand && candidateBrand && baseBrand !== candidateBrand) {
+    return false;
+  }
+
+  const baseModelCode = normalizeIdentityPart(base.model_code);
+  const candidateModelCode = normalizeIdentityPart(candidate.model_code);
+  if (baseModelCode && candidateModelCode) {
+    return baseModelCode === candidateModelCode;
+  }
+
+  const baseFamily = normalizeIdentityPart(base.model_family);
+  const candidateFamily = normalizeIdentityPart(candidate.model_family);
+  if (!baseFamily || !candidateFamily || baseFamily !== candidateFamily) {
+    return false;
+  }
+
+  const baseStorage = normalizeIdentityPart(base.variant_storage);
+  const candidateStorage = normalizeIdentityPart(candidate.variant_storage);
+  const baseColor = normalizeIdentityPart(base.variant_color);
+  const candidateColor = normalizeIdentityPart(candidate.variant_color);
+  const hasVariantIdentity = Boolean(baseStorage || candidateStorage || baseColor || candidateColor);
+
+  if (!hasVariantIdentity) {
+    return false;
+  }
+
+  return baseStorage === candidateStorage && baseColor === candidateColor;
+}
+
+function normalizeIdentityPart(value: string | null | undefined): string {
+  return (value ?? "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\u0131/g, "i")
+    .replace(/\u0130/g, "I")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "")
+    .trim();
 }
 
 function truncate(value: string, max: number): string {
