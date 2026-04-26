@@ -7,6 +7,7 @@ import {
   getLowestActivePrice,
 } from "@/lib/listingSignals";
 import { mergeClusteredProducts } from "@/lib/productCluster";
+import { cleanProductTitle } from "@/lib/productTitle";
 
 type Price = {
   id: string;
@@ -32,11 +33,24 @@ type Product = {
 };
 
 const SECTIONS = [
-  { key: "latest", label: "Yeni Eklenen Urunler", icon: "N", accent: "#E8460A" },
-  { key: "value", label: "En Avantajli Urunler", icon: "F", accent: "#059669" },
-  { key: "picked", label: "One Cikan Secimler", icon: "O", accent: "#2563EB" },
-  { key: "popular", label: "En Fazla Fiyatli Urunler", icon: "P", accent: "#D97706" },
+  { key: "drops", label: "Fiyati Dusenler", icon: "D", accent: "#E8460A" },
+  { key: "weekly", label: "Son Haftanin En Ucuzlari", icon: "H", accent: "#059669" },
+  { key: "multi", label: "Cok Magazali Firsatlar", icon: "M", accent: "#2563EB" },
+  { key: "fresh", label: "En Guncel Teklifler", icon: "G", accent: "#D97706" },
 ] as const;
+
+type ProductHistoryRow = {
+  listing_id: string;
+  price: number | string;
+  recorded_at: string;
+};
+
+type ProductMetrics = {
+  weeklyLow: number | null;
+  weeklyHigh: number | null;
+  dropPct: number | null;
+  freshnessRank: number;
+};
 
 async function loadProducts(): Promise<Product[]> {
   const { data, error } = await supabaseAdmin
@@ -111,19 +125,49 @@ function getLowestPrice(product: Product): number {
   return getLowestActivePrice(product.listings) ?? Infinity;
 }
 
-function buildSections(products: Product[]) {
-  const latest = products.slice(0, 8);
-  const value = [...products].sort((a, b) => getLowestPrice(a) - getLowestPrice(b)).slice(0, 8);
-  const popular = [...products]
-    .sort((a, b) => getActiveOfferCount(b.listings) - getActiveOfferCount(a.listings))
+async function buildSections(products: Product[]) {
+  const metrics = await loadProductMetrics(products);
+
+  const drops = [...products]
+    .filter((product) => (metrics.get(product.id)?.dropPct ?? 0) > 0)
+    .sort((left, right) => {
+      const leftDrop = metrics.get(left.id)?.dropPct ?? 0;
+      const rightDrop = metrics.get(right.id)?.dropPct ?? 0;
+      if (rightDrop !== leftDrop) return rightDrop - leftDrop;
+      return getLowestPrice(left) - getLowestPrice(right);
+    })
     .slice(0, 8);
-  const picked = products.slice(8, 16);
+
+  const weekly = [...products]
+    .sort((left, right) => {
+      const leftWeekly = metrics.get(left.id)?.weeklyLow ?? getLowestPrice(left);
+      const rightWeekly = metrics.get(right.id)?.weeklyLow ?? getLowestPrice(right);
+      if (leftWeekly !== rightWeekly) return leftWeekly - rightWeekly;
+      return getLowestPrice(left) - getLowestPrice(right);
+    })
+    .slice(0, 8);
+
+  const multi = [...products]
+    .sort((left, right) => {
+      const offerDiff = getActiveOfferCount(right.listings) - getActiveOfferCount(left.listings);
+      if (offerDiff !== 0) return offerDiff;
+      return getLowestPrice(left) - getLowestPrice(right);
+    })
+    .slice(0, 8);
+
+  const fresh = [...products]
+    .sort((left, right) => {
+      const freshnessDiff = (metrics.get(right.id)?.freshnessRank ?? 0) - (metrics.get(left.id)?.freshnessRank ?? 0);
+      if (freshnessDiff !== 0) return freshnessDiff;
+      return getLowestPrice(left) - getLowestPrice(right);
+    })
+    .slice(0, 8);
 
   return {
-    latest,
-    value,
-    picked,
-    popular,
+    drops: drops.length > 0 ? drops : weekly,
+    weekly,
+    multi,
+    fresh,
   };
 }
 
@@ -153,7 +197,7 @@ function ProductCard({ product }: { product: Product }) {
             {product.brand || "Markasiz"}
           </div>
           <div className="text-[10px] sm:text-xs font-medium text-gray-800 line-clamp-2 leading-snug mb-1 sm:mb-2">
-            {product.title}
+            {cleanProductTitle(product.title)}
           </div>
           <div className="text-xs sm:text-sm font-bold text-gray-900">
             {lowestPrice.toLocaleString("tr-TR")}
@@ -214,6 +258,7 @@ function EmptyState() {
         <div className="text-sm font-semibold text-gray-700">Henuz gosterilecek aktif urun yok</div>
         <div className="mt-2 text-xs text-gray-500">
           Yeni eklenen urunler aktif listing aldiginda burada gorunecek.
+          Fiyat hareketi ve aktif teklif geldiginde burada firsat bloklari gorunecek.
         </div>
       </div>
     </div>
@@ -227,7 +272,7 @@ export default async function FeaturedProducts() {
     return <EmptyState />;
   }
 
-  const sections = buildSections(products);
+  const sections = await buildSections(products);
 
   return (
     <div className="py-3 sm:py-5">
@@ -235,26 +280,85 @@ export default async function FeaturedProducts() {
         label={SECTIONS[0].label}
         icon={SECTIONS[0].icon}
         accent={SECTIONS[0].accent}
-        products={sections.latest}
+        products={sections.drops}
       />
       <Section
         label={SECTIONS[1].label}
         icon={SECTIONS[1].icon}
         accent={SECTIONS[1].accent}
-        products={sections.value}
+        products={sections.weekly}
       />
       <Section
         label={SECTIONS[2].label}
         icon={SECTIONS[2].icon}
         accent={SECTIONS[2].accent}
-        products={sections.picked}
+        products={sections.multi}
       />
       <Section
         label={SECTIONS[3].label}
         icon={SECTIONS[3].icon}
         accent={SECTIONS[3].accent}
-        products={sections.popular}
+        products={sections.fresh}
       />
     </div>
   );
+}
+
+async function loadProductMetrics(products: Product[]): Promise<Map<string, ProductMetrics>> {
+  const listingIds = products.flatMap((product) => product.listings.map((listing) => listing.id));
+  const historyMap = new Map<string, ProductHistoryRow[]>();
+
+  if (listingIds.length > 0) {
+    const weekAgoIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+    const { data } = await supabaseAdmin
+      .from("price_history")
+      .select("listing_id, price, recorded_at")
+      .in("listing_id", listingIds)
+      .gte("recorded_at", weekAgoIso)
+      .order("recorded_at", { ascending: true });
+
+    for (const row of (data ?? []) as ProductHistoryRow[]) {
+      const existing = historyMap.get(row.listing_id) ?? [];
+      existing.push(row);
+      historyMap.set(row.listing_id, existing);
+    }
+  }
+
+  const metrics = new Map<string, ProductMetrics>();
+
+  for (const product of products) {
+    const currentLow = getLowestPrice(product);
+    const weeklyPrices = product.listings
+      .flatMap((listing) => historyMap.get(listing.id) ?? [])
+      .map((row) => Number(row.price))
+      .filter((price) => Number.isFinite(price) && price > 0);
+
+    const weeklyLow =
+      weeklyPrices.length > 0 ? Math.min(...weeklyPrices, currentLow) : Number.isFinite(currentLow) ? currentLow : null;
+    const weeklyHigh =
+      weeklyPrices.length > 0 ? Math.max(...weeklyPrices, currentLow) : Number.isFinite(currentLow) ? currentLow : null;
+    const dropPct =
+      weeklyHigh && Number.isFinite(currentLow) && weeklyHigh > currentLow
+        ? ((weeklyHigh - currentLow) / weeklyHigh) * 100
+        : null;
+
+    metrics.set(product.id, {
+      weeklyLow,
+      weeklyHigh,
+      dropPct,
+      freshnessRank: freshnessScore(getFreshestSeenAt(product.listings)),
+    });
+  }
+
+  return metrics;
+}
+
+function freshnessScore(value: string | null): number {
+  if (!value) return 0;
+  const diffHours = (Date.now() - new Date(value).getTime()) / (1000 * 60 * 60);
+  if (diffHours <= 6) return 4;
+  if (diffHours <= 24) return 3;
+  if (diffHours <= 72) return 2;
+  if (diffHours <= 168) return 1;
+  return 0;
 }
