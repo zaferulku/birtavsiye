@@ -17,15 +17,33 @@ import {
   formatFreshnessLabel,
   sourceTrustScore,
 } from "../../../lib/listingSignals";
+import { mergeClusteredProducts } from "../../../lib/productCluster";
 
 export const revalidate = 60;
 
 type ListingRow = {
+  id?: string | null;
   price?: number | null;
   source?: string | null;
   is_active?: boolean | null;
   in_stock?: boolean | null;
   last_seen?: string | null;
+};
+
+type ProductCard = {
+  id: string;
+  title: string;
+  slug: string;
+  brand: string | null;
+  description?: string | null;
+  image_url?: string | null;
+  category_id?: string | null;
+  model_code?: string | null;
+  model_family?: string | null;
+  variant_storage?: string | null;
+  variant_color?: string | null;
+  created_at?: string | null;
+  prices?: ListingRow[] | null;
 };
 
 export default async function KategoriSayfasi({ params, searchParams }: {
@@ -90,7 +108,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   // Variant dedup için daha geniş bir havuz çekip in-memory birleştiriyoruz
   let query = supabaseAdmin
     .from("products")
-    .select("id, title, slug, brand, description, image_url, model_family, variant_storage, variant_color, prices:listings(price, source, is_active, in_stock, last_seen)", { count: "exact" })
+    .select("id, title, slug, brand, description, image_url, category_id, model_code, model_family, variant_storage, variant_color, created_at, prices:listings(id, price, source, is_active, in_stock, last_seen)", { count: "exact" })
     .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""]);
 
   if (marka) query = query.eq("brand", marka);
@@ -104,60 +122,43 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   // Paralel: ana ürün query + marka/model count (aynı descendantIds kullanıyor)
   const allBrandsPromise = supabaseAdmin
     .from("products")
-    .select("brand, model_family, prices:listings(source, is_active, in_stock)")
+    .select("id, title, slug, brand, image_url, category_id, model_code, model_family, variant_storage, variant_color, created_at, prices:listings(id, price, source, is_active, in_stock, last_seen)")
     .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""]);
   const mainPromise = query.limit(300);
   const [mainRes, allRes] = await Promise.all([mainPromise, allBrandsPromise]);
-  const { data: rawProducts, count } = mainRes;
+  const { data: rawProducts } = mainRes;
   const allProducts = allRes.data;
 
   // Aynı (brand, model_family) birden fazla kayıt varsa sadece en ucuzunu listele
-  type Row = NonNullable<typeof rawProducts>[number];
-  type ProductCard = Row & { _variantCount?: number };
   const visibleListingsOf = (p: { prices: ListingRow[] | null | undefined }) =>
     getActiveListings(p.prices, kaynak ?? null);
   const allSourcesOf = (p: { prices: ListingRow[] | null | undefined }): string[] =>
     getUniqueActiveSources(p.prices);
-  const visibleSourcesOf = (p: { prices: ListingRow[] | null | undefined }): string[] =>
-    getUniqueActiveSources(p.prices, kaynak ?? null);
-  const filteredRawProducts = (rawProducts ?? []).filter((product) => !kaynak || visibleListingsOf(product).length > 0);
-  const familyGroups = new Map<string, Row[]>();
-  const singletons: Row[] = [];
-  for (const p of filteredRawProducts) {
-    if (p.brand && p.model_family) {
-      const key = `${p.brand}|${p.model_family}`;
-      const arr = familyGroups.get(key) ?? [];
-      arr.push(p);
-      familyGroups.set(key, arr);
-    } else {
-      singletons.push(p);
-    }
-  }
+  const normalizeProducts = (items: ProductCard[]): ProductCard[] =>
+    mergeClusteredProducts(
+      items.map((product) => ({
+        ...product,
+        prices: ((product.prices ?? []).map((listing) => ({
+          id: listing.id ?? `${product.id}:${listing.source ?? "unknown"}:${listing.price ?? "0"}`,
+          price: Number(listing.price ?? 0),
+          source: listing.source ?? null,
+          is_active: listing.is_active ?? null,
+          in_stock: listing.in_stock ?? null,
+          last_seen: listing.last_seen ?? null,
+        }))).filter(
+          (listing) =>
+            listing.is_active !== false &&
+            listing.in_stock !== false &&
+            Number.isFinite(listing.price) &&
+            listing.price > 0
+        ),
+      }))
+    );
 
-  const minPriceOf = (p: Row): number => {
-    return getLowestActivePrice(p.prices, kaynak ?? null) ?? Infinity;
-  };
-  const dedupedRepresentatives: ProductCard[] = [];
-  for (const arr of familyGroups.values()) {
-    const sortedByPrice = arr.slice().sort((a, b) => minPriceOf(a) - minPriceOf(b));
-    const withImage = arr.filter(x => (x as { image_url?: string | null }).image_url);
-    const imageSource = (withImage.length > 0 ? withImage : arr)
-      .slice()
-      .sort((a, b) => {
-        const trustB = Math.max(0, ...visibleSourcesOf(b).map(sourceTrustScore));
-        const trustA = Math.max(0, ...visibleSourcesOf(a).map(sourceTrustScore));
-        return trustB - trustA;
-      })[0];
-    const uniqSources = new Set(arr.flatMap((product) => visibleSourcesOf(product)));
-    const rep = {
-      ...sortedByPrice[0],
-      image_url: (imageSource as { image_url?: string | null })?.image_url ?? sortedByPrice[0].image_url,
-      _variantCount: uniqSources.size || arr.length,
-    };
-    dedupedRepresentatives.push(rep);
-  }
-
-  let products: ProductCard[] = [...dedupedRepresentatives, ...singletons];
+  const mergedRawProducts = normalizeProducts((rawProducts as ProductCard[] | null) ?? []);
+  let products: ProductCard[] = mergedRawProducts.filter(
+    (product) => !kaynak || visibleListingsOf(product).length > 0
+  );
 
   // Filtreler
   if (hafiza) {
@@ -201,8 +202,9 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   const brandCounts: Record<string, number> = {};
   const modelsByBrand: Record<string, Record<string, number>> = {};
   const sourceCounts: Record<string, number> = {};
-  const countBaseProducts = ((allProducts || []) as Array<{ brand?: string | null; model_family?: string | null; prices?: ListingRow[] | null }>)
-    .filter((product) => !kaynak || getActiveListings(product.prices, kaynak).length > 0);
+  const countBaseProducts = normalizeProducts((allProducts as ProductCard[] | null) ?? []).filter(
+    (product) => !kaynak || getActiveListings(product.prices, kaynak).length > 0
+  );
   countBaseProducts.forEach(p => {
     if (p.brand) {
       brandCounts[p.brand] = (brandCounts[p.brand] || 0) + 1;
@@ -212,7 +214,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
       }
     }
   });
-  ((allProducts || []) as Array<{ prices?: ListingRow[] | null }>).forEach((p) => {
+  countBaseProducts.forEach((p) => {
     for (const src of allSourcesOf({ prices: p.prices ?? null })) {
       sourceCounts[src] = (sourceCounts[src] || 0) + 1;
     }
@@ -283,7 +285,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
           </nav>
           <div className="flex items-center justify-between gap-3">
             <h1 className="font-extrabold text-lg sm:text-2xl text-gray-900 min-w-0 truncate">{category.name}</h1>
-            <span className="text-xs sm:text-sm text-gray-500 flex-shrink-0">{kaynak || hafiza || renk || min || max ? filteredProductCount : count || 0} ürün</span>
+            <span className="text-xs sm:text-sm text-gray-500 flex-shrink-0">{filteredProductCount} ürün</span>
           </div>
         </div>
       </div>
@@ -360,7 +362,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                 <Link href={buildUrl({ marka: null })}>
                   <div className={`flex items-center justify-between px-4 py-2 text-sm cursor-pointer transition-colors ${!marka ? "text-slate-900 font-semibold bg-slate-100" : "text-gray-700 hover:bg-gray-50"}`}>
                     <span>Tümü</span>
-                    <span className="text-xs text-gray-400">{kaynak ? filteredProductCount : count || 0}</span>
+                    <span className="text-xs text-gray-400">{countBaseProducts.length}</span>
                   </div>
                 </Link>
                       {brands.map((b) => {

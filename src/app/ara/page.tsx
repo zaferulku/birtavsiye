@@ -9,10 +9,10 @@ import Footer from "../components/layout/Footer";
 import {
   formatFreshnessLabel,
   getActiveOfferCount,
-  getActiveListings,
   getFreshestSeenAt,
   getLowestActivePrice,
 } from "../../lib/listingSignals";
+import { mergeClusteredProducts } from "../../lib/productCluster";
 
 type Product = {
   id: string;
@@ -22,11 +22,19 @@ type Product = {
   description: string;
   image_url?: string;
   category_id?: string;
+  model_code?: string | null;
   model_family?: string | null;
   variant_storage?: string | null;
   variant_color?: string | null;
-  prices?: { price: number; source?: string | null; last_seen?: string | null; is_active?: boolean | null; in_stock?: boolean | null }[];
-  _variantCount?: number;
+  created_at?: string | null;
+  prices?: {
+    id: string;
+    price: number;
+    source: string | null;
+    last_seen: string | null;
+    is_active?: boolean | null;
+    in_stock?: boolean | null;
+  }[];
 };
 
 const popularSearches = [
@@ -61,7 +69,7 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
     let queryBuilder = supabase
       .from("products")
       .select(
-        "id, title, slug, brand, description, image_url, category_id, model_family, variant_storage, variant_color, prices:listings(price, source, last_seen, is_active, in_stock)"
+        "id, title, slug, brand, description, image_url, category_id, model_code, model_family, variant_storage, variant_color, created_at, prices:listings(id, price, source, last_seen, is_active, in_stock)"
       )
       .limit(200);
 
@@ -77,38 +85,49 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
 
     const { data } = await queryBuilder;
     if (data) {
-      const normalized = (data as Product[]).map((product) => ({
+      const normalized = (data as Array<{
+        id: string;
+        title: string;
+        slug: string;
+        brand: string;
+        description: string;
+        image_url?: string;
+        category_id?: string;
+        model_code?: string | null;
+        model_family?: string | null;
+        variant_storage?: string | null;
+        variant_color?: string | null;
+        created_at?: string | null;
+        prices?: Array<{
+          id: string;
+          price: number | string;
+          source?: string | null;
+          last_seen?: string | null;
+          is_active?: boolean | null;
+          in_stock?: boolean | null;
+        }>;
+      }>).map((product) => ({
         ...product,
-        prices: getActiveListings(product.prices).map((listing) => ({
-          price: listing.price,
-          source: listing.source,
-          last_seen: listing.last_seen,
-        })),
+        prices: ((product.prices ?? []).map((listing) => ({
+          id: listing.id,
+          price: Number(listing.price),
+          source: listing.source ?? null,
+          last_seen: listing.last_seen ?? null,
+          is_active: listing.is_active ?? null,
+          in_stock: listing.in_stock ?? null,
+        }))).filter(
+          (listing) =>
+            listing.is_active !== false &&
+            listing.in_stock !== false &&
+            Number.isFinite(listing.price) &&
+            listing.price > 0
+        ),
       }));
-
-      const familyGroups = new Map<string, Product[]>();
-      const singletons: Product[] = [];
-      for (const product of normalized) {
-        if (product.brand && product.model_family) {
-          const key = `${product.brand}|${product.model_family}`;
-          const arr = familyGroups.get(key) ?? [];
-          arr.push(product);
-          familyGroups.set(key, arr);
-        } else {
-          singletons.push(product);
-        }
-      }
-
-      const minPriceOf = (product: Product): number => getLowestActivePrice(product.prices) ?? Infinity;
-
-      const dedupped: Product[] = [];
-      for (const arr of familyGroups.values()) {
-        const sorted = arr.slice().sort((left, right) => minPriceOf(left) - minPriceOf(right));
-        const offerCount = arr.reduce((count, product) => count + getActiveOfferCount(product.prices), 0);
-        dedupped.push({ ...sorted[0], _variantCount: offerCount || arr.length });
-      }
-
-      setResults([...dedupped, ...singletons].slice(0, 48));
+      setResults(
+        mergeClusteredProducts(normalized)
+          .filter((product) => (product.prices?.length ?? 0) > 0)
+          .slice(0, 48)
+      );
     }
 
     setLoading(false);
