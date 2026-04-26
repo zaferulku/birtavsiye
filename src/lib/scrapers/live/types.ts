@@ -47,9 +47,12 @@ export type Listing = {
   source: string;
   source_product_id: string;
   source_url: string | null;
+  affiliate_url?: string | null;
   store_id: string | null;
   price: number;
   is_active: boolean;
+  in_stock?: boolean | null;
+  last_seen?: string | null;
 };
 
 export type SsePriceEvent = {

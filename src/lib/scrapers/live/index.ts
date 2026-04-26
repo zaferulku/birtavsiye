@@ -10,6 +10,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { rateLimiter } from "./rate-limiter";
 import { fetchWithDedupe, cacheGet, cacheSet, cacheKey } from "./cache";
+import {
+  dedupeClusterListingsBySource,
+  resolveProductClusterIdsByProductId,
+} from "@/lib/productCluster";
 import type {
   StoreFetcher,
   StoreLiveData,
@@ -44,11 +48,12 @@ export async function fetchLivePricesForProduct(
   const forceFresh = options.forceFresh ?? false;
 
   const startTime = Date.now();
+  const clusterProductIds = await resolveProductClusterIdsByProductId(supabase, productId);
 
   const { data: listings, error } = await supabase
     .from("listings")
-    .select("id, product_id, source, source_product_id, source_url, store_id, price, is_active")
-    .eq("product_id", productId)
+    .select("id, product_id, source, source_product_id, source_url, affiliate_url, store_id, price, is_active, in_stock, last_seen")
+    .in("product_id", clusterProductIds)
     .eq("is_active", true);
 
   if (error) {
@@ -63,7 +68,9 @@ export async function fetchLivePricesForProduct(
     return;
   }
 
-  if (!listings || listings.length === 0) {
+  const uniqueListings = dedupeClusterListingsBySource((listings as Listing[] | null) ?? []);
+
+  if (uniqueListings.length === 0) {
     emit({
       type: "done",
       total_stores: 0,
@@ -77,7 +84,7 @@ export async function fetchLivePricesForProduct(
   let successful = 0;
   let failed = 0;
 
-  const tasks = listings.map((listing) =>
+  const tasks = uniqueListings.map((listing) =>
     fetchOneListing(listing, emit, forceFresh, options.cacheTtlMs)
       .then((outcome) => {
         if (outcome.ok) {
@@ -100,7 +107,7 @@ export async function fetchLivePricesForProduct(
 
   emit({
     type: "done",
-    total_stores: listings.length,
+    total_stores: uniqueListings.length,
     successful,
     failed,
     duration_ms: Date.now() - startTime,
@@ -161,8 +168,9 @@ async function fetchOneListing(
     cacheSet(key, data, cacheTtlMs);
     emit({ type: "price", listing_id: listingId, source, data });
     return { ok: true, data };
-  } catch (err: any) {
-    const errorMsg = String(err?.message || err).slice(0, 120);
+  } catch (err: unknown) {
+    const errorMsg =
+      err instanceof Error ? err.message.slice(0, 120) : String(err).slice(0, 120);
     emit({
       type: "error",
       listing_id: listingId,
@@ -182,7 +190,19 @@ async function persistListing(
 
   try {
     const nowIso = new Date().toISOString();
-    const updatePayload: Record<string, any> = {
+    const updatePayload: {
+      price: number;
+      original_price: number | null;
+      in_stock: boolean;
+      stock_count: number | null;
+      shipping_price: number | null;
+      free_shipping: boolean;
+      seller_name: string | null;
+      affiliate_url: string | null;
+      last_seen: string;
+      updated_at: string;
+      last_price_change?: string;
+    } = {
       price: data.price,
       original_price: data.original_price,
       in_stock: data.in_stock,
