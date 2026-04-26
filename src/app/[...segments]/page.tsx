@@ -9,6 +9,8 @@ import type { Metadata } from "next";
 import KategoriSayfasi from "../kategori/[slug]/page";
 import ModelPageView from "../components/marka/ModelPageView";
 import { resolveCategorySlug } from "../../lib/categoryAliases";
+import { mergeClusteredProducts } from "../../lib/productCluster";
+import { getActiveOfferCount, getLowestActivePrice } from "../../lib/listingSignals";
 
 export const revalidate = 120;
 
@@ -108,7 +110,7 @@ export default async function Page({ params, searchParams }: PageProps) {
 
     const { data: productsData } = await supabaseAdmin
       .from("products")
-      .select("id, slug, brand, model_family, image_url, category_id, prices:listings(price, is_active, in_stock)")
+      .select("id, title, slug, brand, model_code, model_family, variant_storage, variant_color, image_url, category_id, created_at, prices:listings(id, price, source, last_seen, is_active, in_stock)")
       .ilike("brand", brandGuess)
       .in("category_id", descendantIds.length > 0 ? descendantIds : [leafCategory?.id ?? ""])
       .not("model_family", "is", null)
@@ -116,16 +118,41 @@ export default async function Page({ params, searchParams }: PageProps) {
 
     type Row = {
       id: string;
+      title: string;
       slug: string;
       brand: string | null;
+      model_code: string | null;
       model_family: string | null;
+      variant_storage: string | null;
+      variant_color: string | null;
       image_url: string | null;
       category_id: string | null;
-      prices: { price: number; is_active?: boolean | null; in_stock?: boolean | null }[] | null;
+      created_at: string | null;
+      prices: {
+        id: string;
+        price: number;
+        source: string | null;
+        last_seen?: string | null;
+        is_active?: boolean | null;
+        in_stock?: boolean | null;
+      }[] | null;
     };
     const rows = (productsData ?? []) as unknown as Row[];
+    const mergedRows = mergeClusteredProducts(
+      rows.map((row) => ({
+        ...row,
+        listings: (row.prices ?? []).map((listing) => ({
+          ...listing,
+          source: listing.source ?? null,
+          last_seen: listing.last_seen ?? null,
+        })),
+      }))
+    ).map((row) => ({
+      ...row,
+      prices: row.listings ?? [],
+    }));
 
-    if (rows.length === 0) {
+    if (mergedRows.length === 0) {
       return (
         <main className="bg-white min-h-screen">
           <Header />
@@ -138,21 +165,20 @@ export default async function Page({ params, searchParams }: PageProps) {
       );
     }
 
-    const actualBrand = rows[0].brand ?? brandGuess;
+    const actualBrand = mergedRows[0].brand ?? brandGuess;
     const GENERIC_EXCLUDE = /^(Kılıf|Kılıfı|Ekran\s*Koruyucu|Aksesuar|Batarya|Adaptör|Kordon|Kayış|Tablet|Akıllı\s*Saat|Android\s*Tablet|Android\s*Telefon|Güç\s*Kablosu|Hoparlör|Mouse|Klavye|Powerbank)$/i;
 
     type Group = { rep: Row; count: number; minPrice: number };
     const groups = new Map<string, Group>();
-    for (const p of rows) {
+    for (const p of mergedRows) {
       const mf = p.model_family!;
       if (GENERIC_EXCLUDE.test(mf)) continue;
-      const priceList = (p.prices ?? []).filter((listing) => listing.is_active !== false && listing.in_stock !== false);
-      const minP = priceList.length > 0 ? Math.min(...priceList.map(x => x.price)) : Infinity;
+      const minP = getLowestActivePrice(p.prices) ?? Infinity;
       const existing = groups.get(mf);
       if (!existing) {
-        groups.set(mf, { rep: p, count: 1, minPrice: minP });
+        groups.set(mf, { rep: p, count: getActiveOfferCount(p.prices), minPrice: minP });
       } else {
-        existing.count += 1;
+        existing.count += getActiveOfferCount(p.prices);
         if (minP < existing.minPrice) { existing.rep = p; existing.minPrice = minP; }
       }
     }

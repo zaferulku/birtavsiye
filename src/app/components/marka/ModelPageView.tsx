@@ -5,14 +5,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { fetchCategoryPath } from "../../../lib/categoryTree";
 import {
+  getActiveOfferCount,
   formatFreshnessLabel,
   getFreshestSeenAt,
   getLowestActivePrice,
   getUniqueActiveSources,
   sourceTrustScore,
 } from "../../../lib/listingSignals";
+import { mergeClusteredProducts } from "../../../lib/productCluster";
 
 type PriceRow = {
+  id: string;
   price: number;
   source: string | null;
   is_active?: boolean | null;
@@ -24,10 +27,13 @@ type Row = {
   slug: string;
   title: string;
   brand: string | null;
+  model_code: string | null;
+  model_family: string | null;
   image_url: string | null;
   variant_storage: string | null;
   variant_color: string | null;
   category_id: string | null;
+  created_at: string | null;
   specs: Record<string, unknown> | null;
   prices: PriceRow[] | null;
 };
@@ -53,14 +59,27 @@ export default async function ModelPageView({ brand, model }: { brand: string; m
 
   const { data } = await supabaseAdmin
     .from("products")
-    .select("id, slug, title, brand, image_url, variant_storage, variant_color, category_id, specs, prices:listings(price, source, last_seen, is_active, in_stock)")
+    .select("id, slug, title, brand, model_code, model_family, image_url, variant_storage, variant_color, category_id, created_at, specs, prices:listings(id, price, source, last_seen, is_active, in_stock)")
     .ilike("brand", brandGuess)
     .ilike("model_family", modelGuess)
     .limit(200);
 
   const rows = (data ?? []) as unknown as Row[];
+  const mergedRows = mergeClusteredProducts(
+    rows.map((row) => ({
+      ...row,
+      listings: (row.prices ?? []).map((listing) => ({
+        ...listing,
+        source: listing.source ?? null,
+        last_seen: listing.last_seen ?? null,
+      })),
+    }))
+  ).map((row) => ({
+    ...row,
+    prices: row.listings ?? [],
+  }));
 
-  if (rows.length === 0) {
+  if (mergedRows.length === 0) {
     return (
       <main className="bg-white min-h-screen">
         <Header />
@@ -73,11 +92,11 @@ export default async function ModelPageView({ brand, model }: { brand: string; m
     );
   }
 
-  const actualBrand = rows[0].brand ?? brandGuess;
+  const actualBrand = mergedRows[0].brand ?? brandGuess;
   const actualModel = modelGuess.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
   const catCounts = new Map<string, number>();
-  for (const r of rows) {
+  for (const r of mergedRows) {
     if (r.category_id) catCounts.set(r.category_id, (catCounts.get(r.category_id) ?? 0) + 1);
   }
   const dominantCatId = [...catCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
@@ -92,8 +111,8 @@ export default async function ModelPageView({ brand, model }: { brand: string; m
     return sources.length > 0 ? Math.max(...sources.map((source) => sourceTrustScore(source ?? null))) : 0;
   };
 
-  const legitByTitleInitial = rows.filter(r => !isAccessoryTitle(r.title));
-  const legitByTitle = legitByTitleInitial.length > 0 ? legitByTitleInitial : rows;
+  const legitByTitleInitial = mergedRows.filter(r => !isAccessoryTitle(r.title));
+  const legitByTitle = legitByTitleInitial.length > 0 ? legitByTitleInitial : mergedRows;
   const allMinPrices = legitByTitle.map(minPriceOf).filter(p => isFinite(p) && p > 0).sort((a, b) => a - b);
   const medianPrice = allMinPrices.length > 0 ? allMinPrices[Math.floor(allMinPrices.length / 2)] : 0;
   const minValidPrice = medianPrice > 1000 ? medianPrice * 0.6 : 0;
@@ -112,10 +131,10 @@ export default async function ModelPageView({ brand, model }: { brand: string; m
     const mp = minPriceOf(r);
     const existing = groups.get(key);
     if (!existing) {
-      groups.set(key, { rep: r, minPrice: mp, count: 1, image: r.image_url });
-      continue;
-    }
-    existing.count += 1;
+        groups.set(key, { rep: r, minPrice: mp, count: getActiveOfferCount(r.prices), image: r.image_url });
+        continue;
+      }
+      existing.count += getActiveOfferCount(r.prices);
     if (mp < existing.minPrice) existing.minPrice = mp;
     const curTrust = trustOf(existing.rep);
     const newTrust = trustOf(r);
