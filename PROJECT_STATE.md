@@ -1,21 +1,11 @@
 # Birtavsiye.net — Proje Durumu
 
-> **Bu dosya tek kaynak gerçek.** Yeni sohbet/oturum başlattığınızda
+> **Bu dosya tek kaynak gerçek.** Yeni sohbet/oturum başlattığınızda 
 > bu dosyayı Claude veya Claude Code'a verin — tüm bağlamı 30 saniyede alır.
 >
 > **Güncelleme kuralı:** Yeni karar/durum oluştuğunda buraya 1-2 satır ekleyin.
-> Disiplinli tutulursa bağlam kaybolmaz.
 >
-> **Son güncelleme:** 2026-04-26 v4 (current state alignment)
-
----
-
-## 📌 BU DOSYA NEDEN VAR
-
-Proje uzun süredir geliştirme altında. Onlarca karar verildi, dosyalar
-değişti, mimari evrim geçirdi. Yeni Claude/Claude Code oturumlarında
-**bağlam kaybı** ciddi bir sorun. Tek dosya, sürekli güncel — bağlam
-tek seferde gelir.
+> **Son güncelleme:** 2026-04-26 v4 (chatbot UX tamam, Header tamam, kategori sayfaları çalışıyor)
 
 ---
 
@@ -25,20 +15,17 @@ tek seferde gelir.
 
 ### Konumlandırma
 - **Doğrudan rakipler:** Akakçe, Cimri, Akçeli, Pricet
-- **Farklılaşma noktası:** Klasik fiyat karşılaştırma siteleri kelime
-  eşleşmesi yapar. Birtavsiye **anlam katmanında** çalışır —
-  "lavanta kokulu deodorant" → çiçeksi koku ailesi → öneri.
-- **Hedef kitle:** Türkçe konuşan tüketici, alışveriş kararı vermeden
-  önce bilgi/tavsiye arayan kullanıcı
+- **Farklılaşma noktası:** Anlam katmanında çalışır + **proaktif chatbot ile rehberlik**.
+- **Hedef kitle:** Türkçe konuşan, alışveriş kararı vermeden önce bilgi/tavsiye arayan kullanıcı
 
 ### Teknoloji yığını
-- **Framework:** Next.js 16 (App Router, Turbopack)
+- **Framework:** Next.js 16 (App Router)
 - **DB:** Supabase (PostgreSQL + pgvector)
 - **Hosting:** Vercel
 - **AI sağlayıcılar:**
-  - **NVIDIA NIM** — Llama 3.3 70B (chatbot intent + response, primary)
+  - **NVIDIA NIM** — Llama 3.3 70B (chatbot intent + response)
   - **Groq** — Llama 70B (fallback)
-  - **Gemini** — embedding (768-dim) + classify (Flash Lite, 2.0 Flash)
+  - **Gemini** — embedding (768-dim) + classify (Flash Lite, Flash)
 - **State management:** Zustand (chatbot UI, persist middleware)
 - **Styling:** Tailwind CSS
 
@@ -51,348 +38,288 @@ tek seferde gelir.
 
 ## 🔥 ŞU AN AKTIF (Bu hafta)
 
-### 1. Faz 1 Classifier — 1000-batch arkaplanda
-- backup_20260422_products (43,176 satır) → canonical products eklemek
-- Multi-model fallback: gemini-flash-lite-latest → gemini-2.0-flash
-- gemma-3-27b-it kaldırıldı (JSON mode desteklemiyordu, %76 fail vardı)
-- Quality dağılımı: %92.5 ≥0.9 (mükemmel)
-- Toplam Faz1 ile eklenen: 227 ürün, aktif products 339→566
-- Background task: `bm2rckq2a` (yeni 1000-test, 0 fail)
+### 1. Faz 1 — Backup'tan canonical'a LLM classify
 
-### 2. Header + Kategori sayfası tamamen düzeltildi (Wave 9)
-- 68 kırık slug → 0 (`categorySlugMap.ts` resolveSlug)
-- Migration 005 yüklendi (3 yeni kategori: babet, etek, film-dizi)
-- Server component'larda `supabase` → `supabaseAdmin` (RLS bypass)
-- Ana sayfa + kategori + ürün detay artık render ediliyor
+**Durum:** 1000 ürün test arka planda devam (bm2rckq2a). Sonra full başlatma.
 
-### 3. Chatbot UI v3 + chip butonları (Wave 11)
-- ChatPanel: 320×600 sağ alt köşe pop-up (mobil tam ekran)
-- ChatBar: [🎤][input][+][▶] düzeni, + popover menü
-- Suggestion chips: 5 tip (shortcut/brand/price/category/freetext)
-- "siyah telefon" → marka chip (Apple/Samsung) ✓
-- "merhaba" → kategori chip ✓
-- "telefon tavsiye ver" → 3 segment (ekonomik/denge/premium) ✓
+**Akış:**
+- 43,176 backup ürün → Gemini ile classify → products tablosuna ekle
+- Brand temizleme (Galaxy → Samsung, Orjinal → Lenovo)
+- Kategori atama, model_family çıkarma
+- Quality_score, classified_at, classified_by audit alanları
+- Multi-model fallback (gemini-flash-lite → 2.0-flash; gemma-3 kaldırıldı)
+- Resume + idempotent
+- Embedding NULL — sonra backfill (kotayı koru)
 
-### 4. Duplicate ürün audit + merge (paralel Claude Code, devam ediyor)
-- Mevcut katalogda aynı ürüne ait dağılmış kayıtları tespit
-- Güvenli olanlarda listing'leri tek canonical'a taşı
-- Yan tablolar (alert/favori/queue) da canonical'a migrate
-- Audit/merge admin endpoint olarak kurulacak
-- Değişen dosyalar: `src/lib/productIdentity.ts`, `src/app/api/sync/route.ts`
+**Sonuçlar:**
+- 50 dry-run: %96 başarı
+- 100 gerçek test: 76 ürün eklendi
+- 1000 test devam: bm2rckq2a
+
+**Full başlatma sonrası:** ~29 gün arka plan, free tier 1500 RPD
+
+**Embedding stratejisi (henüz karar yok):**
+- Strateji 1: Bekle, sonra topluca (~58 gün)
+- Strateji 2: Gündüz classify, gece embed (~29 gün)
+- Strateji 3: Multi-key veya paid (birkaç gün)
+
+### 2. 83 Keşfedilmemiş DB Sub-Kategorisi
+
+Header 68 kırık fix tamamlandı ama DB'de var olan 83 kategori 
+(`kahve-makinesi`, `mikrodalga`, `blender-robot`, `fritoz-airfryer`, 
+`hava-temizleyici`, `powerbank` vb.) Header'da link yok.
+
+Plan: Sonraki Header refactor turunda. Şimdilik teknik borç.
 
 ---
 
-## 📋 YAKIN ÖNCELİK (Bu hafta–Önümüzdeki hafta)
+## 📋 YAKIN ÖNCELİK
 
 ### Mağaza entegrasyonları
 **Şu an canlı sadece PttAVM.**
+- MediaMarkt — URL pattern alignment
+- Trendyol — URL pattern + anti-bot
+- Hepsiburada — Hiç entegre değil
+- N11, Vatan, Teknosa, Migros — Aday
 
-- **MediaMarkt** — URL pattern alignment
-- **Trendyol** — URL pattern + anti-bot scrape header
-- **Hepsiburada** — Hiç entegre değil
-- **N11, Vatan, Teknosa, Migros** — Aday liste
+### chat_session_id (race condition fix — backend)
+useChatStore v3'te chatSessionId üretiliyor. Backend recordFeedback'te 
+session-scoped'a geçirilmeli.
 
-### 83 keşfedilmemiş DB sub-kategorisi → Header'a ekleme
-Şu an Header 159 slug, 68'i map ile yönlendirildi. DB'de 177 kategori var,
-83'ü Header'da hiç yok (örn `kahve-makinesi`, `mikrodalga`,
-`kisisel-bakim-elektrikli`, `aspirator-davlumbaz`, `powerbank`, `laptop`).
+### AbortController
+Provider çağrıları timeout'lu ama route abort'ta dış LLM devam ediyor.
+intentParserRuntime + provider chain'lere AbortController.
 
-### Faz 1 günlük cron
-Her gün ~150-200 ürün eklenebilir (free tier). 25-30 günde 43K bitirilir.
-
-### Boş kategoriler (102→93)
-Faz1 işlerken boş leaf'ler dolmaya başladı (89→80). Tam dolması için
-Faz1 tamamlanması veya manuel scrape pipeline.
-
-### AbortController (token tasarrufu)
-Provider çağrıları timeout'lu ama route abort olunca dış LLM çağrısı
-boşa akmaya devam ediyor. AbortController ile request iptal kademesi.
+### Embedding cron
+Faz 1 başladıktan sonra `scripts/backfill-embeddings.mjs` günlük cron.
 
 ---
 
-## 🌟 UZAK ÖNCELİK (Bu ay değil)
+## 🌟 UZAK ÖNCELİK
 
-### Ürün eşleştirme engine (matching)
-5 katmanlı ensemble: GTIN/MPN → rule → semantic → manuel kuyruk →
-kullanıcı feedback. Mağaza entegrasyonları çoğalınca.
+### Ürün eşleştirme engine
+5 katmanlı: GTIN → rule → semantic → manuel → feedback. ~5 gün.
 
 ### Wave 3 KB dokümanları
-Mevcut: 12 doküman / 141 chunk. Hedefler: küçük ev aletleri, spor,
-otomotiv, ev tekstili, yapı market, kitap & hobi.
+Mevcut: 12 doküman / 141 chunk. Hedef: küçük ev aletleri, spor, otomotiv.
 
 ### Forum MVP polish
-En iyi cevap, faydalı bul, raporlama, spam filter, kullanıcı profili.
+En iyi cevap, faydalı bul, raporlama, spam filter, profil.
 
-### Vision modeli (chatbot image upload)
-Şu an `/api/chat` body.image kabul ediyor (data:image/* base64) ama
-LLM görseli görmüyor — text hint olarak iletiliyor. Gemini Vision
-veya Llama 3.2 Vision entegrasyonu sonraki tur.
+### Header tam yeniden yapı
+Mevcut: MEGA_MENU constant + categorySlugMap.ts.
+İdeal: DB'den dinamik fetch. Tahmini: 2-3 saat.
 
 ---
 
 ## ⚖️ KRİTİK KARARLAR (GERİ ALINMAYACAK)
 
-> Bunları sorgulama. Bilinçli kararlar.
-
 | Karar | Tarih | Sebep |
 |---|---|---|
-| **middleware → proxy.ts** | 2026-04-24 | Next 16 deprecation |
-| **prices → listings + price_history** | 2026-04-24 | Eski şema fiyat geçmişi/stok yapmıyordu |
-| **Alarm condition fix** | 2026-04-24 | target ≤ current → current ≤ target |
-| **/api/refresh-prices auth zorunlu** | 2026-04-24 | Scrape suistimali |
-| **Public forum endpoint whitelist** | 2026-04-24 | user_id PII sızıyordu |
-| **answer_count atomik SQL** | 2026-04-24 | Race condition |
-| **Google Fonts kaldırıldı** | 2026-04-24 | KVKK + CSP + perf |
-| **/api/me/topic-answers ownership** | 2026-04-24 | Forum güvenliği |
-| **priceHealth + cron + admin uyarıları** | 2026-04-24 | Stale listing, anomali |
-| **Chatbot intent: NVIDIA Llama 3.3 70B** | 2026-04-24 | Gemini kotasını koru |
-| **Chatbot fallback: NVIDIA → Groq → Gemini Flash** | 2026-04-24 | Dirençlilik |
-| **Chatbot voice: Web Speech API** | 2026-04-24 | Whisper sonra geçilebilir |
-| **Chatbot fast/slow path ayrımı** | 2026-04-24 | Spesifik vs niyet sorgusu |
-| **Klasik header arama + chatbot paralel** | 2026-04-24 | Farklı amaçlar |
-| **/sonuclar yönlendirme stratejisi** | 2026-04-24 | URL paylaşılabilir |
-| **Chatbot UI = Zustand state** | 2026-04-24 | useState yetersiz |
-| **Eski ChatWidget.tsx silinecek** | 2026-04-24 | Yeni ChatBar+ChatPanel |
-| **Image search: B önce, A sonra** | 2026-04-24 | DB varsa direkt göster |
-| **Sesli komut: bas-konuş, döngü yok** | 2026-04-24 | Basit interaction |
-| **Ürünler chat içinde DEĞİL** | 2026-04-24 | Chat=konuşma, /sonuclar=ürünler |
-| **Chatbot proaktif sohbet** | 2026-04-24 | Tek kelimeyi vague sayma |
-| **Lifecycle: küçült=koru, kapat=sil, 15dk timeout** | 2026-04-24 | Hareketsizlikte sonlansın |
-| **Chatbot UI v2: 320px panel + içine input bar** | 2026-04-24 | Daha kompakt |
-| **Zustand persist (sessionStorage)** | 2026-04-24 | router.push state kırılması |
-| **chat_session_id (feedback race fix)** | 2026-04-24 | Session-scoped feedback |
-| **smart_search v2: variant_color + storage filter** | 2026-04-25 | "siyah iphone" hibrit filter (migration 004) |
-| **fastPathDetector: variant keyword → slow** | 2026-04-25 | Renk/storage varsa intent + smart_search v2 |
-| **Çözüm C hibrit: 68 kırık slug → categorySlugMap.ts** | 2026-04-26 | 35 1-to-1 + 30 1-to-many + 3 yeni (migration 005) |
-| **Server component'ta supabaseAdmin zorunlu** | 2026-04-26 | RLS sıkı, anon read boş dönüyor |
-| **ChatPanel v3: 320×600 köşe pop-up** | 2026-04-26 | Tam yükseklik kart pencere |
-| **ChatBar v3: [🎤][input][+][▶]** | 2026-04-26 | Mikrofon sola, + sağa popover |
-| **Suggestion chips: 5 tip** | 2026-04-26 | shortcut/brand/price/category/freetext |
-| **Chip displayLabel: UI label, content backend value** | 2026-04-26 | "En popüler" UI'da, "siyah telefon en popüler" history |
-| **gemma-3-27b-it kaldırıldı** | 2026-04-26 | JSON mode desteksiz, %76 fail |
+| middleware → proxy.ts | 2026-04-24 | Next 16 deprecation |
+| prices → listings + price_history | 2026-04-24 | Eski şema fiyat geçmişi yapmıyordu |
+| Alarm condition fix | 2026-04-24 | TERS kondisyon |
+| /api/refresh-prices auth | 2026-04-24 | Anonim açıktı |
+| Forum endpoint whitelist | 2026-04-24 | PII sızıyordu |
+| answer_count atomik SQL | 2026-04-24 | Race condition |
+| Google Fonts kaldırıldı | 2026-04-24 | KVKK + CSP |
+| /api/me/topic-answers | 2026-04-24 | Forum güvenliği |
+| priceHealth + cron + admin | 2026-04-24 | Stale tespit |
+| Chatbot intent: NVIDIA Llama 3.3 70B | 2026-04-24 | Gemini koru |
+| Fallback: NVIDIA → Groq → Gemini Flash | 2026-04-24 | Dirençlilik |
+| Voice: Web Speech API | 2026-04-24 | Whisper sonra |
+| Fast/slow path ayrımı | 2026-04-24 | Spesifik vs niyet |
+| Header arama + chatbot paralel | 2026-04-24 | Farklı amaçlar |
+| /sonuclar yönlendirme | 2026-04-24 | URL paylaşılabilir |
+| Chatbot UI = Zustand | 2026-04-24 | Çoklu component |
+| ChatWidget silinecek | 2026-04-24 | Yeni UI |
+| Image search: B önce A sonra | 2026-04-24 | DB'de varsa direkt |
+| Sesli komut: bas-konuş | 2026-04-24 | Basit interaction |
+| Ürünler chat içinde DEĞİL | 2026-04-24 | Chat=konuşma, /sonuclar=ürünler |
+| Chatbot proaktif sohbet | 2026-04-24 | Tek kelimeyi vague sayma, history |
+| Lifecycle: küçült=koru, kapat=sil, 15dk timeout | 2026-04-24 | Kullanıcı kararı |
+| Chatbot UI v3: 320×600 köşe pencere | 2026-04-24 | Tam yükseklik büyüktü |
+| Zustand persist (sessionStorage) | 2026-04-24 | router.push state korunsun |
+| chat_session_id (feedback race) | 2026-04-24 | Session-scoped |
+| ChatBar düzen: [🎤] [input] [+] [▶] | 2026-04-26 | Mic sola, + sağa |
+| + menü: sadece Fotoğraf yükle | 2026-04-26 | "Ara" eklenmedi |
+| Chip türleri: shortcut/brand/price/category/freetext | 2026-04-26 | Daraltıcı sohbet |
+| "Tavsiye ver": 3 segment (ekonomik/denge/premium) | 2026-04-26 | Bot interaktif |
+| "En popüler": ürünler + daraltıcı chip | 2026-04-26 | Hızlı çözüm |
+| Header 68 kırık → categorySlugMap | 2026-04-26 | 1-to-1 + 1-to-many |
+| Migration 005 (3 yeni kategori) | 2026-04-26 | babet/etek/film-dizi |
+| **Server components'ta supabaseAdmin** | 2026-04-26 | **Anon RLS sıkı, boş veri sorunu** |
+| Faz 1 strategy A (direkt write) + AGRESİF brand | 2026-04-25 | Gemini her ürün doğrular |
+| Faz 1 audit alanları | 2026-04-26 | Sonradan ekleme zor |
+| Brand NOT NULL kaldırıldı | 2026-04-26 | "Generic" uydurma yerine NULL |
+| gemma-3 kaldırıldı (Faz 1) | 2026-04-26 | 400 errors, fallback yavaşlatıyordu |
 
 ---
 
-## 📦 BİLİNEN DURUM (Sayılar ve referanslar)
+## 📦 BİLİNEN DURUM
 
-### Veritabanı tabloları
+### Veritabanı
 
 **Aktif:**
-- `products` — **566** canonical ürün (önce 339, Faz1 ile +227); embedding ilk 339 için %100, yeni 227 NULL (backfill bekliyor)
-- `categories` — 13 root + 164 leaf (**177** toplam, migration 005 sonrası)
+- `products` — 415+ canonical (339 başlangıç + Faz 1 büyüyor), embedding %100 (Faz 1 NULL)
+- `categories` — 177 aktif (Migration 005 sonrası)
 - `listings` — Yeni şema, ürün-mağaza-fiyat-stok
 - `price_history` — listing_id'ye bağlı zaman serisi
-- `agent_decisions` — Tüm agent kararları (faz1-classifier eklendi)
+- `agent_decisions` — Tüm kararlar (faz1-classifier dahil)
 - `decision_feedback` — Kullanıcı feedback
 - `topics`, `topic_answers`, `community_posts` — Forum
-- `knowledge_base` — KB chunks (141 satır, 12 doküman)
+- `knowledge_base` — 141 chunk, 12 doküman
 - `users`, `auth.users` — Supabase auth
 
-**Backup (canlı değil):**
-- `backup_20260422_products` — 43,176 satır (Faz1 source); aktif ile **0 ID overlap**
+**Backup:**
+- `backup_20260422_products` — 43,176 satır (Faz 1 kaynak)
 - `backup_20260422_prices` — 43,279 satır
 
-**Eski şemadan:**
-- `prices` — Sadece eski kayıtlar; aktif yazma listings'e
+### Migrations
 
-### Migrations (Supabase)
+| Migration | Durum |
+|---|---|
+| 001_knowledge_base.sql | ✅ |
+| 002_smart_search.sql | ✅ |
+| 003_topic_answer_count_rpc.sql | ✅ |
+| 004_smart_search_variants.sql | ✅ |
+| 005_header_missing_categories.sql | ✅ |
 
-| Migration | Durum | İçerik |
-|---|---|---|
-| 001_knowledge_base.sql | ✅ Yüklü | KB tablo + retrieve_knowledge RPC + ivfflat |
-| 002_smart_search.sql | ✅ Yüklü | smart_search v1 (hybrid) + 6 index + pg_trgm |
-| 003_topic_answer_count_rpc.sql | ✅ Yüklü | Atomik increment/decrement (forum) |
-| 004_smart_search_variants.sql | ✅ Yüklü | smart_search v2: variant_color + variant_storage |
-| 005_header_missing_categories.sql | ✅ Yüklü | 3 yeni: kadin-ayakkabi-babet, kadin-etek, film-dizi |
-
-### Knowledge Base (141 chunk, 12 doküman)
-parfum_notalari, cilt_bakimi, makyaj, moda_ust_giyim, moda_alt_giyim,
-moda_ayakkabi, elektronik_telefon, elektronik_laptop, beyaz_esya,
-gida, pet_shop, anne_bebek.
+### Knowledge Base
+12 doküman / 141 chunk (`docs/knowledge/`):
+parfum_notalari (10), cilt_bakimi (11), makyaj (12), moda_ust_giyim (13), 
+moda_alt_giyim (14), moda_ayakkabi (11), elektronik_telefon (9), 
+elektronik_laptop (11), beyaz_esya (20), gida (8), pet_shop (11), 
+anne_bebek (11) = **141**
 
 ### Chatbot mimarisi
 
 ```
-Kullanıcı mesajı (text/chip/voice/image)
+ChatBar/ChatPanel input
   ↓
-ChatBar/ChatPanel → useChatStore.addUserMessage(content, type, preview, displayLabel)
+useChatStore.addUserMessage() + history
   ↓
 router.push("/sonuclar?q=...")
   ↓
-fetch("/api/chat", { message, history, chatSessionId, image? })
+fetch("/api/chat", { message, history, chatSessionId })
   ↓
-[server] route.ts → orchestrateChat
+[server] orchestrateChat
+  ├── fastPath: match_products RPC (vector)
+  └── slowPath:
+        - retrieveKnowledge (5dk LRU)
+        - parseIntent (Llama + history)
+        - extractVariantPatterns (renk/storage)
+        - smart_search RPC (hybrid + variant filter)
+        - generateResponse (Llama + KB + intent + history)
+        - buildSuggestions (chip butonları)
   ↓
-fastPathDetector.detectPath()
-  ├── Sinyal 1: brand+model → fast
-  ├── Sinyal 2: brand+variant → SLOW (variant filter v2'de)
-  ├── Sinyal 2b: hasVariantKeyword → SLOW
-  ├── Sinyal 3: model number → fast
-  └── Sinyal slow: descriptive/conversational/long
+agent_decisions log
   ↓
-FAST: searchProducts() (legacy vector + keyword)
-SLOW:
-  ├── retrieveKnowledge (KB, 5dk LRU)
-  ├── parseIntent (Llama 70B + history, 5dk LRU)
-  ├── smart_search v2 RPC (vector + specs + keyword + variant_color/storage)
-  └── generateResponse (Llama 70B + KB + intent + history)
+Response: { reply, products, suggestions, meta }
   ↓
-buildSuggestions(ctx) → 5 tip chip
+[client] addAssistantMessage(content, suggestions)
   ↓
-Response: { reply, products, suggestions, meta, _debug }
-  ↓
-[client] addAssistantMessage(reply, suggestions) + setRecommendations
-ChatPanel: yanıt + son assistant mesajda ChipRow
-/sonuclar sayfası: ürünler grid
+ChatPanel: yanıt + chip (son mesaj)
+/sonuclar: ürün grid
 ```
 
-**Provider chain (intent):** NVIDIA → Groq → Gemini Flash.
+**Chip türleri:**
+- `shortcut`: 🔥 En popüler, ✨ Tavsiye ver, Hepsini göster, Yeni arama
+- `brand`: Apple, Samsung vb.
+- `price`: 10-30K, 30-60K
+- `category`: Telefon, Laptop (gerçek vague)
+- `freetext`: "Ekonomik detay", "Denge detay"
+
+**Provider chain:** NVIDIA → Groq → Gemini Flash
 
 ### API endpoints
 
 **Aktif:**
-- `/api/chat` — Chatbot orchestrator (history + chatSessionId + image, suggestions return)
-- `/api/sync` — Mağaza sync (listings + price_history)
-- `/api/refresh-prices` — Tek ürün refresh (auth)
+- `/api/chat` — Chatbot (history + chatSessionId + suggestions)
+- `/api/sync` — Mağaza sync
+- `/api/refresh-prices` — Tek ürün (auth)
 - `/api/admin/prices/health` — priceHealth dashboard
-- `/api/cron/prices` — Periyodik fiyat sağlık
-- `/api/public/products` — Public ürün listesi (listings şeması)
-- `/api/public/products/similar` — Benzer ürünler (freshness sinyalleri)
-- `/api/public/topics`, `/topic-answers`, `/community-posts` — Forum public (whitelist)
-- `/api/me/topic-answers` — Kullanıcı kendi cevapları (auth)
+- `/api/cron/prices` — Periyodik
+- `/api/public/products` — Ürün listesi
+- `/api/public/products/similar` — Benzer
+- `/api/public/topics` / `/api/public/topic-answers` / `/api/public/community-posts` — Forum
+- `/api/me/topic-answers` — Kullanıcı (auth)
+- `/api/live-prices` — SSE
 
-**Live price (SSE):**
-- `/api/live-prices` — Canlı fiyat akışı
+### Frontend route'ları
 
-### Frontend route haritası
-
-| Route | Dosya | Notlar |
-|---|---|---|
-| `/` | `src/app/page.tsx` | Ana sayfa (Header + ToggleBar + Featured + TopicFeed) |
-| `/kategori/[slug]` | `src/app/kategori/[slug]/page.tsx` | Flat, recursive descendant |
-| `/anasayfa/[...segments]` | `src/app/[...segments]/page.tsx` | Hiyerarşik |
-| `/urun/[slug]` | `src/app/urun/[slug]/page.tsx` | 4 sekme (Yorumlar/Özellikler/Benzer/Tavsiyeler) |
-| `/sonuclar` | `src/app/sonuclar/page.tsx` | Chatbot sonuç grid |
-| `/ara` | `src/app/ara/page.tsx` | Klasik kelime araması |
-| `/karsilastir` | `src/app/karsilastir/page.tsx` | Karşılaştırma |
-| `/tavsiyeler`, `/tavsiye/[id]` | Forum |
-| `/profil`, `/giris`, `/admin` | Auth + admin |
-
-**Header link:** `linkFor(slug, q)` → `hierUrl(resolveSlug(slug), ...)` → `/anasayfa/{chain}` veya fallback `/kategori/{slug}`.
+| Route | Dosya |
+|---|---|
+| `/` | src/app/page.tsx |
+| `/kategori/[slug]` | src/app/kategori/[slug]/page.tsx |
+| `/anasayfa/[...segments]` | src/app/[...segments]/page.tsx (hiyerarşik) |
+| `/urun/[slug]` | src/app/urun/[slug]/page.tsx |
+| `/sonuclar` | src/app/sonuclar/page.tsx |
 
 ### Mağaza scraper'ları
 
 | Mağaza | Durum |
 |---|---|
-| **PttAVM** | ✅ Canlı |
-| **MediaMarkt, Trendyol** | 🟡 Interface var, URL pattern placeholder |
-| Diğerleri | ❌ Yok |
-
-### Gemini API durumu
-
-- Free tier ~1500 RPD; Faz1 1000-test gemma-3 kaldırıldıktan sonra %0 fail
-- Hız ~0.2/sn (rate limit 10 RPM)
+| PttAVM | ✅ Canlı |
+| MediaMarkt | 🟡 Interface, URL placeholder |
+| Trendyol | 🟡 Interface, URL placeholder + anti-bot |
+| Hepsiburada, N11, Vatan, Teknosa, Migros | ❌ Yok |
 
 ### Bilinen teknik borçlar
 
 | Borç | Etki | Plan |
 |---|---|---|
-| 83 keşfedilmemiş DB kategorisi | Header'da yok | Sonraki Header tur |
-| `products.specs` kirli | Search/filter zayıf | Whitelist (kısmen yapıldı) |
-| `brand: "null"` string bug | Bazı ürünlerde marka yanlış | Faz1 sonrası audit |
-| Latency yüksek (slow 16s) | UX kötü | Paralel KB+search |
+| 83 keşfedilmemiş DB sub-kategorisi | Erişilemiyor | Sonraki Header turu |
+| `products.specs` kirli | Search zayıf | Specs whitelist |
+| `brand: "null"` string | Eski kayıtlarda yanlış | Migration veya re-classify |
+| Latency yüksek (slow 16s) | UX | Paralel KB+search |
+| Faz 1 embedding NULL | Vector search'te yok | Backfill cron veya 29-gün sonu |
+| chat_session_id eksik (backend) | Feedback race | Patch hazır, deploy bekliyor |
 | AbortController eksik | Token israfı | intentParserRuntime + provider chain |
-| Faz1 ürün havuzu darlığı | 93/177 kategori boş | Faz1 günlük cron |
-| Faz1 227 embedding NULL | Vector search bulamaz | backfill-embeddings.mjs |
-| Vision modeli yok | LLM görseli görmüyor | Gemini Vision sonraki tur |
-| Duplicate ürün kayıtları | Listing'ler dağılmış | Audit + merge (devam ediyor) |
+| Header tam yeniden yapı | DB'den dinamik değil | Uzak öncelik |
 
 ---
 
 ## 📊 ÖNCEKİ İŞ DALGAlARI
 
-### Dalga 1: Agent consolidation (`1ca8a89`)
-22 → 23 agent yeniden organize.
-
-### Dalga 2: Live price (`705de96`, `7eaaae0`)
-SSE infra. PttAVM real fetcher. 4275 TRY doğrulandı.
-
-### Dalga 3: Karşılaştırma + ChatWidget v1 (`d1f00d6`)
-
-### Dalga 4: KB foundation (`cac1013`, `10c208c`)
-Migration 001 + Wave 1 KB (3 doküman).
-
-### Dalga 5: KB Wave 2 (`9782cd5`)
-9 yeni doküman, 141 chunk.
-
-### Dalga 6: Schema migration + güvenlik
-prices→listings, alarm fix, auth, public whitelist, 003 atomik SQL,
-middleware→proxy, Google Fonts kaldırma, priceHealth cron.
-
-### Dalga 7: Chatbot RAG (`ae8e705`, `888ea69`)
-smart_search, intent parser, fast/slow detector, KB retrieval,
-response generator, orchestrator, embedding backfill, 4/4 E2E.
-
-### Dalga 8: Chatbot UI (Parça 1-7)
-Zustand v3 (persist+sessionId), ChatBar v2, ChatPanel v2, /sonuclar,
-image upload (Parça 6), Web Speech (Parça 7), ChatWidget cleanup.
-
-### Dalga 9: Header + Kategori fix (2026-04-26)
-- 68 kırık slug → categorySlugMap.ts
-- Migration 005: babet/etek/film-dizi
-- Server'da supabase → supabaseAdmin (RLS bypass)
-- `[...segments]` breadcrumb expansion
-
-### Dalga 10: Faz 1 Classifier (devam)
-- backup_20260422_products → products pipeline
-- Multi-model fallback, gemma-3 kaldırıldı
-- Audit alanları (classified_at/by, quality_score)
-- Brand NULL kabul
-- 227 ürün eklendi (339→566)
-
-### Dalga 11: Variant filter + chip butonları (2026-04-25/26)
-- Migration 004: smart_search v2 (variant_color/storage patterns)
-- fastPathDetector: variant keyword → slow
-- chatOrchestrator: extractVariantPatterns + semantic_keywords fallback
-- suggestionBuilder.ts: 5 tip chip
-- ChatPanel v3 + ChatBar v3 layout
-- displayLabel (UI label / backend value)
-
-### Dalga 12: Duplicate audit + merge (paralel, devam)
-- productIdentity.ts + sync/route.ts değişiklikleri
-- Audit endpoint kurulumu
-- Listing/alert/favori/queue migration
+**1:** Agent consolidation (`1ca8a89`)
+**2:** Live price (`705de96`, `7eaaae0`) — PttAVM real
+**3:** Karşılaştırma + ChatWidget v1 (`d1f00d6`)
+**4:** KB foundation (`cac1013`, `10c208c`) — Migration 001 + Wave 1
+**5:** KB Wave 2 (`9782cd5`) — 9 doküman, 141 chunk
+**6:** Schema migration + güvenlik — prices→listings, alarm, auth, forum, atomik counter, proxy.ts, fonts, priceHealth
+**7:** Chatbot RAG (`ae8e705`, `888ea69`) — smart_search, intent, fast/slow, KB, response, orchestrator
+**8:** Chatbot UI (04-24 → 04-26) — Zustand v3, ChatBar v3, ChatPanel v3, suggestion chips, mic+image, /sonuclar, history+chatSessionId+variant filter, supabaseAdmin
+**9:** Header + Kategori (04-26) — 68 kırık fix (categorySlugMap), Migration 005, URL hierarchy, server components supabaseAdmin
+**10:** Faz 1 (04-25 → ongoing) — LLM classifier, multi-model fallback, resume, dry-run %96, 100 gerçek %76, 1000 test devam
 
 ---
 
-## ✅ COMMIT GEÇMİŞİ (Son 2 hafta)
+## ✅ COMMIT GEÇMİŞİ
 
 ```
-[devam] Duplicate audit + merge (paralel Claude Code)
-[devam] Faz 1 1000-test bm2rckq2a (gemma-3 kaldırıldıktan sonra %0 fail)
-ca90fbb  perf(faz1): gemma-3-27b-it model chain'den kaldırıldı
-00f62d9  fix: chip butonları — siyah telefon → marka chip
-bf38b3d  fix: restore homepage products and non-priced product pages
-56cabf2  fix: restore category routes with server data access
-4511297  feat: add freshness to similar product cards
-c05c7bf  feat: Header 68 kırık slug fix (Çözüm C hibrit) — categorySlugMap.ts
-85681a6  feat: 3 missing categories — babet/etek/film-dizi (migration 005)
-7a6e357  feat: v3 üzerine Parça 6 + Parça 7 yeniden bağla
-9be4f7f  feat: ChatPanel v3 + ChatBar v3 UI değişiklikleri
-e40dd65  feat: chatbot proaktif daraltıcı sohbet + chip butonları
-87c376d  fix: variant filter — genişletilmiş renk + Türkçe karakter
-6831d25  fix: variant filter slow path routing + sourceTrustScore re-export
-b5a2925  fix: variant filter LLM tutarsızlık fallback + STORAGE_KEYS
-8877d61  feat: renk/storage variant filter + Faz 1 classifier script
-0e729aa  test: chatbot e2e suite (5 senaryo) — 5/5 pass
-adab89b  chore: orphan ChatWidget + chatpanel v3 e2e
-2977207  docs: PROJECT_STATE.md v3
-25b5223  feat: chatbot Parça 7 — mikrofon Web Speech API
-a56dcd9  feat: chatbot Parça 6 — + butonu görsel yükleme MVP
-0a9e137  feat: ürün detay sayfası 4 sekmeli tasarım
-5ea1f5c  feat: chatbot v3 — Zustand persist + chat_session_id
-a5d84ee  feat: chatbot UI v2 + proaktif + /sonuclar sayfası
-888ea69  feat: chatbot RAG integration              ← chatbot canlı, 4/4 E2E
+[pending] Faz 1 1000 test (bm2rckq2a, arka plan)
+bf38b3d   fix: homepage products + non-priced product pages
+56cabf2   fix: category routes server data access
+4511297   feat: similar product cards freshness
+ca90fbb   perf(faz1): gemma-3 kaldırıldı
+00f62d9   fix: chip butonları — siyah telefon → marka chip
+c05c7bf   feat: Header 68 kırık slug fix (categorySlugMap)
+85681a6   feat: Migration 005 — babet/etek/film-dizi
+e40dd65   feat: suggestionBuilder + chip render
+7a6e357   feat: v3 + Parça 6/7 yeniden bağla
+9be4f7f   feat: ChatPanel v3 320×600 + ChatBar v3
+87c376d   fix: variant filter renk sözlüğü
+8877d61   feat: variant filter + Faz 1 classifier
+2977207   docs: PROJECT_STATE.md v3
+25b5223   feat: Parça 7 mikrofon
+a56dcd9   feat: Parça 6 görsel yükleme
+adab89b   feat: Parça 4 cleanup
+0a9e137   feat: chatbot v3 + persist
+f263958   fix: public/products listings schema
+888ea69   feat: chatbot RAG integration
+ae8e705   feat: intent parser + smart_search
+9782cd5   feat: KB Wave 2
 ```
 
 ---
@@ -401,92 +328,85 @@ a5d84ee  feat: chatbot UI v2 + proaktif + /sonuclar sayfası
 
 ### Claude (sohbet) için
 
-1. **Bu dosyayı önce oku** — Bağlamı buradan al, sorma.
-2. **Kritik Kararları sorgulama.**
-3. **Yeni karar verirken** Kritik Kararlar tablosuna ekle.
-4. **Yeni iş başlattığında** Şu An Aktif listesini güncelle.
-5. **Tahminle hareket etme** — ÖNCE Bilinen Durum'a bak.
-6. **Önceki sohbetlerin özeti güvenilmez olabilir** — Bu dosya kazanır.
+1. **Bu dosyayı önce oku** — bağlamı buradan al
+2. **Kritik Kararları sorgulama** — bilinçli kararlar
+3. **Yeni karar verirken** Kritik Kararlar tablosuna ekle
+4. **Yeni iş başlattığında** Şu An Aktif listesini güncelle
+5. **Tahminle hareket etme** — Bilinen Durum'a bak
+6. **Önceki sohbet özetleri güvenilmez** — bu dosya kazanır
+7. **UI dosyası overwrite etmeden önce mevcut özellikleri doğrula** — regresyon önle (Parça 6/7 olayı tekrar olmasın)
 
 ### Claude Code (implementer) için
 
 1. **Her oturum başında bu dosyayı OKU.** `cat PROJECT_STATE.md`
-2. **Mevcut kod değişikliklerini "regression" olarak FLAG ETME** —
-   kasıtlı olabilir, önce Kritik Kararlar tablosuna bak.
-3. **Untracked dosyalar** — Bu dosyada bahsediliyorsa muhtemelen
-   bilinçli, silmeden önce kullanıcıya sor.
-4. **Migration'lar** — Bilinen Durum > Migrations bölümüne bak.
-5. **Server component'ta `supabaseAdmin`, client'ta `supabase`.**
-   Server'da anon → RLS yüzünden boş sonuç.
-6. **Davranış değişikliği yapma** — Claude (sohbet) yönlendirmeden
-   büyük refactor yapma.
-7. **Yanlış alarm verme** — "katastrofik" gibi güçlü ifadeler önce
-   bu dosyayı kontrol et.
+2. **Mevcut kod değişikliklerini "regression" FLAG ETME** — kasıtlı olabilir
+3. **Untracked dosyalar** — bu dosyada bahsediliyorsa silme
+4. **Migration'lar** — Bilinen Durum > Migrations'a bak
+5. **Davranış değişikliği yapma** — Claude (sohbet) onayı gerek
+6. **Yanlış alarm verme** — "katastrofik" demeden önce dosyayı kontrol
+7. **Bilmediğin tablo/agent görürsen** Bilinen Durum'a bak
+8. **Server components'ta `supabaseAdmin` kullan** (`supabase` anon DEĞİL). 
+   Anon RLS sıkı — server-side render boş veri döner. 
+   Etkilenen dosyalar: `src/app/[...segments]/page.tsx`, 
+   `src/app/kategori/[slug]/page.tsx`, `src/app/urun/[slug]/page.tsx`,
+   `src/app/components/home/Categories.tsx`, 
+   `src/app/components/home/FeaturedProducts.tsx`, 
+   `src/app/components/marka/ModelPageView.tsx`, 
+   `src/lib/categoryTree.ts`. Commit `bf38b3d`/`56cabf2`/`4511297` bu sebeple yapıldı.
 
 ### Kullanıcı için
 
-1. **Yeni karar verdikçe** Kritik Kararlar tablosuna ekle.
-2. **Bitmiş iş** Commit Geçmişi'ne ekle.
-3. **Yeni sohbet açtığında** bu dosyayı paste et.
-4. **Disiplini bozma.**
+1. **Yeni karar verdikçe** Kritik Kararlar tablosuna ekle
+2. **Bitmiş iş** Commit Geçmişi'ne ekle
+3. **Yeni sohbet açtığında** bu dosyayı paste et
+4. **Eksik gelirse** Claude'a "şunu da ekle" de
+5. **Disiplini bozma** — güncel kalmazsa açıklama yüküne döneriz
 
 ---
 
 ## 📞 BAĞLAM SORULARI (FAQ)
 
-**S: Faz 1 nedir?**
-C: backup_20260422_products (43K) → products LLM-classify pipeline.
-Şu an 227 eklendi (566/43K). Multi-model, audit, brand NULL kabul.
-Background `bm2rckq2a` çalışıyor.
+**S: Faz 1 nedir?**  
+C: 43K backup ürünü Gemini ile classify edip products tablosuna ekleyen pipeline. Brand temizleme + kategori atama + model_family. ~29 gün arka plan (free tier 1500 RPD). Şu an 1000 ürün test devam (bm2rckq2a).
 
-**S: prices vs listings farkı?**
-C: prices eski şema, listings yeni (ürün-mağaza-stok). price_history
-listing_id'ye zaman serisi. Tüm yazma listings'e.
+**S: prices vs listings farkı?**  
+C: prices eski şema. listings yeni (ürün-mağaza-stok). Aktif yazma listings'e.
 
-**S: Chatbot fast/slow path?**
-C: Fast = "iPhone 15 Pro Max" spesifik (vector). Slow = "lavanta
-deodorant" / "siyah telefon" betimleyici/varyant (KB+intent+hybrid+variant).
+**S: Chatbot fast/slow path nedir?**  
+C: Fast = "iPhone 15 Pro Max" (vector). Slow = "lavanta deodorant" (KB + intent + hybrid).
 
-**S: Hangi mağazalar canlı?**
-C: Sadece PttAVM. MediaMarkt+Trendyol interface var, URL placeholder.
+**S: Hangi mağazalar canlı?**  
+C: Sadece PttAVM. MediaMarkt + Trendyol interface var, URL placeholder.
 
-**S: Embedding durumu?**
-C: 339 canonical %100 embed. Faz1 +227 NULL (backfill bekliyor).
+**S: Embedding ne durumda?**  
+C: 339 başlangıç ürünü %100. Faz 1'le gelenler NULL — sonra backfill.
 
-**S: Klasik arama vs Chatbot farkı?**
-C: Header `/ara` (kelime). ChatBar `/sonuclar` (AI niyet, RAG, chip).
+**S: Klasik arama vs Chatbot?**  
+C: Header'daki klasik → `/ara` (kelime). ChatBar → `/sonuclar` (RAG, chip).
 
-**S: middleware silinmiş mi?**
-C: HAYIR. Next 16 → `src/proxy.ts`.
+**S: middleware silinmiş mi?**  
+C: HAYIR. Next 16 ile `src/proxy.ts`'e taşındı.
 
-**S: 003/004/005 migration uygulandı mı?**
-C: HEPSİ EVET.
+**S: Migration'lar nasıl?**  
+C: 001-005 hepsi yüklü. Yeni migration manuel uygulanmalı.
 
-**S: Header'daki kategori linkleri?**
-C: HEPSİ EVET. categorySlugMap.ts ile 68 kırık → 0.
+**S: ChatPanel açılma sorunu?**  
+C: ÇÖZÜLDÜ. Zustand persist (sessionStorage).
 
-**S: Server'da neden supabaseAdmin?**
-C: Anon RLS sıkı, server anon read boş döner. supabaseAdmin RLS bypass.
+**S: Renk filtresi?**  
+C: ÇÖZÜLDÜ. 5/5 senaryo. variant_color/storage smart_search params + extractVariantPatterns.
 
-**S: ChatPanel açılmıyor sorunu?**
-C: ÇÖZÜLDÜ. Zustand persist (sessionStorage). E2E PASS.
+**S: Header kırık slug?**  
+C: ÇÖZÜLDÜ. categorySlugMap.ts + Migration 005. 159/159 link uyumlu.
 
-**S: Suggestion chip ne işe yarar?**
-C: Bot daraltıcı sohbet. "siyah telefon" → marka chip, "merhaba" →
-kategori, "tavsiye ver" → 3 segment. 5 tip.
+**S: Ana sayfa/kategori/ürün sayfaları boştu?**  
+C: ÇÖZÜLDÜ. Server components supabaseAdmin'e geçirildi (RLS bypass).
 
-**S: gemma-3 neden kaldırıldı?**
-C: JSON mode desteksiz, 400 errors, %76 fail. Yeni chain:
-flash-lite → 2.0-flash, %0 fail.
+**S: Bot chip neden bazen kategori soruyor?**  
+C: 4 senaryo: "siyah telefon" → marka, "merhaba" → kategori, marka belli + 6+ ürün → bütçe, spesifik → chip yok.
 
-**S: 83 keşfedilmemiş DB kategorisi?**
-C: Header'da olmayan 83 aktif kategori (kahve-makinesi, mikrodalga,
-powerbank vb.). Sonraki Header tur.
-
-**S: Duplicate audit/merge nedir?**
-C: Mevcut katalogda aynı ürüne ait dağılmış kayıtları tespit + tek
-canonical'a taşı. Yan tablolar (alert/favori/queue) da migrate.
-Paralel Claude Code agent'ı çalışıyor.
+**S: Faz 1 yeni ürünler embedding'siz mi?**  
+C: EVET, kasıtlı. Backfill sonra. Strateji henüz belirlenmedi.
 
 ---
 
@@ -494,19 +414,13 @@ Paralel Claude Code agent'ı çalışıyor.
 
 | Tarih | Ne değişti | Kim |
 |---|---|---|
-| 2026-04-24 | İlk versiyon | Claude (sohbet) |
-| 2026-04-24 | v2 — detaylı yeniden yazım | Claude (sohbet) |
-| 2026-04-24 | v3 — current state alignment | Claude (sohbet) |
-| 2026-04-26 | v4 — Faz1, Header 68 fix, ChatPanel v3, suggestion chips, supabaseAdmin, migration 004+005, duplicate audit (Wave 9-12) | Claude Code |
+| 2026-04-24 | İlk versiyon | Claude |
+| 2026-04-24 | v2 — detaylı yeniden yazım | Claude |
+| 2026-04-24 | v3 — current state alignment | Claude |
+| 2026-04-26 | v4 — chatbot UX tamam, Header tamam, supabaseAdmin kuralı, Faz 1 ongoing | Claude |
 
 ---
 
 ## 🔚 SON NOT
 
-Bu dosya **canlı bir belge.** Her hafta güncel tutulmalı:
-- Bir kararın **sebebi belirsizleşirse** → buraya yaz
-- Yeni teknik borç → Bilinen Teknik Borçlar
-- Mimari değişiklik → Kritik Kararlar
-- Yeni iş dalgası → Önceki İş Dalgaları
-
-**Hedefin:** "Yeni Claude/Claude Code 30 saniyede tüm bağlamı alabilsin."
+**Hedef:** "Yeni Claude/Claude Code 30 saniyede tüm bağlamı alabilsin."
