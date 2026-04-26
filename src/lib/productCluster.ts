@@ -21,6 +21,16 @@ export type ClusterableListing = {
   in_stock?: boolean | null;
 };
 
+export type ClusterableProduct<TListing extends ClusterableListing = ClusterableListing> =
+  ProductClusterSeed & {
+    title: string;
+    slug?: string | null;
+    image_url?: string | null;
+    created_at?: string | null;
+    quality_score?: number | string | null;
+    listings?: TListing[] | null;
+  };
+
 function normalizeIdentityPart(value: string | null | undefined): string {
   return (value ?? "")
     .normalize("NFKD")
@@ -75,6 +85,26 @@ export function isExactProductClusterMatch(
   }
 
   return baseStorage === candidateStorage && baseColor === candidateColor;
+}
+
+export function getExactProductClusterKey(product: ProductClusterSeed): string | null {
+  const brand = normalizeIdentityPart(product.brand);
+  if (!brand) return null;
+
+  const modelCode = normalizeIdentityPart(product.model_code);
+  if (modelCode) {
+    return `code:${brand}|${modelCode}`;
+  }
+
+  const family = normalizeIdentityPart(product.model_family);
+  const storage = normalizeIdentityPart(product.variant_storage);
+  const color = normalizeIdentityPart(product.variant_color);
+
+  if (!family || (!storage && !color)) {
+    return null;
+  }
+
+  return `variant:${brand}|${family}|${storage}|${color}`;
 }
 
 export async function resolveProductClusterIds(
@@ -171,4 +201,118 @@ export function dedupeClusterListingsBySource<T extends ClusterableListing>(list
   }
 
   return Array.from(bestBySource.values()).sort(compareListingPriority);
+}
+
+function compareRepresentativePriority(
+  left: ClusterableProduct,
+  right: ClusterableProduct
+): number {
+  const leftListings = dedupeClusterListingsBySource((left.listings ?? []).filter(Boolean));
+  const rightListings = dedupeClusterListingsBySource((right.listings ?? []).filter(Boolean));
+
+  if (leftListings.length !== rightListings.length) {
+    return rightListings.length - leftListings.length;
+  }
+
+  const leftBestPrice = leftListings
+    .map((listing) => Number(listing.price))
+    .filter((price) => Number.isFinite(price) && price > 0)
+    .sort((a, b) => a - b)[0] ?? Number.POSITIVE_INFINITY;
+  const rightBestPrice = rightListings
+    .map((listing) => Number(listing.price))
+    .filter((price) => Number.isFinite(price) && price > 0)
+    .sort((a, b) => a - b)[0] ?? Number.POSITIVE_INFINITY;
+
+  if (leftBestPrice !== rightBestPrice) {
+    return leftBestPrice - rightBestPrice;
+  }
+
+  const leftFreshest = leftListings
+    .map((listing) => listing.last_seen)
+    .filter((value): value is string => Boolean(value))
+    .sort((a, b) => b.localeCompare(a))[0];
+  const rightFreshest = rightListings
+    .map((listing) => listing.last_seen)
+    .filter((value): value is string => Boolean(value))
+    .sort((a, b) => b.localeCompare(a))[0];
+
+  if ((leftFreshest ?? "") !== (rightFreshest ?? "")) {
+    return (rightFreshest ?? "").localeCompare(leftFreshest ?? "");
+  }
+
+  const leftQuality = Number(left.quality_score ?? 0);
+  const rightQuality = Number(right.quality_score ?? 0);
+  if (leftQuality !== rightQuality) {
+    return rightQuality - leftQuality;
+  }
+
+  const leftImage = Boolean(left.image_url);
+  const rightImage = Boolean(right.image_url);
+  if (leftImage !== rightImage) {
+    return leftImage ? -1 : 1;
+  }
+
+  return (right.created_at ?? "").localeCompare(left.created_at ?? "");
+}
+
+export function mergeClusteredProducts<
+  TListing extends ClusterableListing,
+  TProduct extends ClusterableProduct<TListing>
+>(products: TProduct[]): TProduct[] {
+  const groups = new Map<
+    string,
+    {
+      firstIndex: number;
+      items: TProduct[];
+    }
+  >();
+  const passthrough: Array<{ firstIndex: number; item: TProduct }> = [];
+
+  products.forEach((product, index) => {
+    const key = getExactProductClusterKey(product);
+    if (!key) {
+      passthrough.push({
+        firstIndex: index,
+        item: {
+          ...product,
+          listings: dedupeClusterListingsBySource((product.listings ?? []).filter(Boolean)) as TListing[],
+        } as TProduct,
+      });
+      return;
+    }
+
+    const group = groups.get(key);
+    if (group) {
+      group.items.push(product);
+      return;
+    }
+
+    groups.set(key, {
+      firstIndex: index,
+      items: [product],
+    });
+  });
+
+  const mergedGroups = Array.from(groups.values()).map((group) => {
+    const representative = [...group.items].sort(compareRepresentativePriority)[0];
+    const mergedListings = dedupeClusterListingsBySource(
+      group.items.flatMap((item) => item.listings ?? []).filter(Boolean)
+    ) as TListing[];
+
+    return {
+      firstIndex: group.firstIndex,
+      item: {
+        ...representative,
+        image_url:
+          representative.image_url ??
+          group.items.find((item) => item.image_url)?.image_url ??
+          null,
+        listings: mergedListings,
+      } as TProduct,
+    };
+  });
+
+  return [...passthrough, ...mergedGroups]
+    .sort((left, right) => left.firstIndex - right.firstIndex)
+    .map((entry) => entry.item);
 }

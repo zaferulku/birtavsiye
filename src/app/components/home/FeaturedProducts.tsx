@@ -3,18 +3,31 @@ import { supabaseAdmin } from "@/lib/supabaseServer";
 import {
   formatFreshnessLabel,
   getActiveOfferCount,
-  getActiveListings,
   getFreshestSeenAt,
   getLowestActivePrice,
 } from "@/lib/listingSignals";
+import { mergeClusteredProducts } from "@/lib/productCluster";
 
-type Price = { price: number; source?: string | null; last_seen?: string | null };
+type Price = {
+  id: string;
+  price: number;
+  source: string | null;
+  last_seen: string | null;
+  is_active?: boolean | null;
+  in_stock?: boolean | null;
+};
 type Product = {
   id: string;
   title: string;
   slug: string;
   brand: string | null;
   image_url: string | null;
+  category_id: string | null;
+  model_code: string | null;
+  model_family: string | null;
+  variant_storage: string | null;
+  variant_color: string | null;
+  created_at: string | null;
   listings: Price[];
 };
 
@@ -29,25 +42,32 @@ async function loadProducts(): Promise<Product[]> {
   const { data, error } = await supabaseAdmin
     .from("products")
     .select(
-      "id, title, slug, brand, image_url, listings:listings!inner(price, source, last_seen, is_active, in_stock)"
+      "id, title, slug, brand, image_url, category_id, model_code, model_family, variant_storage, variant_color, created_at, listings:listings!inner(id, price, source, last_seen, is_active, in_stock)"
     )
     .eq("is_active", true)
     .eq("listings.is_active", true)
     .order("created_at", { ascending: false })
-    .limit(128);
+    .limit(192);
 
   if (error) {
     console.error("[FeaturedProducts] product load failed:", error.message);
     return [];
   }
 
-  return ((data ?? []) as Array<{
+  const mappedProducts = ((data ?? []) as Array<{
     id: string;
     title: string;
     slug: string;
     brand: string | null;
     image_url: string | null;
+    category_id: string | null;
+    model_code: string | null;
+    model_family: string | null;
+    variant_storage: string | null;
+    variant_color: string | null;
+    created_at: string | null;
       listings?: Array<{
+        id: string;
         price: number | string;
         source?: string | null;
         last_seen?: string | null;
@@ -61,14 +81,30 @@ async function loadProducts(): Promise<Product[]> {
       slug: product.slug,
       brand: product.brand,
       image_url: product.image_url,
-      listings: getActiveListings(product.listings).map((listing) => ({
-        price: listing.price,
-        source: listing.source,
-        last_seen: listing.last_seen,
-      }))
-        .filter((listing) => Number.isFinite(listing.price) && listing.price > 0),
+      category_id: product.category_id,
+      model_code: product.model_code,
+      model_family: product.model_family,
+      variant_storage: product.variant_storage,
+      variant_color: product.variant_color,
+      created_at: product.created_at,
+      listings: ((product.listings ?? []).map((listing) => ({
+        id: listing.id,
+        price: Number(listing.price),
+        source: listing.source ?? null,
+        last_seen: listing.last_seen ?? null,
+        is_active: listing.is_active ?? null,
+        in_stock: listing.in_stock ?? null,
+      }))).filter(
+        (listing) =>
+          listing.is_active !== false &&
+          listing.in_stock !== false &&
+          Number.isFinite(listing.price) &&
+          listing.price > 0
+      ),
     }))
     .filter((product) => product.listings.length > 0);
+
+  return mergeClusteredProducts(mappedProducts).filter((product) => product.listings.length > 0);
 }
 
 function getLowestPrice(product: Product): number {
