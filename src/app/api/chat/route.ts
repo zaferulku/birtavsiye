@@ -20,6 +20,7 @@
 // =============================================================================
 
 import { NextResponse } from "next/server";
+import { createHash } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { aiEmbed } from "../../../lib/ai/aiClient";
 import { parseQuery, type CategoryRef } from "../../../lib/search/queryParser";
@@ -366,9 +367,14 @@ export async function POST(req: Request) {
 
     // ----- 4. agent_decisions log -----
     try {
+      const inputData = { message, userId, chatSessionId };
+      const inputHash = createHash("sha256")
+        .update(JSON.stringify(inputData))
+        .digest("hex");
       await sb.from("agent_decisions").insert({
         agent_name: "chatbot-search",
-        input_data: { message, userId, chatSessionId },
+        input_data: inputData,
+        input_hash: inputHash,
         output_data: {
           method: orchResult.method,
           path: orchResult.pathDecision.path,
