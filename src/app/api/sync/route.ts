@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import {
+  buildProductCreatePayload,
+  buildProductUpdatePayload,
+  inferProductIdentity,
+  resolveExistingProduct,
+} from "@/lib/productIdentity";
 
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET;
 const BASE_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
@@ -29,94 +35,13 @@ interface ScrapedProduct {
   specs?: Record<string, string>;
 }
 
-function toAscii(text: string): string {
+function normalizeForSecondhand(text: string): string {
   return text
-    .replace(/[Ğğ]/g, "g")
-    .replace(/[Üü]/g, "u")
-    .replace(/[Şş]/g, "s")
-    .replace(/[İIı]/g, "i")
-    .replace(/[Öö]/g, "o")
-    .replace(/[Çç]/g, "c");
-}
-
-function normalizeTitle(name: string): string {
-  return toAscii(name)
-    .replace(/(\d+)\s+(gb|mb|tb)/gi, "$1$2")
-    .replace(/\b[A-Z]{2,5}[0-9]{2,}[A-Z0-9/]{0,6}\b/g, "")
-    .replace(/\bakilli\s+telefon(u)?\b/gi, "")
-    .replace(/\bcep\s+telefon(u)?\b/gi, "")
-    .replace(/\bsmartphone\b/gi, "")
-    .replace(/\btelefon(u)?\b/gi, "")
-    .replace(/\b(4|6|8|12|16)\s*gb\s+(ram\s+)?(?=\d)/gi, "")
-    .replace(/\bnotebook\b/gi, "laptop")
-    .replace(/\bdizustu\b/gi, "laptop")
-    .replace(/\bnatural\s+titanium\b/gi, "dogal-titanyum")
-    .replace(/\bwhite\s+titanium\b/gi, "beyaz-titanyum")
-    .replace(/\bblack\s+titanium\b/gi, "siyah-titanyum")
-    .replace(/\bdesert\s+titanium\b/gi, "col-titanyum")
-    .replace(/\bmarble\s+gr[ae]y\b/gi, "gri")
-    .replace(/\bonyx\s+black\b/gi, "siyah")
-    .replace(/\bphantom\s+black\b/gi, "siyah")
-    .replace(/\bphantom\s+white\b/gi, "beyaz")
-    .replace(/\bcloud\s+white\b/gi, "beyaz")
-    .replace(/\blight\s+blue\b/gi, "mavi")
-    .replace(/\bmidnight\s+black\b/gi, "siyah")
-    .replace(/\bice\s+blue\b/gi, "buz-mavisi")
-    .replace(/\btitanium\b/gi, "titanyum")
-    .replace(/\bblack\b/gi, "siyah")
-    .replace(/\bwhite\b/gi, "beyaz")
-    .replace(/\bgr[ae]y\b/gi, "gri")
-    .replace(/\bsilver\b/gi, "gumus")
-    .replace(/\bgold\b/gi, "altin")
-    .replace(/\bblue\b/gi, "mavi")
-    .replace(/\bgreen\b/gi, "yesil")
-    .replace(/\bred\b/gi, "kirmizi")
-    .replace(/\bpurple\b/gi, "mor")
-    .replace(/\bpink\b/gi, "pembe")
-    .replace(/\byellow\b/gi, "sari")
-    .replace(/\borange\b/gi, "turuncu")
-    .replace(/\brose\b/gi, "pembe")
-    .replace(/\bmidnight\b/gi, "gece-mavisi")
-    .replace(/\bstarlight\b/gi, "yildiz-isigi")
-    .replace(/\(.*?\)/g, "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-function toSlug(text: string): string {
-  return normalizeTitle(text)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-    .slice(0, 100);
-}
-
-function extractBrand(name: string): string {
-  const brands = [
-    "Apple", "Samsung", "Xiaomi", "Lenovo", "HP", "Dell", "Asus", "Acer", "MSI",
-    "Casper", "Monster", "Huawei", "Sony", "LG", "Philips", "Dyson", "Bosch",
-    "Nike", "Adidas", "Puma", "Arcelik", "Vestel", "Beko", "Siemens", "Tefal",
-  ];
-  const normalizedName = toAscii(name).toLowerCase();
-  for (const brand of brands) {
-    if (normalizedName.startsWith(toAscii(brand).toLowerCase())) return brand;
-  }
-  return name.split(" ")[0];
-}
-
-function extractModelCode(name: string): string | null {
-  const tokens = name.split(/\s+/);
-  for (const token of tokens) {
-    if (
-      token.length >= 5 &&
-      /[A-Z]/i.test(token) &&
-      /[0-9]/.test(token) &&
-      /^[A-Z0-9-]+$/i.test(token)
-    ) {
-      return token.toUpperCase();
-    }
-  }
-  return null;
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\u0131/g, "i")
+    .replace(/\u0130/g, "I")
+    .toLowerCase();
 }
 
 function getSourceProductId(url: string): string {
@@ -159,89 +84,144 @@ async function getStoreId(source: SyncSource): Promise<string | null> {
 async function syncProducts(products: ScrapedProduct[], source: SyncSource, categoryId?: string) {
   const sb = getSupabase();
   const storeId = await getStoreId(source);
-  if (!storeId) return { inserted: 0, errors: 1, firstError: ["store:not_found"], newProductIds: [] };
+  if (!storeId) {
+    return { inserted: 0, errors: 1, firstError: ["store:not_found"], newProductIds: [] };
+  }
 
   let inserted = 0;
   let errors = 0;
   const firstError: string[] = [];
   const newProductIds: string[] = [];
 
-  const SECONDHAND = /ikinci\s*el|2\.\s*el|kullanilmis|teshir|hasarli|defolu|acik kutu|open box/i;
+  const SECONDHAND =
+    /ikinci\s*el|2\.\s*el|kullanilmis|teshir|hasarli|defolu|acik kutu|open box/i;
 
-  for (const p of products) {
-    if (!p.name || !p.url) continue;
-    if (SECONDHAND.test(toAscii(p.name).toLowerCase())) continue;
+  for (const product of products) {
+    if (!product.name || !product.url) continue;
+    if (SECONDHAND.test(normalizeForSecondhand(product.name))) continue;
 
-    const slug = toSlug(p.name);
-    const brand = extractBrand(p.name);
-    const modelCode = extractModelCode(p.name);
-    const sourceProductId = getSourceProductId(p.url);
+    const identity = inferProductIdentity({
+      title: product.name,
+      specs: product.specs,
+    });
+    const sourceProductId = getSourceProductId(product.url);
+
     let productId: string | null = null;
     let queueAgentValidation = false;
 
-    if (modelCode) {
-      const { data: existing } = await sb
-        .from("products")
-        .select("id")
-        .ilike("brand", brand)
-        .eq("model_code", modelCode)
-        .maybeSingle();
-      if (existing) productId = existing.id;
-    }
+    let existingProduct = await resolveExistingProduct({
+      sb,
+      identity,
+      categoryId,
+    });
 
-    if (!productId) {
-      const { data: existingBySlug } = await sb
-        .from("products")
-        .select("id")
-        .eq("slug", slug)
-        .maybeSingle();
-      if (existingBySlug) productId = existingBySlug.id;
-    }
+    if (existingProduct) {
+      productId = existingProduct.id;
+      const updatePayload = buildProductUpdatePayload({
+        existing: existingProduct,
+        identity,
+        imageUrl: product.image,
+        specs: product.specs,
+      });
 
-    const productPayload: Record<string, unknown> = {
-      title: p.name,
-      slug,
-      brand,
-    };
-    if (p.image) productPayload.image_url = p.image;
-    if (modelCode) productPayload.model_code = modelCode;
-    if (p.specs && Object.keys(p.specs).length > 0) productPayload.specs = p.specs;
+      if (Object.keys(updatePayload).length > 0) {
+        const { error: updateError } = await sb
+          .from("products")
+          .update(updatePayload)
+          .eq("id", productId);
 
-    if (productId) {
-      const { error: updateError } = await sb
-        .from("products")
-        .update(productPayload)
-        .eq("id", productId);
-
-      if (updateError) {
-        if (firstError.length < 3) firstError.push(`product:${updateError.code}:${updateError.message}:id=${productId}`);
-        errors++;
-        continue;
+        if (updateError) {
+          if (firstError.length < 3) {
+            firstError.push(
+              `product:${updateError.code}:${updateError.message}:id=${productId}`
+            );
+          }
+          errors++;
+          continue;
+        }
       }
     } else {
       if (!categoryId) {
-        if (firstError.length < 3) firstError.push(`product:missing_category:slug=${slug}`);
+        if (firstError.length < 3) {
+          firstError.push(`product:missing_category:slug=${identity.slug}`);
+        }
         errors++;
         continue;
       }
 
-      const { data: createdProduct, error: productError } = await sb
+      let createPayload = buildProductCreatePayload({
+        identity,
+        categoryId,
+        imageUrl: product.image,
+        specs: product.specs,
+      });
+
+      let createResult = await sb
         .from("products")
-        .upsert(
-          { ...productPayload, category_id: categoryId },
-          { onConflict: "slug" }
-        )
+        .insert(createPayload)
         .select("id")
         .single();
 
-      if (productError || !createdProduct) {
-        if (firstError.length < 3) firstError.push(`product:${productError?.code}:${productError?.message}:slug=${slug}`);
+      if (createResult.error?.code === "23505") {
+        existingProduct = await resolveExistingProduct({
+          sb,
+          identity,
+          categoryId,
+        });
+
+        if (existingProduct) {
+          productId = existingProduct.id;
+          const updatePayload = buildProductUpdatePayload({
+            existing: existingProduct,
+            identity,
+            imageUrl: product.image,
+            specs: product.specs,
+          });
+
+          if (Object.keys(updatePayload).length > 0) {
+            const { error: updateError } = await sb
+              .from("products")
+              .update(updatePayload)
+              .eq("id", productId);
+
+            if (updateError) {
+              if (firstError.length < 3) {
+                firstError.push(
+                  `product:${updateError.code}:${updateError.message}:id=${productId}`
+                );
+              }
+              errors++;
+              continue;
+            }
+          }
+        } else {
+          createPayload = {
+            ...createPayload,
+            slug: `${identity.slug}-${Date.now().toString(36).slice(-4)}`,
+          };
+
+          createResult = await sb
+            .from("products")
+            .insert(createPayload)
+            .select("id")
+            .single();
+        }
+      }
+
+      if (!productId && (createResult.error || !createResult.data)) {
+        if (firstError.length < 3) {
+          firstError.push(
+            `product:${createResult.error?.code}:${createResult.error?.message}:slug=${identity.slug}`
+          );
+        }
         errors++;
         continue;
       }
 
-      productId = createdProduct.id;
-      queueAgentValidation = true;
+      if (!productId && createResult.data) {
+        productId = createResult.data.id;
+        queueAgentValidation = true;
+      }
     }
 
     const nowIso = new Date().toISOString();
@@ -252,22 +232,23 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
       .eq("source_product_id", sourceProductId)
       .maybeSingle();
 
-    const previousPrice = existingListing?.price != null ? Number(existingListing.price) : null;
+    const previousPrice =
+      existingListing?.price != null ? Number(existingListing.price) : null;
     const listingPayload: Record<string, unknown> = {
       product_id: productId,
       store_id: storeId,
       source,
       source_product_id: sourceProductId,
-      source_url: p.url,
-      source_title: p.name,
-      price: p.price,
-      affiliate_url: p.url,
+      source_url: product.url,
+      source_title: product.name,
+      price: product.price,
+      affiliate_url: product.url,
       currency: "TRY",
       in_stock: true,
       is_active: true,
       last_seen: nowIso,
     };
-    if (!existingListing || previousPrice !== p.price) {
+    if (!existingListing || previousPrice !== product.price) {
       listingPayload.last_price_change = nowIso;
     }
 
@@ -278,20 +259,28 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
       .single();
 
     if (listingError || !listing) {
-      if (firstError.length < 3) firstError.push(`listing:${listingError?.code}:${listingError?.message}:source=${source}`);
+      if (firstError.length < 3) {
+        firstError.push(
+          `listing:${listingError?.code}:${listingError?.message}:source=${source}`
+        );
+      }
       errors++;
       continue;
     }
 
-    if (!existingListing || previousPrice !== p.price) {
+    if (!existingListing || previousPrice !== product.price) {
       const { error: historyError } = await sb.from("price_history").insert({
         listing_id: listing.id,
-        price: p.price,
+        price: product.price,
         recorded_at: nowIso,
       });
 
       if (historyError) {
-        if (firstError.length < 3) firstError.push(`history:${historyError.code}:${historyError.message}:listing=${listing.id}`);
+        if (firstError.length < 3) {
+          firstError.push(
+            `history:${historyError.code}:${historyError.message}:listing=${listing.id}`
+          );
+        }
         errors++;
         continue;
       }
@@ -302,7 +291,7 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
       .select("id")
       .eq("product_id", productId)
       .eq("is_triggered", false)
-      .gte("target_price", p.price);
+      .gte("target_price", product.price);
 
     if (alerts && alerts.length > 0) {
       const ids = alerts.map((alert: { id: string }) => alert.id);
@@ -329,9 +318,15 @@ async function triggerAgentValidation(productIds: string[]): Promise<void> {
           "x-internal-secret": INTERNAL_SECRET ?? "",
         },
         body: JSON.stringify({ product_id: id }),
-      }).catch((err) => console.error(`[agent-validate] product=${id} fetch failed: ${err.message}`));
+      }).catch((err) =>
+        console.error(`[agent-validate] product=${id} fetch failed: ${err.message}`)
+      );
     } catch (err) {
-      console.error(`[agent-validate] product=${id} error: ${err instanceof Error ? err.message : String(err)}`);
+      console.error(
+        `[agent-validate] product=${id} error: ${
+          err instanceof Error ? err.message : String(err)
+        }`
+      );
     }
 
     await new Promise((resolve) => setTimeout(resolve, rateLimitMs));
@@ -344,16 +339,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Yetkisiz" }, { status: 401 });
   }
 
-  const { source, query, page = 1, category_id, title_filter } = await request.json() as {
-    source: SyncSource;
-    query: string;
-    page?: number;
-    category_id?: string;
-    title_filter?: string[];
-  };
+  const { source, query, page = 1, category_id, title_filter } =
+    (await request.json()) as {
+      source: SyncSource;
+      query: string;
+      page?: number;
+      category_id?: string;
+      title_filter?: string[];
+    };
 
   if (!source || !query) {
-    return NextResponse.json({ error: "source ve query gerekli" }, { status: 400 });
+    return NextResponse.json(
+      { error: "source ve query gerekli" },
+      { status: 400 }
+    );
   }
 
   const scraperRes = await fetch(
@@ -361,25 +360,36 @@ export async function POST(request: NextRequest) {
   );
 
   if (!scraperRes.ok) {
-    return NextResponse.json({ error: `Scraper hatasi: ${scraperRes.status}` }, { status: 502 });
+    return NextResponse.json(
+      { error: `Scraper hatasi: ${scraperRes.status}` },
+      { status: 502 }
+    );
   }
 
-  let { products = [] } = await scraperRes.json() as { products: ScrapedProduct[] };
+  let { products = [] } = (await scraperRes.json()) as { products: ScrapedProduct[] };
 
   if (title_filter && title_filter.length > 0) {
     const before = products.length;
     products = products.filter((product) =>
-      title_filter.some((keyword) => product.name.toLowerCase().includes(keyword.toLowerCase()))
+      title_filter.some((keyword) =>
+        product.name.toLowerCase().includes(keyword.toLowerCase())
+      )
     );
     if (products.length < before) {
-      console.log(`[title_filter] ${before} -> ${products.length} urun (${before - products.length} atlandi)`);
+      console.log(
+        `[title_filter] ${before} -> ${products.length} urun (${
+          before - products.length
+        } atlandi)`
+      );
     }
   }
 
   const stats = await syncProducts(products, source, category_id);
 
   if (stats.newProductIds.length > 0) {
-    console.log(`[sync] ${stats.newProductIds.length} new product(s) -> agent validation queued`);
+    console.log(
+      `[sync] ${stats.newProductIds.length} new product(s) -> agent validation queued`
+    );
     triggerAgentValidation(stats.newProductIds).catch((err) =>
       console.error(`[sync] triggerAgentValidation failed: ${err.message}`)
     );
