@@ -242,7 +242,7 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
                   {brands.map((brand) => (
                     <button
                       key={brand}
-                      onClick={() => setSelectedBrand(brand)}
+                      onClick={() => setSelectedBrand(brand ?? "")}
                       className={`w-full text-left px-3 py-2 rounded-lg text-xs mb-1 transition-all ${
                         selectedBrand === brand
                           ? "bg-orange-50 text-[#E8460A] font-semibold"

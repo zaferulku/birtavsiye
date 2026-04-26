@@ -37,13 +37,13 @@ type ProductCard = {
   brand: string | null;
   description?: string | null;
   image_url?: string | null;
-  category_id?: string | null;
-  model_code?: string | null;
-  model_family?: string | null;
-  variant_storage?: string | null;
-  variant_color?: string | null;
+  category_id: string | null;
+  model_code: string | null;
+  model_family: string | null;
+  variant_storage: string | null;
+  variant_color: string | null;
   created_at?: string | null;
-  prices?: ListingRow[] | null;
+  prices: ListingRow[] | null;
 };
 
 export default async function KategoriSayfasi({ params, searchParams }: {
