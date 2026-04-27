@@ -104,6 +104,68 @@ const SAMSUNG_PATTERNS: Array<{ regex: RegExp; canonical: string }> = [
   { regex: /Galaxy\s*M15/i, canonical: "Galaxy M15" },
 ];
 
+const XIAOMI_PATTERNS: Array<{ regex: RegExp; canonical: string }> = [
+  // Redmi Note (uzun match once)
+  { regex: /Redmi\s*Note\s*15\s*Pro\+/i, canonical: "Redmi Note 15 Pro+" },
+  { regex: /Redmi\s*Note\s*15\s*Pro/i, canonical: "Redmi Note 15 Pro" },
+  { regex: /Redmi\s*Note\s*15/i, canonical: "Redmi Note 15" },
+  { regex: /Redmi\s*Note\s*14\s*Pro\+/i, canonical: "Redmi Note 14 Pro+" },
+  { regex: /Redmi\s*Note\s*14\s*Pro/i, canonical: "Redmi Note 14 Pro" },
+  { regex: /Redmi\s*Note\s*14/i, canonical: "Redmi Note 14" },
+  { regex: /Redmi\s*Note\s*13\s*Pro\+/i, canonical: "Redmi Note 13 Pro+" },
+  { regex: /Redmi\s*Note\s*13\s*Pro/i, canonical: "Redmi Note 13 Pro" },
+  { regex: /Redmi\s*Note\s*13/i, canonical: "Redmi Note 13" },
+  { regex: /Redmi\s*Note\s*12\s*Pro/i, canonical: "Redmi Note 12 Pro" },
+  { regex: /Redmi\s*Note\s*12/i, canonical: "Redmi Note 12" },
+  { regex: /Redmi\s*Note\s*11\s*Pro/i, canonical: "Redmi Note 11 Pro" },
+  { regex: /Redmi\s*Note\s*11/i, canonical: "Redmi Note 11" },
+  // Redmi
+  { regex: /Redmi\s*15C/i, canonical: "Redmi 15C" },
+  { regex: /Redmi\s*15/i, canonical: "Redmi 15" },
+  { regex: /Redmi\s*14C/i, canonical: "Redmi 14C" },
+  { regex: /Redmi\s*14/i, canonical: "Redmi 14" },
+  { regex: /Redmi\s*13C/i, canonical: "Redmi 13C" },
+  { regex: /Redmi\s*13/i, canonical: "Redmi 13" },
+  { regex: /Redmi\s*12C/i, canonical: "Redmi 12C" },
+  { regex: /Redmi\s*12/i, canonical: "Redmi 12" },
+  // Poco
+  { regex: /Poco\s*F8\s*Pro/i, canonical: "Poco F8 Pro" },
+  { regex: /Poco\s*F7\s*Pro/i, canonical: "Poco F7 Pro" },
+  { regex: /Poco\s*F6\s*Pro/i, canonical: "Poco F6 Pro" },
+  { regex: /Poco\s*F5\s*Pro/i, canonical: "Poco F5 Pro" },
+  { regex: /Poco\s*X8\s*Pro/i, canonical: "Poco X8 Pro" },
+  { regex: /Poco\s*X7\s*Pro/i, canonical: "Poco X7 Pro" },
+  { regex: /Poco\s*X6\s*Pro/i, canonical: "Poco X6 Pro" },
+  { regex: /Poco\s*M7\s*Pro/i, canonical: "Poco M7 Pro" },
+  { regex: /Poco\s*M6\s*Pro/i, canonical: "Poco M6 Pro" },
+  { regex: /Poco\s*C75/i, canonical: "Poco C75" },
+  // Xiaomi T variants
+  { regex: /\bXiaomi\s*15T\s*Pro/i, canonical: "Xiaomi 15T Pro" },
+  { regex: /\bXiaomi\s*15T\b/i, canonical: "Xiaomi 15T" },
+  { regex: /\bXiaomi\s*14T\s*Pro/i, canonical: "Xiaomi 14T Pro" },
+  { regex: /\bXiaomi\s*14T\b/i, canonical: "Xiaomi 14T" },
+  { regex: /\bXiaomi\s*13T\s*Pro/i, canonical: "Xiaomi 13T Pro" },
+  { regex: /\bXiaomi\s*13T\b/i, canonical: "Xiaomi 13T" },
+  // Xiaomi numara-only
+  { regex: /\bXiaomi\s*17\s*Ultra/i, canonical: "Xiaomi 17 Ultra" },
+  { regex: /\bXiaomi\s*17\s*Pro/i, canonical: "Xiaomi 17 Pro" },
+  { regex: /\bXiaomi\s*17\b/i, canonical: "Xiaomi 17" },
+  { regex: /\bXiaomi\s*16\s*Pro/i, canonical: "Xiaomi 16 Pro" },
+  { regex: /\bXiaomi\s*16\b/i, canonical: "Xiaomi 16" },
+  { regex: /\bXiaomi\s*15\s*Ultra/i, canonical: "Xiaomi 15 Ultra" },
+  { regex: /\bXiaomi\s*15\s*Pro/i, canonical: "Xiaomi 15 Pro" },
+  { regex: /\bXiaomi\s*15\b/i, canonical: "Xiaomi 15" },
+  { regex: /\bXiaomi\s*14\s*Ultra/i, canonical: "Xiaomi 14 Ultra" },
+  { regex: /\bXiaomi\s*14\s*Pro/i, canonical: "Xiaomi 14 Pro" },
+  { regex: /\bXiaomi\s*14\b/i, canonical: "Xiaomi 14" },
+  { regex: /\bXiaomi\s*13\s*Pro/i, canonical: "Xiaomi 13 Pro" },
+  { regex: /\bXiaomi\s*13\b/i, canonical: "Xiaomi 13" },
+  { regex: /\bXiaomi\s*12T\s*Pro/i, canonical: "Xiaomi 12T Pro" },
+  { regex: /\bXiaomi\s*12T\b/i, canonical: "Xiaomi 12T" },
+  { regex: /\bXiaomi\s*12\s*Pro/i, canonical: "Xiaomi 12 Pro" },
+  { regex: /\bXiaomi\s*12\b/i, canonical: "Xiaomi 12" },
+];
+
 const APPLE_SKU_REGEX = /\b([A-Z]{2}[A-Z0-9]{2,6}TU\/A)\b/i;
 const NUMERIC_SKU_REGEX = /^\d{6,13}$/;
 
@@ -124,6 +186,12 @@ export function extractModelFamily(title: string, brand?: string | null): ModelE
 
   if (/galaxy/i.test(title) || brandLower === "samsung") {
     for (const { regex, canonical } of SAMSUNG_PATTERNS) {
+      if (regex.test(title)) return { family: canonical, code };
+    }
+  }
+
+  if (/xiaomi|redmi|poco/i.test(title) || brandLower === "xiaomi" || brandLower === "poco") {
+    for (const { regex, canonical } of XIAOMI_PATTERNS) {
       if (regex.test(title)) return { family: canonical, code };
     }
   }
