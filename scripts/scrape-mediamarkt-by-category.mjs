@@ -251,13 +251,31 @@ async function upsertListing(scraped) {
     const updatePayload = { ...listingPayload };
     if (priceChanged) updatePayload.last_price_change = new Date().toISOString();
     await sb.from('listings').update(updatePayload).eq('id', existing.id);
+    if (priceChanged) {
+      await sb.from('price_history').insert({
+        listing_id: existing.id,
+        price: scraped.price,
+        recorded_at: new Date().toISOString(),
+      });
+    }
     return { ok: true, action: 'updated' };
   } else {
-    const { error } = await sb.from('listings').insert({
+    const { data: insertedRow, error } = await sb.from('listings').insert({
       ...listingPayload,
       first_seen: new Date().toISOString(),
-    });
+    }).select('id').single();
+
     if (error) return { ok: false, reason: 'listing_insert_fail: ' + error.message };
+
+    // price_history: ilk fiyat kaydi
+    if (insertedRow?.id) {
+      await sb.from('price_history').insert({
+        listing_id: insertedRow.id,
+        price: scraped.price,
+        recorded_at: new Date().toISOString(),
+      });
+    }
+
     return { ok: true, action: 'inserted' };
   }
 }
