@@ -1,9 +1,9 @@
-# birtavsiye.net — Project State v8
+# birtavsiye.net — Project State v9
 
 > **Bu dosya tek kaynak gerçek.** Yeni sohbet/oturum başlattığınızda
 > bu dosyayı Claude veya Claude Code'a verin — tüm bağlamı 30 saniyede alır.
 
-**Son güncelleme:** 2026-04-27 v8 (model_family pattern 17 marka + tablet/saat/laptop + categorizeFromTitle + PttAVM kategori inference %92 + MM-source priority)
+**Son güncelleme:** 2026-04-27 v9 (backup migrate Gemini bypass +3.9K ürün + categorizeFromTitle 30 niş kategori + MM map 132 yeni leaf segment + 25 dbSlug)
 **Production:** https://birtavsiye.net (www.birtavsiye.net canonical)
 **Stack:** Next.js 16, Supabase + pgvector, Zustand, NVIDIA Llama 3.3 70B / Groq / Gemini fallback
 
@@ -31,7 +31,7 @@ kişiselleştirilmiş tavsiye, kategori bazlı search, forum tartışmaları.
 
 | Tablo | Sayı |
 |---|---|
-| products | ~1960 canonical (akilli-telefon scrape sonrası) |
+| products | **6,748+** canonical (backup-restore migrate sonrasi, classified_by: faz1/gemini/mediamarkt-scraper/backup-restore) |
 | listings (MM çoğu) | ~2900 (akilli-telefon ek scrape sonrası) |
 | price_history | büyüyor (her listing INSERT/UPDATE'de yazıyor) |
 | categories | 177 (Migration 005 sonrası) |
@@ -221,6 +221,7 @@ scripts/audit-accessory-products.mjs                          # DB-wide accessor
 scripts/test-accessory-detector.mjs                           # 10 vaka smoke test
 scripts/test-categorize-pttavm.mts                            # PttAVM categorizer kapsam testi
 scripts/backfill-pttavm-categories.mts                        # PttAVM source_category backfill
+scripts/migrate-backup-to-products.mjs                        # backup-restore migrate (Gemini bypass)
 scripts/seed-forum-static.mjs                                 # 21 topics + 84 answers
 mm-category-tree.json                                         # 367KB, 713 leaf
 supabase/migrations/004_smart_search_variants.sql             # variant_color_patterns
@@ -434,12 +435,17 @@ anne_bebek (11) = **141**
 **12:** Search regression + 3-bug + price_history (04-27) — `bcebf6b` + `da7f09b` + `8913a79`
 **13:** akilli-telefon büyük scrape (04-27) — ProductGroup fix + accessory pipeline + model_family + brand normalize — `facc78a` + `076244c` (akilli-telefon 27 → 585 ürün)
 **14:** Pattern + categorizer + MM-source priority (04-27) — extractModelFamily 17 marka, tablet/saat/laptop, scraper ingestion entegrasyon, categorizeFromTitle (PttAVM 249→334 dolu, %92), enrich-pttavm description guard — `533f319` + `a673ff6` + `9e5dcdf` + `29d14db` + `2b5fd9f` + `76b597e` + `ec2a446`
+**15:** Backup migrate + niş kategori + MM map genişletme (04-27) — backup-restore (43K backup, %99.9 cat dolu ama orphan, categorizeFromTitle ile re-infer), Round 1+2+3 = +4,030 ürün migrate, 30 niş kategori (kıyafet/kozmetik/oyuncak/otomotiv/aydınlatma/pet), MM map 21→25 dbSlug + 132 yeni leaf segment, Vercel build fix (tsconfig scripts exclude) — `881e78e` + `19890df` + `fafbbc2` + `f0758cd`
 
 ---
 
 ## ✅ COMMIT GEÇMİŞİ (son 25)
 
 ```
+f0758cd   feat(mm-map): 132 yeni leaf segment + 4 yeni dbSlug
+fafbbc2   fix(build): tsconfig exclude scripts/ (Vercel build .mts fix)
+19890df   feat(categorizer): nis kategoriler ek (ev-tekstili, gida, kitap, oyuncak, ...)
+881e78e   feat(categorizer+migrate): backup -> products migrate + nis kategori patterns
 ec2a446   feat(categorizer): pattern listesi genisletme (%69 -> %92 PttAVM coverage)
 76b597e   feat(pttavm): backfill source_category from title
 2b5fd9f   feat(categorizer+pttavm): title->kategori inference + MM-source oncelik
@@ -595,6 +601,7 @@ C: ÇÖZÜLDÜ (`8913a79`). Scraper INSERT/UPDATE her iki path'de price_history 
 | 2026-04-27 | v6 — search regression + 3-bug + price_history + MM scrape category-driven | Claude |
 | 2026-04-27 | v7 — akilli-telefon büyük scrape (585 ürün) + ProductGroup fix + accessory pipeline (detector+filter+migration+audit) + model_family backfill + brand normalize | Claude |
 | 2026-04-27 | v8 — extractModelFamily 17 marka pattern (telefon+tablet+saat+laptop) + categorizeFromTitle.mts (PttAVM kategori inference %92) + MM-source priority (specs/description) + scraper ingestion entegrasyonu | Claude |
+| 2026-04-27 | v9 — backup-restore migrate (Gemini bypass +3,964 ürün) + categorizeFromTitle 30 niş kategori (kıyafet/kozmetik/oyuncak/otomotiv/aydınlatma/pet) + MM map +132 leaf segment + 25 dbSlug (fotograf-kamera/aksiyon-kamera/aspirator-davlumbaz/sac-kurutma) + tsconfig scripts/ exclude (Vercel build fix) | Claude |
 
 ---
 
