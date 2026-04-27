@@ -170,6 +170,15 @@ function normalize(s: string): string {
     .trim();
 }
 
+// Word-boundary keyword match: "kablosu" "kablosuz" icinde yakalamasin diye.
+// Multi-word keyword'lerde de calisir (ornek: "kahve makinesi temizleyici").
+function matchesKeyword(haystackNorm: string, keyword: string): boolean {
+  const kwNorm = normalize(keyword);
+  if (!kwNorm) return false;
+  const escaped = kwNorm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`\\b${escaped}\\b`, "i").test(haystackNorm);
+}
+
 // Aksesuar kategorileri — bu kategorilerin sayfasinda detector devre disi
 // (ornek: powerbank kategori page'inde "kablosu" gecen powerbank gizlenmemeli)
 const ACCESSORY_CATEGORY_SLUGS = new Set([
@@ -214,7 +223,7 @@ export function checkAccessory(
 
   if (rule) {
     for (const kw of rule.accessoryKeywords) {
-      if (titleNorm.includes(normalize(kw))) {
+      if (matchesKeyword(titleNorm, kw)) {
         return {
           isAccessory: true,
           reason: "title_keyword",
@@ -226,7 +235,7 @@ export function checkAccessory(
   }
 
   for (const kw of UNIVERSAL_ACCESSORY_KEYWORDS) {
-    if (titleNorm.includes(normalize(kw))) {
+    if (matchesKeyword(titleNorm, kw)) {
       return {
         isAccessory: true,
         reason: "title_keyword",
@@ -238,7 +247,7 @@ export function checkAccessory(
 
   if (rule && rule.mainProductKeywords.length > 0) {
     const hasMainKeyword = rule.mainProductKeywords.some((kw) =>
-      titleNorm.includes(normalize(kw)),
+      matchesKeyword(titleNorm, kw),
     );
     if (!hasMainKeyword) {
       return {
