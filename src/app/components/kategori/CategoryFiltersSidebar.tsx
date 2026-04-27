@@ -66,11 +66,12 @@ export default function CategoryFiltersSidebar({
   const pushUrl = (params: URLSearchParams) => {
     const query = params.toString();
     if (debounceRef.current) clearTimeout(debounceRef.current);
+    // 80ms — hizli ardarda tiklamada tek push, ama gecikme algilanmaz
     debounceRef.current = setTimeout(() => {
       startTransition(() => {
         router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
       });
-    }, 250);
+    }, 80);
   };
 
   const updateUrl = (mutator: (params: URLSearchParams) => void) => {

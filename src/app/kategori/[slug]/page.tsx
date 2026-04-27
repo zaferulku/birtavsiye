@@ -205,7 +205,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   // Variant dedup için daha geniş bir havuz çekip in-memory birleştiriyoruz
   let query = supabaseAdmin
     .from("products")
-    .select("id, title, slug, brand, description, image_url, specs, category_id, model_code, model_family, variant_storage, variant_color, created_at, prices:listings(id, price, source, is_active, in_stock, last_seen)", { count: "exact" })
+    .select("id, title, slug, brand, description, image_url, specs, category_id, model_code, model_family, variant_storage, variant_color, created_at, prices:listings(id, price, source, is_active, in_stock, last_seen)")
     .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""]);
 
   if (selectedBrands.length === 1) query = query.eq("brand", selectedBrands[0]);
@@ -406,11 +406,17 @@ export default async function KategoriSayfasi({ params, searchParams }: {
     }
   });
 
-  const sidebarModelOptions = Object.entries(
-    selectedBrands.length === 1 && modelsByBrand[selectedBrands[0]]
-      ? modelsByBrand[selectedBrands[0]]
-      : mergedModelCounts
-  )
+  // Seri (Model) filter: 1+ marka secildiyse sadece o markalarin modelleri,
+  // hicbir marka secili degilse tum markalarin merged modelleri.
+  const filteredModelCounts: Record<string, number> = selectedBrands.length > 0
+    ? selectedBrands.reduce<Record<string, number>>((acc, brand) => {
+        const m = modelsByBrand[brand] ?? {};
+        for (const [k, v] of Object.entries(m)) acc[k] = (acc[k] || 0) + v;
+        return acc;
+      }, {})
+    : mergedModelCounts;
+
+  const sidebarModelOptions = Object.entries(filteredModelCounts)
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "tr"))
     .map(([value, count]) => ({ value, label: value, count }));
 
