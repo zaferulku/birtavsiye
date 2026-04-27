@@ -409,6 +409,10 @@ export async function POST(request: NextRequest) {
 
   let { products = [] } = (await scraperRes.json()) as { products: ScrapedProduct[] };
 
+  // Defensive: geçersiz fiyatlı ürünleri filtrele (her scraper kendi başına yapsa da
+  // kaynak ne olursa olsun "0 TL" listing'i DB'ye yazılmasın).
+  products = products.filter((p) => Number.isFinite(p.price) && p.price > 0);
+
   if (title_filter && title_filter.length > 0) {
     const before = products.length;
     products = products.filter((product) =>

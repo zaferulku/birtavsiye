@@ -91,8 +91,16 @@ function parseProducts(html: string): ParsedProduct[] {
         const name  = item.name as string;
         const url   = item.url as string;
         const image = item.image as string;
-        const price = (item.offers as Record<string, unknown>)?.price as number;
+        const rawPrice = (item.offers as Record<string, unknown>)?.price;
+        const price = typeof rawPrice === "number"
+          ? rawPrice
+          : typeof rawPrice === "string"
+            ? Number(rawPrice)
+            : NaN;
         if (!name || !url) continue;
+        // Stoksuz ürünlerde JSON-LD price boş gelebilir; geçersiz fiyatlı listing'leri
+        // veritabanına eklemek istemiyoruz (UI'da "0 TL" gösterirdi).
+        if (!Number.isFinite(price) || price <= 0) continue;
         if (seen.has(url)) continue;
         seen.add(url);
 
@@ -102,7 +110,7 @@ function parseProducts(html: string): ParsedProduct[] {
           image: image
             ? (image.startsWith("http") ? image : `${MM_BASE}${image}`)
             : "",
-          price: price ?? 0,
+          price,
           specs: parseSpecsFromTitle(name),
         });
       }
