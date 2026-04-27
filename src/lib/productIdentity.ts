@@ -383,6 +383,24 @@ function toSlug(text: string): string {
     .slice(0, 100);
 }
 
+// Aksesuar göstergesi: bu kelimelerden biri title'da varsa ürün AKSESUAR.
+// Brand alias (iPhone→Apple) skip edilir, model_family null bırakılır.
+const ACCESSORY_INDICATORS = [
+  "uyumlu", "kılıf", "kilif", "kapak", "ekran koruyucu", "cam koruyucu",
+  "screen protector", "tempered glass", "case", "cover",
+  "kordon", "kayış", "kayısı", "saat kayışı",
+  "powerbank", "şarj kablosu", "şarj aleti", "şarj cihazı", "data kablosu",
+  "kulaklık", "earbuds", "tutucu", "askı", "stand",
+  "stylus", "kalem ucu",
+  "yedek parça", "yedek pil", "lcd ekran", "batarya kapağı",
+  "kamera lens", "lens koruyucu",
+];
+
+function isAccessoryTitle(title: string): boolean {
+  const lower = title.toLowerCase();
+  return ACCESSORY_INDICATORS.some((kw) => lower.includes(kw));
+}
+
 function titleizeSegment(value: string): string {
   const lower = value.toLowerCase();
   return lower.charAt(0).toUpperCase() + lower.slice(1);
@@ -421,8 +439,12 @@ function extractBrand(title: string, brandHint?: string | null): string {
 
   // Brand alias: title içinde tanınan model anahtarı varsa brand'a yönlendir
   // ("iPhone 17 512 Gb Sis Mavisi" → Apple, "Galaxy S25" → Samsung)
-  for (const [pattern, brand] of BRAND_TITLE_ALIASES) {
-    if (pattern.test(title)) return brand;
+  // İSTİSNA: Aksesuar göstergesi varsa alias kapalı — "Youngkit iPhone Uyumlu"
+  // Apple olarak değil Youngkit (gerçek üretici) olarak kalsın.
+  if (!isAccessoryTitle(title)) {
+    for (const [pattern, brand] of BRAND_TITLE_ALIASES) {
+      if (pattern.test(title)) return brand;
+    }
   }
 
   const firstToken = title.split(/\s+/).find(Boolean) ?? "Unknown";
@@ -598,6 +620,10 @@ function normalizeFamilyToken(token: string): string {
 }
 
 function extractModelFamily(title: string, brand: string, modelCode: string | null): string | null {
+  // Aksesuar başlığında model_family çıkarma — "Youngkit iPhone 15 Plus Uyumlu Kılıf"
+  // iPhone 15 Plus model_family olmamalı (kılıf canonicalı).
+  if (isAccessoryTitle(title)) return null;
+
   const overrides = MODEL_FAMILY_OVERRIDES[brand];
   if (overrides) {
     const lowerTitle = title.toLowerCase();

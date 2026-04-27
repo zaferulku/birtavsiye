@@ -6,6 +6,8 @@ import {
   inferProductIdentity,
   resolveExistingProduct,
 } from "@/lib/productIdentity";
+// @ts-expect-error — .mts dosyası, tsx runtime'da resolve edilir
+import { categorizeFromTitle } from "@/lib/categorizeFromTitle";
 
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET;
 const BASE_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
@@ -110,6 +112,12 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
     return { inserted: 0, errors: 1, firstError: ["store:not_found"], newProductIds: [] };
   }
 
+  // Slug → category_id mapping (title-based override için)
+  const { data: catRows } = await sb.from("categories").select("id, slug").eq("is_active", true);
+  const slugToId = new Map<string, string>(
+    (catRows ?? []).map((c: { id: string; slug: string }) => [c.slug, c.id])
+  );
+
   let inserted = 0;
   let errors = 0;
   const firstError: string[] = [];
@@ -128,13 +136,23 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
     });
     const sourceProductId = getSourceProductId(product.url);
 
+    // Title-based dinamik kategori override:
+    // PttAVM "iphone 16 plus" query'si aksesuarları da getirebilir.
+    // categorizeFromTitle high-confidence eşleşme verirse cron category'sini override et.
+    let effectiveCategoryId = categoryId;
+    const catGuess = categorizeFromTitle(product.name);
+    if (catGuess.slug && catGuess.confidence === "high") {
+      const guessedId = slugToId.get(catGuess.slug);
+      if (guessedId) effectiveCategoryId = guessedId;
+    }
+
     let productId: string | null = null;
     let queueAgentValidation = false;
 
     let existingProduct = await resolveExistingProduct({
       sb,
       identity,
-      categoryId,
+      categoryId: effectiveCategoryId,
     });
 
     if (existingProduct) {
@@ -163,7 +181,7 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
         }
       }
     } else {
-      if (!categoryId) {
+      if (!effectiveCategoryId) {
         if (firstError.length < 3) {
           firstError.push(`product:missing_category:slug=${identity.slug}`);
         }
@@ -173,7 +191,7 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
 
       let createPayload = buildProductCreatePayload({
         identity,
-        categoryId,
+        categoryId: effectiveCategoryId,
         imageUrl: product.image,
         specs: product.specs,
       });
@@ -188,7 +206,7 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
         existingProduct = await resolveExistingProduct({
           sb,
           identity,
-          categoryId,
+          categoryId: effectiveCategoryId,
         });
 
         if (existingProduct) {
