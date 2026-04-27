@@ -26,6 +26,7 @@ import {
   sourceTrustScore,
 } from "../../../lib/listingSignals";
 import { mergeClusteredProducts } from "../../../lib/productCluster";
+import { checkAccessory } from "../../../lib/accessoryDetector";
 import {
   getDiscoveryProductLabel,
   shouldHideDiscoveryProduct,
@@ -251,9 +252,19 @@ export default async function KategoriSayfasi({ params, searchParams }: {
       }))
     );
 
+  const categorySlug = category?.slug ?? "";
   const mergedRawProducts = normalizeProducts((rawProducts as ProductCard[] | null) ?? []).filter(
     (product) => !shouldHideDiscoveryProduct(product)
-  );
+  ).filter((product) => {
+    // PAKET 1: high-confidence aksesuarlari gizle
+    const lowestPrice = getLowestActivePrice(product.prices, kaynak ?? null);
+    const acc = checkAccessory(
+      product.title ?? "",
+      categorySlug,
+      typeof lowestPrice === "number" && lowestPrice > 0 ? lowestPrice : undefined,
+    );
+    return !(acc.isAccessory && acc.confidence === "high");
+  });
   let products: ProductCard[] = mergedRawProducts.filter(
     (product) => !kaynak || visibleListingsOf(product).length > 0
   );

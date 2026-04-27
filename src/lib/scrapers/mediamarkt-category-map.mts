@@ -24,8 +24,11 @@ export const MEDIAMARKT_CATEGORY_MAP: MmCategoryTarget[] = [
       'iPhone 16', 'iPhone 16e', 'iPhone 16 Plus', 'iPhone 16 Pro', 'iPhone 16 Pro Max',
       'iPhone 17', 'iPhone 17 Pro', 'iPhone 17 Pro Max', 'iPhone 17e',
       // Diger
-      'Tuşlu Telefon', 'Yenilenmiş Cep Telefonu',
-      'iPhone Yenilenmiş Telefon', 'Yapay Zeka Destekli Telefonlar',
+      'Tuşlu Telefon',
+      // BLACKLIST — yenilenmis ve AI-flagged segmentler hic scrape edilmez (karar: 2026-04-27)
+      // 'Yenilenmiş Cep Telefonu',
+      // 'iPhone Yenilenmiş Telefon',
+      // 'Yapay Zeka Destekli Telefonlar',
     ],
     priority: 1,
   },

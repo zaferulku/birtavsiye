@@ -16,10 +16,11 @@
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { MEDIAMARKT_CATEGORY_MAP } from '../src/lib/scrapers/mediamarkt-category-map.mjs';
-import { scrapePdp, MM_STORE_UUID } from '../src/lib/scrapers/mediamarkt.mjs';
+import { scrapePdpDetailed, MM_STORE_UUID, isRefurbished } from '../src/lib/scrapers/mediamarkt.mjs';
+import { checkAccessory } from '../src/lib/accessoryDetector.mjs';
 import { fetchAllProductsFromCategory } from '../src/lib/scrapers/mediamarkt-categories.mjs';
 
-const DELAY_MS = 1500;
+const DELAY_MS = 350;
 const STATE_FILE = './scripts/scraper-state.json';
 const ONLY_DB_SLUG = process.env.ONLY_DB_SLUG || null;
 const SKIP_24H_FRESH = process.env.SKIP_24H !== '0';  // default true; SKIP_24H=0 ile bypass
@@ -351,9 +352,33 @@ async function main() {
               }
             }
 
-            const scraped = await scrapePdp(url);
-            if (!scraped) {
+            // BLACKLIST pre-filter — refurbished URL'leri scrape etme
+            if (isRefurbished({ url })) {
               state.stats.skipped++;
+              recordFailReason('refurbished_blacklist');
+              await sleep(DELAY_MS);
+              continue;
+            }
+
+            const detailed = await scrapePdpDetailed(url);
+            if (!detailed.ok) {
+              state.stats.skipped++;
+              recordFailReason('skip_' + detailed.reason);
+              await sleep(DELAY_MS);
+              continue;
+            }
+            const scraped = detailed.scraped;
+
+            // PAKET 2: aksesuar guard — high-confidence aksesuarlar DB'ye yazilmaz.
+            // price 0 ise (stoksuz urun) priceTRY=undefined geciyoruz ki price_too_low yanlis tetiklenmesin.
+            const accCheck = checkAccessory(
+              scraped.source_title || '',
+              scraped.dbSlug,
+              scraped.price > 0 ? scraped.price : undefined,
+            );
+            if (accCheck.isAccessory && accCheck.confidence === 'high') {
+              state.stats.skipped++;
+              recordFailReason('skip_accessory_' + (accCheck.matchedKeyword || 'unknown').slice(0, 30));
               await sleep(DELAY_MS);
               continue;
             }

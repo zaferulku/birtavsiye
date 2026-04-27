@@ -142,25 +142,74 @@ function extractSpecsFromHtml(html: string, sku: string): Record<string, string>
 // PDP scraper
 // -----------------------------------------------------
 
-export async function scrapePdp(pdpUrl: string): Promise<MmScrapedProduct | null> {
+// BLACKLIST — yenilenmis / refurbished urunler scrape edilmez (karar: 2026-04-27)
+export const REFURBISHED_PATTERNS: RegExp[] = [
+  /yenilenm/i,
+  /refurb/i,
+  /ikinci\s*el/i,
+  /\b2\.?\s*el\b/i,
+];
+
+export function isRefurbished(opts: {
+  title?: string;
+  url?: string;
+  breadcrumb?: { name: string }[] | string[];
+}): boolean {
+  const breadcrumbStr = Array.isArray(opts.breadcrumb)
+    ? opts.breadcrumb
+        .map((b) => (typeof b === "string" ? b : b?.name ?? ""))
+        .join(" | ")
+    : "";
+  const haystack = `${opts.title ?? ""} | ${opts.url ?? ""} | ${breadcrumbStr}`;
+  return REFURBISHED_PATTERNS.some((p) => p.test(haystack));
+}
+
+export type ScrapeFailReason =
+  | 'no_jsonld'
+  | 'no_product_type'
+  | 'no_offers'
+  | 'no_breadcrumb_match'
+  | 'no_sku'
+  | 'refurbished'
+  | 'no_price';
+
+export type ScrapeResult =
+  | { ok: true; scraped: MmScrapedProduct }
+  | { ok: false; reason: ScrapeFailReason; debugTitle?: string };
+
+export async function scrapePdpDetailed(pdpUrl: string): Promise<ScrapeResult> {
   const html = await fetchText(pdpUrl);
   const $ = cheerio.load(html);
 
   let product: any = null;
   let breadcrumb: { name: string; position: number }[] = [];
+  let jsonldFound = false;
+  let productTypeFound = false;
 
   $('script[type="application/ld+json"]').each((_, el) => {
     try {
       const txt = $(el).html()?.trim() ?? '';
       if (!txt) return;
+      jsonldFound = true;
       const data = JSON.parse(txt);
       const items = Array.isArray(data) ? data : [data];
 
       for (const item of items) {
-        // MM JSON-LD yapisi: Product BuyAction.object icinde gomulu
+        // MM JSON-LD yapisi: Product/ProductGroup BuyAction.object icinde gomulu
+        // Apple iPhone PDP'leri ProductGroup tipinde geliyor — onlari da kabul et
         const p = item.object || item.mainEntity || item;
-        if (p['@type'] === 'Product' && p.offers) {
-          product = p;
+        const t = p['@type'];
+        if (t === 'Product' || t === 'ProductGroup') {
+          productTypeFound = true;
+          if (p.offers) {
+            product = p;
+          } else if (p['@type'] === 'ProductGroup' && Array.isArray(p.hasVariant) && p.hasVariant.length > 0) {
+            // ProductGroup variant fallback: ilk variant'in offers'ini kullan
+            const firstVariant = p.hasVariant.find((v: any) => v?.offers);
+            if (firstVariant) {
+              product = { ...p, offers: firstVariant.offers, sku: firstVariant.sku ?? p.sku };
+            }
+          }
         } else if (p['@type'] === 'BreadcrumbList' && Array.isArray(p.itemListElement)) {
           breadcrumb = p.itemListElement.map((b: any) => ({
             position: b.position,
@@ -171,14 +220,28 @@ export async function scrapePdp(pdpUrl: string): Promise<MmScrapedProduct | null
     } catch { /* parse fail, atla */ }
   });
 
-  if (!product) return null;
+  if (!jsonldFound) return { ok: false, reason: 'no_jsonld' };
+  if (!productTypeFound) return { ok: false, reason: 'no_product_type' };
+  if (!product) return { ok: false, reason: 'no_offers' };
 
   const matchResult = findDbSlugForMmBreadcrumb(breadcrumb);
-  if (!matchResult) return null;
+  if (!matchResult) {
+    return {
+      ok: false,
+      reason: 'no_breadcrumb_match',
+      debugTitle: String(product.name ?? '').slice(0, 50),
+    };
+  }
   const { dbSlug, matchedSegment } = matchResult;
 
   const sku = String(product.sku ?? '').trim();
-  if (!sku) return null;
+  if (!sku) return { ok: false, reason: 'no_sku' };
+
+  // BLACKLIST guard — yenilenmis urunler scrape edilmez
+  const productTitle = String(product.name ?? '').trim();
+  if (isRefurbished({ title: productTitle, url: pdpUrl, breadcrumb })) {
+    return { ok: false, reason: 'refurbished', debugTitle: productTitle.slice(0, 50) };
+  }
 
   const sourceCategory: string | null = matchedSegment;
 
@@ -186,10 +249,11 @@ export async function scrapePdp(pdpUrl: string): Promise<MmScrapedProduct | null
     ? product.image.filter((u: any) => typeof u === 'string')
     : (typeof product.image === 'string' ? [product.image] : []);
 
-  const price = Number(product.offers?.price ?? 0);
-  if (!price || price < 1) return null;
-
-  const inStock = String(product.offers?.availability ?? '').includes('InStock');
+  // Fiyat 0/null OK — stoksuz urunleri de kabul ediyoruz (urun olusturmak icin),
+  // diger sitelerden fiyat geldiginde eslesir. in_stock=false olur.
+  const rawPrice = Number(product.offers?.price ?? 0);
+  const price = isFinite(rawPrice) && rawPrice > 0 ? rawPrice : 0;
+  const inStock = price > 0 && String(product.offers?.availability ?? '').includes('InStock');
   const shippingValue = product.offers?.shippingDetails?.shippingRate?.value;
   const freeShipping = shippingValue === 0 || shippingValue === '0';
 
@@ -200,24 +264,33 @@ export async function scrapePdp(pdpUrl: string): Promise<MmScrapedProduct | null
   const specs = extractSpecsFromHtml(html, sku);
 
   return {
-    source_product_id: sku,
-    source_url: pdpUrl,
-    affiliate_url: affiliate,
-    source_title: String(product.name ?? '').trim(),
-    source_category: sourceCategory,
-    price,
-    currency: 'TRY',
-    free_shipping: freeShipping,
-    in_stock: inStock,
-    raw_images: images,
-    raw_description: typeof product.description === 'string' ? product.description : null,
-    raw_specs: specs,
-    gtin13: typeof product.gtin13 === 'string' ? product.gtin13 : null,
-    brand: typeof product.brand === 'object' ? product.brand?.name ?? null : null,
-    name: String(product.name ?? '').trim(),
-    dbSlug,
-    breadcrumb,
+    ok: true,
+    scraped: {
+      source_product_id: sku,
+      source_url: pdpUrl,
+      affiliate_url: affiliate,
+      source_title: String(product.name ?? '').trim(),
+      source_category: sourceCategory,
+      price,
+      currency: 'TRY',
+      free_shipping: freeShipping,
+      in_stock: inStock,
+      raw_images: images,
+      raw_description: typeof product.description === 'string' ? product.description : null,
+      raw_specs: specs,
+      gtin13: typeof product.gtin13 === 'string' ? product.gtin13 : null,
+      brand: typeof product.brand === 'object' ? product.brand?.name ?? null : null,
+      name: String(product.name ?? '').trim(),
+      dbSlug,
+      breadcrumb,
+    },
   };
+}
+
+// Legacy wrapper — eski consumer'lar (scrape-mediamarkt-pilot.mjs) icin
+export async function scrapePdp(pdpUrl: string): Promise<MmScrapedProduct | null> {
+  const r = await scrapePdpDetailed(pdpUrl);
+  return r.ok ? r.scraped : null;
 }
 
 // -----------------------------------------------------
@@ -226,7 +299,7 @@ export async function scrapePdp(pdpUrl: string): Promise<MmScrapedProduct | null
 
 let cachedCookies: string = '';
 
-async function fetchText(url: string): Promise<string> {
+async function fetchText(url: string, attempt: number = 0): Promise<string> {
   const headers: Record<string, string> = {
     'User-Agent': USER_AGENT,
     'Accept': 'text/html,application/xhtml+xml,application/xml,text/xml;q=0.9,*/*;q=0.8',
@@ -240,6 +313,14 @@ async function fetchText(url: string): Promise<string> {
   if (setCookie) {
     const cfMatch = setCookie.match(/(__cf_bm|_cfuvid)=([^;]+)/g);
     if (cfMatch) cachedCookies = cfMatch.join('; ');
+  }
+
+  // 503 — Cloudflare cookie reset + 1 retry
+  if (res.status === 503 && attempt < 1) {
+    console.warn(`  [503] cookie reset + retry: ${url.slice(-60)}`);
+    cachedCookies = '';
+    await new Promise((r) => setTimeout(r, 5000));
+    return fetchText(url, attempt + 1);
   }
 
   if (!res.ok) throw new Error(`Fetch ${url}: ${res.status}`);
