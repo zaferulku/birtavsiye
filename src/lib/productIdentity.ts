@@ -991,6 +991,16 @@ function chooseSingleCandidate(
   categoryId?: string
 ): ExistingProductRow | null {
   if (candidates.length === 0) return null;
+
+  // If categoryId is given, restrict to same-category candidates so accessory
+  // listings cannot snap onto a phone canonical that just happens to share
+  // brand/family/slug.
+  if (categoryId) {
+    const sameCategory = candidates.filter((c) => c.category_id === categoryId);
+    if (sameCategory.length === 0) return null;
+    candidates = sameCategory;
+  }
+
   if (candidates.length === 1) return candidates[0];
 
   const sameCategory = categoryId
@@ -1070,9 +1080,14 @@ export async function resolveExistingProduct({
     .from("products")
     .select(PRODUCT_FIELDS)
     .eq("slug", identity.slug)
-    .limit(2);
-  if (bySlug && bySlug.length === 1) {
-    return bySlug[0] as ExistingProductRow;
+    .limit(5);
+  if (bySlug && bySlug.length > 0) {
+    if (categoryId) {
+      const sameCategory = bySlug.filter((p) => p.category_id === categoryId);
+      if (sameCategory.length === 1) return sameCategory[0] as ExistingProductRow;
+    } else if (bySlug.length === 1) {
+      return bySlug[0] as ExistingProductRow;
+    }
   }
 
   if (!identity.modelFamily) return null;

@@ -28,24 +28,54 @@ const sb = createClient(
 
 const DRY = process.env.DRY_RUN === "1";
 
-// Aksesuar göstergeleri (source_title'da varsa listing aksesuar)
-const ACC_KEYWORDS = [
-  "uyumlu", "kılıf", "kapak", "case", "cover",
-  "ekran koruyucu", "cam koruyucu", "kamera lens", "kamera koruma",
-  "kordon", "kayış", "tutucu", "stand",
-  "şarj kablo", "powerbank", "kulaklık", "airpods kapak", "airpods kılıf",
-  "lens koruyucu", "iç speaker", "iç hoparlör",
+// "uyumlu" en güçlü aftermarket göstergesi: aftermarket bir aksesuarın başlığı
+// neredeyse her zaman "<Marka> <Model> uyumlu" kalıbıyla başlar.
+const STRONG_AFTERMARKET = ["uyumlu"];
+
+// Tek başına yüksek kesinlikle aksesuar belirten kelimeler (gerçek bir telefon/watch/
+// tablet/kulaklık/buzdolabı başlığında nadiren bağımsız geçer).
+const UNAMBIGUOUS_ACC = [
+  "kılıf", "kapak",
+  "ekran koruyucu", "cam koruyucu", "tempered glass", "temperli cam",
+  "kamera lens koruyucu", "lens koruyucu", "kamera koruma lens",
+  "şarj kablo", "şarj cihaz", "şarj adaptör", "data kablo",
+  "powerbank", "power bank", "taşınabilir şarj",
+  "airpods kapak", "airpods kılıf",
+  "iç speaker", "iç hoparlör", "lcd panel", "yedek pil",
+  "flash bellek", "usb hub", "otg kablo", "otg adaptör",
+  "hafıza kartı", "sd kart", "micro sd", "memory card",
+  "type c girişli flash",
 ];
+
+const ACC_KEYWORDS = [...STRONG_AFTERMARKET, ...UNAMBIGUOUS_ACC];
+
+// Listing aksesuar mı? "uyumlu" varsa kesin aftermarket — başka kelime şart değil.
+// Yoksa kesin aksesuar kelimesi olmalı. ("case", "cover", "kordon", "kayış" gibi
+// muğlak kelimeler tek başına yetmez — gerçek ürün başlığında da geçebiliyor.)
+function isAccessoryListing(title: string): boolean {
+  if (STRONG_AFTERMARKET.some((kw) => trMatchKeyword(title, kw))) return true;
+  if (UNAMBIGUOUS_ACC.some((kw) => trMatchKeyword(title, kw))) return true;
+  return false;
+}
 
 // Title pattern → target slug
 const PATTERN_TO_SLUG: Array<[RegExp, string]> = [
-  [/(şarj kablo|şarj alet|şarj cihaz|şarj adaptör|usb-c kablo|lightning kablo|qi2|kablosuz şarj|magsafe.*şarj)/i, "sarj-kablo"],
-  [/(powerbank|power bank|taşınabilir şarj|harici batarya)/i, "powerbank"],
-  [/(ekran koruyucu|cam koruyucu|tempered glass|temperli cam|9d cam|9h cam|kırılmaz cam|nano cam|hayalet ekran|jelly cam|seramik koruyucu)/i, "ekran-koruyucu"],
-  [/(bluetooth kulaklık|kablosuz kulaklık|tws kulaklık|earbuds|airpods (?!kapak|kılıf))/i, "ses-kulaklik"],
-  [/(iç speaker|iç hoparlör|lcd panel|lcd dokunmatik|yedek pil|yedek batarya|orjinal pil|sim tray|şarj soketi|vibratör motor|titreşim motoru|flex kablo)/i, "telefon-yedek-parca"],
-  [/(selfie çubuğu|selfie stick|popsocket|telefon tutucu|araç tutucu|stylus kalem|lens koruyucu|kamera lens koruyucu|gimbal|tripod)/i, "telefon-aksesuar"],
-  [/(kılıf|kapak|case|cover|airbag|cüzdanlı|silikon kapak|deri kılıf|magsafe kılıf)/i, "telefon-kilifi"],
+  // Şarj/kablo (geniş)
+  [/(şarj kablo|şarj alet|şarj cihaz|şarj adaptör|usb-c kablo|usb c kablo|lightning kablo|type-c kablo|type c kablo|qi2|kablosuz şarj|wireless charger|magsafe.*şarj|şarj seti|şarj istasyon|şarj dock|otg kablo|otg adaptör|usb hub|data kablo)/i, "sarj-kablo"],
+  // Powerbank
+  [/(powerbank|power bank|taşınabilir şarj|harici batarya|magsafe powerbank)/i, "powerbank"],
+  // Hafıza/flash
+  [/(flash bellek|hafıza kartı|sd kart|micro sd|memory card|usb stick|usb flash|type c girişli flash|type-c.*flash bellek)/i, "telefon-aksesuar"],
+  // Ekran koruyucu
+  [/(ekran koruyucu|cam koruyucu|tempered glass|temperli cam|9d cam|9h cam|kırılmaz cam|nano cam|hayalet ekran|jelly cam|seramik koruyucu|film koruyucu)/i, "ekran-koruyucu"],
+  // Kulaklık
+  [/(bluetooth kulaklık|kablosuz kulaklık|tws kulaklık|earbuds|airpods (?!kapak|kılıf)|anc kulaklık)/i, "ses-kulaklik"],
+  // Yedek parça
+  [/(iç speaker|iç hoparlör|lcd panel|lcd dokunmatik|yedek pil|yedek batarya|orjinal pil|sim tray|sim yuva|şarj soketi|vibratör motor|titreşim motoru|flex kablo|telefon anakart|kamera değişim|ekran değişim|şarj portu yedek)/i, "telefon-yedek-parca"],
+  // Genel aksesuar (tutucu/stand/lens koruma/selfie/kamera lens/kordon/kayış)
+  [/(selfie çubuğu|selfie stick|popsocket|telefon tutucu|araç tutucu|stylus kalem|lens koruyucu|kamera lens|metal kamera lens|kamera koruma lens|kamera koruma|metal çerçeveli kamera|gimbal|tripod|monopod|kordon|kayış|saat kordonu|saat kayışı|silikon kordon|hasır kordon|deri kordon|spor kordon|metal kordon|dokunmatik lens)/i, "telefon-aksesuar"],
+  // Kılıf/kapak (fallback)
+  [/(kılıf|kapak|case|cover|airbag|cüzdanlı|silikon kapak|deri kılıf|magsafe kılıf|hasır kılıf|spigen|ringke|gpack|youngkit)/i, "telefon-kilifi"],
 ];
 
 interface ListingRow {
@@ -62,32 +92,66 @@ async function main() {
   const slugToId = new Map<string, string>(
     (cats ?? []).map((c) => [c.slug, c.id])
   );
-  const PHONE_CAT = slugToId.get("akilli-telefon");
-  if (!PHONE_CAT) throw new Error("akilli-telefon kategorisi bulunamadı");
 
-  // Aksesuar source_title'lı + akilli-telefon canonical'a bağlı listing'leri çek
+  // Yanlış kategoriye düşmüş aksesuar tarama hedefleri (kategori → kabul edilen "ana ürün" slug'ları).
+  // Bir aksesuar listing'i bu kategorilerden birinin canonical'ına bağlıysa relink edilir.
+  const SCAN_CATEGORY_SLUGS = [
+    "akilli-telefon",
+    "laptop",
+    "tablet",
+    "akilli-saat",
+    "ses-kulaklik",
+    "kulaklik",
+    "buzdolabi",
+    "camasir-makinesi",
+    "bulasik-makinesi",
+    "firin",
+    "tv",
+    "klima",
+  ];
+  const SCAN_CAT_IDS = new Set(
+    SCAN_CATEGORY_SLUGS.map((s) => slugToId.get(s)).filter((x): x is string => Boolean(x))
+  );
+  if (SCAN_CAT_IDS.size === 0) throw new Error("Hiçbir tarama kategorisi bulunamadı");
+
+  // Aksesuar source_title'lı + ana ürün kategorisi canonical'a bağlı listing'leri çek
   const candidates: ListingRow[] = [];
   let from = 0;
   while (true) {
     const { data } = await sb
       .from("listings")
       .select("id,source_title,product_id,source_url,products!inner(category_id)")
-      .eq("is_active", true)
       .range(from, from + 999);
     if (!data?.length) break;
     for (const l of data) {
       const t = l.source_title || "";
-      const isAcc = ACC_KEYWORDS.some((kw) => trMatchKeyword(t, kw));
       // @ts-expect-error nested type
       const cat = l.products?.category_id;
-      if (isAcc && cat === PHONE_CAT) {
-        candidates.push(l as ListingRow);
-      }
+      if (!cat || !SCAN_CAT_IDS.has(cat)) continue;
+
+      // Telefon kategorisi için lenient: "uyumlu" YA DA kesin aksesuar kelimesi yeterli.
+      // Diğer kategoriler (saat/tablet/laptop/kulaklık/buzdolabı/...) için strict:
+      // mutlaka "uyumlu" kelimesi olmalı (gerçek-ürün bundle'larını yanlış işaretlememek için).
+      const phoneCatId = slugToId.get("akilli-telefon");
+      const isPhone = cat === phoneCatId;
+      const isAcc = isPhone
+        ? isAccessoryListing(t)
+        : trMatchKeyword(t, "uyumlu");
+      if (isAcc) candidates.push(l as ListingRow);
     }
     if (data.length < 1000) break;
     from += 1000;
   }
   console.log(`Yanlış-bağlanmış aksesuar listing: ${candidates.length}`);
+  if (process.env.DEBUG === "1") {
+    for (const c of candidates) {
+      let slug: string | null = null;
+      for (const [pat, s] of PATTERN_TO_SLUG) {
+        if (pat.test(c.source_title || "")) { slug = s; break; }
+      }
+      console.log(`  [${slug ?? "NO-MATCH"}] ${(c.source_title || "").slice(0, 100)}`);
+    }
+  }
 
   let relinked = 0;
   let createdNew = 0;

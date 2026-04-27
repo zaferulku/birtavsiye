@@ -206,7 +206,8 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   let query = supabaseAdmin
     .from("products")
     .select("id, title, slug, brand, description, image_url, specs, category_id, model_code, model_family, variant_storage, variant_color, created_at, prices:listings(id, price, source, is_active, in_stock, last_seen)")
-    .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""]);
+    .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""])
+    .eq("is_active", true);
 
   if (selectedBrands.length === 1) query = query.eq("brand", selectedBrands[0]);
   if (selectedModels.length === 1) query = query.eq("model_family", selectedModels[0]);
@@ -220,7 +221,8 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   const allBrandsPromise = supabaseAdmin
     .from("products")
     .select("id, title, slug, brand, image_url, specs, category_id, model_code, model_family, variant_storage, variant_color, created_at, prices:listings(id, price, source, is_active, in_stock, last_seen)")
-    .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""]);
+    .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""])
+    .eq("is_active", true);
   const mainPromise = query.limit(300);
   const [mainRes, allRes] = await Promise.all([mainPromise, allBrandsPromise]);
   const { data: rawProducts } = mainRes;

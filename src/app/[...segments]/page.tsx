@@ -118,6 +118,7 @@ export default async function Page({ params, searchParams }: PageProps) {
       .ilike("brand", brandGuess)
       .in("category_id", descendantIds.length > 0 ? descendantIds : [leafCategory?.id ?? ""])
       .not("model_family", "is", null)
+      .eq("is_active", true)
       .limit(1000);
 
     type Row = {
