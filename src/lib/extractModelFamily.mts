@@ -355,6 +355,96 @@ const GENERAL_MOBILE_PATTERNS: Array<{ regex: RegExp; canonical: string }> = [
   { regex: /GM\s*20\b/i, canonical: "GM 20" },
 ];
 
+const TABLET_PATTERNS: Array<{ regex: RegExp; canonical: string }> = [
+  // Apple iPad
+  { regex: /iPad\s*Pro\s*M5/i, canonical: "iPad Pro M5" },
+  { regex: /iPad\s*Pro\s*M4/i, canonical: "iPad Pro M4" },
+  { regex: /iPad\s*Pro\s*13/i, canonical: "iPad Pro 13" },
+  { regex: /iPad\s*Pro\s*11/i, canonical: "iPad Pro 11" },
+  { regex: /iPad\s*Pro/i, canonical: "iPad Pro" },
+  { regex: /iPad\s*Air\s*M3/i, canonical: "iPad Air M3" },
+  { regex: /iPad\s*Air\s*M2/i, canonical: "iPad Air M2" },
+  { regex: /iPad\s*Air/i, canonical: "iPad Air" },
+  { regex: /iPad\s*Mini\s*7/i, canonical: "iPad Mini 7" },
+  { regex: /iPad\s*Mini/i, canonical: "iPad Mini" },
+  { regex: /iPad\s*A16/i, canonical: "iPad A16" },
+  { regex: /iPad\s*11/i, canonical: "iPad 11" },
+  { regex: /iPad\s*10/i, canonical: "iPad 10" },
+  { regex: /iPad/i, canonical: "iPad" },
+  // Samsung Galaxy Tab
+  { regex: /Galaxy\s*Tab\s*S11\s*Ultra/i, canonical: "Galaxy Tab S11 Ultra" },
+  { regex: /Galaxy\s*Tab\s*S11\+/i, canonical: "Galaxy Tab S11+" },
+  { regex: /Galaxy\s*Tab\s*S11/i, canonical: "Galaxy Tab S11" },
+  { regex: /Galaxy\s*Tab\s*S10\s*Ultra/i, canonical: "Galaxy Tab S10 Ultra" },
+  { regex: /Galaxy\s*Tab\s*S10\+/i, canonical: "Galaxy Tab S10+" },
+  { regex: /Galaxy\s*Tab\s*S10/i, canonical: "Galaxy Tab S10" },
+  { regex: /Galaxy\s*Tab\s*S9\s*FE/i, canonical: "Galaxy Tab S9 FE" },
+  { regex: /Galaxy\s*Tab\s*S9\s*Ultra/i, canonical: "Galaxy Tab S9 Ultra" },
+  { regex: /Galaxy\s*Tab\s*S9\+/i, canonical: "Galaxy Tab S9+" },
+  { regex: /Galaxy\s*Tab\s*S9/i, canonical: "Galaxy Tab S9" },
+  { regex: /Galaxy\s*Tab\s*A9\+/i, canonical: "Galaxy Tab A9+" },
+  { regex: /Galaxy\s*Tab\s*A9/i, canonical: "Galaxy Tab A9" },
+  // Huawei MatePad
+  { regex: /MatePad\s*Pro\s*13/i, canonical: "MatePad Pro 13" },
+  { regex: /MatePad\s*Pro\s*11/i, canonical: "MatePad Pro 11" },
+  { regex: /MatePad\s*Pro/i, canonical: "MatePad Pro" },
+  { regex: /MatePad\s*11\.5\s*S/i, canonical: "MatePad 11.5 S" },
+  { regex: /MatePad\s*11/i, canonical: "MatePad 11" },
+  { regex: /MatePad/i, canonical: "MatePad" },
+  // Xiaomi Pad
+  { regex: /Xiaomi\s*Pad\s*7\s*Pro/i, canonical: "Xiaomi Pad 7 Pro" },
+  { regex: /Xiaomi\s*Pad\s*7/i, canonical: "Xiaomi Pad 7" },
+  { regex: /Xiaomi\s*Pad\s*6\s*Pro/i, canonical: "Xiaomi Pad 6 Pro" },
+  { regex: /Xiaomi\s*Pad\s*6/i, canonical: "Xiaomi Pad 6" },
+  { regex: /Redmi\s*Pad\s*Pro/i, canonical: "Redmi Pad Pro" },
+  { regex: /Redmi\s*Pad/i, canonical: "Redmi Pad" },
+  // Lenovo
+  { regex: /Lenovo\s*Tab\s*M11/i, canonical: "Lenovo Tab M11" },
+  { regex: /Lenovo\s*Tab\s*P12/i, canonical: "Lenovo Tab P12" },
+  { regex: /Lenovo\s*Tab\s*P11/i, canonical: "Lenovo Tab P11" },
+  { regex: /Lenovo\s*Tab/i, canonical: "Lenovo Tab" },
+];
+
+const WATCH_PATTERNS: Array<{ regex: RegExp; canonical: string }> = [
+  // Apple Watch
+  { regex: /Watch\s*Ultra\s*3/i, canonical: "Apple Watch Ultra 3" },
+  { regex: /Watch\s*Ultra\s*2/i, canonical: "Apple Watch Ultra 2" },
+  { regex: /Watch\s*Ultra/i, canonical: "Apple Watch Ultra" },
+  { regex: /Watch\s*Series\s*11/i, canonical: "Apple Watch Series 11" },
+  { regex: /Watch\s*Series\s*10/i, canonical: "Apple Watch Series 10" },
+  { regex: /Watch\s*Series\s*9/i, canonical: "Apple Watch Series 9" },
+  { regex: /Watch\s*Series\s*8/i, canonical: "Apple Watch Series 8" },
+  { regex: /Watch\s*Series\s*7/i, canonical: "Apple Watch Series 7" },
+  { regex: /Watch\s*SE\s*3/i, canonical: "Apple Watch SE 3" },
+  { regex: /Watch\s*SE\s*2/i, canonical: "Apple Watch SE 2" },
+  { regex: /Watch\s*SE/i, canonical: "Apple Watch SE" },
+  // Samsung
+  { regex: /Galaxy\s*Watch\s*Ultra/i, canonical: "Galaxy Watch Ultra" },
+  { regex: /Galaxy\s*Watch\s*8\s*Classic/i, canonical: "Galaxy Watch 8 Classic" },
+  { regex: /Galaxy\s*Watch\s*8/i, canonical: "Galaxy Watch 8" },
+  { regex: /Galaxy\s*Watch\s*7/i, canonical: "Galaxy Watch 7" },
+  { regex: /Galaxy\s*Watch\s*6\s*Classic/i, canonical: "Galaxy Watch 6 Classic" },
+  { regex: /Galaxy\s*Watch\s*6/i, canonical: "Galaxy Watch 6" },
+  { regex: /Galaxy\s*Watch\s*FE/i, canonical: "Galaxy Watch FE" },
+  // Huawei
+  { regex: /Huawei\s*Watch\s*GT\s*5/i, canonical: "Huawei Watch GT 5" },
+  { regex: /Huawei\s*Watch\s*GT\s*4/i, canonical: "Huawei Watch GT 4" },
+  { regex: /Huawei\s*Watch\s*Ultimate/i, canonical: "Huawei Watch Ultimate" },
+  { regex: /Huawei\s*Watch\s*D2/i, canonical: "Huawei Watch D2" },
+  // Xiaomi
+  { regex: /Xiaomi\s*Watch\s*S4/i, canonical: "Xiaomi Watch S4" },
+  { regex: /Xiaomi\s*Watch\s*S3/i, canonical: "Xiaomi Watch S3" },
+  { regex: /Mi\s*Band\s*9/i, canonical: "Xiaomi Mi Band 9" },
+  { regex: /Mi\s*Band\s*8/i, canonical: "Xiaomi Mi Band 8" },
+  // Garmin
+  { regex: /Garmin\s*Fenix\s*8/i, canonical: "Garmin Fenix 8" },
+  { regex: /Garmin\s*Fenix\s*7/i, canonical: "Garmin Fenix 7" },
+  { regex: /Garmin\s*Forerunner\s*265/i, canonical: "Garmin Forerunner 265" },
+  { regex: /Garmin\s*Forerunner/i, canonical: "Garmin Forerunner" },
+  { regex: /Garmin\s*Venu\s*3/i, canonical: "Garmin Venu 3" },
+  { regex: /Garmin\s*Descent\s*Mk2S/i, canonical: "Garmin Descent Mk2S" },
+];
+
 const APPLE_SKU_REGEX = /\b([A-Z]{2}[A-Z0-9]{2,6}TU\/A)\b/i;
 const NUMERIC_SKU_REGEX = /^\d{6,13}$/;
 
@@ -447,6 +537,20 @@ export function extractModelFamily(title: string, brand?: string | null): ModelE
 
   if (/general\s*mobile|gm\s/i.test(title) || brandLower === "general mobile") {
     for (const { regex, canonical } of GENERAL_MOBILE_PATTERNS) {
+      if (regex.test(title)) return { family: canonical, code };
+    }
+  }
+
+  // Tablet patterns (iPad/Galaxy Tab/MatePad/Xiaomi Pad/Lenovo Tab)
+  if (/ipad|galaxy\s*tab|matepad|xiaomi\s*pad|redmi\s*pad|lenovo\s*tab/i.test(title)) {
+    for (const { regex, canonical } of TABLET_PATTERNS) {
+      if (regex.test(title)) return { family: canonical, code };
+    }
+  }
+
+  // Akilli saat patterns (Apple Watch/Galaxy Watch/Huawei Watch/Garmin/Mi Band)
+  if (/\bwatch\b|mi\s*band|fenix|forerunner/i.test(title)) {
+    for (const { regex, canonical } of WATCH_PATTERNS) {
       if (regex.test(title)) return { family: canonical, code };
     }
   }
