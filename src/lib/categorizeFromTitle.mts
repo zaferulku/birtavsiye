@@ -27,7 +27,12 @@ const RULES: CategoryRule[] = [
   {
     slug: "telefon-kilifi",
     keywords: ["telefon kılıfı", "silikon kılıf", "kılıf siyah", "kılıf gold", "kılıf şeffaf",
-               "uyumlu kılıf", "uyumlu silikon", "silikon kapak", "arka kapak", "cüzdanlı kılıf"],
+               "uyumlu kılıf", "uyumlu silikon", "silikon kapak", "arka kapak", "cüzdanlı kılıf",
+               "kılıf negro", "kılıf first", "kılıf silikon", "kılıf airbagli", "kılıf mat",
+               "kılıf kamera korumalı", "kılıf biye", "kılıf bright simli", "kılıf kelvin",
+               "kılıf renkli", "kılıf resimli", "kılıf yumuşak", "kılıf darbeye",
+               "kılıf magnum", "kılıf kapaklı", "kılıf aras deri", "kılıf ananas"],
+    excludeIfPresent: ["watch", "ipad", "tablet", "tv "],
     confidence: "high",
   },
   {
@@ -39,7 +44,10 @@ const RULES: CategoryRule[] = [
   {
     slug: "sarj-kablo",
     keywords: ["şarj kablosu", "usb-c kablo", "lightning kablo", "type-c kablo",
-               "data kablosu", "fast charge kablo"],
+               "data kablosu", "fast charge kablo",
+               "şarj aleti", "şarj adaptörü", "güç adaptörü", "süper hızlı şarj",
+               "type-c süper hızlı", "laptop şarj aleti", "adaptör plastik kasa",
+               "type-c / usb kablo"],
     confidence: "high",
   },
   {
@@ -47,13 +55,22 @@ const RULES: CategoryRule[] = [
     keywords: ["telefon tutucu", "araç tutucu", "selfie çubuğu", "selfie stick",
                "popsocket", "yüzük tutucu", "telefon askısı", "boyun askısı",
                "watch kordon", "saat kordon", "kordon naylon", "kamera lens koruyucu",
-               "magsafe", "stylus kalem", "dokunmatik kalem"],
+               "magsafe", "stylus kalem", "dokunmatik kalem",
+               "kordon", "kayış silikon", "süet kordon", "metal tokalı",
+               "kamera lens", "raze metal kamera", "watch kasa", "watch kılıf",
+               "watch gard", "watch ekran koruma", "kasa koruyucu watch", "watch ppma"],
+    excludeIfPresent: ["tv askı", "akıllı saat ", "smart watch ", "akıllı telefon"],
     confidence: "high",
   },
   {
     slug: "tv-aksesuar",
     keywords: ["tv duvar askı", "tv standı", "tv sehpası", "tv kumandası", "uzaktan kumanda",
-               "smart tv kumanda", "hdmi kablosu", "uydu alıcı"],
+               "smart tv kumanda", "hdmi kablosu", "uydu alıcı",
+               "tv askı aparatı", "askı aparatı", "tavan askı", "askı aparat",
+               "lcd led tv", "tv mönitör", "tv lcd led", "tv duvar",
+               "smart tv akıllı kumanda", "tv kumanda", "tv evolution kit",
+               "tüplü televizyon kumandası", "ses komutlu kumanda", "android tv kumanda",
+               "android tv box", "tv yedek kumandası"],
     confidence: "high",
   },
   {
@@ -67,7 +84,10 @@ const RULES: CategoryRule[] = [
   {
     slug: "telefon-yedek-parca",
     keywords: ["batarya pil", "telefon pili", "telefon bataryası", "yedek pil",
-               "lcd dokunmatik", "lcd ekran", "yedek ekran", "uyumlu pil", "uyumlu batarya"],
+               "lcd dokunmatik", "lcd ekran", "yedek ekran", "uyumlu pil", "uyumlu batarya",
+               "pil batarya", "şarj soketi", "arka pil batarya kapağı", "batarya kapağı",
+               "güçlendirilmiş batarya", "ithal pil", "lenovo pil", "kamera pili",
+               "kamera bataryası", "şarj cihazı dock"],
     confidence: "high",
   },
 
@@ -76,7 +96,38 @@ const RULES: CategoryRule[] = [
     slug: "oyun-konsol",
     keywords: ["nintendo switch", "playstation 5", "ps5 konsol", "xbox series",
                "switch konsol", "ps4 konsol", "ps5 dualsense", "joy-con",
-               "kontrolfreek", "oyun kolu", "gamepad"],
+               "kontrolfreek", "oyun kolu", "gamepad",
+               "retro oyun konsolu", "taşınabilir oyun konsolu", "video oyun konsolu",
+               "oyun konsolu", "atari ", "hdmi oyun konsolu", "emülatör destekli",
+               "klasik oyunlu", "1000 oyun yüklü", "oyun yüklü"],
+    confidence: "high",
+  },
+
+  // --- Bilgisayar bileşenleri (RAM/SSD/Anakart vs) ---
+  {
+    slug: "bilgisayar-bilesenleri",
+    keywords: ["ddr4 ram", "ddr5 ram", "ddr4 bellek", "ddr5 bellek", "ecc rdimm",
+               "rdimm", "udimm", "sodimm", "ssd nvme", "ssd m.2", "ssd sata",
+               "tb ssd ", "gb ssd ", "pc4-2133", "pc5-", "ram bellek",
+               "8gb ddr4", "16gb ddr4", "32gb ddr4", "64gb ddr4", "ddr4 2133",
+               "soğutucu pad", "notebook soğutucu"],
+    excludeIfPresent: ["telefon", "tablet"],
+    confidence: "high",
+  },
+
+  // --- Klima ---
+  {
+    slug: "klima",
+    keywords: ["btu klima", "duvar tipi split", "windfree", "multi inverter",
+               "inverter klima", "9000 btu", "12000 btu", "18000 btu", "24000 btu",
+               "duvar tipi multi"],
+    confidence: "high",
+  },
+
+  // --- Mikrodalga ---
+  {
+    slug: "mikrodalga",
+    keywords: ["mikrodalga", "ankastre mikrodalga", "dijital mikrodalga", "retro mikrodalga"],
     confidence: "high",
   },
 
@@ -84,9 +135,13 @@ const RULES: CategoryRule[] = [
   {
     slug: "akilli-saat",
     keywords: ["akıllı saat", "smart watch", "smartwatch", "fitness saat", "spor saati",
-               "garmin fenix", "garmin forerunner", "apple watch series", "apple watch ultra",
-               "galaxy watch ", "huawei watch gt", "xiaomi watch s", "mi band"],
-    excludeIfPresent: ["kordon", "kasa koruyucu", "ekran koruyucu", "kılıf"],
+               "garmin fenix", "garmin forerunner", "garmin descent", "garmin venu",
+               "apple watch series", "apple watch ultra",
+               "galaxy watch ", "huawei watch gt", "xiaomi watch s", "mi band",
+               "vivowatch", "asus vivowatch", "smartwatch silikon", "watch s88",
+               "imıkı sf1", "linktech watch"],
+    excludeIfPresent: ["kordon", "kasa koruyucu", "ekran koruyucu", "kılıf",
+                        "watch gard", "watch ppma", "watch kasa", "watch kayış"],
     confidence: "high",
   },
 
@@ -239,8 +294,23 @@ const RULES: CategoryRule[] = [
   {
     slug: "televizyon",
     keywords: ["smart tv", "led tv", "oled tv", "qled tv", "uhd tv", "4k tv", "8k tv",
-               "android tv", "google tv"],
-    excludeIfPresent: ["askı", "kumanda", "duvar", "stand", "kablosu"],
+               "android tv", "google tv",
+               "ultra hd (4k) tv", "tv 4k", "55 inç tv", "65 inç tv", "75 inç tv",
+               "lg ultra hd", "tcl 4k", "samsung qled", "beko crystal pro"],
+    excludeIfPresent: ["askı", "kumanda", "duvar", "stand", "kablosu", "yedek"],
+    confidence: "high",
+  },
+
+  // --- Buzdolabı/Beyaz eşya ek ---
+  {
+    slug: "firin-ocak",
+    keywords: ["ocaklı", "ocaklı fırın", "siemens fırın", "ankastre buhar destekli"],
+    confidence: "high",
+  },
+  {
+    slug: "guvenlik-kamerasi",
+    keywords: ["güvenlik kamerası", "outdoor güvenlik", "dış mekan güvenlik kamerası",
+               "wi-fi 5mp outdoor", "ip kamera"],
     confidence: "high",
   },
 ];
