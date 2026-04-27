@@ -445,6 +445,132 @@ const WATCH_PATTERNS: Array<{ regex: RegExp; canonical: string }> = [
   { regex: /Garmin\s*Descent\s*Mk2S/i, canonical: "Garmin Descent Mk2S" },
 ];
 
+const LAPTOP_PATTERNS: Array<{ regex: RegExp; canonical: string }> = [
+  // Apple MacBook
+  { regex: /MacBook\s*Pro\s*M5/i, canonical: "MacBook Pro M5" },
+  { regex: /MacBook\s*Pro\s*M4/i, canonical: "MacBook Pro M4" },
+  { regex: /MacBook\s*Pro\s*M3/i, canonical: "MacBook Pro M3" },
+  { regex: /MacBook\s*Pro/i, canonical: "MacBook Pro" },
+  { regex: /MacBook\s*Air\s*M4/i, canonical: "MacBook Air M4" },
+  { regex: /MacBook\s*Air\s*M3/i, canonical: "MacBook Air M3" },
+  { regex: /MacBook\s*Air\s*M2/i, canonical: "MacBook Air M2" },
+  { regex: /MacBook\s*Air/i, canonical: "MacBook Air" },
+  // ASUS
+  { regex: /Vivobook\s*16\b/i, canonical: "ASUS Vivobook 16" },
+  { regex: /Vivobook\s*15\b/i, canonical: "ASUS Vivobook 15" },
+  { regex: /Vivobook\s*14\b/i, canonical: "ASUS Vivobook 14" },
+  { regex: /Vivobook/i, canonical: "ASUS Vivobook" },
+  { regex: /Zenbook\s*Pro/i, canonical: "ASUS Zenbook Pro" },
+  { regex: /Zenbook\s*14/i, canonical: "ASUS Zenbook 14" },
+  { regex: /Zenbook/i, canonical: "ASUS Zenbook" },
+  { regex: /TUF\s*Gaming\s*A16/i, canonical: "ASUS TUF Gaming A16" },
+  { regex: /TUF\s*Gaming\s*A15/i, canonical: "ASUS TUF Gaming A15" },
+  { regex: /TUF\s*F16/i, canonical: "ASUS TUF F16" },
+  { regex: /TUF\s*F15/i, canonical: "ASUS TUF F15" },
+  { regex: /TUF\s*Gaming/i, canonical: "ASUS TUF Gaming" },
+  { regex: /ROG\s*Strix\s*Scar/i, canonical: "ASUS ROG Strix Scar" },
+  { regex: /ROG\s*Strix/i, canonical: "ASUS ROG Strix" },
+  { regex: /ROG\s*Zephyrus/i, canonical: "ASUS ROG Zephyrus" },
+  { regex: /ROG\s*Flow/i, canonical: "ASUS ROG Flow" },
+  { regex: /ROG\b/i, canonical: "ASUS ROG" },
+  { regex: /ProArt\s*StudioBook/i, canonical: "ASUS ProArt StudioBook" },
+  // HP
+  { regex: /Omen\s*Max/i, canonical: "HP Omen Max" },
+  { regex: /Omen\s*Slim/i, canonical: "HP Omen Slim" },
+  { regex: /Omen\s*Transcend/i, canonical: "HP Omen Transcend" },
+  { regex: /Omen\b/i, canonical: "HP Omen" },
+  { regex: /Omnibook\s*Ultra/i, canonical: "HP Omnibook Ultra" },
+  { regex: /Omnibook\s*X\s*Flip/i, canonical: "HP Omnibook X Flip" },
+  { regex: /Omnibook\s*X/i, canonical: "HP Omnibook X" },
+  { regex: /Omnibook\s*5\s*Flip/i, canonical: "HP Omnibook 5 Flip" },
+  { regex: /Omnibook\s*5/i, canonical: "HP Omnibook 5" },
+  { regex: /Omnibook/i, canonical: "HP Omnibook" },
+  { regex: /Victus\b/i, canonical: "HP Victus" },
+  { regex: /Pavilion\s*Plus/i, canonical: "HP Pavilion Plus" },
+  { regex: /Pavilion\s*Aero/i, canonical: "HP Pavilion Aero" },
+  { regex: /Pavilion/i, canonical: "HP Pavilion" },
+  { regex: /EliteBook\s*1040/i, canonical: "HP EliteBook 1040" },
+  { regex: /EliteBook\s*845/i, canonical: "HP EliteBook 845" },
+  { regex: /EliteBook\s*840/i, canonical: "HP EliteBook 840" },
+  { regex: /EliteBook/i, canonical: "HP EliteBook" },
+  { regex: /ProBook\s*460/i, canonical: "HP ProBook 460" },
+  { regex: /ProBook\s*450/i, canonical: "HP ProBook 450" },
+  { regex: /ProBook/i, canonical: "HP ProBook" },
+  { regex: /ZBook\s*Studio/i, canonical: "HP ZBook Studio" },
+  { regex: /ZBook\s*Power/i, canonical: "HP ZBook Power" },
+  { regex: /ZBook\s*Firefly/i, canonical: "HP ZBook Firefly" },
+  { regex: /ZBook\b/i, canonical: "HP ZBook" },
+  { regex: /HP\s*250\s*G10/i, canonical: "HP 250 G10" },
+  { regex: /HP\s*255\s*G10/i, canonical: "HP 255 G10" },
+  { regex: /Spectre\s*x360/i, canonical: "HP Spectre x360" },
+  { regex: /Spectre/i, canonical: "HP Spectre" },
+  { regex: /Envy\s*x360/i, canonical: "HP Envy x360" },
+  { regex: /Envy/i, canonical: "HP Envy" },
+  // Lenovo
+  { regex: /Yoga\s*Pro\s*9/i, canonical: "Lenovo Yoga Pro 9" },
+  { regex: /Yoga\s*Pro\s*7/i, canonical: "Lenovo Yoga Pro 7" },
+  { regex: /Yoga\s*Slim\s*7/i, canonical: "Lenovo Yoga Slim 7" },
+  { regex: /Yoga\s*7\s*2-in-1|Yoga\s*7i?\b/i, canonical: "Lenovo Yoga 7" },
+  { regex: /Yoga\s*9i?\b/i, canonical: "Lenovo Yoga 9i" },
+  { regex: /Yoga\s*Book/i, canonical: "Lenovo Yoga Book" },
+  { regex: /Yoga\b/i, canonical: "Lenovo Yoga" },
+  { regex: /Legion\s*Pro\s*7/i, canonical: "Lenovo Legion Pro 7" },
+  { regex: /Legion\s*Pro\s*5/i, canonical: "Lenovo Legion Pro 5" },
+  { regex: /Legion\s*Slim\s*5/i, canonical: "Lenovo Legion Slim 5" },
+  { regex: /Legion\s*9/i, canonical: "Lenovo Legion 9" },
+  { regex: /Legion\s*7/i, canonical: "Lenovo Legion 7" },
+  { regex: /Legion\s*5/i, canonical: "Lenovo Legion 5" },
+  { regex: /Legion/i, canonical: "Lenovo Legion" },
+  { regex: /IdeaPad\s*Slim\s*3/i, canonical: "Lenovo IdeaPad Slim 3" },
+  { regex: /IdeaPad\s*Slim\s*5/i, canonical: "Lenovo IdeaPad Slim 5" },
+  { regex: /IdeaPad\s*5\s*2-in-1/i, canonical: "Lenovo IdeaPad 5 2-in-1" },
+  { regex: /IdeaPad\s*Flex\s*5/i, canonical: "Lenovo IdeaPad Flex 5" },
+  { regex: /IdeaPad\s*Flex\s*3/i, canonical: "Lenovo IdeaPad Flex 3" },
+  { regex: /IdeaPad/i, canonical: "Lenovo IdeaPad" },
+  { regex: /ThinkPad\s*X1\s*Carbon/i, canonical: "Lenovo ThinkPad X1 Carbon" },
+  { regex: /ThinkPad\s*X1\s*Yoga/i, canonical: "Lenovo ThinkPad X1 Yoga" },
+  { regex: /ThinkPad\s*X1/i, canonical: "Lenovo ThinkPad X1" },
+  { regex: /ThinkPad\s*T14/i, canonical: "Lenovo ThinkPad T14" },
+  { regex: /ThinkPad\s*T16/i, canonical: "Lenovo ThinkPad T16" },
+  { regex: /ThinkPad\s*P1/i, canonical: "Lenovo ThinkPad P1" },
+  { regex: /ThinkPad\s*E14/i, canonical: "Lenovo ThinkPad E14" },
+  { regex: /ThinkPad\s*E16/i, canonical: "Lenovo ThinkPad E16" },
+  { regex: /ThinkPad/i, canonical: "Lenovo ThinkPad" },
+  { regex: /ThinkBook/i, canonical: "Lenovo ThinkBook" },
+  // Acer
+  { regex: /Predator\s*Helios/i, canonical: "Acer Predator Helios" },
+  { regex: /Predator\b/i, canonical: "Acer Predator" },
+  { regex: /Nitro\s*V/i, canonical: "Acer Nitro V" },
+  { regex: /Nitro\s*5/i, canonical: "Acer Nitro 5" },
+  { regex: /Nitro\b/i, canonical: "Acer Nitro" },
+  { regex: /Aspire\s*7/i, canonical: "Acer Aspire 7" },
+  { regex: /Aspire\s*5/i, canonical: "Acer Aspire 5" },
+  { regex: /Aspire\s*3/i, canonical: "Acer Aspire 3" },
+  { regex: /Aspire/i, canonical: "Acer Aspire" },
+  { regex: /Swift\s*Go/i, canonical: "Acer Swift Go" },
+  { regex: /Swift\s*X/i, canonical: "Acer Swift X" },
+  { regex: /Swift/i, canonical: "Acer Swift" },
+  // Casper
+  { regex: /Nirvana\s*X650/i, canonical: "Casper Nirvana X650" },
+  { regex: /Nirvana\s*X550/i, canonical: "Casper Nirvana X550" },
+  { regex: /Nirvana/i, canonical: "Casper Nirvana" },
+  { regex: /Excalibur\s*G915/i, canonical: "Casper Excalibur G915" },
+  { regex: /Excalibur\s*G900/i, canonical: "Casper Excalibur G900" },
+  { regex: /Excalibur/i, canonical: "Casper Excalibur" },
+  // MSI
+  { regex: /Stealth\s*16/i, canonical: "MSI Stealth 16" },
+  { regex: /Stealth/i, canonical: "MSI Stealth" },
+  { regex: /Cyborg/i, canonical: "MSI Cyborg" },
+  { regex: /Katana\s*15/i, canonical: "MSI Katana 15" },
+  { regex: /Katana\s*17/i, canonical: "MSI Katana 17" },
+  { regex: /Katana/i, canonical: "MSI Katana" },
+  { regex: /Modern\s*15/i, canonical: "MSI Modern 15" },
+  { regex: /Modern\s*14/i, canonical: "MSI Modern 14" },
+  { regex: /Prestige\s*16/i, canonical: "MSI Prestige 16" },
+  { regex: /Prestige/i, canonical: "MSI Prestige" },
+  { regex: /Raider/i, canonical: "MSI Raider" },
+];
+
 const APPLE_SKU_REGEX = /\b([A-Z]{2}[A-Z0-9]{2,6}TU\/A)\b/i;
 const NUMERIC_SKU_REGEX = /^\d{6,13}$/;
 
@@ -551,6 +677,13 @@ export function extractModelFamily(title: string, brand?: string | null): ModelE
   // Akilli saat patterns (Apple Watch/Galaxy Watch/Huawei Watch/Garmin/Mi Band)
   if (/\bwatch\b|mi\s*band|fenix|forerunner/i.test(title)) {
     for (const { regex, canonical } of WATCH_PATTERNS) {
+      if (regex.test(title)) return { family: canonical, code };
+    }
+  }
+
+  // Laptop patterns (MacBook/ThinkPad/IdeaPad/Vivobook/ROG/Pavilion/Aspire/Nirvana/Excalibur/MSI)
+  if (/macbook|thinkpad|ideapad|vivobook|zenbook|rog|tuf|pavilion|aspire|predator|nitro|swift|nirvana|excalibur|omnibook|elitebook|probook|zbook|omen|victus|legion|yoga|spectre|envy|stealth|cyborg|katana|modern\s*\d+|prestige|raider/i.test(title)) {
+    for (const { regex, canonical } of LAPTOP_PATTERNS) {
       if (regex.test(title)) return { family: canonical, code };
     }
   }
