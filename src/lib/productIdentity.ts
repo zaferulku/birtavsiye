@@ -733,17 +733,28 @@ function extractVariantStorage(title: string, specs?: SpecMap | null): string | 
   const matches: Array<{ value: string; size: number; score: number }> = [];
 
   for (const source of sources) {
-    const iterator = source.matchAll(/\b(\d{1,4})\s*(tb|gb|mb)\b/gi);
-    for (const match of iterator) {
-      const size = Number(match[1]);
-      const unit = match[2].toUpperCase();
+    // X GB / X TB eşleşmeleri — ardından "RAM" gelirse storage değil (skip).
+    const ramAware = /\b(\d{1,4})\s*(tb|gb|mb)\b(\s*ram)?/gi;
+    let m: RegExpExecArray | null;
+    while ((m = ramAware.exec(source)) !== null) {
+      if (m[3]) continue; // "X GB RAM" → bellek, storage değil
+      const size = Number(m[1]);
+      const unit = m[2].toUpperCase();
       if (!Number.isFinite(size)) continue;
       if (unit === "MB") continue;
-
       const value = `${size}${unit}`;
       const multiplier = unit === "TB" ? 1024 : 1;
-      const score = size * multiplier;
-      matches.push({ value, size, score });
+      matches.push({ value, size, score: size * multiplier });
+    }
+
+    // Telefon/tablet başlıklarında sık görülen şablon: "256 8 GB RAM" → 256 = storage,
+    // 8 GB RAM = bellek. Bare number'ı (64/128/256/512/1024) storage olarak ekle.
+    const phoneStorage = /\b(64|128|256|512|1024)\s+\d+\s*(?:gb|tb)\s*ram\b/gi;
+    let pm: RegExpExecArray | null;
+    while ((pm = phoneStorage.exec(source)) !== null) {
+      const size = Number(pm[1]);
+      if (!Number.isFinite(size)) continue;
+      matches.push({ value: `${size}GB`, size, score: size });
     }
   }
 
@@ -1043,10 +1054,14 @@ export function inferProductIdentity(input: InferIdentityInput): ProductIdentity
     variantColor
   );
 
+  // Slug source title'tan üretilir — kullanıcının isteği. Aynı ürünün farklı
+  // store'lardan gelen varyasyonları (PttAVM "Apple iPhone 15 256GB Mavi" vs MM
+  // "iPhone 15 256 GB Mavi") farklı slug üretir; resolveExistingProduct bu durumda
+  // brand+model_family+variant tuple'ından match'liyor (slug-by-name fallback'a değil).
   return {
     originalTitle: input.title.trim(),
     brand,
-    slug: toSlug(canonicalTitle),
+    slug: toSlug(input.title),
     canonicalTitle,
     modelCode,
     modelFamily,

@@ -96,9 +96,20 @@ function parseMediaMarktHtml(html: string): StoreLiveData {
         const isProduct =
           type === "Product" ||
           (Array.isArray(type) && type.includes("Product"));
-        if (!isProduct) continue;
+        // MediaMarkt'ın güncel JSON-LD layout'unda Product, BuyAction wrapper'ı
+        // içine nest ediliyor: {"@type":"BuyAction","object":{"@type":"Product",...}}.
+        // Top-level Product görünmüyor; nested object'i de Product olarak değerlendir.
+        const isBuyActionWithProduct =
+          (type === "BuyAction" || (Array.isArray(type) && type.includes("BuyAction"))) &&
+          item?.object?.["@type"] === "Product";
+        const productNode = isProduct
+          ? item
+          : isBuyActionWithProduct
+            ? item.object
+            : null;
+        if (!productNode) continue;
 
-        const result = parseProductSchema(item);
+        const result = parseProductSchema(productNode);
         if (result) return result;
       }
     } catch {

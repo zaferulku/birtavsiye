@@ -23,6 +23,9 @@ const sb = createClient(
 
 const DRY = process.env.DRY_RUN === "1";
 const CONCURRENCY = 4;
+// MODE=price (default): price=0 + is_active=false → re-fetch, recover
+// MODE=stock          : price>0 + is_active=true + in_stock=false → revalidate
+const MODE = (process.env.MODE === "stock" ? "stock" : "price") as "price" | "stock";
 
 interface ListingRow {
   id: string;
@@ -31,18 +34,21 @@ interface ListingRow {
 }
 
 async function main() {
-  console.log(`=== Stale MM listing refresh ${DRY ? "(DRY-RUN)" : ""} ===`);
+  console.log(`=== Stale MM listing refresh [mode=${MODE}] ${DRY ? "(DRY-RUN)" : ""} ===`);
 
   const stale: ListingRow[] = [];
   let from = 0;
   while (true) {
-    const { data, error } = await sb
+    let query = sb
       .from("listings")
       .select("id,source_url,product_id")
-      .eq("source", "mediamarkt")
-      .eq("price", 0)
-      .eq("is_active", false)
-      .range(from, from + 499);
+      .eq("source", "mediamarkt");
+    if (MODE === "price") {
+      query = query.eq("price", 0).eq("is_active", false);
+    } else {
+      query = query.gt("price", 0).eq("is_active", true).eq("in_stock", false);
+    }
+    const { data, error } = await query.range(from, from + 499);
     if (error) {
       console.error("FETCH err:", error.message);
       break;

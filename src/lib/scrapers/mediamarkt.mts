@@ -249,12 +249,16 @@ export async function scrapePdpDetailed(pdpUrl: string): Promise<ScrapeResult> {
     ? product.image.filter((u: any) => typeof u === 'string')
     : (typeof product.image === 'string' ? [product.image] : []);
 
-  // Fiyat 0/null OK — stoksuz urunleri de kabul ediyoruz (urun olusturmak icin),
-  // diger sitelerden fiyat geldiginde eslesir. in_stock=false olur.
-  const rawPrice = Number(product.offers?.price ?? 0);
+  // MM offers JSON-LD array da olabiliyor: [{price, availability}, ...]. Tek obje
+  // beklemek (.offers?.price) varyantlarda undefined döndürüp price=0/in_stock=false
+  // hatasına yol açıyordu (Panasonic KX-TU155 vakası). İlk geçerli offer'ı seç.
+  const offer = Array.isArray(product.offers)
+    ? (product.offers.find((o: any) => o && (o.price ?? o.lowPrice)) ?? product.offers[0])
+    : product.offers;
+  const rawPrice = Number(offer?.price ?? offer?.lowPrice ?? 0);
   const price = isFinite(rawPrice) && rawPrice > 0 ? rawPrice : 0;
-  const inStock = price > 0 && String(product.offers?.availability ?? '').includes('InStock');
-  const shippingValue = product.offers?.shippingDetails?.shippingRate?.value;
+  const inStock = price > 0 && String(offer?.availability ?? '').toLowerCase().includes('instock');
+  const shippingValue = offer?.shippingDetails?.shippingRate?.value;
   const freeShipping = shippingValue === 0 || shippingValue === '0';
 
   const affiliate = pdpUrl.includes('?')
