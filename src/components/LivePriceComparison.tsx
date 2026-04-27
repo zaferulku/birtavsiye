@@ -5,7 +5,7 @@
 
 "use client";
 
-import { formatTL, type MergedOfferRow } from "@/app/components/urun/offerUtils";
+import { formatTL, getMarketplaceLogoUrl, type MergedOfferRow } from "@/app/components/urun/offerUtils";
 
 type Props = {
   productTitle: string;
@@ -99,6 +99,7 @@ function StoreRow({ row, isMinPrice }: StoreRowProps) {
   const { state, store, displayPrice, isCached, fallback_url } = row;
   const storeName = store?.name ?? row.source;
   const data = state.data;
+  const logoUrl = getMarketplaceLogoUrl(row.source, store?.logo_url ?? null);
 
   const isError = state.status === "error";
   const isPending = state.status === "pending";
@@ -108,9 +109,9 @@ function StoreRow({ row, isMinPrice }: StoreRowProps) {
   return (
     <li className={`lpc-row ${isError ? "lpc-row--error" : ""} ${isOutOfStock ? "lpc-row--oos" : ""}`}>
       <div className="lpc-store">
-        {store?.logo_url ? (
+        {logoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={store.logo_url} alt={storeName} className="lpc-logo" />
+          <img src={logoUrl} alt={storeName} className="lpc-logo" />
         ) : (
           <div className="lpc-logo-placeholder">{storeName.charAt(0)}</div>
         )}
@@ -181,7 +182,7 @@ function StoreRow({ row, isMinPrice }: StoreRowProps) {
             rel="noopener noreferrer nofollow sponsored"
             className="lpc-cta"
           >
-            Magazayi Gor
+            Magazaya Git
           </a>
         )}
         {!isError && !isOutOfStock && !storeUrl && (
@@ -220,7 +221,7 @@ const STYLES = `
   .lpc-badge--shipping { background: var(--success-soft, #ecfdf5); color: var(--success, #059669); }
   .lpc-badge--installment { background: var(--info-soft, #eff6ff); color: var(--info, #2563eb); }
   .lpc-error-text, .lpc-oos-text { font-size: 0.8125rem; color: var(--text-muted, #6b7280); }
-  .lpc-price-col { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .lpc-price-col { display: flex; flex-direction: row; align-items: center; justify-content: flex-end; gap: 12px; }
   .lpc-price { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
   .lpc-price--best .lpc-price-value { color: var(--accent, #dc2626); }
   .lpc-price-label { font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; color: var(--accent, #dc2626); }

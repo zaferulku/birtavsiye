@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import {
   formatTL,
+  getMarketplaceLogoUrl,
   pickBestOffer,
   sourceTrustScore,
   type MergedOfferRow,
@@ -51,15 +52,16 @@ export default function ProductBestOfferCard({ rows, isLoading, refresh }: Props
   const sellerReviewCount = data?.seller_review_count ?? null;
   const destinationUrl = data?.affiliate_url ?? bestOffer.fallback_url ?? null;
   const isOutOfStock = data?.in_stock === false;
+  const logoUrl = getMarketplaceLogoUrl(bestOffer.source, bestOffer.store?.logo_url ?? null);
 
   return (
     <aside className="rounded-[22px] border border-[#E8E4DF] bg-white p-5 shadow-sm xl:sticky xl:top-24">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
-          {bestOffer.store?.logo_url ? (
+          {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={bestOffer.store.logo_url}
+              src={logoUrl}
               alt={storeName}
               className="mt-0.5 h-12 w-12 rounded-xl border border-[#F0E5DD] bg-white object-contain p-2"
             />
@@ -167,7 +169,7 @@ export default function ProductBestOfferCard({ rows, isLoading, refresh }: Props
           rel="noopener noreferrer nofollow sponsored"
           className="mt-5 flex w-full items-center justify-center rounded-xl bg-[#E8460A] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#C93A08]"
         >
-          Magazayi Gor
+          Magazaya Git
         </a>
       ) : (
         <div className="mt-5 rounded-xl border border-dashed border-[#E8E4DF] px-4 py-3 text-center text-sm text-[#8C837B]">

@@ -11,6 +11,10 @@ import ModelPageView from "../components/marka/ModelPageView";
 import { resolveCategorySlug } from "../../lib/categoryAliases";
 import { mergeClusteredProducts } from "../../lib/productCluster";
 import { getActiveOfferCount, getLowestActivePrice } from "../../lib/listingSignals";
+import {
+  getDiscoveryProductLabel,
+  shouldHideDiscoveryProduct,
+} from "../../lib/productDiscovery";
 
 export const revalidate = 120;
 
@@ -152,7 +156,9 @@ export default async function Page({ params, searchParams }: PageProps) {
       prices: row.listings ?? [],
     }));
 
-    if (mergedRows.length === 0) {
+    const visibleRows = mergedRows.filter((row) => !shouldHideDiscoveryProduct(row));
+
+    if (visibleRows.length === 0) {
       return (
         <main className="bg-white min-h-screen">
           <Header />
@@ -165,12 +171,12 @@ export default async function Page({ params, searchParams }: PageProps) {
       );
     }
 
-    const actualBrand = mergedRows[0].brand ?? brandGuess;
+    const actualBrand = visibleRows[0].brand ?? brandGuess;
     const GENERIC_EXCLUDE = /^(Kılıf|Kılıfı|Ekran\s*Koruyucu|Aksesuar|Batarya|Adaptör|Kordon|Kayış|Tablet|Akıllı\s*Saat|Android\s*Tablet|Android\s*Telefon|Güç\s*Kablosu|Hoparlör|Mouse|Klavye|Powerbank)$/i;
 
     type Group = { rep: Row; count: number; minPrice: number };
     const groups = new Map<string, Group>();
-    for (const p of mergedRows) {
+    for (const p of visibleRows) {
       const mf = p.model_family!;
       if (GENERIC_EXCLUDE.test(mf)) continue;
       const minP = getLowestActivePrice(p.prices) ?? Infinity;
@@ -209,7 +215,9 @@ export default async function Page({ params, searchParams }: PageProps) {
                     ? <Image src={info.rep.image_url} alt={mf} fill className="object-contain" sizes="(max-width: 768px) 50vw, 25vw" />
                     : <div className="text-gray-300 text-4xl">📦</div>}
                 </div>
-                <div className="font-semibold text-sm mt-3 line-clamp-2">{mf}</div>
+                <div className="font-semibold text-sm mt-3 line-clamp-2">
+                  {getDiscoveryProductLabel(info.rep, { includeBrand: false })}
+                </div>
                 <div className="text-xs text-gray-500 mt-1">{info.count} satıcı</div>
                 {isFinite(info.minPrice) && <div className="text-[#E8460A] font-bold mt-1">{info.minPrice.toLocaleString("tr-TR")} TL&apos;den</div>}
               </Link>

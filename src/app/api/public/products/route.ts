@@ -4,6 +4,7 @@ import {
   CategoryNotFoundError,
   retrieveRankedProducts,
 } from "../../../../lib/search/productRetrieval";
+import { shouldHideDiscoveryProduct } from "../../../../lib/productDiscovery";
 
 export const runtime = "nodejs";
 export const revalidate = 60;
@@ -33,7 +34,7 @@ export async function GET(req: Request) {
     });
 
     return NextResponse.json(
-      { products },
+      { products: products.filter((product) => !shouldHideDiscoveryProduct(product)) },
       {
         headers: {
           "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120",

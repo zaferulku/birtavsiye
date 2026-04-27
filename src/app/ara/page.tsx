@@ -11,6 +11,7 @@ import {
   getFreshestSeenAt,
   getLowestActivePrice,
 } from "../../lib/listingSignals";
+import { getDiscoveryProductLabel } from "../../lib/productDiscovery";
 
 type Product = {
   id: string;
@@ -290,9 +291,7 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
                           {product.brand}
                         </div>
                         <div className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug mb-2">
-                          {product.model_family && product.brand
-                            ? `${product.brand} ${product.model_family}`
-                            : product.title}
+                          {getDiscoveryProductLabel(product)}
                         </div>
                         {minPrice !== null ? (
                           <div>

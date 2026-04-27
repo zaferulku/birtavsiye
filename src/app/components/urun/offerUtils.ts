@@ -37,6 +37,31 @@ export function formatTL(amount: number): string {
   }).format(amount);
 }
 
+export function getMarketplaceLogoUrl(source: string | null | undefined, explicitLogoUrl?: string | null) {
+  if (explicitLogoUrl) return explicitLogoUrl;
+
+  switch ((source ?? "").toLowerCase()) {
+    case "pttavm":
+      return "https://www.google.com/s2/favicons?sz=64&domain_url=https://www.pttavm.com";
+    case "mediamarkt":
+      return "https://www.google.com/s2/favicons?sz=64&domain_url=https://www.mediamarkt.com.tr";
+    case "trendyol":
+      return "https://www.google.com/s2/favicons?sz=64&domain_url=https://www.trendyol.com";
+    case "hepsiburada":
+      return "https://www.google.com/s2/favicons?sz=64&domain_url=https://www.hepsiburada.com";
+    case "amazon":
+      return "https://www.google.com/s2/favicons?sz=64&domain_url=https://www.amazon.com.tr";
+    case "n11":
+      return "https://www.google.com/s2/favicons?sz=64&domain_url=https://www.n11.com";
+    case "vatan":
+      return "https://www.google.com/s2/favicons?sz=64&domain_url=https://www.vatanbilgisayar.com";
+    case "teknosa":
+      return "https://www.google.com/s2/favicons?sz=64&domain_url=https://www.teknosa.com";
+    default:
+      return null;
+  }
+}
+
 export function computeTotal(data: StoreLiveData): number {
   return data.price + (data.shipping_price && !data.free_shipping ? data.shipping_price : 0);
 }

@@ -231,7 +231,7 @@ export default function ProductDetailShell({
             </p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-1">
             <div className="rounded-2xl border border-[#EFE7DF] bg-[#FFF7F2] p-4">
               <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#B56B48]">
                 En dusuk fiyat
@@ -239,13 +239,8 @@ export default function ProductDetailShell({
               <div className="mt-1 text-xl font-black text-[#E8460A]">
                 {lowestKnownPrice !== null ? formatTL(lowestKnownPrice) : "-"}
               </div>
-            </div>
-            <div className="rounded-2xl border border-[#EFE7DF] bg-white p-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#8A8179]">
-                Son fiyat kontrolu
-              </div>
-              <div className="mt-1 text-xl font-black text-[#171412]">
-                {formatFreshnessLabel(freshestListingSeenAt)}
+              <div className="mt-1 text-xs font-medium text-[#8A8179]">
+                Son fiyat kontrolu {formatFreshnessLabel(freshestListingSeenAt)}
               </div>
             </div>
           </div>
@@ -279,6 +274,10 @@ export default function ProductDetailShell({
             currentStorage={product.variant_storage}
             currentColor={product.variant_color}
             variants={variants}
+            currentTitle={product.title}
+            currentImageUrl={product.image_url}
+            currentPrice={lowestKnownPrice}
+            currentFreshness={freshestListingSeenAt}
           />
         </div>
 

@@ -13,6 +13,7 @@ import {
   sourceTrustScore,
 } from "../../../lib/listingSignals";
 import { mergeClusteredProducts } from "../../../lib/productCluster";
+import { shouldHideDiscoveryProduct } from "../../../lib/productDiscovery";
 
 type PriceRow = {
   id: string;
@@ -79,7 +80,9 @@ export default async function ModelPageView({ brand, model }: { brand: string; m
     prices: row.listings ?? [],
   }));
 
-  if (mergedRows.length === 0) {
+  const visibleRows = mergedRows.filter((row) => !shouldHideDiscoveryProduct(row));
+
+  if (visibleRows.length === 0) {
     return (
       <main className="bg-white min-h-screen">
         <Header />
@@ -92,11 +95,11 @@ export default async function ModelPageView({ brand, model }: { brand: string; m
     );
   }
 
-  const actualBrand = mergedRows[0].brand ?? brandGuess;
+  const actualBrand = visibleRows[0].brand ?? brandGuess;
   const actualModel = modelGuess.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 
   const catCounts = new Map<string, number>();
-  for (const r of mergedRows) {
+  for (const r of visibleRows) {
     if (r.category_id) catCounts.set(r.category_id, (catCounts.get(r.category_id) ?? 0) + 1);
   }
   const dominantCatId = [...catCounts.entries()].sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
@@ -111,8 +114,8 @@ export default async function ModelPageView({ brand, model }: { brand: string; m
     return sources.length > 0 ? Math.max(...sources.map((source) => sourceTrustScore(source ?? null))) : 0;
   };
 
-  const legitByTitleInitial = mergedRows.filter(r => !isAccessoryTitle(r.title));
-  const legitByTitle = legitByTitleInitial.length > 0 ? legitByTitleInitial : mergedRows;
+  const legitByTitleInitial = visibleRows.filter(r => !isAccessoryTitle(r.title));
+  const legitByTitle = legitByTitleInitial.length > 0 ? legitByTitleInitial : visibleRows;
   const allMinPrices = legitByTitle.map(minPriceOf).filter(p => isFinite(p) && p > 0).sort((a, b) => a - b);
   const medianPrice = allMinPrices.length > 0 ? allMinPrices[Math.floor(allMinPrices.length / 2)] : 0;
   const minValidPrice = medianPrice > 1000 ? medianPrice * 0.6 : 0;

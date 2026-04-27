@@ -6,8 +6,16 @@ import Image from "next/image";
 import { fetchCategoryPath, fetchChildCategories, fetchDescendantIds } from "../../../lib/categoryTree";
 import SortDropdown from "../../components/kategori/SortDropdown";
 import FilterModal from "../../components/kategori/FilterModal";
+import CategoryFiltersSidebar from "../../components/kategori/CategoryFiltersSidebar";
 import { CATEGORY_IMAGE_OVERRIDES } from "../../../lib/categoryImageOverrides";
 import { getCategoryQueryHint, resolveCategorySlug } from "../../../lib/categoryAliases";
+import {
+  CATEGORY_SPEC_FILTERS,
+  extractSpecFilterValue,
+  normalizeFilterValue,
+  sortFilterValues,
+  type CategorySpecFilterParam,
+} from "../../../lib/categoryFilterSpecs";
 import {
   getActiveListings,
   getActiveOfferCount,
@@ -18,6 +26,10 @@ import {
   sourceTrustScore,
 } from "../../../lib/listingSignals";
 import { mergeClusteredProducts } from "../../../lib/productCluster";
+import {
+  getDiscoveryProductLabel,
+  shouldHideDiscoveryProduct,
+} from "../../../lib/productDiscovery";
 
 export const revalidate = 60;
 
@@ -37,6 +49,7 @@ type ProductCard = {
   brand: string | null;
   description?: string | null;
   image_url?: string | null;
+  specs?: Record<string, unknown> | null;
   category_id: string | null;
   model_code: string | null;
   model_family: string | null;
@@ -46,14 +59,97 @@ type ProductCard = {
   prices: ListingRow[] | null;
 };
 
+type CategoryFilterSection = {
+  id: string;
+  label: string;
+  options: Array<{ value: string; label: string; count: number }>;
+  selected: string[];
+  searchable?: boolean;
+  defaultOpen?: boolean;
+};
+
+function parseMultiParam(value: string | undefined): string[] {
+  return (value ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function matchesSelectedValue(value: string | null | undefined, selected: string[]): boolean {
+  if (selected.length === 0) return true;
+  const normalizedValue = normalizeFilterValue(value).toLocaleLowerCase("tr");
+  return selected.some((item) => normalizeFilterValue(item).toLocaleLowerCase("tr") === normalizedValue);
+}
+
+function getStorageValue(product: ProductCard): string | null {
+  return (
+    normalizeFilterValue(product.variant_storage) ||
+    extractSpecFilterValue(product.specs, ["Dahili Hafiza", "Dahili Hafıza", "Depolama"])
+  );
+}
+
+function getColorValue(product: ProductCard): string | null {
+  return (
+    normalizeFilterValue(product.variant_color) ||
+    extractSpecFilterValue(product.specs, ["Renk", "Color", "Renk (Ureticiye Gore)"])
+  );
+}
+
 export default async function KategoriSayfasi({ params, searchParams }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ marka?: string; model?: string; q?: string; siralama?: string; hafiza?: string; renk?: string; min?: string; max?: string; kaynak?: string }>;
+  searchParams: Promise<{
+    marka?: string;
+    model?: string;
+    q?: string;
+    siralama?: string;
+    hafiza?: string;
+    renk?: string;
+    min?: string;
+    max?: string;
+    kaynak?: string;
+    ram?: string;
+    batarya?: string;
+    yil?: string;
+    mobil?: string;
+    ekran?: string;
+    cozunurluk?: string;
+    yenileme?: string;
+  }>;
 }) {
   const { slug } = await params;
   const resolvedSlug = resolveCategorySlug(slug);
-  const { marka, model, q, siralama, hafiza, renk, min, max, kaynak } = await searchParams;
+  const {
+    marka,
+    model,
+    q,
+    siralama,
+    hafiza,
+    renk,
+    min,
+    max,
+    kaynak,
+    ram,
+    batarya,
+    yil,
+    mobil,
+    ekran,
+    cozunurluk,
+    yenileme,
+  } = await searchParams;
   const effectiveQuery = q ?? getCategoryQueryHint(slug);
+  const selectedBrands = parseMultiParam(marka);
+  const selectedModels = parseMultiParam(model);
+  const selectedStorages = parseMultiParam(hafiza);
+  const selectedColors = parseMultiParam(renk);
+  const selectedSpecFilters: Record<CategorySpecFilterParam, string[]> = {
+    ram: parseMultiParam(ram),
+    batarya: parseMultiParam(batarya),
+    yil: parseMultiParam(yil),
+    mobil: parseMultiParam(mobil),
+    ekran: parseMultiParam(ekran),
+    cozunurluk: parseMultiParam(cozunurluk),
+    yenileme: parseMultiParam(yenileme),
+  };
 
   const { data: category } = await supabaseAdmin
     .from("categories")
@@ -108,11 +204,11 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   // Variant dedup için daha geniş bir havuz çekip in-memory birleştiriyoruz
   let query = supabaseAdmin
     .from("products")
-    .select("id, title, slug, brand, description, image_url, category_id, model_code, model_family, variant_storage, variant_color, created_at, prices:listings(id, price, source, is_active, in_stock, last_seen)", { count: "exact" })
+    .select("id, title, slug, brand, description, image_url, specs, category_id, model_code, model_family, variant_storage, variant_color, created_at, prices:listings(id, price, source, is_active, in_stock, last_seen)", { count: "exact" })
     .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""]);
 
-  if (marka) query = query.eq("brand", marka);
-  if (model) query = query.eq("model_family", model);
+  if (selectedBrands.length === 1) query = query.eq("brand", selectedBrands[0]);
+  if (selectedModels.length === 1) query = query.eq("model_family", selectedModels[0]);
   if (effectiveQuery) query = query.ilike("title", `%${effectiveQuery}%`);
 
   if (siralama === "az") query = query.order("title", { ascending: true });
@@ -122,7 +218,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   // Paralel: ana ürün query + marka/model count (aynı descendantIds kullanıyor)
   const allBrandsPromise = supabaseAdmin
     .from("products")
-    .select("id, title, slug, brand, image_url, category_id, model_code, model_family, variant_storage, variant_color, created_at, prices:listings(id, price, source, is_active, in_stock, last_seen)")
+    .select("id, title, slug, brand, image_url, specs, category_id, model_code, model_family, variant_storage, variant_color, created_at, prices:listings(id, price, source, is_active, in_stock, last_seen)")
     .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""]);
   const mainPromise = query.limit(300);
   const [mainRes, allRes] = await Promise.all([mainPromise, allBrandsPromise]);
@@ -155,17 +251,32 @@ export default async function KategoriSayfasi({ params, searchParams }: {
       }))
     );
 
-  const mergedRawProducts = normalizeProducts((rawProducts as ProductCard[] | null) ?? []);
+  const mergedRawProducts = normalizeProducts((rawProducts as ProductCard[] | null) ?? []).filter(
+    (product) => !shouldHideDiscoveryProduct(product)
+  );
   let products: ProductCard[] = mergedRawProducts.filter(
     (product) => !kaynak || visibleListingsOf(product).length > 0
   );
 
   // Filtreler
-  if (hafiza) {
-    products = products.filter(p => p.variant_storage === hafiza);
+  if (selectedBrands.length > 0) {
+    products = products.filter((product) => matchesSelectedValue(product.brand, selectedBrands));
   }
-  if (renk) {
-    products = products.filter(p => p.variant_color === renk);
+  if (selectedModels.length > 0) {
+    products = products.filter((product) => matchesSelectedValue(product.model_family, selectedModels));
+  }
+  if (selectedStorages.length > 0) {
+    products = products.filter((product) => matchesSelectedValue(getStorageValue(product), selectedStorages));
+  }
+  if (selectedColors.length > 0) {
+    products = products.filter((product) => matchesSelectedValue(getColorValue(product), selectedColors));
+  }
+  for (const config of CATEGORY_SPEC_FILTERS) {
+    const selectedValues = selectedSpecFilters[config.param];
+    if (selectedValues.length === 0) continue;
+    products = products.filter((product) =>
+      matchesSelectedValue(extractSpecFilterValue(product.specs, config.keys), selectedValues)
+    );
   }
   const minN = min ? Number(min) : null;
   const maxN = max ? Number(max) : null;
@@ -190,9 +301,9 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   // Filtre seçenekleri (sidebar için)
   const storageSet = new Set<string>();
   const colorSet = new Set<string>();
-  (rawProducts ?? []).forEach(p => {
-    if (p.variant_storage) storageSet.add(p.variant_storage);
-    if (p.variant_color) colorSet.add(p.variant_color);
+  mergedRawProducts.forEach((product) => {
+    if (product.variant_storage) storageSet.add(product.variant_storage);
+    if (product.variant_color) colorSet.add(product.variant_color);
   });
   const storageOptions = [...storageSet].sort((a, b) => parseInt(a) - parseInt(b));
   const colorOptions = [...colorSet].sort();
@@ -202,9 +313,9 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   const brandCounts: Record<string, number> = {};
   const modelsByBrand: Record<string, Record<string, number>> = {};
   const sourceCounts: Record<string, number> = {};
-  const countBaseProducts = normalizeProducts((allProducts as ProductCard[] | null) ?? []).filter(
-    (product) => !kaynak || getActiveListings(product.prices, kaynak).length > 0
-  );
+  const countBaseProducts = normalizeProducts((allProducts as ProductCard[] | null) ?? [])
+    .filter((product) => !shouldHideDiscoveryProduct(product))
+    .filter((product) => !kaynak || getActiveListings(product.prices, kaynak).length > 0);
   countBaseProducts.forEach(p => {
     if (p.brand) {
       brandCounts[p.brand] = (brandCounts[p.brand] || 0) + 1;
@@ -249,6 +360,120 @@ export default async function KategoriSayfasi({ params, searchParams }: {
     rootSlug === "spor-outdoor" ? "Tip" :
     rootSlug === "otomotiv" ? "Tip" :
     "Model";
+
+  const mergedModelCounts = Object.values(modelsByBrand).reduce<Record<string, number>>((acc, modelMap) => {
+    for (const [name, count] of Object.entries(modelMap)) {
+      acc[name] = (acc[name] || 0) + count;
+    }
+    return acc;
+  }, {});
+
+  const specCounts: Record<CategorySpecFilterParam, Record<string, number>> = {
+    ram: {},
+    batarya: {},
+    yil: {},
+    mobil: {},
+    ekran: {},
+    cozunurluk: {},
+    yenileme: {},
+  };
+
+  countBaseProducts.forEach((product) => {
+    for (const config of CATEGORY_SPEC_FILTERS) {
+      const specValue = extractSpecFilterValue(product.specs, config.keys);
+      if (!specValue) continue;
+      specCounts[config.param][specValue] = (specCounts[config.param][specValue] || 0) + 1;
+    }
+  });
+
+  const sidebarModelOptions = Object.entries(
+    selectedBrands.length === 1 && modelsByBrand[selectedBrands[0]]
+      ? modelsByBrand[selectedBrands[0]]
+      : mergedModelCounts
+  )
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], "tr"))
+    .map(([value, count]) => ({ value, label: value, count }));
+
+  const sidebarStorageOptions = storageOptions.map((value) => ({
+    value,
+    label: value,
+    count: countBaseProducts.filter((product) => matchesSelectedValue(getStorageValue(product), [value])).length,
+  }));
+
+  const sidebarColorOptions = colorOptions.map((value) => ({
+    value,
+    label: value,
+    count: countBaseProducts.filter((product) => matchesSelectedValue(getColorValue(product), [value])).length,
+  }));
+
+  const sidebarSections: CategoryFilterSection[] = [
+    brands.length > 1
+      ? {
+          id: "marka",
+          label: "Marka",
+          options: brands.map((brand) => ({ value: brand.name, label: brand.name, count: brand.count })),
+          selected: selectedBrands,
+          searchable: brands.length > 10,
+          defaultOpen: true,
+        }
+      : null,
+    sidebarModelOptions.length > 1
+      ? {
+          id: "model",
+          label: subLabel === "Model" ? "Seri" : subLabel,
+          options: sidebarModelOptions,
+          selected: selectedModels,
+          searchable: sidebarModelOptions.length > 10,
+          defaultOpen: true,
+        }
+      : null,
+    sidebarStorageOptions.length > 1
+      ? {
+          id: "hafiza",
+          label: "Dahili Hafiza",
+          options: sidebarStorageOptions,
+          selected: selectedStorages,
+          defaultOpen: true,
+        }
+      : null,
+    sidebarColorOptions.length > 1
+      ? {
+          id: "renk",
+          label: "Renk",
+          options: sidebarColorOptions,
+          selected: selectedColors,
+          searchable: sidebarColorOptions.length > 10,
+          defaultOpen: false,
+        }
+      : null,
+    ...CATEGORY_SPEC_FILTERS.map((config) => ({
+      id: config.param,
+      label: config.label,
+      options: sortFilterValues(Object.keys(specCounts[config.param]), config.sort).map((value) => ({
+        value,
+        label: value,
+        count: specCounts[config.param][value] ?? 0,
+      })),
+      selected: selectedSpecFilters[config.param],
+      searchable: Object.keys(specCounts[config.param]).length > 10,
+      defaultOpen: false,
+    })).filter((section) => section.options.length > 1),
+  ].filter(Boolean) as CategoryFilterSection[];
+
+  const pricePresets = [
+    { label: "199 - 19.999 TL", min: "199", max: "19999", active: (min ?? null) === "199" && (max ?? null) === "19999" },
+    { label: "20.000 - 50.000 TL", min: "20000", max: "50000", active: (min ?? null) === "20000" && (max ?? null) === "50000" },
+    { label: "50.000 - 80.000 TL", min: "50000", max: "80000", active: (min ?? null) === "50000" && (max ?? null) === "80000" },
+    { label: "80.000 TL ve ustu", min: "80000", max: null, active: (min ?? null) === "80000" && !max },
+  ];
+
+  const hasActiveSidebarFilters =
+    selectedBrands.length > 0 ||
+    selectedModels.length > 0 ||
+    selectedStorages.length > 0 ||
+    selectedColors.length > 0 ||
+    Object.values(selectedSpecFilters).some((items) => items.length > 0) ||
+    Boolean(min || max);
 
   if (!category) {
     return (
@@ -327,7 +552,24 @@ export default async function KategoriSayfasi({ params, searchParams }: {
 
         {(() => {
           const buildUrl = (overrides: Record<string, string | null>): string => {
-            const params: Record<string, string | undefined> = { marka, model, q, siralama, hafiza, renk, min, max, kaynak };
+            const params: Record<string, string | undefined> = {
+              marka,
+              model,
+              q,
+              siralama,
+              hafiza,
+              renk,
+              min,
+              max,
+              kaynak,
+              ram,
+              batarya,
+              yil,
+              mobil,
+              ekran,
+              cozunurluk,
+              yenileme,
+            };
             for (const [k, v] of Object.entries(overrides)) {
               if (v === null || v === "") delete params[k];
               else params[k] = v;
@@ -341,6 +583,13 @@ export default async function KategoriSayfasi({ params, searchParams }: {
 
           return (
             <>
+              <CategoryFiltersSidebar
+                sections={sidebarSections}
+                pricePresets={pricePresets}
+                hasActiveFilters={hasActiveSidebarFilters}
+              />
+              {false && (
+                <>
               {/* Sol: Filtreler sidebar */}
               <aside className="w-full md:w-60 flex-shrink-0 space-y-3">
                 {/* Aktif filtreler (varsa) clear linki */}
@@ -463,6 +712,8 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                   </div>
                 </div>
               </aside>
+                </>
+              )}
 
               {/* Sağ: Ürün grid */}
               <div className="flex-1 min-w-0">
@@ -533,9 +784,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                         <div className="p-3 pb-2">
                           <div className="text-[10px] font-bold text-[#E8460A] uppercase tracking-wider mb-0.5">{p.brand}</div>
                           <div className="text-xs font-medium text-gray-800 leading-snug line-clamp-2 min-h-[2.5rem] mb-2">
-                            {p.model_family && p.brand
-                              ? `${p.brand} ${p.model_family}`
-                              : p.title}
+                            {getDiscoveryProductLabel(p)}
                           </div>
                           {minPrice ? (
                             <>

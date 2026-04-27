@@ -8,6 +8,7 @@ import {
 } from "@/lib/listingSignals";
 import { mergeClusteredProducts } from "@/lib/productCluster";
 import { cleanProductTitle } from "@/lib/productTitle";
+import { shouldHideDiscoveryProduct } from "@/lib/productDiscovery";
 
 type Price = {
   id: string;
@@ -118,7 +119,9 @@ async function loadProducts(): Promise<Product[]> {
     }))
     .filter((product) => product.listings.length > 0);
 
-  return mergeClusteredProducts(mappedProducts).filter((product) => product.listings.length > 0);
+  return mergeClusteredProducts(mappedProducts).filter(
+    (product) => product.listings.length > 0 && !shouldHideDiscoveryProduct(product)
+  );
 }
 
 function getLowestPrice(product: Product): number {

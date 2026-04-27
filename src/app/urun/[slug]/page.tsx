@@ -11,6 +11,7 @@ import type {
 } from "../../components/urun/ProductDetailShell";
 import { supabaseAdmin } from "@/lib/supabaseServer";
 import { getFreshestSeenAt, getLowestActivePrice } from "@/lib/listingSignals";
+import { buildVariantFamilyKey, isSameVariantFamily } from "@/lib/productVariantFamily";
 import type { InitialListing, StoreDefinition } from "../../components/urun/offerUtils";
 import type { ReviewSummary } from "../../components/urun/CommunitySection";
 import { cleanProductTitle } from "@/lib/productTitle";
@@ -108,14 +109,15 @@ type VariantProductRow = {
   slug: string;
   title: string;
   image_url: string | null;
+  model_family: string | null;
   variant_storage: string | null;
   variant_color: string | null;
-  listings: Array<{
+  listings?: Array<{
     price: number | string;
     last_seen?: string | null;
     is_active?: boolean | null;
     in_stock?: boolean | null;
-  }>;
+  }> | null;
 };
 
 function rowsToSimilar(rows: SimilarProductRow[]): SimilarProduct[] {
@@ -228,7 +230,7 @@ async function loadVariantOptions(
   const { data, error } = await supabaseAdmin
     .from("products")
     .select(
-      "id, slug, title, image_url, variant_storage, variant_color, listings!inner(price, last_seen, is_active, in_stock)"
+      "id, slug, title, image_url, model_family, variant_storage, variant_color, listings(price, last_seen, is_active, in_stock)"
     )
     .eq("brand", brand)
     .eq("model_family", modelFamily)
@@ -240,9 +242,41 @@ async function loadVariantOptions(
     return [];
   }
 
+  let variantRows = data as unknown as VariantProductRow[];
+  const baseFamilyKey = buildVariantFamilyKey({ brand, modelFamily, title: `${brand ?? ""} ${modelFamily}` });
+
+  if (variantRows.length <= 1) {
+    const { data: fallbackRows, error: fallbackError } = await supabaseAdmin
+      .from("products")
+      .select(
+        "id, slug, title, image_url, model_family, variant_storage, variant_color, listings(price, last_seen, is_active, in_stock)"
+      )
+      .eq("brand", brand)
+      .eq("category_id", categoryId)
+      .eq("is_active", true)
+      .limit(160);
+
+    if (!fallbackError && fallbackRows) {
+      const mergedBySlug = new Map<string, VariantProductRow>();
+      for (const row of [...variantRows, ...(fallbackRows as unknown as VariantProductRow[])]) {
+        mergedBySlug.set(row.slug, row);
+      }
+      variantRows = Array.from(mergedBySlug.values());
+    }
+  }
+
+  if (baseFamilyKey) {
+    variantRows = variantRows.filter((row) =>
+      isSameVariantFamily(
+        { brand, modelFamily, title: `${brand ?? ""} ${modelFamily}` },
+        { brand, modelFamily: row.model_family, title: row.title }
+      )
+    );
+  }
+
   const bestByVariant = new Map<string, VariantOption>();
 
-  for (const row of data as unknown as VariantProductRow[]) {
+  for (const row of variantRows) {
     const listings = (row.listings ?? []).filter(
       (listing) =>
         listing.is_active !== false &&

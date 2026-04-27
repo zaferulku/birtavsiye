@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { formatFreshnessLabel } from "@/lib/listingSignals";
 import { formatTL } from "./offerUtils";
 import type { VariantOption } from "./ProductDetailShell";
 
@@ -10,6 +9,10 @@ type Props = {
   currentStorage: string | null;
   currentColor: string | null;
   variants: VariantOption[];
+  currentTitle: string;
+  currentImageUrl: string | null;
+  currentPrice: number | null;
+  currentFreshness: string | null;
 };
 
 type VariantCard = {
@@ -28,29 +31,43 @@ export default function ProductVariantOptions({
   currentStorage,
   currentColor,
   variants,
+  currentTitle,
+  currentImageUrl,
+  currentPrice,
+  currentFreshness,
 }: Props) {
-  const storageCards = buildOptionCards(variants, "storage", currentStorage, currentSlug);
-  const colorCards = buildOptionCards(variants, "color", currentColor, currentSlug);
+  const storageCards = buildOptionCards(variants, "storage", currentStorage, currentSlug, {
+    title: currentTitle,
+    image_url: currentImageUrl,
+    min_price: currentPrice,
+    freshest_seen_at: currentFreshness,
+  });
+  const colorCards = buildOptionCards(variants, "color", currentColor, currentSlug, {
+    title: currentTitle,
+    image_url: currentImageUrl,
+    min_price: currentPrice,
+    freshest_seen_at: currentFreshness,
+  });
 
-  if (storageCards.length <= 1 && colorCards.length <= 1) {
+  if (storageCards.length === 0 && colorCards.length === 0) {
     return null;
   }
 
   return (
     <section className="space-y-4 rounded-[22px] border border-[#E8E4DF] bg-white p-4 shadow-sm">
-      {storageCards.length > 1 && (
+      {storageCards.length > 0 && (
         <OptionSection
-          title="Hafiza Secenekleri"
-          subtitle="Secenekler icindeki en dusuk fiyat gosterilir."
+          title="Kapasite"
           items={storageCards}
+          mode="storage"
         />
       )}
 
-      {colorCards.length > 1 && (
+      {colorCards.length > 0 && (
         <OptionSection
-          title="Renk Secenekleri"
-          subtitle="Renk varyantlari mevcut urun ailesinden listelenir."
+          title="Renk"
           items={colorCards}
+          mode="color"
         />
       )}
     </section>
@@ -59,62 +76,76 @@ export default function ProductVariantOptions({
 
 function OptionSection({
   title,
-  subtitle,
   items,
+  mode,
 }: {
   title: string;
-  subtitle: string;
   items: VariantCard[];
+  mode: "storage" | "color";
 }) {
+  const showImage = mode === "color";
+
   return (
     <div>
-      <div className="mb-3">
-        <h2 className="text-sm font-bold text-[#171412]">{title}</h2>
-        <p className="mt-1 text-xs text-[#8A8179]">{subtitle}</p>
+      <div className="mb-2">
+        <h2 className="text-[15px] font-semibold text-[#171412]">{title}</h2>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+      <div className="flex flex-wrap gap-2">
         {items.map((item) => (
           <Link
             key={item.key}
             href={`/urun/${item.slug}`}
-            className={`group flex flex-col overflow-hidden rounded-2xl border transition ${
-              item.active
-                ? "border-[#E8460A] bg-[#FFF5F0] shadow-sm"
-                : "border-[#EFE7DF] bg-white hover:border-[#E8460A] hover:shadow-sm"
-            }`}
+            className={
+              showImage
+                ? `group flex h-[56px] w-[128px] items-center gap-2 rounded-md border px-3 transition ${
+                    item.active
+                      ? "border-[#111827] bg-white shadow-[0_0_0_1px_rgba(17,24,39,0.08)]"
+                      : "border-[#111827] bg-white hover:border-[#111827]"
+                  }`
+                : `flex h-[38px] min-w-[76px] items-center justify-center rounded-md border px-4 text-center transition ${
+                    item.active
+                      ? "border-[#111827] bg-white shadow-[0_0_0_1px_rgba(17,24,39,0.08)]"
+                      : "border-[#111827] bg-white hover:border-[#111827]"
+                  }`
+            }
           >
-            <div className="aspect-square w-full bg-[#FAF7F4]">
-              {item.image_url ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={item.image_url}
-                  alt={item.title}
-                  className="h-full w-full object-contain p-3"
-                  loading="lazy"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center text-3xl text-[#D1CAC3]">
-                  {item.label.charAt(0)}
+            {showImage ? (
+              <>
+                <div className="flex h-8 w-8 flex-none items-center justify-center overflow-hidden rounded-sm bg-[#F5F7FA]">
+                  {item.image_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={item.image_url}
+                      alt={item.title}
+                      className="h-full w-full object-contain"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-xs text-[#D1CAC3]">
+                      {item.label.charAt(0)}
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
 
-            <div className="flex flex-1 flex-col gap-1 p-3">
-              <span className="text-sm font-semibold text-[#171412] group-hover:text-[#E8460A]">
-                {item.label}
-              </span>
-              {item.min_price !== null ? (
-                <>
-                  <span className="mt-auto text-sm font-black text-[#E8460A]">{formatTL(item.min_price)}</span>
-                  <span className="text-[10px] text-[#8A8179]">
-                    Son fiyat: {formatFreshnessLabel(item.freshest_seen_at ?? null)}
+                <div className="flex min-w-0 flex-1 flex-col leading-none">
+                  <span className="truncate text-[13px] font-medium text-[#1F2A37]">
+                    {item.label}
                   </span>
-                </>
-              ) : (
-                <span className="mt-auto text-xs text-[#8A8179]">Aktif fiyat bekleniyor</span>
-              )}
-            </div>
+                  {item.min_price !== null ? (
+                    <span className="mt-1 truncate text-[12px] font-medium text-[#64748B]">
+                      {formatTL(item.min_price)}
+                    </span>
+                  ) : (
+                    <span className="mt-1 truncate text-[12px] font-medium text-[#94A3B8]">
+                      Fiyat bekleniyor
+                    </span>
+                  )}
+                </div>
+              </>
+            ) : (
+              <span className="truncate text-[14px] font-medium text-[#1F2A37]">{item.label}</span>
+            )}
           </Link>
         ))}
       </div>
@@ -126,7 +157,13 @@ function buildOptionCards(
   variants: VariantOption[],
   kind: "storage" | "color",
   selectedValue: string | null,
-  currentSlug: string
+  currentSlug: string,
+  currentProduct: {
+    title: string;
+    image_url: string | null;
+    min_price: number | null;
+    freshest_seen_at: string | null;
+  }
 ): VariantCard[] {
   const bestByValue = new Map<string, VariantOption>();
 
@@ -154,6 +191,19 @@ function buildOptionCards(
     ) {
       bestByValue.set(value, variant);
     }
+  }
+
+  if (bestByValue.size === 0 && selectedValue) {
+    bestByValue.set(selectedValue, {
+      id: currentSlug,
+      slug: currentSlug,
+      title: currentProduct.title,
+      image_url: currentProduct.image_url,
+      variant_storage: kind === "storage" ? selectedValue : null,
+      variant_color: kind === "color" ? selectedValue : null,
+      min_price: currentProduct.min_price,
+      freshest_seen_at: currentProduct.freshest_seen_at,
+    });
   }
 
   return Array.from(bestByValue.entries())
