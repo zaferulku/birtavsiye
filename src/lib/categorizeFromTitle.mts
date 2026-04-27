@@ -553,6 +553,115 @@ const RULES: CategoryRule[] = [
     confidence: "high",
   },
 
+  // --- Networking ---
+  {
+    slug: "networking",
+    keywords: ["wi-fi router", "wi-fi 6", "wi-fi 7", "mesh router", "access point",
+               "ethernet switch", "tp-link router", "asus router", "netgear router",
+               "huawei router", "5g modem", "4g modem", "modem router", "wifi tekrarlayıcı",
+               "powerline adapter"],
+    confidence: "high",
+  },
+
+  // --- Bilgisayar bileşenleri (genişlet) ---
+  {
+    slug: "bilgisayar-bilesenleri",
+    keywords: ["anakart", "ekran kartı", "rtx 4060", "rtx 4070", "rtx 4080", "rtx 4090",
+               "rtx 5070", "rtx 5080", "rtx 5090", "intel core i5", "intel core i7",
+               "intel core i9", "ryzen 5", "ryzen 7", "ryzen 9", "ryzen ai",
+               "işlemci soğutucu", "cpu fan", "cpu air cooler", "psu güç kaynağı",
+               "750w psu", "850w psu", "1000w psu"],
+    confidence: "high",
+  },
+
+  // --- Spor ayakkabı / fitness ---
+  {
+    slug: "spor-ayakkabi",
+    keywords: ["koşu ayakkabısı", "running shoes", "spor ayakkabı erkek", "spor ayakkabı kadın",
+               "tenis ayakkabısı", "basketbol ayakkabısı"],
+    excludeIfPresent: ["bot", "klasik"],
+    confidence: "high",
+  },
+  {
+    slug: "spor-outdoor",
+    keywords: ["trekking", "kamp ekipman", "termal mont", "outdoor mont", "softshell"],
+    confidence: "medium",
+  },
+
+  // --- Saat & Takı ---
+  {
+    slug: "saat-taki",
+    keywords: ["kol saati", "erkek kol saati", "kadın kol saati", "kuvars saat",
+               "altın kaplama", "925 ayar gümüş", "925 ayar", "altın kolye", "altın bilezik"],
+    excludeIfPresent: ["akıllı saat", "smart watch", "garmin"],
+    confidence: "high",
+  },
+
+  // --- Telefon aksesuar (Gpack genişlet) ---
+  {
+    slug: "telefon-aksesuar",
+    keywords: ["gpack ", "spigen ", "ringke ", "uyumlu kordon", "saat kayışı",
+               "watch kayışı", "spor band", "fitness band"],
+    excludeIfPresent: ["telefon kılıfı", "akıllı saat ana"],
+    confidence: "high",
+  },
+
+  // --- Güneş koruyucu ---
+  {
+    slug: "gunes-koruyucu",
+    keywords: ["güneş kremi", "spf 30", "spf 50", "spf 50+", "sun protection",
+               "güneşten koruyucu", "güneş bakım"],
+    confidence: "high",
+  },
+
+  // --- Mutfak sofra ---
+  {
+    slug: "mutfak-sofra",
+    keywords: ["yemek takımı", "porselen yemek", "12 parça yemek", "tencere seti",
+               "çatal kaşık seti", "tabak seti", "kahve fincanı seti", "demlik takımı",
+               "saklama kabı seti"],
+    confidence: "high",
+  },
+
+  // --- Küçük ev aletleri ---
+  {
+    slug: "kucuk-ev-aletleri",
+    keywords: ["air fryer", "yağsız fritöz", "ekmek kızartma", "tost makinesi",
+               "su ısıtıcı", "kettle", "yumurta pişirici", "yoğurt makinesi",
+               "et kıyma", "narenciye sıkacak"],
+    confidence: "high",
+  },
+
+  // --- Kişisel bakım ---
+  {
+    slug: "kisisel-hijyen",
+    keywords: ["sabun", "duş jeli", "kolonya el", "antibakteriyel jel",
+               "ıslak mendil", "tıraş bıçağı", "tıraş köpüğü"],
+    confidence: "high",
+  },
+  {
+    slug: "kisisel-bakim-elektrikli",
+    keywords: ["sakal kesme", "tıraş makinesi", "epilasyon", "ipl", "burun kıl",
+               "manikür seti", "elektrikli diş fırçası"],
+    confidence: "high",
+  },
+
+  // --- Mobilya ofis ---
+  {
+    slug: "mobilya-ofis",
+    keywords: ["ofis koltuğu", "çalışma masası", "oyuncu koltuğu", "gaming koltuk",
+               "ergonomik koltuk", "çalışma sandalye", "bilgisayar masası"],
+    confidence: "high",
+  },
+
+  // --- Pet aksesuar ---
+  {
+    slug: "pet-aksesuar",
+    keywords: ["kedi tasması", "köpek tasması", "kedi yatağı", "köpek yatağı",
+               "kedi mama kabı", "köpek mama kabı", "kedi tırmalama"],
+    confidence: "high",
+  },
+
   // --- Bebek ---
   {
     slug: "bebek-bezi",
