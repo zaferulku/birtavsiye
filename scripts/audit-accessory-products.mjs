@@ -8,7 +8,7 @@
  *   npx tsx --env-file=.env.local scripts/audit-accessory-products.mjs --category=akilli-telefon --batch=300
  */
 import { createClient } from "@supabase/supabase-js";
-import { checkAccessory, hasAccessoryRule } from "../src/lib/accessoryDetector.mjs";
+import { checkAccessory, hasAccessoryRule } from "../src/lib/accessoryDetector.js";
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,

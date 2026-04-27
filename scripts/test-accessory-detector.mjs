@@ -3,7 +3,7 @@
  * Calistirma:
  *   npx tsx scripts/test-accessory-detector.mjs
  */
-import { checkAccessory } from "../src/lib/accessoryDetector.mjs";
+import { checkAccessory } from "../src/lib/accessoryDetector";
 
 /** @type {Array<[string, string, boolean, string]>} */
 const cases = [
