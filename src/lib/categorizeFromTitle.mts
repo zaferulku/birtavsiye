@@ -290,6 +290,150 @@ const RULES: CategoryRule[] = [
     confidence: "high",
   },
 
+  // --- Kıyafet (en büyük niş) ---
+  {
+    slug: "erkek-ayakkabi-sneaker",
+    keywords: ["erkek sneaker", "erkek spor ayakkabı", "spor ayakkabı erkek", "sneaker erkek"],
+    confidence: "high",
+  },
+  {
+    slug: "erkek-ayakkabi-bot",
+    keywords: ["erkek bot", "erkek çizme", "bot erkek"],
+    confidence: "high",
+  },
+  {
+    slug: "erkek-ayakkabi-klasik",
+    keywords: ["klasik erkek ayakkabı", "erkek klasik ayakkabı", "deri damatlık", "damatlık erkek ayakkabı"],
+    confidence: "high",
+  },
+  {
+    slug: "erkek-giyim-ust",
+    keywords: ["erkek gömlek", "erkek tişört", "erkek sweat", "erkek hırka", "erkek kazak",
+               "erkek polo", "erkek t-shirt"],
+    excludeIfPresent: ["kadın"],
+    confidence: "high",
+  },
+  {
+    slug: "erkek-giyim-alt",
+    keywords: ["erkek pantolon", "erkek jean", "erkek eşofman alt", "erkek şort",
+               "pantolon erkek"],
+    excludeIfPresent: ["kadın"],
+    confidence: "high",
+  },
+  {
+    slug: "erkek-dis-giyim",
+    keywords: ["erkek mont", "erkek ceket", "erkek kaban", "erkek puffer", "erkek deri ceket"],
+    excludeIfPresent: ["kadın", "çocuk"],
+    confidence: "high",
+  },
+  {
+    slug: "kadin-giyim-ust",
+    keywords: ["kadın bluz", "kadın tişört", "kadın gömlek", "kadın hırka", "kadın kazak",
+               "kadın tunik", "büyük beden bluz"],
+    excludeIfPresent: ["erkek"],
+    confidence: "high",
+  },
+  {
+    slug: "kadin-giyim-alt",
+    keywords: ["kadın etek", "kadın pantolon", "kadın elbise", "kapri", "tayt"],
+    excludeIfPresent: ["erkek"],
+    confidence: "high",
+  },
+  {
+    slug: "kadin-dis-giyim",
+    keywords: ["kadın mont", "kadın ceket", "kadın kaban", "kadın trençkot"],
+    excludeIfPresent: ["erkek"],
+    confidence: "high",
+  },
+  {
+    slug: "esofman-spor-giyim",
+    keywords: ["eşofman takım", "spor takım", "fitness tayt", "spor tayt", "fitness şort",
+               "yoga taytı", "koşu taytı"],
+    confidence: "high",
+  },
+  {
+    slug: "canta-cuzdan",
+    keywords: ["sırt çantası", "el çantası", "omuz çantası", "kadın çanta", "erkek çanta",
+               "deri cüzdan", "kart çantası", "okul çantası", "spor çantası"],
+    confidence: "high",
+  },
+
+  // --- Cilt bakım / makyaj ---
+  {
+    slug: "cilt-bakim",
+    keywords: ["nemlendirici krem", "nemlendirici", "yüz bakım", "yüz kremi", "anti-aging",
+               "vitamin c serum", "hyaluronic", "yüz serumu", "göz kremi", "leke kremi",
+               "akne kremi", "güneş kremi", "spf "],
+    excludeIfPresent: ["saç", "el kremi"],
+    confidence: "high",
+  },
+  {
+    slug: "makyaj",
+    keywords: ["far paleti", "makyaj paleti", "fondöten", "kapatıcı", "pudra",
+               "eyeliner", "maskara", "kaş kalemi", "allık", "highlighter"],
+    confidence: "high",
+  },
+  {
+    slug: "dudak-makyaji",
+    keywords: ["ruj", "lip gloss", "dudak parlatıcı", "lip balm", "lip stain"],
+    confidence: "high",
+  },
+  {
+    slug: "sac-bakim",
+    keywords: ["şampuan", "saç kremi", "saç maskesi", "saç bakım", "saç serumu",
+               "kuru şampuan", "saç boyası"],
+    excludeIfPresent: ["fön", "kurutma", "düzleştirici", "saç fırçası"],
+    confidence: "high",
+  },
+  {
+    slug: "parfum",
+    keywords: ["parfüm", "edt ", "edp ", "eau de toilette", "eau de parfum", "kolonya"],
+    excludeIfPresent: ["deodorant"],
+    confidence: "high",
+  },
+  {
+    slug: "deodorant",
+    keywords: ["deodorant", "roll-on", "antiperspirant", "deostick"],
+    confidence: "high",
+  },
+  {
+    slug: "agiz-dis-bakim",
+    keywords: ["diş macunu", "diş fırçası", "elektrikli diş fırçası", "ağız bakım",
+               "diş ipi", "ağız gargarası"],
+    confidence: "high",
+  },
+
+  // --- Spor / outdoor ---
+  {
+    slug: "kamp-outdoor",
+    keywords: ["kamp çadırı", "uyku tulumu", "kamp sandalyesi", "termos", "kamp seti",
+               "outdoor sırt çantası"],
+    confidence: "high",
+  },
+  {
+    slug: "fitness-kondisyon",
+    keywords: ["dumbell", "dambıl", "kettlebell", "yoga matı", "yoga blok",
+               "fitness band", "direnç bandı", "spor bandı"],
+    confidence: "high",
+  },
+
+  // --- Bebek ---
+  {
+    slug: "bebek-bezi",
+    keywords: ["bebek bezi", "prima bebek bezi", "huggies"],
+    confidence: "high",
+  },
+  {
+    slug: "bebek-mama",
+    keywords: ["bebek maması", "devam sütü", "biberon maması"],
+    confidence: "high",
+  },
+  {
+    slug: "biberon-emzik",
+    keywords: ["biberon", "emzik", "biberon temizleyici"],
+    confidence: "high",
+  },
+
   // --- Televizyon ---
   {
     slug: "televizyon",
