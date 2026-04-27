@@ -85,17 +85,57 @@ const RULES: CategoryRule[] = [
     confidence: "high",
   },
 
-  // --- Yedek parça ---
+  // --- Yedek parça (Standart pattern grubu) ---
+  // Bu rule, bir ürün başlığında "iç speaker / yedek pil / değişim / soket / motor"
+  // gibi yedek-parça göstergesi geçtiğinde devreye girer. Telefon spesifik öncelikli.
+  // Rule order: aksesuar/aksesuar specific'ten ÖNCE çünkü "ekran değişim" → "ekran-koruyucu"
+  // değil "telefon-yedek-parca" olmalı.
   {
     slug: "telefon-yedek-parca",
-    keywords: ["batarya pil", "telefon pili", "telefon bataryası", "yedek pil",
-               "lcd dokunmatik", "lcd ekran", "yedek ekran", "uyumlu pil", "uyumlu batarya",
-               "pil batarya", "şarj soketi", "arka pil batarya kapağı", "batarya kapağı",
-               "güçlendirilmiş batarya", "ithal pil",
-               "şarj cihazı dock"],
-    excludeIfPresent: ["laptop", "notebook", "kamera", "fotoğraf makinesi"],
+    keywords: [
+      // İç parçalar (Samsung Galaxy / iPhone yedek parça örnekleri)
+      "iç speaker", "iç hoparlör", "iç hoparlor", "iç kamera", "iç mikrofon", "iç anten",
+      "kulak speaker", "ön kamera değişim", "arka kamera değişim", "ön kamera yedek", "arka kamera yedek",
+      // Ekran/Panel
+      "ekran değişim", "ekran panel", "lcd panel", "lcd ekran", "lcd dokunmatik", "yedek ekran",
+      "dokunmatik panel", "amoled panel", "oled panel",
+      // Pil/batarya
+      "batarya pil", "telefon pili", "telefon bataryası", "yedek pil", "yedek batarya",
+      "uyumlu pil", "uyumlu batarya", "pil batarya", "güçlendirilmiş batarya", "ithal pil",
+      "orjinal pil", "orjinal batarya", "lityum polimer batarya",
+      // Şarj/jak/soket
+      "şarj soketi", "şarj soket", "şarj portu yedek", "kulaklık jakı", "jack soket",
+      // Buton/tuş/kapak
+      "buton kapağı", "tuş kapağı", "arka pil batarya kapağı", "batarya kapağı",
+      "ses tuşu", "power tuşu", "home tuşu", "yan tuş",
+      // Sim tray/kart yuvası
+      "sim tray", "sim yuvası", "sim kart kapağı", "kart yuvası", "sim tepsi",
+      // Anten/kablo/flex
+      "anten kablo", "ana anten", "flex kablo", "esnek kablo flex",
+      // Vibratör/motor (telefon)
+      "vibratör motor", "vibrasyon motor", "titreşim motoru",
+      // Diğer
+      "fonksiyon kart", "telefon anakart", "şarj cihazı dock", "raze metal kamera"
+    ],
+    excludeIfPresent: ["laptop", "notebook", "fotoğraf makinesi", "araba", "otomobil",
+                       "buzdolabı", "çamaşır", "süpürge", "kahve makinesi"],
     confidence: "high",
   },
+
+  // --- Oto yedek parça ---
+  {
+    slug: "oto-yedek-parca",
+    keywords: ["fren disk", "fren balata", "yedek lastik araç", "akü araç",
+               "ön far", "arka far", "sinyal lambası", "ayna araç", "tampon parça",
+               "amortisör", "rotbaşı", "salıncak", "v kayışı", "triger kayışı",
+               "yağ filtresi", "hava filtresi araç", "yakıt filtresi", "polen filtresi"],
+    excludeIfPresent: ["telefon", "laptop"],
+    confidence: "high",
+  },
+
+  // --- Beyaz eşya yedek (mevcut kategorilere düşmek için generic) ---
+  // Rule yok; mevcut "buzdolabi" "supurge" rule'larında "filtre/torba/motor" yedek varyantları
+  // şu rule'a EKLE: aşağıdaki "supurge" ve "buzdolabi" rule'larında genişletme yapılacak.
 
   // --- Oyun konsol ---
   {
@@ -1024,15 +1064,11 @@ const RULES: CategoryRule[] = [
   },
 ];
 
+// Re-export — merkezi util'den. Türkçe İ lowercase bug düzeltilmiş halı.
+import { trNormalize } from "./turkishNormalize";
+
 function normalize(s: string): string {
-  return s.toLowerCase()
-    .replace(/ı/g, "i").replace(/İ/g, "i")
-    .replace(/ş/g, "s").replace(/Ş/g, "s")
-    .replace(/ğ/g, "g").replace(/Ğ/g, "g")
-    .replace(/ü/g, "u").replace(/Ü/g, "u")
-    .replace(/ö/g, "o").replace(/Ö/g, "o")
-    .replace(/ç/g, "c").replace(/Ç/g, "c")
-    .trim();
+  return trNormalize(s);
 }
 
 // Hibrit word-boundary: keyword'ün BAŞINDA boundary olsun (omen→Homend, ud→Dudak,
