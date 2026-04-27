@@ -662,6 +662,275 @@ const RULES: CategoryRule[] = [
     confidence: "high",
   },
 
+  // --- Monitör / Yazıcı / Projeksiyon ---
+  {
+    slug: "monitor",
+    keywords: ["gaming monitör", "144hz monitör", "165hz monitör", "240hz monitör",
+               "27 inç monitör", "32 inç monitör", "ultrawide monitör", "4k monitör",
+               "samsung odyssey", "lg ultragear"],
+    confidence: "high",
+  },
+  {
+    slug: "yazici-tarayici",
+    keywords: ["lazer yazıcı", "mürekkep püskürtmeli yazıcı", "çok fonksiyonlu yazıcı",
+               "fotokopi makinesi", "tarayıcı", "renkli yazıcı", "barkod yazıcı"],
+    confidence: "high",
+  },
+  {
+    slug: "projeksiyon",
+    keywords: ["projeksiyon cihazı", "projektör", "ev sinema projektör", "led projektör",
+               "4k projeksiyon"],
+    confidence: "high",
+  },
+  {
+    slug: "soundbar",
+    keywords: ["soundbar", "sound bar", "ev sinema sistemi", "5.1 ses sistemi",
+               "subwoofer ses"],
+    confidence: "high",
+  },
+
+  // --- Beyaz eşya ek ---
+  {
+    slug: "fritoz-airfryer",
+    keywords: ["air fryer", "airfryer", "yağsız fritöz", "fritöz makinesi"],
+    confidence: "high",
+  },
+  {
+    slug: "mikser-cirpici",
+    keywords: ["mikser", "çırpıcı", "stand mikser", "el mikseri", "kitchen mixer"],
+    confidence: "high",
+  },
+  {
+    slug: "su-isiticisi",
+    keywords: ["su ısıtıcısı", "çay makinesi", "kettle", "elektrikli çaydanlık"],
+    confidence: "high",
+  },
+  {
+    slug: "tost-makinesi",
+    keywords: ["tost makinesi", "ızgara tost", "multi grill", "ekmek kızartma makinesi"],
+    confidence: "high",
+  },
+  {
+    slug: "utu",
+    keywords: ["buharlı ütü", "ütü makinesi", "kuru ütü", "philips ütü", "tefal ütü",
+               "dikey ütü", "buhar kazanı"],
+    confidence: "high",
+  },
+  {
+    slug: "kurutma-makinesi",
+    keywords: ["çamaşır kurutma makinesi", "kurutma makinesi"],
+    excludeIfPresent: ["saç kurutma"],
+    confidence: "high",
+  },
+  {
+    slug: "hava-temizleyici",
+    keywords: ["hava temizleyici", "air purifier", "nemlendirici cihaz", "ortam nemlendirici"],
+    confidence: "high",
+  },
+  {
+    slug: "isitici",
+    keywords: ["elektrikli ısıtıcı", "fan heater", "soba", "elektrikli soba", "yağlı radyatör",
+               "çelik şömine", "infrared ısıtıcı"],
+    confidence: "high",
+  },
+
+  // --- Ulaşım ---
+  {
+    slug: "bisiklet",
+    keywords: ["bisiklet", "dağ bisikleti", "şehir bisikleti", "yarış bisikleti",
+               "katlanır bisiklet", "elektrikli bisiklet"],
+    confidence: "high",
+  },
+  {
+    slug: "scooter",
+    keywords: ["elektrikli scooter", "scooter", "elektrikli patinet"],
+    excludeIfPresent: ["motor"],
+    confidence: "high",
+  },
+
+  // --- Pet detay ---
+  {
+    slug: "akvaryum",
+    keywords: ["akvaryum", "balık yemi", "balık tankı", "akvaryum filtre"],
+    confidence: "high",
+  },
+  {
+    slug: "kus-urunleri",
+    keywords: ["kuş yemi", "kuş kafesi", "muhabbet kuşu", "papağan yemi"],
+    confidence: "high",
+  },
+  {
+    slug: "kedi-mamasi",
+    keywords: ["kedi maması", "kedi maması kuru", "kedi maması yaş"],
+    confidence: "high",
+  },
+  {
+    slug: "kopek-mamasi",
+    keywords: ["köpek maması", "köpek maması kuru", "köpek maması yaş"],
+    confidence: "high",
+  },
+  {
+    slug: "kedi-kumu",
+    keywords: ["kedi kumu", "topaklaşan kum", "silika kum"],
+    confidence: "high",
+  },
+
+  // --- Gözlük ---
+  {
+    slug: "gozluk",
+    keywords: ["güneş gözlüğü", "okuma gözlüğü", "gözlük çerçeve", "ray-ban",
+               "polarize gözlük"],
+    confidence: "high",
+  },
+
+  // --- Banyo / Tuvalet ---
+  {
+    slug: "banyo-tuvalet",
+    keywords: ["tuvalet kağıdı", "kağıt havlu", "klozet", "lavabo bataryası", "duş başlığı",
+               "duş seti", "askılı duş"],
+    confidence: "high",
+  },
+
+  // --- İç giyim ---
+  {
+    slug: "ic-giyim",
+    keywords: ["sutyen", "külot", "boxer", "atlet", "iç çamaşır", "pijama takım",
+               "kadın pijama", "erkek pijama", "termal iç çamaşır"],
+    confidence: "high",
+  },
+
+  // --- Kadın ayakkabı detay ---
+  {
+    slug: "kadin-ayakkabi-topuklu",
+    keywords: ["topuklu ayakkabı", "stiletto"],
+    confidence: "high",
+  },
+  {
+    slug: "kadin-ayakkabi-sneaker",
+    keywords: ["kadın sneaker", "kadın spor ayakkabı"],
+    confidence: "high",
+  },
+  {
+    slug: "kadin-ayakkabi-bot",
+    keywords: ["kadın bot", "kadın çizme"],
+    confidence: "high",
+  },
+  {
+    slug: "kadin-ayakkabi-sandalet",
+    keywords: ["sandalet", "babet", "terlik", "ev terliği", "yazlık ayakkabı"],
+    confidence: "high",
+  },
+  {
+    slug: "kadin-elbise",
+    keywords: ["kadın elbise", "mini elbise", "midi elbise", "uzun elbise",
+               "kokteyl elbise", "büyük beden elbise"],
+    confidence: "high",
+  },
+  {
+    slug: "kadin-etek",
+    keywords: ["kadın etek", "mini etek", "uzun etek", "tüllü etek"],
+    confidence: "high",
+  },
+
+  // --- Saç bakım detay ---
+  {
+    slug: "sampuan",
+    keywords: ["şampuan", "saç şampuanı", "schwarzkopf şampuan"],
+    confidence: "high",
+  },
+  {
+    slug: "sac-boyasi",
+    keywords: ["saç boyası", "loreal saç", "schwarzkopf saç boya"],
+    confidence: "high",
+  },
+
+  // --- Yüz bakım detay ---
+  {
+    slug: "yuz-nemlendirici",
+    keywords: ["yüz nemlendirici", "anti aging krem", "yüz kremi", "moisturizer"],
+    confidence: "high",
+  },
+  {
+    slug: "yuz-temizleyici",
+    keywords: ["yüz temizleyici", "yüz jeli", "cleanser", "makyaj temizleyici"],
+    confidence: "high",
+  },
+  {
+    slug: "serum-ampul",
+    keywords: ["yüz serumu", "vitamin c serum", "hyaluronic asit serum", "retinol serum",
+               "ampul serum"],
+    confidence: "high",
+  },
+  {
+    slug: "vucut-bakim",
+    keywords: ["vücut losyonu", "vücut kremi", "el ve vücut kremi", "body lotion"],
+    confidence: "high",
+  },
+
+  // --- Mobilya ---
+  {
+    slug: "mobilya-yatak",
+    keywords: ["karyola", "yatak baza", "tek kişilik yatak", "çift kişilik yatak",
+               "ortopedik yatak", "yaylı yatak"],
+    confidence: "high",
+  },
+  {
+    slug: "mobilya-yemek",
+    keywords: ["yemek masası", "yemek odası", "yemek sandalyesi takımı", "vitrin"],
+    confidence: "high",
+  },
+  {
+    slug: "mobilya-oturma",
+    keywords: ["koltuk takımı", "oturma grubu", "kanepe", "berjer", "tv ünitesi"],
+    confidence: "high",
+  },
+
+  // --- Müzik aleti / hobi ---
+  {
+    slug: "muzik-aleti",
+    keywords: ["akustik gitar", "elektro gitar", "klasik gitar", "piyano", "klavye piyano",
+               "saksafon", "bateri", "ud", "bağlama"],
+    confidence: "high",
+  },
+  {
+    slug: "resim-cizim",
+    keywords: ["resim defteri", "akrilik boya", "yağlı boya", "tuval", "fırça seti",
+               "pastel boya", "kuru boya"],
+    confidence: "high",
+  },
+
+  // --- Yapı / hırdavat ---
+  {
+    slug: "hirdavat",
+    keywords: ["vida", "civata", "somun", "matkap ucu", "kaynak teli", "su tesisat boru"],
+    confidence: "high",
+  },
+
+  // --- Ölçüm aletleri ---
+  {
+    slug: "olcum-aletleri",
+    keywords: ["dijital tartı", "mutfak terazisi", "lazer metre", "şerit metre",
+               "kumpas", "termometre"],
+    confidence: "high",
+  },
+
+  // --- İçecek / supermarket ---
+  {
+    slug: "icecek",
+    keywords: ["meyve suyu", "kola", "ayran", "soda", "maden suyu", "doğal kaynak suyu"],
+    confidence: "high",
+  },
+  {
+    slug: "konserve-sos",
+    keywords: ["domates salça", "ketçap", "mayonez", "salça", "konserve", "turşu"],
+    confidence: "high",
+  },
+  {
+    slug: "kahvalti-kahve",
+    keywords: ["kahvaltılık", "reçel", "bal", "fındık ezme", "tahin pekmez", "zeytin"],
+    confidence: "high",
+  },
+
   // --- Bebek ---
   {
     slug: "bebek-bezi",
