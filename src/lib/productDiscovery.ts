@@ -5,6 +5,8 @@ type DiscoveryProductLike = {
   description?: string | null;
   brand?: string | null;
   model_family?: string | null;
+  variant_storage?: string | null;
+  variant_color?: string | null;
 };
 
 function normalizeDiscoveryText(value: string | null | undefined): string {
@@ -53,16 +55,26 @@ export function getDiscoveryProductLabel(
   const includeBrand = options?.includeBrand ?? true;
   const family = (product.model_family ?? "").trim();
   const brand = (product.brand ?? "").trim();
+  const storage = (product.variant_storage ?? "").trim();
+  const color = (product.variant_color ?? "").trim();
   const cleanedTitle = cleanProductTitle(product.title);
 
+  // Eğer model_family anlamlıysa: brand + family + variant detayları (storage/color)
+  // Detay sayfasındaki gibi tam ürün başlığı liste'de de görünsün.
   if (family && hasMeaningfulModelFamily(family)) {
     const normalizedFamily = normalizeDiscoveryText(family);
     const normalizedBrand = normalizeDiscoveryText(brand);
-    if (normalizedBrand && normalizedFamily.startsWith(normalizedBrand)) {
-      return family;
+
+    const parts: string[] = [];
+    // Family brand'le başlamıyorsa brand'i de ekle
+    if (includeBrand && brand && !(normalizedBrand && normalizedFamily.startsWith(normalizedBrand))) {
+      parts.push(brand);
     }
-    if (includeBrand && brand) return `${brand} ${family}`.trim();
-    return family;
+    parts.push(family);
+    if (storage) parts.push(storage);
+    if (color) parts.push(color);
+
+    return parts.join(" ").trim();
   }
 
   if (cleanedTitle) return cleanedTitle;
