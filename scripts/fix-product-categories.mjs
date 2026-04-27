@@ -33,6 +33,10 @@ const PENDING_LIMIT = process.env.PENDING_LIMIT ? Number(process.env.PENDING_LIM
 const PENDING_FILE = process.env.PENDING_FILE || "output/pending-classification.json";
 const SAFE_ONLY = process.env.SAFE_ONLY === "1";
 const MOVE_UNCLASSIFIED = process.env.MOVE_UNCLASSIFIED === "1"; // pattern fail -> "siniflandirilmamis" kategorisi
+const EXPORT_UNCLASSIFIED = process.env.EXPORT_UNCLASSIFIED === "1"; // siniflandirilmamis kategorideki ürünleri JSON'a dump
+const UNCL_BATCH = process.env.UNCL_BATCH ? Number(process.env.UNCL_BATCH) : 200;
+const UNCL_OFFSET = process.env.UNCL_OFFSET ? Number(process.env.UNCL_OFFSET) : 0;
+const UNCL_FILE = process.env.UNCL_FILE || `output/unclassified-batch-${Math.floor((process.env.UNCL_OFFSET || 0)/200)}.json`;
 const UNCLASSIFIED_SLUG = "siniflandirilmamis";
 
 // Net güvenli transition whitelist (oldSlug -> newSlug). False-positive riski yok.
@@ -154,6 +158,34 @@ console.log(`No match (pattern yok): ${noMatch}`);
 console.log(`Low confidence: ${lowConfidence}`);
 console.log(`Mismatch (DUZELT): ${mismatches.length}`);
 
+// 3.3) siniflandirilmamis kategorideki ürünleri batch JSON'a dump et (Claude için)
+if (EXPORT_UNCLASSIFIED) {
+  const uId = slugToId.get(UNCLASSIFIED_SLUG);
+  if (!uId) { console.error("siniflandirilmamis kategorisi yok"); process.exit(1); }
+  const { data: unclProducts } = await sb.from("products")
+    .select("id,title")
+    .eq("category_id", uId)
+    .eq("is_active", true)
+    .order("title")
+    .range(UNCL_OFFSET, UNCL_OFFSET + UNCL_BATCH - 1);
+
+  // Leaf kategori listesi (Claude için referans)
+  const { data: leafCats } = await sb.from("categories").select("slug,name")
+    .eq("is_active", true).eq("is_leaf", true).neq("slug", UNCLASSIFIED_SLUG).order("slug");
+
+  const payload = {
+    generated_at: new Date().toISOString(),
+    batch: { offset: UNCL_OFFSET, limit: UNCL_BATCH, returned: unclProducts?.length || 0 },
+    leaf_categories: (leafCats || []).map(c => ({ slug: c.slug, name: c.name })),
+    instruction: "Her ürün için 'newSlug' alanını ekle (leaf_categories.slug listesinden). Eşleşme yoksa null bırak.",
+    products: (unclProducts || []).map(p => ({ id: p.id, title: p.title, newSlug: null })),
+  };
+  const { writeFileSync } = await import("fs");
+  writeFileSync(UNCL_FILE, JSON.stringify(payload, null, 2));
+  console.log(`Yazıldı: ${UNCL_FILE} (${payload.products.length} ürün, ${(leafCats||[]).length} kategori)`);
+  process.exit(0);
+}
+
 // 3.4) Pattern-fail olanları "siniflandirilmamis" kategorisine taşı
 if (MOVE_UNCLASSIFIED && moveCandidates.length > 0) {
   console.log(`\n=== MOVE_UNCLASSIFIED ===`);
@@ -215,8 +247,12 @@ Object.entries(transitions)
 let toApply = mismatches;
 if (SAFE_ONLY) {
   const before = mismatches.length;
-  toApply = mismatches.filter(m => SAFE_TRANSITIONS.has(`${m.oldSlug} -> ${m.newSlug}`));
-  console.log(`\nSAFE_ONLY filtre: ${before} -> ${toApply.length} (whitelist'te olanlar)`);
+  // siniflandirilmamis -> X her zaman güvenli (bilinmeyen → bilinen, regresyon değil)
+  toApply = mismatches.filter(m =>
+    m.oldSlug === UNCLASSIFIED_SLUG ||
+    SAFE_TRANSITIONS.has(`${m.oldSlug} -> ${m.newSlug}`)
+  );
+  console.log(`\nSAFE_ONLY filtre: ${before} -> ${toApply.length} (whitelist + ${UNCLASSIFIED_SLUG}->*)`);
   // SAFE filter sonrası transition breakdown
   const safeAgg = {};
   for (const m of toApply) {
