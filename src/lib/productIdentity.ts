@@ -1142,7 +1142,10 @@ export function buildProductUpdatePayload({
     if (existing.brand !== identity.brand) payload.brand = identity.brand;
   }
   if (!existing.slug && identity.slug) payload.slug = identity.slug;
-  if (!existing.title || existing.title.trim().length < 5) payload.title = identity.canonicalTitle;
+  // Mevcut title boşsa veya source'tan gelen daha uzun/info'luysa güncelle
+  if (!existing.title || existing.title.trim().length < identity.originalTitle.trim().length) {
+    payload.title = identity.originalTitle;
+  }
   if (!existing.image_url && imageUrl) payload.image_url = imageUrl;
   if (!existing.model_code && identity.modelCode) payload.model_code = identity.modelCode;
   if (!existing.model_family && identity.modelFamily) payload.model_family = identity.modelFamily;
@@ -1161,8 +1164,10 @@ export function buildProductCreatePayload({
   imageUrl,
   specs,
 }: BuildCreatePayloadInput): Record<string, unknown> {
+  // Title HER ZAMAN orijinal (source'tan geldiği gibi) — bilgi kaybı engellenir.
+  // Slug ise canonical short form (eşleştirme için).
   const payload: Record<string, unknown> = {
-    title: identity.canonicalTitle,
+    title: identity.originalTitle,
     slug: identity.slug,
     brand: identity.brand,
     category_id: categoryId,
