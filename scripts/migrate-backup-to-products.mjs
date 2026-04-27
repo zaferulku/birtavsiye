@@ -12,6 +12,35 @@
 import { createClient } from "@supabase/supabase-js";
 import { categorizeFromTitle } from "../src/lib/categorizeFromTitle.mts";
 
+// Title'dan variant_storage extract (GB, TB, ml)
+function extractStorage(title) {
+  if (!title) return null;
+  const m = title.match(/\b(\d+)\s*(GB|TB|ml|L)\b/i);
+  return m ? `${m[1]} ${m[2].toUpperCase()}` : null;
+}
+
+// Title'dan variant_color extract (TR + EN)
+const COLOR_PATTERNS = {
+  Siyah: /\b(siyah|black|midnight|space gray)\b/i,
+  Beyaz: /\b(beyaz|white|starlight)\b/i,
+  Kırmızı: /\b(kırmızı|red|crimson)\b/i,
+  Mavi: /\b(mavi|blue|navy)\b/i,
+  Yeşil: /\b(yeşil|green|mint)\b/i,
+  Sarı: /\b(sarı|yellow|gold)\b/i,
+  Pembe: /\b(pembe|pink|rose)\b/i,
+  Mor: /\b(mor|purple|violet)\b/i,
+  Gri: /\b(gri|gray|grey|silver|gümüş)\b/i,
+  Turuncu: /\b(turuncu|orange)\b/i,
+  Kahverengi: /\b(kahverengi|brown)\b/i,
+};
+function extractColor(title) {
+  if (!title) return null;
+  for (const [color, pattern] of Object.entries(COLOR_PATTERNS)) {
+    if (pattern.test(title)) return color;
+  }
+  return null;
+}
+
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY,
@@ -98,8 +127,9 @@ for (let i = 0; i < todo.length; i += BATCH) {
       image_url: b.image_url,
       model_code: b.model_code,
       model_family: b.model_family,
-      variant_storage: b.variant_storage,
-      variant_color: b.variant_color,
+      // Title'dan extract (dedup constraint için benzersiz tuple)
+      variant_storage: b.variant_storage || extractStorage(b.title),
+      variant_color: b.variant_color || extractColor(b.title),
       icecat_id: b.icecat_id,
       is_active: true,
       is_verified: false,
