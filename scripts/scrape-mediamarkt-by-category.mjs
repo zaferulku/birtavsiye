@@ -348,6 +348,7 @@ async function main() {
               const ageMs = Date.now() - new Date(existing.last_seen).getTime();
               if (ageMs < 24 * 3600 * 1000) {
                 state.stats.skipped++;
+                recordFailReason('skip_24h_fresh');
                 continue;
               }
             }
