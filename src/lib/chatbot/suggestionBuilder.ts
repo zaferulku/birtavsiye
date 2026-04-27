@@ -26,7 +26,17 @@ export type Suggestion = {
   value: string;
   type: "shortcut" | "brand" | "price" | "category" | "freetext";
   icon?: string;
+  /** Backward compat — eski chip'ler için korundu */
   categorySlug?: string;
+  intentHint?: {
+    category_slug?: string | null;
+    brand_filter?: string[];
+    variant_color_patterns?: string[];
+    variant_storage_patterns?: string[];
+    price_min?: number | null;
+    price_max?: number | null;
+    mode?: "extend" | "replace" | "reset";
+  };
 };
 
 export type SuggestionContext = {
@@ -202,14 +212,28 @@ async function buildBrandSuggestions(
       .map(([b]) => b);
   }
 
+  const categorySlug = ctx.categorySlug ?? null;
   const out: Suggestion[] = [
-    { label: "En popüler", value: `${baseValue} en popüler`, type: "shortcut", icon: "🔥" },
-    { label: "Tavsiye ver", value: `${baseValue} tavsiye ver`, type: "shortcut", icon: "✨" },
+    {
+      label: "En popüler",
+      value: `${baseValue} en popüler`,
+      type: "shortcut",
+      icon: "🔥",
+      intentHint: { category_slug: categorySlug, mode: "reset" },
+    },
+    {
+      label: "Tavsiye ver",
+      value: `${baseValue} tavsiye ver`,
+      type: "shortcut",
+      icon: "✨",
+      intentHint: { category_slug: categorySlug, mode: "reset" },
+    },
     ...topBrands.map(
       (brand): Suggestion => ({
         label: brand,
         value: `${baseValue} ${brand}`,
         type: "brand",
+        intentHint: { category_slug: categorySlug, brand_filter: [brand], mode: "extend" },
       })
     ),
     { label: "Hepsini göster", value: `${baseValue} hepsini göster`, type: "shortcut" },

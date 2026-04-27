@@ -45,6 +45,9 @@ export type ChatMessage = {
   // tam değer gider (örn "siyah telefon en popüler"), displayLabel UI'da
   // kısa görünür (örn "En popüler").
   displayLabel?: string | null;
+  // Backend'den dönen meta (state, mergeAction, productLimit) — history rebuild için
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  meta?: any;
 };
 
 export type RecommendedProduct = {
@@ -75,7 +78,8 @@ interface ChatStore {
     attachmentPreview?: string | null,
     displayLabel?: string | null
   ) => string;
-  addAssistantMessage: (content: string, suggestions?: Suggestion[] | null) => void;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  addAssistantMessage: (content: string, suggestions?: Suggestion[] | null, meta?: any) => void;
   clearMessages: () => void;
   startNewConversation: () => void;
   getHistoryForBackend: () => Array<{ role: string; content: string }>;
@@ -177,13 +181,14 @@ export const useChatStore = create<ChatStore>()(
         return id;
       },
 
-      addAssistantMessage: (content, suggestions = null) => {
+      addAssistantMessage: (content, suggestions = null, meta = undefined) => {
         const message: ChatMessage = {
           id: generateId(),
           role: "assistant",
           content,
           timestamp: Date.now(),
           suggestions: suggestions ?? null,
+          meta,
         };
         set((state) => ({
           messages: [...state.messages, message],
@@ -214,7 +219,11 @@ export const useChatStore = create<ChatStore>()(
         const historicalOnly = messages.slice(0, -1);
         return historicalOnly
           .slice(-HISTORY_FOR_BACKEND)
-          .map((m) => ({ role: m.role, content: m.content }));
+          .map((m) => ({
+            role: m.role,
+            content: m.content,
+            ...(m.role === "assistant" && m.meta?.state ? { meta: m.meta.state } : {}),
+          }));
       },
 
       // ----- Panel -----

@@ -51,6 +51,12 @@ export type OrchestratorInput = {
   sb: SupabaseClient;
   // Önceki konuşma (proaktif sohbet için, opsiyonel)
   conversationHistory?: Array<{ role: string; content: string }>;
+  // Stateful conversation (opsiyonel — dinamik match_count için)
+  conversationState?: {
+    brand_filter?: string[];
+    variant_color_patterns?: string[];
+    variant_storage_patterns?: string[];
+  } | null;
 };
 
 export type ChatProductResult = {
@@ -607,6 +613,13 @@ async function runSmartSearch(
     remaining_specs,
   } = extractVariantPatterns(intent.must_have_specs, intent.semantic_keywords);
 
+  // Dinamik match_count — filtre yoğunluğuna göre
+  const filterDensity =
+    (intent.brand_filter?.length ? 1 : 0) +
+    (variant_color_patterns ? 1 : 0) +
+    (variant_storage_patterns ? 1 : 0);
+  const dynamicMatchCount = filterDensity >= 2 ? 20 : filterDensity === 1 ? 30 : 40;
+
   // RPC parametreleri
   const params = {
     query_embedding: embed.embedding,
@@ -622,7 +635,7 @@ async function runSmartSearch(
     brand_filter: intent.brand_filter.length > 0
       ? intent.brand_filter
       : null,
-    match_count: 10,
+    match_count: dynamicMatchCount,
     match_threshold: 0.3,
     variant_color_patterns,
     variant_storage_patterns,

@@ -8,6 +8,13 @@ import {
 } from "../../../lib/chatbot/chatOrchestrator";
 import { parseQuery, type CategoryRef } from "../../../lib/search/queryParser";
 import {
+  mergeIntent,
+  rebuildStateFromHistory,
+  emptyState,
+  type ConversationState,
+  type RawIntent,
+} from "../../../lib/chatbot/conversationState";
+import {
   getQueryRankingProfile,
   isStrictIntentTerm,
   retrieveRankedProducts,
@@ -334,6 +341,19 @@ async function searchProducts(userQuery: string): Promise<SearchResult> {
   }
 }
 
+function calculateProductLimit(state: ConversationState, mergeAction: string): number {
+  if (mergeAction === "shortcut_keep_category" || mergeAction === "single_word_widen") return 24;
+  if (mergeAction === "category_changed_reset") return 18;
+  const filterCount =
+    (state.brand_filter.length > 0 ? 1 : 0) +
+    (state.variant_color_patterns.length > 0 ? 1 : 0) +
+    (state.variant_storage_patterns.length > 0 ? 1 : 0) +
+    (state.price_min != null || state.price_max != null ? 1 : 0);
+  if (filterCount >= 2) return 12;
+  if (filterCount === 1) return 18;
+  return 24;
+}
+
 export async function POST(req: Request) {
   const startTime = Date.now();
 
@@ -352,6 +372,8 @@ export async function POST(req: Request) {
       typeof body?.intentHint?.category_slug === "string"
         ? body.intentHint.category_slug
         : null;
+    const intentHintFull: { category_slug?: string | null } | null =
+      body?.intentHint && typeof body.intentHint === "object" ? body.intentHint : null;
     const image =
       typeof body?.image === "string" && body.image.startsWith("data:image/")
         ? body.image
@@ -409,20 +431,58 @@ export async function POST(req: Request) {
     const parsed = parseQuery(message, categories);
     const categoryTaxonomy = categories.map((category) => category.slug);
 
-    const effectiveCategory =
-      intentHintCategory || parsed.category_slugs?.[0] || null;
+    // ── Stateful conversation intent merge ────────────────────────────────────
+    const previousState = rebuildStateFromHistory(
+      (history ?? []) as Array<{ role: string; content: string; meta?: Partial<ConversationState> }>
+    );
+
+    const rawIntent: RawIntent = {
+      category_slug: parsed.category_slugs?.[0] ?? null,
+      brand_filter: parsed.brand ? [parsed.brand] : [],
+      variant_color_patterns: parsed.color ? [`%${parsed.color}%`] : [],
+      variant_storage_patterns: [],
+      price_min: parsed.price_min ?? null,
+      price_max: parsed.price_max ?? null,
+      keywords: parsed.keywords ?? [],
+    };
+
+    const { next: conversationState, action: mergeAction } = mergeIntent(
+      previousState,
+      rawIntent,
+      message,
+      intentHintFull
+    );
+
+    console.log("[chat] mergeAction=", mergeAction, {
+      prev: { category: previousState.category_slug, brand: previousState.brand_filter, color: previousState.variant_color_patterns },
+      next: { category: conversationState.category_slug, brand: conversationState.brand_filter, color: conversationState.variant_color_patterns },
+    });
+
+    const effectiveCategory = conversationState.category_slug || intentHintCategory || parsed.category_slugs?.[0] || null;
+
+    // Effective brand: first entry from state, or parsed brand
+    const effectiveBrand =
+      conversationState.brand_filter.length > 0
+        ? conversationState.brand_filter[0]
+        : parsed.brand;
+
+    // Effective color: extract raw color string from first pattern (strip % wildcards)
+    const effectiveColor =
+      conversationState.variant_color_patterns.length > 0
+        ? conversationState.variant_color_patterns[0].replace(/%/g, "")
+        : parsed.color;
 
     const orchResult = await orchestrateChat({
       userMessage: message,
       legacySearch: searchProducts,
       parsed: {
         category: effectiveCategory,
-        brand: parsed.brand,
+        brand: effectiveBrand,
         model_family: null,
         variant_storage: null,
-        variant_color: parsed.color,
-        price_min: parsed.price_min,
-        price_max: parsed.price_max,
+        variant_color: effectiveColor,
+        price_min: conversationState.price_min ?? parsed.price_min,
+        price_max: conversationState.price_max ?? parsed.price_max,
         keywords: parsed.keywords || [],
         confidence: intentHintCategory
           ? 1.0
@@ -433,7 +493,11 @@ export async function POST(req: Request) {
       categoryTaxonomy,
       sb,
       conversationHistory: history,
+      conversationState,
     });
+
+    const productLimit = calculateProductLimit(conversationState, mergeAction);
+    const responseProducts = orchResult.products.slice(0, productLimit);
 
     let loggedDecisionId: number | null = null;
     try {
@@ -463,7 +527,7 @@ export async function POST(req: Request) {
                 }
               : null,
             kb_chunks: orchResult.kbChunkCount,
-            product_count: orchResult.products.length,
+            product_count: responseProducts.length,
             suggestions: orchResult.suggestions ?? [],
             reply: typeof orchResult.response === "string" ? orchResult.response.slice(0, 200) : null,
             latency_ms: orchResult.latencyMs,
@@ -489,12 +553,23 @@ export async function POST(req: Request) {
 
     return NextResponse.json({
       reply: orchResult.response,
-      products: orchResult.products,
+      products: responseProducts,
       suggestions: orchResult.suggestions ?? null,
       meta: {
         method: orchResult.method,
         decisionId: loggedDecisionId,
         latency_ms: Date.now() - startTime,
+        state: {
+          category_slug: conversationState.category_slug,
+          brand_filter: conversationState.brand_filter,
+          variant_color_patterns: conversationState.variant_color_patterns,
+          variant_storage_patterns: conversationState.variant_storage_patterns,
+          price_min: conversationState.price_min,
+          price_max: conversationState.price_max,
+          turn_count_in_category: conversationState.turn_count_in_category,
+        },
+        mergeAction,
+        productLimit,
       },
       _debug: {
         path: orchResult.pathDecision.path,
