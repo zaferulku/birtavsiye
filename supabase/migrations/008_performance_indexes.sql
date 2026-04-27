@@ -8,20 +8,23 @@
 --   3. listings(source, source_url) — scrape dedup check
 --   4. listings(is_active, in_stock) — aktif fiyat filtresi
 --
--- CONCURRENTLY: tabloyu kilitlemeden index oluşturur (production-safe).
--- Supabase SQL Editor'da çalıştır.
+-- CONCURRENTLY kaldırıldı — Supabase SQL Editor sorguları implicit transaction'a
+-- sarar, CONCURRENTLY içinde çalışamaz (error 25001). Tablolar küçük olduğu için
+-- normal CREATE INDEX 5-10sn sürer, kısa kilitleme hissedilmez.
+-- Production'da çok büyük tabloda Supabase Studio yerine direct psql ile
+-- CONCURRENTLY kullan.
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_products_category_active
+CREATE INDEX IF NOT EXISTS idx_products_category_active
   ON products (category_id)
   WHERE is_active = true;
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_listings_product_id
+CREATE INDEX IF NOT EXISTS idx_listings_product_id
   ON listings (product_id);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_listings_source_url
+CREATE INDEX IF NOT EXISTS idx_listings_source_url
   ON listings (source, source_url);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_listings_active_stock
+CREATE INDEX IF NOT EXISTS idx_listings_active_stock
   ON listings (is_active, in_stock)
   WHERE is_active = true;
 
