@@ -327,10 +327,19 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   const countBaseProducts = normalizeProducts((allProducts as ProductCard[] | null) ?? [])
     .filter((product) => !shouldHideDiscoveryProduct(product))
     .filter((product) => !kaynak || getActiveListings(product.prices, kaynak).length > 0);
+  // Filter listesinde invalid model_family (SKU/EAN sayisal, Apple SKU MTPxxxTU/A) gizlensin
+  const isInvalidFamily = (v: string | null | undefined): boolean => {
+    if (!v) return true;
+    const t = v.trim();
+    if (/^\d{6,13}$/.test(t)) return true;
+    if (/^[A-Z]{2}[A-Z0-9]{2,6}TU\/A$/i.test(t)) return true;
+    if (t.length < 3) return true;
+    return false;
+  };
   countBaseProducts.forEach(p => {
     if (p.brand) {
       brandCounts[p.brand] = (brandCounts[p.brand] || 0) + 1;
-      if (p.model_family) {
+      if (p.model_family && !isInvalidFamily(p.model_family)) {
         modelsByBrand[p.brand] = modelsByBrand[p.brand] ?? {};
         modelsByBrand[p.brand][p.model_family] = (modelsByBrand[p.brand][p.model_family] || 0) + 1;
       }
