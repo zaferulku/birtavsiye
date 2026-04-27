@@ -65,6 +65,11 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  // Kill switch — Supabase rate limit / connection pool dolduğunda devre dışı bırak
+  if (process.env.CRON_SCRAPE_DISABLED === "1") {
+    return NextResponse.json({ skipped: true, reason: "CRON_SCRAPE_DISABLED" });
+  }
+
   const start = Date.now();
   console.log(`[${new Date().toISOString()}] CRON /api/cron/scrape started`);
 
