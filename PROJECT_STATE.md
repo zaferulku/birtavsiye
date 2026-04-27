@@ -1,9 +1,9 @@
-# birtavsiye.net — Project State v6
+# birtavsiye.net — Project State v7
 
 > **Bu dosya tek kaynak gerçek.** Yeni sohbet/oturum başlattığınızda
 > bu dosyayı Claude veya Claude Code'a verin — tüm bağlamı 30 saniyede alır.
 
-**Son güncelleme:** 2026-04-27 v6 (search regression + price_history + 3-bug session)
+**Son güncelleme:** 2026-04-27 v7 (akilli-telefon büyük scrape + ProductGroup fix + accessory pipeline + model_family backfill + brand normalize)
 **Production:** https://birtavsiye.net (www.birtavsiye.net canonical)
 **Stack:** Next.js 16, Supabase + pgvector, Zustand, NVIDIA Llama 3.3 70B / Groq / Gemini fallback
 
@@ -31,13 +31,13 @@ kişiselleştirilmiş tavsiye, kategori bazlı search, forum tartışmaları.
 
 | Tablo | Sayı |
 |---|---|
-| products | 815+ canonical |
-| listings (MM çoğu) | ~1294 (devam) |
-| price_history | 1294 (coverage %100) |
+| products | ~1960 canonical (akilli-telefon scrape sonrası) |
+| listings (MM çoğu) | ~2900 (akilli-telefon ek scrape sonrası) |
+| price_history | büyüyor (her listing INSERT/UPDATE'de yazıyor) |
 | categories | 177 (Migration 005 sonrası) |
 | topics | 21 (forum seed, statik) |
 | topic_answers | 84 |
-| akilli-telefon | 27 ürün (Samsung 6, Apple 10, OPPO 3, NUBIA 3, TECNO 3) |
+| akilli-telefon | **585 ürün** (Apple 230+55, Samsung 124+6, Xiaomi 50, Tecno 38, Vivo 37, Infinix 30, ...) |
 | KB | 141 chunk, 12 doküman |
 | agent_decisions | büyüyor (chatbot logging) |
 | backup_20260422_products | 43,176 (Faz 1 kaynak) |
@@ -207,17 +207,23 @@ src/lib/scrapers/mediamarkt.mts                               # JSON-LD + Apollo
 src/lib/scrapers/mediamarkt-categories.mts                    # category reader
 src/lib/scrapers/mediamarkt-category-map.mts                  # 21 DB → ~70 MM
 src/lib/productTitle.ts                                       # extractColorFromTitle
+src/lib/accessoryDetector.mts                                 # 7 kategori kuralı + universal + ACCESSORY_CATEGORY_SLUGS bypass
+src/lib/extractModelFamily.mts                                # iPhone/Galaxy canonical pattern + APPLE_SKU_REGEX
 src/components/chatbot/ChatBar.tsx                            # camera split
 src/components/chatbot/ChatPanel.tsx                          # chip click intentHint
 scripts/scrape-mediamarkt-by-category.mjs                     # ana scraper
 scripts/scraper-state.json                                    # gitignored, resume state
 scripts/backfill-variant-color.mjs                            # color title parse
 scripts/backfill-price-history.mjs                            # history backfill
+scripts/backfill-model-family.mjs                             # title -> canonical model_family + model_code
+scripts/audit-accessory-products.mjs                          # DB-wide accessory flag set
+scripts/test-accessory-detector.mjs                           # 10 vaka smoke test
 scripts/seed-forum-static.mjs                                 # 21 topics + 84 answers
 mm-category-tree.json                                         # 367KB, 713 leaf
 supabase/migrations/004_smart_search_variants.sql             # variant_color_patterns
 supabase/migrations/005_header_missing_categories.sql         # babet/etek/film-dizi
 supabase/migrations/006_listings_raw_columns.sql              # raw_specs/images/desc
+supabase/migrations/007_products_is_accessory.sql             # is_accessory flag (manuel uygulama gerek)
 /tmp/mm-full-resume.log                                       # resume log
 ```
 
@@ -303,6 +309,16 @@ ProductDetailShell.tsx ortak nokta — uyumlu.
 | KNOWN_BRANDS_TR enrichment | 2026-04-27 | LLM brand_filter boş bırakıyordu |
 | Suggestion.categorySlug + intentHint | 2026-04-27 | "Telefon" chip too_vague düşüyordu |
 | agent_decisions output_data: suggestions + reply | 2026-04-27 | DB log eksikti, teşhis yapılamıyordu |
+| ProductGroup JSON-LD desteği | 2026-04-27 | Apple iPhone PDP'leri ProductGroup tipinde, parser eski hali kabul etmiyordu |
+| ProductGroup hasVariant offers fallback | 2026-04-27 | offers ProductGroup'ta yoksa ilk variant'tan al |
+| Stoksuz ürün kabulü (price=0, in_stock=false) | 2026-04-27 | Ürün oluşturmak için, diğer sitelerde fiyat geldiğinde eşleşir |
+| scrapePdpDetailed structured fail | 2026-04-27 | 7 farklı reason — skip diagnostic için |
+| accessoryDetector tek kaynak gerçek | 2026-04-27 | Frontend + ingestion + audit aynı detector kullanır |
+| ACCESSORY_CATEGORY_SLUGS bypass | 2026-04-27 | powerbank/telefon-kilifi gibi aksesuar kategorilerinde detector devre dışı |
+| Migration 007 products.is_accessory | 2026-04-27 | Audit script aksesuarları kalıcı işaretler |
+| extractModelFamily canonical patterns | 2026-04-27 | iPhone/Galaxy başlıklarından doğru model çıkarma; SKU/EAN'lardan kurtulma |
+| Brand TitleCase normalize (acronym hariç) | 2026-04-27 | Apple/APPLE duplicate chip vs sorunu; HP/DJI/JBL all-caps |
+| skip_24h_fresh failsByReason'a | 2026-04-27 | Skip diagnostic eksikti (24h skip görünmez) |
 
 ---
 
@@ -335,6 +351,7 @@ ProductDetailShell.tsx ortak nokta — uyumlu.
 | 004_smart_search_variants.sql | ✅ |
 | 005_header_missing_categories.sql | ✅ |
 | 006_listings_raw_columns.sql | ✅ |
+| 007_products_is_accessory.sql | ⚠️ MANUEL uygulama bekliyor |
 
 ### Knowledge Base
 12 doküman / 141 chunk (`docs/knowledge/`):
@@ -407,12 +424,16 @@ anne_bebek (11) = **141**
 **10:** Faz 1 (04-25 → ongoing) — LLM classifier, multi-model fallback, resume, dry-run %96, 100 gerçek %76
 **11:** MM scrape category-driven (04-27) — 49/49 kategori, 7.6h, 726 insert + 63 update + 5975 skipped + 1061 fails
 **12:** Search regression + 3-bug + price_history (04-27) — `bcebf6b` + `da7f09b` + `8913a79`
+**13:** akilli-telefon büyük scrape (04-27) — ProductGroup fix + accessory pipeline + model_family + brand normalize — `facc78a` + `076244c` (akilli-telefon 27 → 585 ürün)
 
 ---
 
 ## ✅ COMMIT GEÇMİŞİ (son 25)
 
 ```
+076244c   feat(scrape+model): skip_24h_fresh tracking + model_family backfill
+facc78a   feat(scrape+detector): stoksuz urun + ProductGroup + accessory detector + refurb blacklist + skip diagnostic
+9688b7e   docs: PROJECT_STATE v6 — search regression + price_history + 3-bug session
 da7f09b   fix(chat): suggestion log + brand parser + chip kategori hint
 afbd879   feat: add category filters and hide refurbished products
 8913a79   fix(scraper): price_history insert in upsertListing + backfill
@@ -555,6 +576,7 @@ C: ÇÖZÜLDÜ (`8913a79`). Scraper INSERT/UPDATE her iki path'de price_history 
 | 2026-04-26 | v4 — chatbot UX tamam, Header tamam, supabaseAdmin kuralı, Faz 1 ongoing | Claude |
 | 2026-04-26 | v5 — varyant filtre + Header slug map + Migration 005 | Claude |
 | 2026-04-27 | v6 — search regression + 3-bug + price_history + MM scrape category-driven | Claude |
+| 2026-04-27 | v7 — akilli-telefon büyük scrape (585 ürün) + ProductGroup fix + accessory pipeline (detector+filter+migration+audit) + model_family backfill + brand normalize | Claude |
 
 ---
 
