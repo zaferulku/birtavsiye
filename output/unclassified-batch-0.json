@@ -1,0 +1,1669 @@
+{
+  "generated_at": "2026-04-27T16:35:16.639Z",
+  "batch": {
+    "offset": 0,
+    "limit": 200,
+    "returned": 200
+  },
+  "leaf_categories": [
+    {
+      "slug": "agiz-dis-bakim",
+      "name": "Ağız & Diş Bakımı"
+    },
+    {
+      "slug": "akilli-saat",
+      "name": "Akıllı Saat & Bileklik"
+    },
+    {
+      "slug": "akilli-telefon",
+      "name": "Akıllı Telefon"
+    },
+    {
+      "slug": "aksiyon-kamera",
+      "name": "Aksiyon Kamera"
+    },
+    {
+      "slug": "akvaryum",
+      "name": "Akvaryum & Balık"
+    },
+    {
+      "slug": "arac-aksesuar",
+      "name": "Araç Aksesuar"
+    },
+    {
+      "slug": "arac-elektronigi",
+      "name": "Araç Elektroniği"
+    },
+    {
+      "slug": "aspirator-davlumbaz",
+      "name": "Aspiratör & Davlumbaz"
+    },
+    {
+      "slug": "atistirmalik-cikolata",
+      "name": "Atıştırmalık & Çikolata"
+    },
+    {
+      "slug": "aydinlatma",
+      "name": "Aydınlatma"
+    },
+    {
+      "slug": "bahce-balkon",
+      "name": "Bahçe & Balkon"
+    },
+    {
+      "slug": "bakliyat-makarna",
+      "name": "Bakliyat & Makarna"
+    },
+    {
+      "slug": "banyo-tuvalet",
+      "name": "Banyo & Tuvalet"
+    },
+    {
+      "slug": "bebek-bakim-urunleri",
+      "name": "Bebek Bakım Ürünleri"
+    },
+    {
+      "slug": "bebek-bezi",
+      "name": "Bebek Bezi"
+    },
+    {
+      "slug": "bebek-guvenligi",
+      "name": "Bebek Güvenliği"
+    },
+    {
+      "slug": "bebek-mama",
+      "name": "Bebek Maması"
+    },
+    {
+      "slug": "besik-bebek-yatak",
+      "name": "Beşik & Bebek Yatağı"
+    },
+    {
+      "slug": "biberon-emzik",
+      "name": "Biberon & Emzik"
+    },
+    {
+      "slug": "bilgisayar-bilesenleri",
+      "name": "Bilgisayar Bileşenleri"
+    },
+    {
+      "slug": "bilgisayar-cevre",
+      "name": "Klavye, Mouse, Webcam"
+    },
+    {
+      "slug": "bisiklet",
+      "name": "Bisiklet"
+    },
+    {
+      "slug": "blender-robot",
+      "name": "Blender & Mutfak Robotu"
+    },
+    {
+      "slug": "bluetooth-hoparlor",
+      "name": "Bluetooth Hoparlör"
+    },
+    {
+      "slug": "boya-malzeme",
+      "name": "Boya & Malzeme"
+    },
+    {
+      "slug": "bulasik-makinesi",
+      "name": "Bulaşık Makinesi"
+    },
+    {
+      "slug": "buzdolabi",
+      "name": "Buzdolabı"
+    },
+    {
+      "slug": "camasir-makinesi",
+      "name": "Çamaşır Makinesi"
+    },
+    {
+      "slug": "canta-cuzdan",
+      "name": "Çanta & Cüzdan"
+    },
+    {
+      "slug": "cocuk-ayakkabi",
+      "name": "Çocuk Ayakkabı"
+    },
+    {
+      "slug": "cocuk-giyim",
+      "name": "Çocuk Giyim"
+    },
+    {
+      "slug": "cocuk-kitaplari",
+      "name": "Çocuk Kitapları"
+    },
+    {
+      "slug": "cocuk-odasi",
+      "name": "Çocuk Odası"
+    },
+    {
+      "slug": "deodorant",
+      "name": "Deodorant"
+    },
+    {
+      "slug": "dondurma-tatli",
+      "name": "Dondurma & Tatlı"
+    },
+    {
+      "slug": "drone",
+      "name": "Drone"
+    },
+    {
+      "slug": "dudak-makyaji",
+      "name": "Dudak Makyajı"
+    },
+    {
+      "slug": "ekran-koruyucu",
+      "name": "Ekran Koruyucu"
+    },
+    {
+      "slug": "el-aletleri",
+      "name": "El Aletleri"
+    },
+    {
+      "slug": "el-sanatlari",
+      "name": "El Sanatları"
+    },
+    {
+      "slug": "elektrik-malzeme",
+      "name": "Elektrik Malzeme"
+    },
+    {
+      "slug": "elektrikli-aletler",
+      "name": "Elektrikli Aletler"
+    },
+    {
+      "slug": "erkek-ayakkabi-bot",
+      "name": "Erkek Bot & Çizme"
+    },
+    {
+      "slug": "erkek-ayakkabi-klasik",
+      "name": "Klasik Erkek Ayakkabı"
+    },
+    {
+      "slug": "erkek-ayakkabi-sneaker",
+      "name": "Erkek Sneaker & Spor Ayakkabı"
+    },
+    {
+      "slug": "erkek-bakim",
+      "name": "Erkek Bakımı"
+    },
+    {
+      "slug": "erkek-dis-giyim",
+      "name": "Erkek Dış Giyim"
+    },
+    {
+      "slug": "erkek-giyim-alt",
+      "name": "Erkek Alt Giyim"
+    },
+    {
+      "slug": "erkek-giyim-ust",
+      "name": "Erkek Üst Giyim"
+    },
+    {
+      "slug": "erkek-takim-elbise",
+      "name": "Takım Elbise & Smokin"
+    },
+    {
+      "slug": "esofman-spor-giyim",
+      "name": "Eşofman & Spor Giyim"
+    },
+    {
+      "slug": "ev-tekstili",
+      "name": "Ev Tekstili"
+    },
+    {
+      "slug": "film-dizi",
+      "name": "Film & Dizi"
+    },
+    {
+      "slug": "firin-ocak",
+      "name": "Fırın & Ocak"
+    },
+    {
+      "slug": "fitness-kondisyon",
+      "name": "Fitness & Kondisyon"
+    },
+    {
+      "slug": "fotograf-kamera",
+      "name": "Fotoğraf Makinesi"
+    },
+    {
+      "slug": "fritoz-airfryer",
+      "name": "Fritöz & Airfryer"
+    },
+    {
+      "slug": "goz-makyaji",
+      "name": "Göz Makyajı"
+    },
+    {
+      "slug": "gozluk",
+      "name": "Gözlük"
+    },
+    {
+      "slug": "gunes-koruyucu",
+      "name": "Güneş Koruyucu"
+    },
+    {
+      "slug": "guvenlik-kamerasi",
+      "name": "Güvenlik Kamerası"
+    },
+    {
+      "slug": "hava-temizleyici",
+      "name": "Hava Temizleyici & Nemlendirici"
+    },
+    {
+      "slug": "hirdavat",
+      "name": "Hırdavat & Vida"
+    },
+    {
+      "slug": "ic-giyim",
+      "name": "İç Giyim & Pijama"
+    },
+    {
+      "slug": "icecek",
+      "name": "İçecek"
+    },
+    {
+      "slug": "isitici",
+      "name": "Isıtıcı & Soba"
+    },
+    {
+      "slug": "islak-mendil",
+      "name": "Islak Mendil"
+    },
+    {
+      "slug": "kadin-ayakkabi-babet",
+      "name": "Kadın Babet"
+    },
+    {
+      "slug": "kadin-ayakkabi-bot",
+      "name": "Kadın Bot & Çizme"
+    },
+    {
+      "slug": "kadin-ayakkabi-sandalet",
+      "name": "Sandalet, Babet, Terlik (Kadın)"
+    },
+    {
+      "slug": "kadin-ayakkabi-sneaker",
+      "name": "Kadın Sneaker & Spor Ayakkabı"
+    },
+    {
+      "slug": "kadin-ayakkabi-topuklu",
+      "name": "Topuklu Ayakkabı"
+    },
+    {
+      "slug": "kadin-dis-giyim",
+      "name": "Kadın Dış Giyim"
+    },
+    {
+      "slug": "kadin-elbise",
+      "name": "Elbise"
+    },
+    {
+      "slug": "kadin-etek",
+      "name": "Kadın Etek"
+    },
+    {
+      "slug": "kadin-giyim-alt",
+      "name": "Kadın Alt Giyim"
+    },
+    {
+      "slug": "kadin-giyim-ust",
+      "name": "Kadın Üst Giyim"
+    },
+    {
+      "slug": "kahvalti-kahve",
+      "name": "Kahvaltı & Kahve"
+    },
+    {
+      "slug": "kahve-makinesi",
+      "name": "Kahve Makinesi"
+    },
+    {
+      "slug": "kedi-kumu",
+      "name": "Kedi Kumu"
+    },
+    {
+      "slug": "kedi-mamasi",
+      "name": "Kedi Maması"
+    },
+    {
+      "slug": "kirtasiye",
+      "name": "Kırtasiye & Okul"
+    },
+    {
+      "slug": "kisisel-bakim-elektrikli",
+      "name": "Kişisel Bakım Cihazları"
+    },
+    {
+      "slug": "kisisel-hijyen",
+      "name": "Kişisel Hijyen"
+    },
+    {
+      "slug": "kitap",
+      "name": "Kitap"
+    },
+    {
+      "slug": "klima",
+      "name": "Klima"
+    },
+    {
+      "slug": "koleksiyon",
+      "name": "Koleksiyon"
+    },
+    {
+      "slug": "konserve-sos",
+      "name": "Konserve & Sos"
+    },
+    {
+      "slug": "kopek-mamasi",
+      "name": "Köpek Maması"
+    },
+    {
+      "slug": "kurutma-makinesi",
+      "name": "Kurutma Makinesi"
+    },
+    {
+      "slug": "kus-urunleri",
+      "name": "Kuş Ürünleri"
+    },
+    {
+      "slug": "laptop",
+      "name": "Laptop & Notebook"
+    },
+    {
+      "slug": "makyaj-aksesuar",
+      "name": "Makyaj Fırça & Aksesuar"
+    },
+    {
+      "slug": "masaustu-bilgisayar",
+      "name": "Masaüstü Bilgisayar"
+    },
+    {
+      "slug": "mikrodalga",
+      "name": "Mikrodalga"
+    },
+    {
+      "slug": "mikser-cirpici",
+      "name": "Mikser & Çırpıcı"
+    },
+    {
+      "slug": "mobilya-ofis",
+      "name": "Ofis Mobilyası"
+    },
+    {
+      "slug": "mobilya-oturma",
+      "name": "Oturma Odası Mobilya"
+    },
+    {
+      "slug": "mobilya-yatak",
+      "name": "Yatak Odası Mobilya"
+    },
+    {
+      "slug": "mobilya-yemek",
+      "name": "Yemek Odası Mobilya"
+    },
+    {
+      "slug": "monitor",
+      "name": "Monitör"
+    },
+    {
+      "slug": "motor-scooter",
+      "name": "Motor & Scooter"
+    },
+    {
+      "slug": "mutfak-aleti-diger",
+      "name": "Diğer Mutfak Aletleri"
+    },
+    {
+      "slug": "mutfak-sofra",
+      "name": "Mutfak & Sofra"
+    },
+    {
+      "slug": "muzik-aleti",
+      "name": "Müzik Aleti"
+    },
+    {
+      "slug": "networking",
+      "name": "Modem & Ağ Cihazları"
+    },
+    {
+      "slug": "olcum-aletleri",
+      "name": "Ölçüm Aletleri"
+    },
+    {
+      "slug": "oto-aku",
+      "name": "Oto Akü"
+    },
+    {
+      "slug": "oto-koltugu",
+      "name": "Oto Koltuğu"
+    },
+    {
+      "slug": "oto-lastik-jant",
+      "name": "Lastik & Jant"
+    },
+    {
+      "slug": "oto-navigasyon",
+      "name": "Navigasyon & GPS"
+    },
+    {
+      "slug": "oto-teyp-multimedya",
+      "name": "Teyp & Multimedya"
+    },
+    {
+      "slug": "oto-yag-bakim",
+      "name": "Motor Yağı & Bakım"
+    },
+    {
+      "slug": "oto-yedek-parca",
+      "name": "Oto Yedek Parça"
+    },
+    {
+      "slug": "outdoor-kamp",
+      "name": "Outdoor & Kamp"
+    },
+    {
+      "slug": "oyun-konsol",
+      "name": "Oyun Konsolu"
+    },
+    {
+      "slug": "oyuncak-diger",
+      "name": "Diğer Oyuncaklar"
+    },
+    {
+      "slug": "oyuncak-egitici",
+      "name": "Eğitici Oyuncak"
+    },
+    {
+      "slug": "oyuncak-figur",
+      "name": "Figür & Oyuncak Bebek"
+    },
+    {
+      "slug": "oyuncak-lego",
+      "name": "LEGO & Yapı Blokları"
+    },
+    {
+      "slug": "oyuncak-masa",
+      "name": "Masa Oyunu & Bulmaca"
+    },
+    {
+      "slug": "oyuncak-rc",
+      "name": "RC & Robot Oyuncak"
+    },
+    {
+      "slug": "parfum",
+      "name": "Parfüm"
+    },
+    {
+      "slug": "pet-aksesuar",
+      "name": "Pet Aksesuar"
+    },
+    {
+      "slug": "pet-bakim-hijyen",
+      "name": "Pet Bakım & Hijyen"
+    },
+    {
+      "slug": "pet-diger",
+      "name": "Diğer Evcil Hayvan"
+    },
+    {
+      "slug": "powerbank",
+      "name": "Powerbank & Taşınabilir Şarj"
+    },
+    {
+      "slug": "projeksiyon",
+      "name": "Projeksiyon"
+    },
+    {
+      "slug": "puset-araba",
+      "name": "Bebek Arabası & Puset"
+    },
+    {
+      "slug": "resim-cizim",
+      "name": "Resim & Çizim"
+    },
+    {
+      "slug": "saat-taki",
+      "name": "Saat & Takı"
+    },
+    {
+      "slug": "sac-bakim",
+      "name": "Saç Bakım Ürünleri"
+    },
+    {
+      "slug": "sac-boyasi",
+      "name": "Saç Boyası"
+    },
+    {
+      "slug": "sac-kurutma-sekillendirici",
+      "name": "Saç Kurutma & Şekillendirici"
+    },
+    {
+      "slug": "sac-sekillendirme",
+      "name": "Saç Şekillendirici Ürün"
+    },
+    {
+      "slug": "sampuan",
+      "name": "Şampuan & Saç Kremi"
+    },
+    {
+      "slug": "sarj-kablo",
+      "name": "Şarj Cihazı & Kablo"
+    },
+    {
+      "slug": "scooter",
+      "name": "Scooter & Elektrikli Scooter"
+    },
+    {
+      "slug": "serum-ampul",
+      "name": "Serum & Ampul"
+    },
+    {
+      "slug": "ses-kulaklik",
+      "name": "Kulaklık"
+    },
+    {
+      "slug": "soundbar",
+      "name": "Soundbar & Ev Sinema"
+    },
+    {
+      "slug": "spor-ayakkabi",
+      "name": "Spor Ayakkabı (Genel)"
+    },
+    {
+      "slug": "su-isiticisi",
+      "name": "Su Isıtıcısı & Çay Makinesi"
+    },
+    {
+      "slug": "su-sporlari",
+      "name": "Su Sporları"
+    },
+    {
+      "slug": "su-tesisat",
+      "name": "Su Tesisatı"
+    },
+    {
+      "slug": "supurge",
+      "name": "Süpürge"
+    },
+    {
+      "slug": "tablet",
+      "name": "Tablet"
+    },
+    {
+      "slug": "takim-sporlari",
+      "name": "Takım Sporları"
+    },
+    {
+      "slug": "tarti-terazi",
+      "name": "Tartı & Terazi"
+    },
+    {
+      "slug": "telefon-aksesuar",
+      "name": "Telefon Aksesuarı"
+    },
+    {
+      "slug": "telefon-kilifi",
+      "name": "Telefon Kılıfı"
+    },
+    {
+      "slug": "telefon-yedek-parca",
+      "name": "Telefon Yedek Parça"
+    },
+    {
+      "slug": "temizlik-deterjan",
+      "name": "Temizlik & Deterjan"
+    },
+    {
+      "slug": "tost-makinesi",
+      "name": "Tost & Kızartma Makinesi"
+    },
+    {
+      "slug": "tv",
+      "name": "Televizyon"
+    },
+    {
+      "slug": "tv-aksesuar",
+      "name": "TV Aksesuar"
+    },
+    {
+      "slug": "utu",
+      "name": "Ütü"
+    },
+    {
+      "slug": "vucut-bakim",
+      "name": "Vücut Bakımı"
+    },
+    {
+      "slug": "yazici-tarayici",
+      "name": "Yazıcı & Tarayıcı"
+    },
+    {
+      "slug": "yoga-pilates",
+      "name": "Yoga & Pilates"
+    },
+    {
+      "slug": "yuz-makyaji",
+      "name": "Yüz Makyajı"
+    },
+    {
+      "slug": "yuz-maskesi-skincare",
+      "name": "Yüz Maskesi (Cilt Bakım)"
+    },
+    {
+      "slug": "yuz-nemlendirici",
+      "name": "Yüz Nemlendirici"
+    },
+    {
+      "slug": "yuz-temizleyici",
+      "name": "Yüz Temizleyici"
+    }
+  ],
+  "instruction": "Her ürün için 'newSlug' alanını ekle (leaf_categories.slug listesinden). Eşleşme yoksa null bırak.",
+  "products": [
+    {
+      "id": "c5a927d9-356c-4c02-92b8-ac15c644e5a1",
+      "title": "/00 MagSafe Qi2 Standlı Kablosuz Şarj Cihazı",
+      "newSlug": null
+    },
+    {
+      "id": "c2f86aa7-daa8-4cbc-b422-7af8fdf5b938",
+      "title": "%1 Retinol + B5 İçeren Anti-Aging Serum (30 ml)",
+      "newSlug": null
+    },
+    {
+      "id": "54eeaac9-263c-442b-94c3-a6d4e05f7dbd",
+      "title": "115 Ml 1 Adet Keratin Saç Serumu",
+      "newSlug": null
+    },
+    {
+      "id": "77adc767-33a5-4619-ab3e-7d1bcbae8d0b",
+      "title": "14x14x6mm Aluminyum Soğutucu Siyah M3 Yapıştırma Etiketli Raspberry Xbox Chipset Ekran Kartı Ram",
+      "newSlug": null
+    },
+    {
+      "id": "f5dbb441-f922-4242-929f-c9bd2d02ac80",
+      "title": "15 ml E Vitamini Dolgunlaştırıcı Göz Kremi - Kırışıklık Karşıtı",
+      "newSlug": null
+    },
+    {
+      "id": "27a59faf-4391-40db-a9f3-204c98e21faf",
+      "title": "15W 3in1 Manyetik Magsafe Uyumlu Katlanabilir Hızlı Kablosuz Şarj Istasyonu",
+      "newSlug": null
+    },
+    {
+      "id": "64006856-b369-4fd7-b0b5-f5e2895eb9fe",
+      "title": "1600W Kordonlu 2 Kademe Siyah",
+      "newSlug": null
+    },
+    {
+      "id": "ad95241c-34a0-4f08-bf48-a0bc60e6285c",
+      "title": "17 Aktifli Saç Dökülmesine Karşı Serum Alg Ve Deniz Yosunu İçerikli Besleyici Saç Serumu",
+      "newSlug": null
+    },
+    {
+      "id": "3fc014e3-f19f-4e42-8e60-7edac5d7559a",
+      "title": "2025 Model Çok Kordonlu Bluetooth El Fenerli",
+      "newSlug": null
+    },
+    {
+      "id": "62afbd8e-39b7-4e16-9ff3-6d2e74aa143c",
+      "title": "20H22G Gpu Ekran Kartı Fanı - V1 / 60W nf-kr51187v1l-440527",
+      "newSlug": null
+    },
+    {
+      "id": "1f3afe94-6ada-45ed-aefe-eb6678a486e2",
+      "title": "20Mm Samsung Watch Huawei Watch Kayışkordon Metal Milano Loop-(5775)",
+      "newSlug": null
+    },
+    {
+      "id": "9985f39a-4606-47eb-ab49-39f0c1021bd0",
+      "title": "24 inç Retina 4.5K Ekranlı iMac – Apple M4 Çip (10 Çekirdekli CPU, 10 Çekirdekli GPU), 16 GB RAM, 256 GB SSD, Mavi",
+      "newSlug": null
+    },
+    {
+      "id": "9368c370-d882-4f19-b5fa-ef19f0c97cf7",
+      "title": "250 gr Gym Chalk Fitnes Crossfit Ve Jimnastik Magnezyum Tozu Pudra Halter, Dağ Tırmanma",
+      "newSlug": null
+    },
+    {
+      "id": "87c776e9-20ee-459d-bb5e-0ee63d4af6f4",
+      "title": "256GB SSD LENOVO X1 CARBON 1st generation 45N8483",
+      "newSlug": null
+    },
+    {
+      "id": "99ba158e-464e-4aeb-9239-ce3b21886342",
+      "title": "260737 261750 261751 Bataryası - Pili",
+      "newSlug": null
+    },
+    {
+      "id": "397000f7-cac9-4c8c-91e8-2edb0c47885e",
+      "title": "3 Bileklikli Amoled Bluetooth Çağrı Takipli",
+      "newSlug": null
+    },
+    {
+      "id": "7e3b4471-3b22-4148-a06c-5a72cc5b28ab",
+      "title": "3 Kordonlu Uzun Pil Süreli",
+      "newSlug": null
+    },
+    {
+      "id": "842499d7-bf6f-4a07-8cfa-a6d3fced571a",
+      "title": "30ml şeffaf cam damlalıklı 12 adet, Siyah Kapak, Ecza şişesi, Damlalıklı şişe, propolis şişesi, damlatmalı şişe, saç serum şişesi, ecza şişesi",
+      "newSlug": null
+    },
+    {
+      "id": "6fa884fe-72a5-4d28-b971-a8981fabee5b",
+      "title": "4K Tv Uyumlu Hd Çözünürlüklü Mx Box S 8 Gb",
+      "newSlug": null
+    },
+    {
+      "id": "4af93f54-1bdf-4ef1-ae0a-d9445a73f8a3",
+      "title": "56x351 Koşu Bandı Paleti / Kayışı / Bantı (Profosyonel Çift Kat 2.2 mm)",
+      "newSlug": null
+    },
+    {
+      "id": "276d2b96-a424-4bb8-a7f5-2c111a7c07dd",
+      "title": "57x303 Koşu Bandı Paleti / Kayışı / Bantı (Profosyonel Çift Kat 2.2 mm)",
+      "newSlug": null
+    },
+    {
+      "id": "36040dbc-5eb8-4eb0-be14-7e542ef7ef31",
+      "title": "57x323 Koşu Bandı Paleti / Kayışı / Bantı (Profosyonel Çift Kat 2.2 mm)",
+      "newSlug": null
+    },
+    {
+      "id": "e703e2bb-f955-403d-9f0f-206ef13190c6",
+      "title": "57x329 Koşu Bandı Paleti / Kayışı / Bantı (Profosyonel Çift Kat 2.2 mm)",
+      "newSlug": null
+    },
+    {
+      "id": "b28debde-049c-4cd3-8bcc-0425bd1f2051",
+      "title": "58x372 Koşu Bandı Paleti / Kayışı / Bantı (Profosyonel Çift Kat 2.2 mm)",
+      "newSlug": null
+    },
+    {
+      "id": "4763e08e-e0ee-4d40-8367-63ea986b94f9",
+      "title": "59x333 Koşu Bandı Paleti / Kayışı / Bantı (Profosyonel Çift Kat 2.2 mm)",
+      "newSlug": null
+    },
+    {
+      "id": "bd946736-ea8c-477b-bf70-5382f3d66869",
+      "title": "60x346 Koşu Bandı Paleti / Kayışı / Bantı (Profosyonel Çift Kat 2.2 mm)",
+      "newSlug": null
+    },
+    {
+      "id": "3df2ab04-fb15-452a-b79a-d0ae320a3f72",
+      "title": "60x349 Koşu Bandı Paleti / Kayışı / Bantı (Profosyonel Çift Kat 2.2 mm)",
+      "newSlug": null
+    },
+    {
+      "id": "6f2e724c-5028-4c58-917a-bc26c34d651e",
+      "title": "7DAYS B.Colour Longwear Kajal Eyeliner - 07 Black - 1 adet",
+      "newSlug": null
+    },
+    {
+      "id": "37be336b-161b-4308-8844-c1ca97384d31",
+      "title": "7V 2A 14W Modem / Router Adaptörü - 3.5X1.35Mm - Siyah",
+      "newSlug": null
+    },
+    {
+      "id": "f4336953-fd0d-4edf-9497-728e704d4bda",
+      "title": "8 GB ASUS DUAL--O8G RTX 5060TI 128Bit OC Ekran Kartı",
+      "newSlug": null
+    },
+    {
+      "id": "9df1921b-e1d5-42ed-87e2-7b542fe98c48",
+      "title": "8 GB ASUS DUAL--O8G RTX 5060TI 128Bit OC Ekran Kartı",
+      "newSlug": null
+    },
+    {
+      "id": "d0fe3850-728d-4cab-814d-9de072e86c69",
+      "title": "87 ml Organik Güneş Kremi, Macera Sporları için",
+      "newSlug": null
+    },
+    {
+      "id": "94373b87-b65d-4603-acec-ab3478742b22",
+      "title": "8MM PLATES YOGA MAT MİNDERİ 55X170CM (5433)",
+      "newSlug": null
+    },
+    {
+      "id": "60fd5d58-4d4a-4a67-a3ce-c930b81d083c",
+      "title": "Absolu Serum Chroma Termique Isı Koruyucu Saç Serumu 150ml",
+      "newSlug": null
+    },
+    {
+      "id": "1d97a3b5-07b7-425f-8e01-d07f288e7a47",
+      "title": "Acer Adaptör Kablosu Dc 5.5Mm-1.7Mm",
+      "newSlug": null
+    },
+    {
+      "id": "4135775f-30b1-4280-a985-d465dd09e382",
+      "title": "ACER AL16-52P UMA FHD Intel Core i3 -1305U 8 GB RAM 512 GB SSD 16 inç Windows 11 Home Single Language Laptop Grey",
+      "newSlug": null
+    },
+    {
+      "id": "6acbb0c4-99b3-451a-8781-2c90944d2404",
+      "title": "ACER ANV15-52 RTX 5060 FHD IPS 165 HZ NH.QZ8EY.004 Intel Core I9-13900H 16 GB RAM 512 GB SSD 15,6 inç FreeDOS Laptop Siyah",
+      "newSlug": null
+    },
+    {
+      "id": "39fb8991-cf34-47f6-be53-0e48daff4552",
+      "title": "ACER Nitro 16S AI NH.QXKEY.002 -8Gb WQXGA 180Hz AMD Ryzen Ai 7 350 32 GB RAM 1 TB SSD 16 inç FreeDOS Gaming Siyah",
+      "newSlug": null
+    },
+    {
+      "id": "3ed98c88-dd50-45f0-ac15-25804b9960f2",
+      "title": "ACER Nitro 16S NH.QXJEY.002 FHD 180Hz AMD Ryzen R7 AI 7 350 32 GB RAM 1 TB SSD 16 inç FreeDOS Laptop Antrasit",
+      "newSlug": null
+    },
+    {
+      "id": "1144eac7-4b58-4b3f-a227-8ef349fc55bf",
+      "title": "ACER Nitro ANV16-71 RTX 4050-6 GB  WUXGA IPS 165 Hz NH.QTREY.001 Intel Core i5 14450HX 16 GB RAM 512 GB SSD 16 inç FreeDOS Laptop Siyah",
+      "newSlug": null
+    },
+    {
+      "id": "eaa90276-acf4-4292-b3eb-8268f25aa90d",
+      "title": "ACER Nitro V 16S AN16S RTX5070Tİ 110W 180Hz NHU07EY001F08 AMD Ryzen™ AI 9 365 32 GB RAM 1 TB SSD 16 inç FreeDOS Laptop+Çanta Laptop + Çanta",
+      "newSlug": null
+    },
+    {
+      "id": "5f5b7f26-684d-4adb-99d6-a49e652bd899",
+      "title": "ACER Nitro V15 NH.QV2EY.001 RTX4050-6GB 165 Hz Intel® Core™ i5-13420H 16 GB RAM 512 GB SSD 15,6 inç FreeDOS Laptop Siyah",
+      "newSlug": null
+    },
+    {
+      "id": "a03e6c80-ef65-4ce6-9d2d-355ad745e9c0",
+      "title": "ACER Nitro V16  ANV16-41 AMD Ryzen 7 8845HS 16 GB RAM 1 TB SSD 16 inç FreeDOS Laptop Koyu Gri",
+      "newSlug": null
+    },
+    {
+      "id": "fe6c8c30-c3cf-4bc8-b296-f4eb542b2071",
+      "title": "ACER NX.VTPEY.003 Travelmate Spin P6 Dokunmatik Ekran 2'si 1 Arada Intel Core I7-1165G7 16 GB RAM 512 GB SSD 14 inç Windows 11 Pro Laptop Siyah",
+      "newSlug": null
+    },
+    {
+      "id": "9380c8e7-0f98-4a93-bdd4-c9f595261d19",
+      "title": "Acer Oyuncu Laptop 32GB Siyah",
+      "newSlug": null
+    },
+    {
+      "id": "f2088b4a-76cc-4fee-8122-ae08140adcc3",
+      "title": "ACER Predator NH.QV0EY.001 RTX5060-8GB WQXGA 165 Hz Intel® Core™ Ultra 7-255H 16 GB RAM 1 TB SSD 14,5 inç FreeDOS Laptop Antrasit",
+      "newSlug": null
+    },
+    {
+      "id": "4f9ce706-7c90-40db-873d-049f85ce598e",
+      "title": "ACER Predator PHN18-72 NH.QVMEY.00 RTX5070Ti WQXGA IPS 240Hz Intel® Core™ Ultra 9 275HX 64 GB RAM 2 TB SSD 18 inç FreeDOS Laptop Siyah",
+      "newSlug": null
+    },
+    {
+      "id": "fea9f369-3ba5-4c99-aceb-7c5bbf91a298",
+      "title": "ACER Swift -01/Snapdragon Qualcomm X Plus X1P-42-100/16 GB RAM/512 GB SSD/14.5\"/W11/NX.KYXEY.00",
+      "newSlug": null
+    },
+    {
+      "id": "8e19f9f9-e324-40b5-b2ec-d10e6edaab41",
+      "title": "Acoustic 0651 Kulak Içi Kablosuz Bt 5.0 Tws Beyaz",
+      "newSlug": null
+    },
+    {
+      "id": "154f7331-623d-44f4-ba34-80611fccb3cb",
+      "title": "Adidas Günlük Rahat Siyah Erkek Ayakkabı",
+      "newSlug": null
+    },
+    {
+      "id": "2e36735e-78d0-41c6-9834-d4c9bbbbb737",
+      "title": "Adidas Handball Spezial Maroon / Cream White / Gum Kadın Ayakkabı",
+      "newSlug": null
+    },
+    {
+      "id": "fcbef21c-a9d5-410b-bcd6-40315b59b0ff",
+      "title": "Advance Techniques Parlaklık Veren Saç Serumu 30 Ml. Üçlü Set",
+      "newSlug": null
+    },
+    {
+      "id": "7d5ebbb7-0319-4022-b3c4-b41b0b701489",
+      "title": "AFOX GT 710 -4096D3L7-V1 64 BIT 4GB EKRAN KARTI",
+      "newSlug": null
+    },
+    {
+      "id": "0ca1668e-cf59-46ce-8d58-54bcd5d5bef5",
+      "title": "AFOX GT 710 -4096D3L7-V1 64 BIT 4GB EKRAN KARTI",
+      "newSlug": null
+    },
+    {
+      "id": "ffb800a5-f0eb-4763-bebf-e8598b070d88",
+      "title": "AFOX Radeon HD 5450 2GB 64-Bit Low Profile HDMI/DVI/VGA Ekran Kartı (-2048D3L4)",
+      "newSlug": null
+    },
+    {
+      "id": "9c3877f1-a5f2-4a11-b344-57f6dec78ee5",
+      "title": "Airpods 2 (2.nesil) Bright Simli Airpods Kapak - Gümüş-(5796)",
+      "newSlug": null
+    },
+    {
+      "id": "9d3e4638-81ab-4fc4-a079-81cedb60ea78",
+      "title": "Airpods 3 (3.Nesil) Hang Kılıf - Pudra",
+      "newSlug": null
+    },
+    {
+      "id": "58ffd2e1-4987-45a7-8071-cf8d4ab54392",
+      "title": "Airpods Pro 2 (2.nesil) Bright Simli Airpods Kapak - Gold-(5796)",
+      "newSlug": null
+    },
+    {
+      "id": "e697d704-a4a9-4d26-bba2-13d39a85ade0",
+      "title": "Airpods Pro 2.Nesil Kılıf Magsafe Uyumlu Aramid Fiber Youngkit 1500D Kevlar Extreme Wing Seri Siyah",
+      "newSlug": null
+    },
+    {
+      "id": "cd62b64b-be8c-44bd-9dbe-e3cb66cc9a34",
+      "title": "Airpods Pro Kılıf Magsafe Uyumlu Aramid Fiber Youngkit 1500D Kevlar Extreme Wing Serisi Gold",
+      "newSlug": null
+    },
+    {
+      "id": "fab2d88d-90e6-4978-9cdb-75fc43b553b1",
+      "title": "AkzoNobel Akripol Bazkat FORD TONİK MAVİ Akrilik Sonkat Oto Boyası 1 Litre",
+      "newSlug": null
+    },
+    {
+      "id": "7fc81f18-d399-4edc-a100-3bbeb3c96f75",
+      "title": "Alfais 4250 Harici Ekran Kartı Power Takma Aparatı",
+      "newSlug": null
+    },
+    {
+      "id": "0dc274d9-4fec-4367-904c-225b7d17a8e8",
+      "title": "ALLBİO Ardıç Katranlı Saç Serumu 50 ml",
+      "newSlug": null
+    },
+    {
+      "id": "975fb732-3395-4c67-8cbf-d116cefea518",
+      "title": "ALPİN Plus120 SSD 120 GB SSD Hard Disk 2.5'' Sata 3 450 Mb/s-450BMb/s",
+      "newSlug": null
+    },
+    {
+      "id": "658ad96b-a2c6-41ea-afda-5061a7747974",
+      "title": "ALPİN Plus120 SSD 120 GB SSD Hard Disk 2.5'' Sata 3 450 Mb/s-450BMb/s",
+      "newSlug": null
+    },
+    {
+      "id": "3f498542-da30-415c-87af-1731c911f20e",
+      "title": "ALPIN S-480 2.5'' SATA 3 Gbit/s 480 GB SSD",
+      "newSlug": null
+    },
+    {
+      "id": "39265ee3-8a29-42ad-ab3d-b8a9a1364c03",
+      "title": "Alterna Caviar Restructuring Bond Repair Bağ Yapılandıran Gece Saç Serumu 100ml",
+      "newSlug": null
+    },
+    {
+      "id": "8fd09bc7-448e-482c-875a-a063d51f5592",
+      "title": "Amazon Echo Buds Tws Aktif Gürültü Engelleme, Alexa Destekli",
+      "newSlug": null
+    },
+    {
+      "id": "790c365f-060e-4b42-8c95-bf1934dcab67",
+      "title": "Amd Ryzen 5 7600X3D 4,1 GHz 96 MB Cache İşlemci",
+      "newSlug": null
+    },
+    {
+      "id": "0c9946b2-ec61-4427-a9ca-db89fd46bf14",
+      "title": "AMD Ryzen 7 2700 işlemci (temel saat hızı: 3,2 GHz, 8 çekirdekli, Soket )",
+      "newSlug": null
+    },
+    {
+      "id": "efb8bd67-d1bd-4d66-97d3-da68ac85b3c0",
+      "title": "Amoled Ekran 49Mm Tasarım 3 Kordonlu",
+      "newSlug": null
+    },
+    {
+      "id": "9bbc38b9-8451-4fb2-ac9e-eb934cbad383",
+      "title": "AMOLED Ekran 49mm Ultra Tasarım 3 Kordonlu",
+      "newSlug": null
+    },
+    {
+      "id": "375558e4-013c-47a2-90d5-508aeac36150",
+      "title": "Amoled Ekran Üç Kordonlu İOS Android Uyumlu",
+      "newSlug": null
+    },
+    {
+      "id": "ee28eb91-2008-4920-a439-367b3b39da3a",
+      "title": "Amway Lekelere Karşı Tonik ve Gözenekleri Ferahlatıcı Losyon Artistry Studio",
+      "newSlug": null
+    },
+    {
+      "id": "1e47b0f6-ba46-4156-a065-5730c878d08f",
+      "title": "Anastasıa Beverly Hılls Lip Liner Parchment- Dudak Kalemi",
+      "newSlug": null
+    },
+    {
+      "id": "d67bf02b-34a4-46c9-9574-61bfe2955489",
+      "title": "Anthelios Uvmune Fluid Tinted Renkli Güneş Kremi",
+      "newSlug": null
+    },
+    {
+      "id": "c37c6f75-7b68-497c-b541-e0a3be20aa3c",
+      "title": "Apec Barracuda Elcik Mavi Renk",
+      "newSlug": null
+    },
+    {
+      "id": "92230915-af1c-4210-90f3-382356a36fd2",
+      "title": "Apec Barracuda Elcik Mavi Renk",
+      "newSlug": null
+    },
+    {
+      "id": "911eb7fe-6bf5-416d-95ea-e1c98c320901",
+      "title": "Apec Ps5 Barracuda Elcik Siyah",
+      "newSlug": null
+    },
+    {
+      "id": "a7e06a03-8110-4dc4-bad0-3846a7600225",
+      "title": "Apec Ps5 Barracuda Elcik Yeşil",
+      "newSlug": null
+    },
+    {
+      "id": "22461762-78f6-4cd7-8b85-e5862be0b351",
+      "title": "Apec Ps5 Modifiye Ayna-Kırmızı Renk-A03117",
+      "newSlug": null
+    },
+    {
+      "id": "96af5f20-7b24-4172-8d56-e260d77ab7f6",
+      "title": "APPLE iPad (A16) Wi-Fi 256 GB Tablet Gümüş MD4G4TU/A",
+      "newSlug": null
+    },
+    {
+      "id": "16673013-34a9-42e7-a371-ad885c45ae38",
+      "title": "Apple İpad Pro 13 (2024) Kılıf Smart Kılıf - Lacivert",
+      "newSlug": null
+    },
+    {
+      "id": "d573a7b1-01ea-423e-b261-75ef76e09163",
+      "title": "Apple İphone 12 Kılıf Magsafe Kapak - Turuncu",
+      "newSlug": null
+    },
+    {
+      "id": "feb78b57-1263-4847-b75f-ffe70b0a7f7e",
+      "title": "Apple İphone 12 Pro Shine Kamera Lens - Gold",
+      "newSlug": null
+    },
+    {
+      "id": "6b459aaf-ee97-488b-bcdb-90d83db80629",
+      "title": "Apple İphone 13 Pro Kılıf Razer Lensli Silikon - Siyah",
+      "newSlug": null
+    },
+    {
+      "id": "80b24c92-4ed7-4bca-8114-28d190995b40",
+      "title": "Apple İphone 15 Pro Kılıf Magsafe Kapak - Mor",
+      "newSlug": null
+    },
+    {
+      "id": "b62fbaba-2ea0-406d-8cbd-10b69d1fab59",
+      "title": "APPLE MEPF4TU/A Watch SE 3 GPS + Cellular 44mm Yıldız Işığı Alüminyum Kasa ve Yıldız Işığı Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "cd94bc0e-7039-4cc4-a1ca-3cd78100df07",
+      "title": "APPLE MEQT4TU/A Watch Series 11 GPS 42mm Jet Siyah Alüminyum Kasa ve Siyah Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "c5c4eb99-7b5d-47d0-931c-300d8e262d53",
+      "title": "APPLE MEQU4TU/A Watch Series 11 GPS 42mm Jet Siyah Alüminyum Kasa ve Siyah Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "1ccba3f0-17f0-45aa-bf9b-6e1965c5447c",
+      "title": "APPLE MEQW4TU/A Watch Series 11 GPS 42mm Space Grey Alüminyum Kasa ve Siyah Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "1dd8eed5-7dc4-495e-bde1-f61304cd83c9",
+      "title": "APPLE MEQX4TU/A Watch Series 11 GPS 42mm Space Grey Alüminyum Kasa ve Siyah Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "13eafaa6-91eb-4b64-9256-a0d225305011",
+      "title": "APPLE MEU04TU/A Watch Series 11 GPS 42mm Rose Altın Alüminyum Kasa ve Light Blush Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "af705674-f778-4622-a71b-fdb9b56f0b58",
+      "title": "APPLE MEU44TU/A Watch Series 11 GPS 42mm Rose Altın Alüminyum Kasa ve Light Blush Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "dbe20207-ffbe-4ba1-82cc-1197d4af4196",
+      "title": "APPLE MEU64TU/A Watch Series 11 GPS 42mm Gümüş Alüminyum Kasa ve Purple Fog Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "dfbd684b-4f4a-45ed-86cf-3161c38c35e6",
+      "title": "APPLE MEU74TU/A Watch Series 11 GPS 42mm Gümüş Alüminyum Kasa ve Purple Fog Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "8169593b-b7aa-4445-afd8-445e25baf0bc",
+      "title": "APPLE MEUW4TU/A Watch Series 11 GPS 46mm Jet Siyah Alüminyum Kasa ve Siyah Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "139f12de-93fa-49fb-af2c-bc02e1048784",
+      "title": "APPLE MEUX4TU/A Watch Series 11 GPS 46mm Jet Siyah Alüminyum Kasa ve Siyah Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "217f5be4-5193-4851-ab0e-7bc4dacad0a6",
+      "title": "APPLE MEV04TU/A Watch Series 11 GPS 46mm Space Grey Alüminyum Kasa ve Siyah Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "a2dcbe04-90a0-452e-9321-7055d4f6c19b",
+      "title": "APPLE MEV04TU/A Watch Series 11 GPS 46mm Space Grey Alüminyum Kasa ve Siyah Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "b5962903-1182-4dbf-8ec4-cb479fba007b",
+      "title": "APPLE MEV44TU/A Watch Series 11 GPS 46mm Space Grey Alüminyum Kasa ve Siyah Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "2896c6bd-25da-4f49-9234-22301630a77d",
+      "title": "APPLE MEV64TU/A Watch Series 11 GPS 46mm Rose Altın Alüminyum Kasa ve Light Blush Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "2a033659-4bbb-48a6-99ca-e8eefddeaae9",
+      "title": "APPLE MEV74TU/A Watch Series 11 GPS 46mm Rose Altın Alüminyum Kasa ve Light Blush Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "e17ea32f-4a51-4e93-8f3a-140df0487649",
+      "title": "APPLE MEV74TU/A Watch Series 11 GPS 46mm Rose Altın Alüminyum Kasa ve Light Blush Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "54513065-62e4-4f57-ab51-611f9d15d581",
+      "title": "APPLE MEV94TU/A Watch Series 11 GPS 46mm Gümüş Alüminyum Kasa ve Purple Fog Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "2130ecc1-df1b-40ea-9b06-85cf43d1f246",
+      "title": "APPLE MEVA4TU/A Watch Series 11 GPS 46mm Gümüş Alüminyum Kasa ve Purple Fog Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "be60abea-943c-4cce-8a8d-c4c0ef62909e",
+      "title": "APPLE MEWH4TU/A Watch Ultra 3 GPS + Cellular 49mm Doğal Titanyum Kasa ve Anchor Mavi Ocean Band",
+      "newSlug": null
+    },
+    {
+      "id": "4f44f1b4-6746-45a5-b293-d17179cb26e1",
+      "title": "APPLE MEWK4TU/A Watch Ultra 3 GPS + Cellular 49mm Doğal Titanyum Kasa ve Light Mavi Alpine Loop - Small",
+      "newSlug": null
+    },
+    {
+      "id": "a8cb1afe-8e32-46a0-bccc-f0aa2f6680de",
+      "title": "APPLE MEWM4TU/A Watch Ultra 3 GPS + Cellular 49mm Doğal Titanyum Kasa ve Light Mavi Alpine Loop - Medium",
+      "newSlug": null
+    },
+    {
+      "id": "9361d8f5-24b0-4296-90d0-20081a3469ff",
+      "title": "APPLE MEWP4TU/A Watch Ultra 3 GPS + Cellular 49mm Doğal Titanyum Kasa ve Light Mavi Alpine Loop - Large",
+      "newSlug": null
+    },
+    {
+      "id": "938ffeb4-d5cd-414a-bd8d-d3df72c719da",
+      "title": "APPLE MEWR4TU/A Watch Ultra 3 GPS + Cellular 49mm Doğal Titanyum Kasa ve Mavi/Bright Mavi Trail Loop - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "e75884c3-0417-4930-95a1-67542e09d71d",
+      "title": "APPLE MEWU4TU/A Watch Ultra 3 GPS + Cellular 49mm Doğal Titanyum Kasa ve Mavi/Bright Mavi Trail Loop - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "d221cab9-8fdb-4257-bdf3-2f615eb0c065",
+      "title": "APPLE MEWW4TU/A Watch Ultra 3 GPS + Cellular 49mm Doğal Titanyum Kasa ve Doğal Titanyum Milanese Loop - Small",
+      "newSlug": null
+    },
+    {
+      "id": "599016ec-a934-4393-88b0-ac87606e77ab",
+      "title": "APPLE MEWY4TU/A Watch Ultra 3 GPS + Cellular 49mm Doğal Titanyum Kasa ve Doğal Titanyum Milanese Loop - Medium",
+      "newSlug": null
+    },
+    {
+      "id": "f1f57522-f8b6-4df1-91a9-4a75c9f9d15c",
+      "title": "APPLE MF0J4TU/A Watch Ultra 3 GPS + Cellular 49mm Siyah Titanyum Kasa ve Siyah Ocean Band",
+      "newSlug": null
+    },
+    {
+      "id": "45664a92-b9da-4a33-a4f0-44d09211d80e",
+      "title": "APPLE MF0Q4TU/A Watch Ultra 3 GPS + Cellular 49mm Siyah Titanyum Kasa ve Siyah Alpine Loop - Small",
+      "newSlug": null
+    },
+    {
+      "id": "f7c6f3f0-2a0a-445e-b69b-446a4cd5e24f",
+      "title": "APPLE MF0V4TU/A Watch Ultra 3 GPS + Cellular 49mm Siyah Titanyum Kasa ve Siyah Alpine Loop - Medium",
+      "newSlug": null
+    },
+    {
+      "id": "dc04a921-910e-4599-b5af-71c2cec5685f",
+      "title": "APPLE MF0X4TU/A Watch Ultra 3 GPS + Cellular 49mm Siyah Titanyum Kasa ve Siyah Alpine Loop - Large",
+      "newSlug": null
+    },
+    {
+      "id": "3ceef7b2-b279-423f-9208-a38379cfea5b",
+      "title": "APPLE MF1D4TU/A Watch Ultra 3 GPS + Cellular 49mm Siyah Titanyum Kasa ve Siyah/Charcoal Trail Loop - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "7a262367-bcdd-46b5-a561-025945e0d4c7",
+      "title": "APPLE MF1H4TU/A Watch Ultra 3 GPS + Cellular 49mm Siyah Titanyum Kasa ve Siyah/Charcoal Trail Loop - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "b3c8d416-8ddb-422f-b92e-e65729a8f8e5",
+      "title": "APPLE MF1N4TU/A Watch Ultra 3 GPS + Cellular 49mm Siyah Titanyum Kasa ve Siyah Titanium Milanese Loop - Small",
+      "newSlug": null
+    },
+    {
+      "id": "23a9f372-63c5-407c-9f94-e925fde00929",
+      "title": "APPLE MF1Q4TU/A Watch Ultra 3 GPS + Cellular 49mm Siyah Titanyum Kasa ve Siyah Titanium Milanese Loop - Medium",
+      "newSlug": null
+    },
+    {
+      "id": "2df8a2ca-8058-446a-ad19-8e338eb00b7c",
+      "title": "APPLE MF1T4TU/A Watch Ultra 3 GPS + Cellular 49mm Siyah Titanyum Kasa ve Siyah Titanium Milanese Loop - Large",
+      "newSlug": null
+    },
+    {
+      "id": "13d49152-2d1f-486b-b03e-22c5e463c64b",
+      "title": "APPLE MF834TU/A Watch Series 11 GPS + Cellular 42mm Jet Siyah Alüminyum Kasa ve Siyah Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "4c80a806-bd88-400a-94e0-8a317d4b77c9",
+      "title": "APPLE MF854TU/A Watch Series 11 GPS + Cellular 42mm Jet Siyah Alüminyum Kasa ve Siyah Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "8a6657d1-daf9-4805-917e-63cab0221413",
+      "title": "APPLE MF8A4TU/A Watch Series 11 GPS + Cellular 42mm Space Grey Alüminyum Kasa ve Siyah Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "9d405664-4a9b-48ca-9ff4-febe7b588cfb",
+      "title": "APPLE MF8C4TU/A Watch Series 11 GPS + Cellular 42mm Space Grey Alüminyum Kasa ve Siyah Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "9eb9158e-c66d-4826-a3c0-6aa556398910",
+      "title": "APPLE MF8F4TU/A Watch Series 11 GPS + Cellular 42mm Rose Altın Alüminyum Kasa ve Light Blush Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "e5ae9355-ccf7-4b0d-a794-bc04da608c3d",
+      "title": "APPLE MF8H4TU/A Watch Series 11 GPS + Cellular 42mm Gümüş Alüminyum Kasa ve Purple Fog Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "59fc772a-b5e2-4013-9553-36e4774fb78f",
+      "title": "APPLE MF8J4TU/A Watch Series 11 GPS + Cellular 42mm Gümüş Alüminyum Kasa ve Purple Fog Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "065f899d-906c-4a92-967a-51f2c955a5a5",
+      "title": "APPLE MF8M4TU/A Watch Series 11 GPS + Cellular 42mm Doğal Titanyum Kasa ve Stone Grey Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "a46fbde7-e20d-48df-b626-a712a8d1dfda",
+      "title": "APPLE MF8N4TU/A Watch Series 11 GPS + Cellular 42mm Doğal Titanyum Kasa ve Stone Grey Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "6a34ce22-7304-46d7-aa2f-6a752ad812ab",
+      "title": "APPLE MF8P4TU/A Watch Series 11 GPS + Cellular 42mm Doğal Titanyum Kasa ve Natural Milanese Loop",
+      "newSlug": null
+    },
+    {
+      "id": "ad945f59-eeed-4c8b-9c39-986b8602004f",
+      "title": "APPLE MF8R4TU/A Watch Series 11 GPS + Cellular 42mm Slate Titanyum Kasa ve Siyah Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "7c450db0-c68f-49b0-a545-f7eabc0d1354",
+      "title": "APPLE MF8T4TU/A Watch Series 11 GPS + Cellular 42mm Slate Titanyum Kasa ve Siyah Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "12665262-c8ba-4c86-9243-a2e0358b6382",
+      "title": "APPLE MF8U4TU/A Watch Series 11 GPS + Cellular 42mm Slate Titanyum Kasa ve Slate Milanese Loop",
+      "newSlug": null
+    },
+    {
+      "id": "52627db4-0a89-4d17-aa8d-fab4ed122ed1",
+      "title": "APPLE MF8W4TU/A Watch Series 11 GPS + Cellular 42mm Altın Titanyum Kasa ve Light Blush Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "634fe237-659e-49e8-847a-51aabff61f39",
+      "title": "APPLE MF8X4TU/A Watch Series 11 GPS + Cellular 42mm Altın Titanyum Kasa ve Light Blush Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "a00228f4-c1c4-4b5f-bdfd-6f4be67f046a",
+      "title": "APPLE MF8Y4TU/A  Watch Series 11 GPS + Cellular 42mm Gold Titanium Case with Gold Milanese Loop",
+      "newSlug": null
+    },
+    {
+      "id": "a182afe6-895b-4bbc-b2b6-42e5798a3f3a",
+      "title": "APPLE MFC24TU/A  Watch Series 11 GPS + Cellular 46mm Jet Black Aluminium Case with Black Sport Band - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "9af672d5-6dfa-4c67-b2e1-0b4ca09827db",
+      "title": "APPLE MFC44TU/A  Watch Series 11 GPS + Cellular 46mm Jet Black Aluminium Case with Black Sport Band - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "8d7ccd62-5dc7-4746-a054-2707959d1298",
+      "title": "APPLE MFC94TU/A Watch Series 11 GPS + Cellular 46mm Space Grey Alüminyum Kasa ve Siyah Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "87e18247-4e04-49ae-852e-130e501e7ac2",
+      "title": "APPLE MFCG4TU/A  Watch Series 11 GPS + Cellular 46mm Rose Gold Aluminium Case with Light Blush Sport Band - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "91ef788d-63b1-4102-b992-3418ca9e1632",
+      "title": "APPLE MFCJ4TU/A Watch Series 11 GPS + Cellular 46mm Rose Altın Alüminyum Kasa ve Light Blush Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "6e910869-ed46-4cb3-8ba4-007fd47b056b",
+      "title": "APPLE MFCP4TU/A Watch Series 11 GPS + Cellular 46mm Gümüş Alüminyum Kasa ve Purple Fog Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "76e0d52d-cdff-4ca8-8506-e1105ef31cd2",
+      "title": "APPLE MFCR4TU/A Watch Series 11 GPS + Cellular 46mm Gümüş Alüminyum Kasa ve Purple Fog Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "4aa53da9-3312-4f7d-a83e-fb3e2c908fd0",
+      "title": "APPLE MFCW4TU/A Watch Series 11 GPS + Cellular 46mm Doğal Titanyum Kasa ve Stone Grey Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "32f8611c-4c8c-4d9f-ac55-065b05a6a4b7",
+      "title": "APPLE MFCX4TU/A Watch Series 11 GPS + Cellular 46mm Doğal Titanyum Kasa ve Stone Grey Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "3cddf209-2c5d-44dc-8858-9fb267cbfe22",
+      "title": "APPLE MFCY4TU/A Watch Series 11 GPS + Cellular 46mm Doğal Titanyum Kasa ve Natural Milanese Loop - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "f8b4e635-417e-4fba-bf6e-b3eb47945d43",
+      "title": "APPLE MFD04TU/A Watch Series 11 GPS + Cellular 46mm Doğal Titanyum Kasa ve Natural Milanese Loop - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "e2ef2109-263d-4272-abbb-54c050e7756b",
+      "title": "APPLE MFD14TU/A Watch Series 11 GPS + Cellular 46mm Slate Titanyum Kasa ve Siyah Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "f330d07b-05c3-446e-8fa4-bab4b1bf16c8",
+      "title": "APPLE MFD24TU/A Watch Series 11 GPS + Cellular 46mm Slate Titanyum Kasa ve Siyah Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "a49a8bcc-346c-47d4-aa9b-3ff5b2dd745f",
+      "title": "APPLE MFD34TU/A Watch Series 11 GPS + Cellular 46mm Slate Titanyum Kasa ve Slate Milanese Loop - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "a4c96d0c-b37b-4c24-b35d-320f55bfc50a",
+      "title": "APPLE MFD44TU/A Watch Series 11 GPS + Cellular 46mm Slate Titanyum Kasa ve Slate Milanese Loop - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "8e83458d-e65c-487e-84ca-e9e93890ea8d",
+      "title": "APPLE MFD54TU/A Watch Series 11 GPS + Cellular 46mm Altın Titanyum Kasa ve Light Blush Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "e9e73fdf-71b1-4183-a4eb-b9a970f2d7e2",
+      "title": "APPLE MFD64TU/A Watch Series 11 GPS + Cellular 46mm Altın Titanyum Kasa ve Light Blush Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "bdc4f67f-ebc5-46f4-b463-e315d09d9e57",
+      "title": "APPLE MGPG4TU/A iPhone Air MagSafe Pil",
+      "newSlug": null
+    },
+    {
+      "id": "3b597156-f352-47aa-a497-49e8198b24fd",
+      "title": "APPLE MHFA4TU/A/MacBook Neo/Apple A18 Pro İşlemci(6 Çekirdek CPU-5 Çekirdek GPU)/8GB RAM/256GB SSD/13\"/Gümüş",
+      "newSlug": null
+    },
+    {
+      "id": "1267dbd7-f52c-4693-854f-ccc97735a9fa",
+      "title": "APPLE MWWD3TU/A Watch Series 10 GPS 42mm Gümüş Alüminyum Kasa ve Mavi Cloud Spor Loop",
+      "newSlug": null
+    },
+    {
+      "id": "4dff51b8-9eac-4840-9623-42f40f4dbd98",
+      "title": "Apple Watch 49mm Ultra 2/1 - 46mm Seri 10 - 45mm Seri 9/8/7 - 44mm Seri /6/5/4 Hasır Kordon Amber Gold",
+      "newSlug": null
+    },
+    {
+      "id": "01a343f7-0dc4-43f3-81e5-797f25601586",
+      "title": "Apple Watch 49mm Ultra 2/1 - 46mm Seri 10 - 45mm Seri 9/8/7 - 44mm Seri /6/5/4 Hasır Kordon Gül Altını",
+      "newSlug": null
+    },
+    {
+      "id": "d23a715e-0a34-40ec-9586-8addb8c57250",
+      "title": "Apple Watch 49mm Ultra 2/1 - 46mm Seri 10 - 45mm Seri 9/8/7 - 44mm Seri /6/5/4 Hasır Kordon Silver",
+      "newSlug": null
+    },
+    {
+      "id": "a9a32589-1c4e-475b-a35c-1c7351c7d66c",
+      "title": "Apple Watch 49mm Ultra 2/1 Kordon Stride Serisi Sınırlı Sayıda Üretim Fluoroelastomer Kauçuk Malzeme Bej-Sarı",
+      "newSlug": null
+    },
+    {
+      "id": "28490d98-fa22-4274-b9e4-8e3d5a25dc8c",
+      "title": "Apple Watch 7 45mm Şerit Dizayn Mat Metal Kordon",
+      "newSlug": null
+    },
+    {
+      "id": "baa15510-ca93-4398-beca-adc9b7ba3cca",
+      "title": "Apple Watch 7 45mm Zore KRD-115 Renkli Taş Tasarımlı Kordon",
+      "newSlug": null
+    },
+    {
+      "id": "2b1696cd-fc86-4507-9898-6acdef7694d9",
+      "title": "Apple Watch SE 2 2023 44mm Metal Tokalı Hasır Kordon",
+      "newSlug": null
+    },
+    {
+      "id": "7dc19809-c126-4816-a881-4e46568dba94",
+      "title": "APPLE Watch SE 3 GPS 44mm Yıldız Işığı Alüminyum Kasa ve Yıldız Işığı Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "2521cbdb-0c24-43eb-9373-7442c71fa3b3",
+      "title": "Apple Watch SE 44mm Metal Kordon",
+      "newSlug": null
+    },
+    {
+      "id": "c850fcd6-7582-496f-bf67-c47f34a0dd6e",
+      "title": "APPLE Watch Series 10 GPS 42mm Gümüş Alüminyum Kasa ve Denim Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "1f26bcc0-8162-4b4e-9b54-4b26a46aabc0",
+      "title": "APPLE Watch Series 11 GPS 42mm Gümüş Alüminyum Kasa ve Purple Fog Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "d6a5e901-41cb-4d4a-a9b0-c2392772b792",
+      "title": "Apple Watch Series 11 GPS 42mm Jet Siyah Alüminyum Kasa ve Siyah Spor Kordon",
+      "newSlug": null
+    },
+    {
+      "id": "dee24c87-0b54-41fe-be92-c82f1971a16b",
+      "title": "APPLE Watch Series 11 GPS 42mm Jet Siyah Alüminyum Kasa ve Siyah Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "9c2376e9-05b9-4f0b-99ea-4b03cd256674",
+      "title": "APPLE Watch Series 11 GPS 42mm Jet Siyah Alüminyum Kasa ve Siyah Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "b26f3bb2-fee0-4198-9f82-e44a367bb656",
+      "title": "APPLE Watch Series 11 GPS 46mm Gümüş Alüminyum Kasa ve Purple Fog Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "deada2cd-0d60-4bd5-863c-9e2cebe4c92e",
+      "title": "APPLE Watch Series 9 GPS + Cellular 45 mm Kırmızı Alüminyum Kasa ve Kırmızı Spor Kordon - M/L",
+      "newSlug": null
+    },
+    {
+      "id": "f8f97001-4430-4eb4-9403-9175fec175f9",
+      "title": "APPLE Watch Series 9 GPS + Cellular 45 mm Kırmızı Alüminyum Kasa ve Kırmızı Spor Kordon - S/M",
+      "newSlug": null
+    },
+    {
+      "id": "48b0d920-ad3f-4bb8-98d9-d3e3c2d6a143",
+      "title": "Apple Watch Ultra 49mm Kılıf Kasa Koruyucu Anodize Alüminyum",
+      "newSlug": null
+    },
+    {
+      "id": "cd7686a8-2cea-4522-be69-2053714b0733",
+      "title": "Ar6801 La Moulinette Parçalayıcı Ve Mikser, 800 W +",
+      "newSlug": null
+    },
+    {
+      "id": "9ac5e708-5040-4d23-9fcf-cbd3d0dcbf08",
+      "title": "Araç Multimedya Audi A3 Ser. S Unı - Ty / 4 Gb Ram 64 Gb Hdd / 9 Inch Ekr. Carplay And. 12 Double Teyp - Navigasyon Cihazı MYW",
+      "newSlug": null
+    },
+    {
+      "id": "0916d96f-d827-42a4-ac40-275bbc764878",
+      "title": "ARÇELİK 1070 YKMX I Kurutmalı",
+      "newSlug": null
+    },
+    {
+      "id": "950e0426-626f-4dee-abc9-934d47dfafdd",
+      "title": "ARÇELİK 6688 DI 8 Programlı",
+      "newSlug": null
+    },
+    {
+      "id": "5f594d72-6ff9-4fea-90c3-a68a0e609f22",
+      "title": "ARCELIK 9100 DMX A Enerji Sınıfı 9 kg 1000 rpm Beyaz",
+      "newSlug": null
+    },
+    {
+      "id": "e5d74702-960e-424e-ab42-cc6b46a23a69",
+      "title": "Arçelik Beko Smart TV Universal Kumanda RC-RM-L173",
+      "newSlug": null
+    },
+    {
+      "id": "6bcb7e5b-de8c-41b8-87a3-598d487a59e8",
+      "title": "ARCELIK MK 9250 I Skylight 500 W Mikser Siyah Inox",
+      "newSlug": null
+    },
+    {
+      "id": "c1a6f671-a05f-4530-af18-08fdef74b431",
+      "title": "Argan Çay Ağacı Kürü Saç Serumu 100 Ml 8691228210269",
+      "newSlug": null
+    },
+    {
+      "id": "639e59cc-f72f-4e16-aa1d-94da8aaf7ac9",
+      "title": "Argan Saç Serumu 115 ml 1 Adet",
+      "newSlug": null
+    },
+    {
+      "id": "1c104f6a-27ef-4683-aaf5-6de0550ddf6a",
+      "title": "Argan Saç Serumu 75 ML - Boyalı ve Röfleli Saçlar - mrfs",
+      "newSlug": null
+    },
+    {
+      "id": "1b4f0282-2bc2-4f01-9d9a-5e79529fad07",
+      "title": "Argan Yağı İçeren Besleyici Saç Serumu 30 ml",
+      "newSlug": null
+    },
+    {
+      "id": "789bd67c-2985-449b-a79d-905160d3c814",
+      "title": "Argan Yağı İçeren Besleyici Saç Serumu 30 ml + Avon Naturals Kids Saç Açıcı Sprey 200 ml 2'li Set",
+      "newSlug": null
+    },
+    {
+      "id": "441f1101-e6ed-410f-87e1-a179475a9a50",
+      "title": "Argemon Kışlık Pantolon - Dayanıklı, Isı Yalıtımlı İş ve Outdoor Pantolon",
+      "newSlug": null
+    },
+    {
+      "id": "42e88ff7-df72-415f-974e-40aa302b6914",
+      "title": "Argeus Trekking Pace Outdoor Tozluk Mavi-Siyah",
+      "newSlug": null
+    },
+    {
+      "id": "edc425fd-050c-4a7d-b099-41f4921adad4",
+      "title": "Arktek 1GB 64Bit EKRAN KARTI",
+      "newSlug": null
+    },
+    {
+      "id": "d4b562f1-df8c-444a-b571-d785db4b4a27",
+      "title": "Arktek 1GB 64Bit EKRAN KARTI",
+      "newSlug": null
+    },
+    {
+      "id": "014b1a40-9453-4adc-86b3-fa6ccd5aadb0",
+      "title": "ARZUM AR1187 Soprano Max Neo Multiblender Set Siyah",
+      "newSlug": null
+    },
+    {
+      "id": "1c632de2-ef7f-4038-ab83-a5f53ed48e7e",
+      "title": "Astra F6 Negatif İyon Profesyonel",
+      "newSlug": null
+    },
+    {
+      "id": "8bf667ba-3bd4-4e1c-8af1-09890285e9d4",
+      "title": "ASUS -4H-SL-2GD5 2GB Geforce 64bit 4xHDMI 16x Ekran Kartı",
+      "newSlug": null
+    },
+    {
+      "id": "c6f53aa8-053c-4015-881f-67b411f3cf46",
+      "title": "Asus Amd Radeon Rx 580 Oc Dual-Rx580-O8g 8 Gb 256 Bit Gddr5 Ekran Kartı",
+      "newSlug": null
+    },
+    {
+      "id": "6f286535-0353-49b8-aba9-79048bf04e05",
+      "title": "Asus Asus Laptop 1 TB SSD Lacivert",
+      "newSlug": null
+    },
+    {
+      "id": "a67dd18c-ac57-46c6-b028-9e53dd1d6d51",
+      "title": "Asus Asus Laptop 512 GB SSD Gri",
+      "newSlug": null
+    },
+    {
+      "id": "f09be680-c66f-45e6-9044-175743cadb5c",
+      "title": "Asus Asus Laptop 512 GB SSD Mavi",
+      "newSlug": null
+    }
+  ]
+}

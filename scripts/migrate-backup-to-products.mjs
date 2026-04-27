@@ -10,7 +10,7 @@
  *   npx tsx --env-file=.env.local scripts/migrate-backup-to-products.mjs
  */
 import { createClient } from "@supabase/supabase-js";
-import { categorizeFromTitle } from "../src/lib/categorizeFromTitle.mts";
+import { categorizeFromTitle } from "../src/lib/categorizeFromTitle.ts";
 
 // Title'dan variant_storage extract (GB, TB, ml)
 function extractStorage(title) {

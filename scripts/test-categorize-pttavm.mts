@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { categorizeFromTitle } from "../src/lib/categorizeFromTitle.mts";
+import { categorizeFromTitle } from "../src/lib/categorizeFromTitle.ts";
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

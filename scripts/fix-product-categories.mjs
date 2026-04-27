@@ -14,7 +14,7 @@
  */
 import { createClient } from "@supabase/supabase-js";
 import { writeFileSync } from "fs";
-import { categorizeFromTitle } from "../src/lib/categorizeFromTitle.mts";
+import { categorizeFromTitle } from "../src/lib/categorizeFromTitle.ts";
 
 // Gemini KAPALI — agent'lar Claude ile koordineli (LLM API çağrısı yok).
 // Pattern-fail olan ürünler EXPORT_PENDING=1 ile JSON'a dump edilir,

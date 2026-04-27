@@ -6,7 +6,6 @@ import {
   inferProductIdentity,
   resolveExistingProduct,
 } from "@/lib/productIdentity";
-// @ts-expect-error — .mts dosyası, tsx runtime'da resolve edilir
 import { categorizeFromTitle } from "@/lib/categorizeFromTitle";
 
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET;
