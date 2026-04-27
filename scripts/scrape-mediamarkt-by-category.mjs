@@ -204,6 +204,9 @@ async function upsertListing(scraped) {
       const codeToUse = extracted.code;
 
       const inferredColor = extractColorFromTitle(scraped.name);
+      // Title'dan variant_storage extract (dedup constraint için benzersiz tuple)
+      const storageMatch = (scraped.name || '').match(/\b(\d+)\s*(GB|TB|ml|L)\b/i);
+      const inferredStorage = storageMatch ? `${storageMatch[1]} ${storageMatch[2].toUpperCase()}` : null;
       const { data: newP, error: newErr } = await sb.from('products').insert({
         slug: baseSlug,
         title: scraped.name,
@@ -216,6 +219,7 @@ async function upsertListing(scraped) {
         images: scraped.raw_images,
         specs: productSpecs,
         variant_color: inferredColor,
+        variant_storage: inferredStorage,
         is_active: true,
         is_verified: false,
         classified_by: 'mediamarkt-scraper',
