@@ -54,12 +54,12 @@ const RULES: CategoryRule[] = [
     slug: "telefon-aksesuar",
     keywords: ["telefon tutucu", "araç tutucu", "selfie çubuğu", "selfie stick",
                "popsocket", "yüzük tutucu", "telefon askısı", "boyun askısı",
-               "watch kordon", "saat kordon", "kordon naylon", "kamera lens koruyucu",
-               "magsafe", "stylus kalem", "dokunmatik kalem",
-               "kordon", "kayış silikon", "süet kordon", "metal tokalı",
-               "kamera lens", "raze metal kamera", "watch kasa", "watch kılıf",
-               "watch gard", "watch ekran koruma", "kasa koruyucu watch", "watch ppma"],
-    excludeIfPresent: ["tv askı", "akıllı saat ", "smart watch ", "akıllı telefon"],
+               "kamera lens koruyucu",
+               "stylus kalem", "dokunmatik kalem",
+               "kayış silikon", "süet kordon",
+               "raze metal kamera"],
+    excludeIfPresent: ["tv askı", "akıllı saat ", "smart watch ", "akıllı telefon",
+                       "powerbank", "powerbank ", "watch", "kordon", "kasa koruyucu"],
     confidence: "high",
   },
   {
@@ -86,8 +86,9 @@ const RULES: CategoryRule[] = [
     keywords: ["batarya pil", "telefon pili", "telefon bataryası", "yedek pil",
                "lcd dokunmatik", "lcd ekran", "yedek ekran", "uyumlu pil", "uyumlu batarya",
                "pil batarya", "şarj soketi", "arka pil batarya kapağı", "batarya kapağı",
-               "güçlendirilmiş batarya", "ithal pil", "lenovo pil", "kamera pili",
-               "kamera bataryası", "şarj cihazı dock"],
+               "güçlendirilmiş batarya", "ithal pil",
+               "şarj cihazı dock"],
+    excludeIfPresent: ["laptop", "notebook", "kamera", "fotoğraf makinesi"],
     confidence: "high",
   },
 
@@ -108,10 +109,14 @@ const RULES: CategoryRule[] = [
     slug: "bilgisayar-bilesenleri",
     keywords: ["ddr4 ram", "ddr5 ram", "ddr4 bellek", "ddr5 bellek", "ecc rdimm",
                "rdimm", "udimm", "sodimm", "ssd nvme", "ssd m.2", "ssd sata",
-               "tb ssd ", "gb ssd ", "pc4-2133", "pc5-", "ram bellek",
+               "pc4-2133", "pc5-", "ram bellek",
                "8gb ddr4", "16gb ddr4", "32gb ddr4", "64gb ddr4", "ddr4 2133",
                "soğutucu pad", "notebook soğutucu"],
-    excludeIfPresent: ["telefon", "tablet"],
+    excludeIfPresent: ["telefon", "tablet", "laptop", "macbook", "thinkpad",
+                       "ideapad", "vivobook", "zenbook", "rog ", "victus",
+                       "pavilion", "elitebook", "omen ", "yoga slim", "yoga pro",
+                       "legion", "predator", "aspire", "swift", "msi stealth",
+                       "msi katana", "msi prestige", "monster"],
     confidence: "high",
   },
 
@@ -984,6 +989,21 @@ function normalize(s: string): string {
     .trim();
 }
 
+// Word-boundary match (substring match'i önler).
+// "omen" -> "Homend" matchlemez, "ud" -> "Dudak" matchlemez.
+// Trailing space içeren keyword (örn "gb ssd ") özel: \b<kw>\s desenine düşer.
+const KW_REGEX_CACHE = new Map<string, RegExp>();
+function matchesKeyword(text: string, keyword: string): boolean {
+  const normKw = normalize(keyword);
+  let rx = KW_REGEX_CACHE.get(normKw);
+  if (!rx) {
+    const escaped = normKw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    rx = new RegExp(`\\b${escaped}\\b`, "i");
+    KW_REGEX_CACHE.set(normKw, rx);
+  }
+  return rx.test(text);
+}
+
 export function categorizeFromTitle(title: string): CategoryMatchResult {
   if (!title) return { slug: null, confidence: "low" };
   const norm = normalize(title);
@@ -991,7 +1011,7 @@ export function categorizeFromTitle(title: string): CategoryMatchResult {
   for (const rule of RULES) {
     let matchedKw: string | null = null;
     for (const kw of rule.keywords) {
-      if (norm.includes(normalize(kw))) {
+      if (matchesKeyword(norm, kw)) {
         matchedKw = kw;
         break;
       }
@@ -999,7 +1019,7 @@ export function categorizeFromTitle(title: string): CategoryMatchResult {
     if (!matchedKw) continue;
 
     if (rule.excludeIfPresent) {
-      const hasExclude = rule.excludeIfPresent.some((ex) => norm.includes(normalize(ex)));
+      const hasExclude = rule.excludeIfPresent.some((ex) => matchesKeyword(norm, ex));
       if (hasExclude) continue;
     }
 

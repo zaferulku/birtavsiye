@@ -13,7 +13,7 @@ const USER_AGENT = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/
 
 let cachedCookies: string = '';
 
-async function fetchText(url: string): Promise<string> {
+async function fetchText(url: string, attempt: number = 0): Promise<string> {
   const headers: Record<string, string> = {
     'User-Agent': USER_AGENT,
     'Accept': 'text/html,application/xhtml+xml,application/xml,text/xml;q=0.9,*/*;q=0.8',
@@ -27,6 +27,14 @@ async function fetchText(url: string): Promise<string> {
   if (setCookie) {
     const cfMatch = setCookie.match(/(__cf_bm|_cfuvid)=([^;]+)/g);
     if (cfMatch) cachedCookies = cfMatch.join('; ');
+  }
+
+  // 503 — Cloudflare cookie reset + 1 retry
+  if (res.status === 503 && attempt < 1) {
+    console.warn(`  [503] cookie reset + retry: ${url.slice(-60)}`);
+    cachedCookies = '';
+    await new Promise((r) => setTimeout(r, 5000));
+    return fetchText(url, attempt + 1);
   }
 
   if (!res.ok) throw new Error(`Fetch ${url}: ${res.status}`);
