@@ -51,6 +51,13 @@ const SAFE_TRANSITIONS = new Set([
   "sac-bakim -> sampuan",                   // şampuan specific
   "sac-bakim -> sac-boyasi",                // saç boyası specific
   "sac-bakim -> serum-ampul",               // saç serumu specific
+  "sarj-kablo -> powerbank",                // powerbank specific
+  "firin-ocak -> mikrodalga",               // mikrodalga specific
+  "bilgisayar-cevre -> oyun-konsol",
+  "laptop -> tost-makinesi",                // yanlış category_id düzeltme
+  "laptop -> supurge",                      // robot süpürge laptop'ta
+  "laptop -> drone",                        // drone laptop'ta
+  "kisisel-bakim-elektrikli -> serum-ampul", // retinol serum
 ]);
 
 console.log(`Fix product categories${dryRun ? " (DRY-RUN)" : ""}${EXPORT_PENDING ? " +EXPORT-PENDING" : ""}`);

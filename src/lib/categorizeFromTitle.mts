@@ -48,6 +48,7 @@ const RULES: CategoryRule[] = [
                "şarj aleti", "şarj adaptörü", "güç adaptörü", "süper hızlı şarj",
                "type-c süper hızlı", "laptop şarj aleti", "adaptör plastik kasa",
                "type-c / usb kablo"],
+    excludeIfPresent: ["powerbank", "taşınabilir şarj", "robot süpürge", "fotoğraf makinesi"],
     confidence: "high",
   },
   {
@@ -158,7 +159,7 @@ const RULES: CategoryRule[] = [
                "iphone 16", "iphone 17", "iphone air", "iphone se",
                "galaxy s23", "galaxy s24", "galaxy s25", "galaxy a", "galaxy z",
                "redmi note", "redmi 1", "xiaomi 1", "poco f", "poco x",
-               "huawei pura", "huawei nova", "huawei mate",
+               "huawei pura", "huawei nova",
                "honor magic", "honor 400", "honor 200",
                "oppo reno", "oppo find x", "oppo a",
                "vivo y", "vivo v", "vivo x",
@@ -167,8 +168,10 @@ const RULES: CategoryRule[] = [
                "realme c", "realme gt", "realme note",
                "tuşlu telefon", "tuşlu cep telefonu"],
     excludeIfPresent: ["kılıf", "kapak", "ekran koruyucu", "cam koruyucu", "kablo",
-                        "şarj cihazı", "şarj aleti", "tutucu", "askı", "stylus",
-                        "lcd", "batarya", "pil", "yedek"],
+                       "şarj cihazı", "şarj aleti", "tutucu", "askı", "stylus",
+                       "lcd", "batarya", "pil", "yedek",
+                       "kordon", "kayış", "uyumlu", "uygun", "hasır", "metal toka",
+                       "kamera lens", "powerbank", "kulaklık"],
     confidence: "high",
   },
 
@@ -176,9 +179,10 @@ const RULES: CategoryRule[] = [
   {
     slug: "tablet",
     keywords: ["ipad pro", "ipad air", "ipad mini", "ipad a16", "ipad 11", "ipad 10",
-               "galaxy tab s", "galaxy tab a", "matepad", "xiaomi pad", "redmi pad",
+               "galaxy tab s", "galaxy tab a", "matepad", "huawei matepad",
+               "huawei mate pad", "xiaomi pad", "redmi pad",
                "lenovo tab", "android tablet"],
-    excludeIfPresent: ["kılıf", "kapak", "ekran koruyucu", "kalem"],
+    excludeIfPresent: ["kılıf", "kapak", "ekran koruyucu", "kalem", "kordon", "kayış"],
     confidence: "high",
   },
 
@@ -437,7 +441,8 @@ const RULES: CategoryRule[] = [
     keywords: ["çikolata", "gofret", "bisküvi", "kraker", "cips", "atıştırmalık",
                "gummi", "şekerleme", "kuruyemiş", "fıstık", "badem", "fındık",
                "kahve çekirdek"],
-    excludeIfPresent: ["kahve makinesi"],
+    excludeIfPresent: ["kahve makinesi", "saç", "şampuan", "krem", "boya",
+                       "rengi", "kokulu", "parfüm", "yağı", "ezme"],
     confidence: "high",
   },
   {
@@ -641,6 +646,8 @@ const RULES: CategoryRule[] = [
     slug: "kisisel-hijyen",
     keywords: ["sabun", "duş jeli", "kolonya el", "antibakteriyel jel",
                "ıslak mendil", "tıraş bıçağı", "tıraş köpüğü"],
+    excludeIfPresent: ["şampuan", "saç boyası", "saç serumu", "saç kremi",
+                       "saç maskesi", "saç bakım"],
     confidence: "high",
   },
   {
