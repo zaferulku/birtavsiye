@@ -48,6 +48,9 @@ const SAFE_TRANSITIONS = new Set([
   "telefon-yedek-parca -> tablet",          // iPad
   "arac-aksesuar -> telefon-aksesuar",      // araç tutucu
   "yoga-pilates -> fitness-kondisyon",
+  "sac-bakim -> sampuan",                   // şampuan specific
+  "sac-bakim -> sac-boyasi",                // saç boyası specific
+  "sac-bakim -> serum-ampul",               // saç serumu specific
 ]);
 
 console.log(`Fix product categories${dryRun ? " (DRY-RUN)" : ""}${EXPORT_PENDING ? " +EXPORT-PENDING" : ""}`);

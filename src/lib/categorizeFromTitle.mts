@@ -385,9 +385,9 @@ const RULES: CategoryRule[] = [
   },
   {
     slug: "sac-bakim",
-    keywords: ["şampuan", "saç kremi", "saç maskesi", "saç bakım", "saç serumu",
-               "kuru şampuan", "saç boyası"],
-    excludeIfPresent: ["fön", "kurutma", "düzleştirici", "saç fırçası"],
+    keywords: ["saç kremi", "saç maskesi", "saç bakım"],
+    excludeIfPresent: ["fön", "kurutma", "düzleştirici", "saç fırçası",
+                       "şampuan", "saç boyası", "saç serumu"],
     confidence: "high",
   },
   {
@@ -568,14 +568,18 @@ const RULES: CategoryRule[] = [
     confidence: "high",
   },
 
-  // --- Bilgisayar bileşenleri (genişlet) ---
+  // --- Bilgisayar bileşenleri (genişlet) — laptop & telefon değil ---
   {
     slug: "bilgisayar-bilesenleri",
-    keywords: ["anakart", "ekran kartı", "rtx 4060", "rtx 4070", "rtx 4080", "rtx 4090",
-               "rtx 5070", "rtx 5080", "rtx 5090", "intel core i5", "intel core i7",
-               "intel core i9", "ryzen 5", "ryzen 7", "ryzen 9", "ryzen ai",
+    keywords: ["anakart", "rtx 4060", "rtx 4070", "rtx 4080", "rtx 4090",
+               "rtx 5070", "rtx 5080", "rtx 5090",
                "işlemci soğutucu", "cpu fan", "cpu air cooler", "psu güç kaynağı",
                "750w psu", "850w psu", "1000w psu"],
+    excludeIfPresent: ["laptop", "macbook", "thinkpad", "ideapad", "vivobook",
+                       "zenbook", "rog ", "victus", "pavilion", "elitebook", "omen ",
+                       "yoga slim", "yoga pro", "legion", "predator", "aspire",
+                       "swift", "msi stealth", "msi katana", "msi prestige",
+                       "monster", "telefon", "tablet"],
     confidence: "high",
   },
 
@@ -602,14 +606,9 @@ const RULES: CategoryRule[] = [
     confidence: "high",
   },
 
-  // --- Telefon aksesuar (Gpack genişlet) ---
-  {
-    slug: "telefon-aksesuar",
-    keywords: ["gpack ", "spigen ", "ringke ", "uyumlu kordon", "saat kayışı",
-               "watch kayışı", "spor band", "fitness band"],
-    excludeIfPresent: ["telefon kılıfı", "akıllı saat ana"],
-    confidence: "high",
-  },
+  // (Eski "Telefon aksesuar Gpack genişlet" rule'u kaldırıldı —
+  // gpack/spigen/ringke/watch kayışı false-positive yaratıyordu.
+  // Saat kayışları akıllı saat kategorisinde kalsın.)
 
   // --- Güneş koruyucu ---
   {
@@ -702,7 +701,8 @@ const RULES: CategoryRule[] = [
   },
   {
     slug: "mikser-cirpici",
-    keywords: ["mikser", "çırpıcı", "stand mikser", "el mikseri", "kitchen mixer"],
+    keywords: ["çırpıcı", "stand mikser", "el mikseri", "kitchen mixer"],
+    excludeIfPresent: ["blender"],
     confidence: "high",
   },
   {
@@ -989,16 +989,16 @@ function normalize(s: string): string {
     .trim();
 }
 
-// Word-boundary match (substring match'i önler).
-// "omen" -> "Homend" matchlemez, "ud" -> "Dudak" matchlemez.
-// Trailing space içeren keyword (örn "gb ssd ") özel: \b<kw>\s desenine düşer.
+// Hibrit word-boundary: keyword'ün BAŞINDA boundary olsun (omen→Homend, ud→Dudak,
+// ipl→cipli false-match'lerini önler), SONUNDA Türkçe eklere izin ver
+// (kılıf → kılıfı eşleşmeli, kapak → kapağı eşleşmeli).
 const KW_REGEX_CACHE = new Map<string, RegExp>();
 function matchesKeyword(text: string, keyword: string): boolean {
   const normKw = normalize(keyword);
   let rx = KW_REGEX_CACHE.get(normKw);
   if (!rx) {
     const escaped = normKw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    rx = new RegExp(`\\b${escaped}\\b`, "i");
+    rx = new RegExp(`(?:^|\\W)${escaped}`, "i");
     KW_REGEX_CACHE.set(normKw, rx);
   }
   return rx.test(text);
