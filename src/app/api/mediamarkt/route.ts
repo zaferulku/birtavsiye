@@ -98,19 +98,19 @@ function parseProducts(html: string): ParsedProduct[] {
             ? Number(rawPrice)
             : NaN;
         if (!name || !url) continue;
-        // Stoksuz ürünlerde JSON-LD price boş gelebilir; geçersiz fiyatlı listing'leri
-        // veritabanına eklemek istemiyoruz (UI'da "0 TL" gösterirdi).
-        if (!Number.isFinite(price) || price <= 0) continue;
         if (seen.has(url)) continue;
         seen.add(url);
 
+        // price'sızsa detail-fetch için tag'le; geçici 0 koy, route GET içinde fallback yapacağız
+        const finalPrice = Number.isFinite(price) && price > 0 ? price : 0;
+
         results.push({
           name,
-          url,
+          url: url.startsWith("http") ? url : `${MM_BASE}${url}`,
           image: image
             ? (image.startsWith("http") ? image : `${MM_BASE}${image}`)
             : "",
-          price,
+          price: finalPrice,
           specs: parseSpecsFromTitle(name),
         });
       }
@@ -143,6 +143,36 @@ export async function GET(request: NextRequest) {
 
     const html     = await res.text();
     const products = parseProducts(html);
+
+    // Fallback: search'te price=0 dönen ürünler için detail page'den price çek.
+    // (Search JSON-LD'sinde bazı varyantlar price'sız gelir; live fetcher modülü
+    //  data-price/HTML body'sinden price extract edebilir.)
+    const needsLive = products.filter((p) => !p.price || p.price <= 0);
+    if (needsLive.length > 0) {
+      const { fetchMediaMarkt } = await import("@/lib/scrapers/live/mediamarkt");
+      const fetchCtx = (sourceUrl: string) => ({
+        sourceUrl,
+        productId: "",
+        sourceProductId: "",
+        store: { id: "", name: "MediaMarkt", source: "mediamarkt" as const },
+        listingId: null,
+      });
+      // Concurrency 4 — MM rate limit dostu
+      const CONC = 4;
+      for (let i = 0; i < needsLive.length; i += CONC) {
+        const batch = needsLive.slice(i, i + CONC);
+        await Promise.all(batch.map(async (prod) => {
+          try {
+            const live = await fetchMediaMarkt(fetchCtx(prod.url));
+            if (live.price && live.price > 0 && live.in_stock) {
+              prod.price = live.price;
+            }
+          } catch {
+            // skip — listing eklenmeyecek (price=0 kalır, /api/sync defensive filter atar)
+          }
+        }));
+      }
+    }
 
     return NextResponse.json({ products, totalCount: products.length, page, source: "mediamarkt" });
   } catch {
