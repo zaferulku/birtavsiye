@@ -284,7 +284,7 @@ const RULES: CategoryRule[] = [
 
   // --- Audio ---
   {
-    slug: "kulaklik",
+    slug: "ses-kulaklik",
     keywords: ["bluetooth kulaklık", "kablosuz kulaklık",
                "airpods", "airpods pro", "airpods 2", "airpods 3", "airpods 4",
                "kulak içi kulaklık", "kulak üstü kulaklık", "earbuds",

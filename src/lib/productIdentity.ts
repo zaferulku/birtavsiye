@@ -56,8 +56,27 @@ type BuildCreatePayloadInput = {
 const PRODUCT_FIELDS =
   "id, title, slug, brand, category_id, model_code, model_family, variant_storage, variant_color, image_url, specs";
 
+// Brand alias: title'da X geçerse brand = Y kabul et
+// Örn. "iPhone 17 Pro" başlığı → brand=Apple, "Galaxy S25" → Samsung
+const BRAND_TITLE_ALIASES: Array<[RegExp, string]> = [
+  [/\biphone\b/i, "Apple"],
+  [/\bipad\b/i, "Apple"],
+  [/\bmacbook\b/i, "Apple"],
+  [/\bairpods\b/i, "Apple"],
+  [/\bapple watch\b/i, "Apple"],
+  [/\bgalaxy (s|a|z|note|tab|watch|buds)\b/i, "Samsung"],
+  [/\bredmi\b/i, "Xiaomi"],
+  [/\bpoco\b/i, "Xiaomi"],
+  [/\bpixel\b/i, "Google"],
+  [/\bthinkpad\b|\bideapad\b|\byoga (slim|pro|book)\b|\blegion\b/i, "Lenovo"],
+  [/\brog\b|\btuf\b|\bvivobook\b|\bzenbook\b|\bexpertbook\b/i, "Asus"],
+  [/\bomen\b|\bvictus\b|\bpavilion\b|\belitebook\b|\bprobook\b|\bzbook\b/i, "HP"],
+  [/\bnitro\b|\baspire\b|\btravelmate\b|\bpredator\b/i, "Acer"],
+];
+
 const KNOWN_BRANDS = [
   "Apple",
+  "Google",
   "Samsung",
   "Xiaomi",
   "Redmi",
@@ -96,6 +115,16 @@ const KNOWN_BRANDS = [
 ];
 
 const COLOR_ALIASES: Array<[string, string]> = [
+  // iPhone 17 (2025) renkleri
+  ["sis mavisi", "Sis Mavisi"],
+  ["mist blue", "Sis Mavisi"],
+  ["kozmik turuncu", "Kozmik Turuncu"],
+  ["cosmic orange", "Kozmik Turuncu"],
+  ["lavanta", "Lavanta"],
+  ["lavender", "Lavanta"],
+  ["adacayi", "Ada\u00e7ay\u0131"],
+  ["sage", "Ada\u00e7ay\u0131"],
+  // iPhone 17 Pro renkleri
   ["natural titanium", "Nat\u00fcrel Titanyum"],
   ["dogal titanyum", "Nat\u00fcrel Titanyum"],
   ["white titanium", "Beyaz Titanyum"],
@@ -388,6 +417,12 @@ function extractBrand(title: string, brandHint?: string | null): string {
     if (normalizedTitle.startsWith(`${normalizedBrand} `) || normalizedTitle === normalizedBrand) {
       return brand;
     }
+  }
+
+  // Brand alias: title içinde tanınan model anahtarı varsa brand'a yönlendir
+  // ("iPhone 17 512 Gb Sis Mavisi" → Apple, "Galaxy S25" → Samsung)
+  for (const [pattern, brand] of BRAND_TITLE_ALIASES) {
+    if (pattern.test(title)) return brand;
   }
 
   const firstToken = title.split(/\s+/).find(Boolean) ?? "Unknown";
