@@ -32,6 +32,8 @@ const EXPORT_PENDING = process.env.EXPORT_PENDING === "1";
 const PENDING_LIMIT = process.env.PENDING_LIMIT ? Number(process.env.PENDING_LIMIT) : 200;
 const PENDING_FILE = process.env.PENDING_FILE || "output/pending-classification.json";
 const SAFE_ONLY = process.env.SAFE_ONLY === "1";
+const MOVE_UNCLASSIFIED = process.env.MOVE_UNCLASSIFIED === "1"; // pattern fail -> "siniflandirilmamis" kategorisi
+const UNCLASSIFIED_SLUG = "siniflandirilmamis";
 
 // Net güvenli transition whitelist (oldSlug -> newSlug). False-positive riski yok.
 const SAFE_TRANSITIONS = new Set([
@@ -100,24 +102,34 @@ console.log(`Aktif products: ${products.length}`);
 const mismatches = [];
 const transitions = {}; // "oldSlug -> newSlug" : count
 const pendingCandidates = []; // Pattern fail — Claude tarafından kategorize edilecek
+const moveCandidates = []; // Pattern fail — "siniflandirilmamis" kategorisine taşınacak
+const unclassifiedId = slugToId.get(UNCLASSIFIED_SLUG);
 let noMatch = 0;
 let lowConfidence = 0;
 let alreadyCorrect = 0;
 
 for (const p of products) {
+  // Halihazırda siniflandirilmamis'te ise tekrar dokunma
+  const isAlreadyUnclassified = p.category_id === unclassifiedId;
   const r = categorizeFromTitle(p.title || "");
   if (!r.slug) {
     noMatch++;
     if (EXPORT_PENDING) pendingCandidates.push({ id: p.id, title: p.title, oldSlug: idToSlug.get(p.category_id) || "(orphan)" });
+    if (MOVE_UNCLASSIFIED && !isAlreadyUnclassified) moveCandidates.push({ id: p.id, title: p.title });
     continue;
   }
   if (r.confidence !== "high") {
     lowConfidence++;
     if (EXPORT_PENDING) pendingCandidates.push({ id: p.id, title: p.title, oldSlug: idToSlug.get(p.category_id) || "(orphan)", patternHint: r.slug });
+    if (MOVE_UNCLASSIFIED && !isAlreadyUnclassified) moveCandidates.push({ id: p.id, title: p.title });
     continue;
   }
   const inferredId = slugToId.get(r.slug);
-  if (!inferredId) { noMatch++; continue; }
+  if (!inferredId) {
+    noMatch++;
+    if (MOVE_UNCLASSIFIED && !isAlreadyUnclassified) moveCandidates.push({ id: p.id, title: p.title });
+    continue;
+  }
   if (p.category_id === inferredId) { alreadyCorrect++; continue; }
   const oldSlug = idToSlug.get(p.category_id) || "(orphan)";
   const key = `${oldSlug} -> ${r.slug}`;
@@ -141,6 +153,33 @@ console.log(`Already correct: ${alreadyCorrect}`);
 console.log(`No match (pattern yok): ${noMatch}`);
 console.log(`Low confidence: ${lowConfidence}`);
 console.log(`Mismatch (DUZELT): ${mismatches.length}`);
+
+// 3.4) Pattern-fail olanları "siniflandirilmamis" kategorisine taşı
+if (MOVE_UNCLASSIFIED && moveCandidates.length > 0) {
+  console.log(`\n=== MOVE_UNCLASSIFIED ===`);
+  console.log(`Aday: ${moveCandidates.length} ürün -> "${UNCLASSIFIED_SLUG}"`);
+  if (!unclassifiedId) {
+    console.error(`HATA: "${UNCLASSIFIED_SLUG}" kategorisi categories tablosunda yok.`);
+    process.exit(1);
+  }
+  if (dryRun) {
+    console.log("DRY-RUN, ilk 5 örnek:");
+    moveCandidates.slice(0, 5).forEach(m => console.log(`  ${(m.title || "").slice(0, 70)}`));
+  } else {
+    let mvUpd = 0, mvFail = 0;
+    const startMv = Date.now();
+    for (let i = 0; i < moveCandidates.length; i += BATCH) {
+      const batch = moveCandidates.slice(i, i + BATCH);
+      await Promise.all(batch.map(async (m) => {
+        const { error } = await sb.from("products").update({ category_id: unclassifiedId }).eq("id", m.id);
+        if (error) mvFail++; else mvUpd++;
+      }));
+      process.stdout.write(`\r  ${i + batch.length}/${moveCandidates.length} | upd=${mvUpd} fail=${mvFail}`);
+    }
+    const mvSec = Math.round((Date.now() - startMv) / 1000);
+    console.log(`\nMove sonuç (${mvSec}s): updated=${mvUpd}, failed=${mvFail}`);
+  }
+}
 
 // 3.5) Pattern-fail olanları JSON dosyasına dump et — Claude kategorize edecek
 if (EXPORT_PENDING && pendingCandidates.length > 0) {
