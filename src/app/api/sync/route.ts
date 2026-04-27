@@ -44,6 +44,28 @@ function normalizeForSecondhand(text: string): string {
     .toLowerCase();
 }
 
+// PttAVM ürün başlığında "(Apple Türkiye Garantili)" / "(İthalatçı Garantili)"
+// notunu yakalar. MM ve diğer resmî dağıtıcılar default 'apple_tr' kabul edilir.
+// Dönen değerler: 'apple_tr' | 'ithalatci' | 'distri' | null
+function detectWarrantyType(source: SyncSource, title: string): string | null {
+  const t = (title || "").toLowerCase();
+  if (t.includes("apple türkiye garantili") || t.includes("apple turkiye garantili")) {
+    return "apple_tr";
+  }
+  if (t.includes("ithalatçı garantili") || t.includes("ithalatci garantili") ||
+      t.includes("ithal garantili") || t.includes("paralel ithal")) {
+    return "ithalatci";
+  }
+  if (t.includes("distribütör garantili") || t.includes("distributor garantili")) {
+    return "distri";
+  }
+  // MM / Vatan / Hepsiburada resmî perakendeci → varsayılan apple_tr
+  if (source === "mediamarkt" || source === "vatan" || source === "hepsiburada") {
+    return "apple_tr";
+  }
+  return null;
+}
+
 function getSourceProductId(url: string): string {
   try {
     const parsed = new URL(url);
@@ -247,6 +269,7 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
       in_stock: true,
       is_active: true,
       last_seen: nowIso,
+      warranty_type: detectWarrantyType(source, product.name),
     };
     if (!existingListing || previousPrice !== product.price) {
       listingPayload.last_price_change = nowIso;
