@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 type FilterOption = {
@@ -49,16 +49,43 @@ export default function CategoryFiltersSidebar({
   const [showAllSections, setShowAllSections] = useState<Record<string, boolean>>({});
   const [searchTerms, setSearchTerms] = useState<Record<string, string>>({});
 
+  // Optimistic UI: checkbox click anlik gorunsun, URL push debounce edilsin
+  const initialOptimistic = useMemo<Record<string, string[]>>(() => {
+    const acc: Record<string, string[]> = {};
+    for (const s of sections) acc[s.id] = s.selected;
+    return acc;
+  }, [sections]);
+  const [optimisticSelected, setOptimisticSelected] = useState(initialOptimistic);
+
+  // Server'dan yeni props geldiginde optimistic state'i resync et
+  useEffect(() => {
+    setOptimisticSelected(initialOptimistic);
+  }, [initialOptimistic]);
+
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pushUrl = (params: URLSearchParams) => {
+    const query = params.toString();
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      startTransition(() => {
+        router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+      });
+    }, 250);
+  };
+
   const updateUrl = (mutator: (params: URLSearchParams) => void) => {
     const params = new URLSearchParams(searchParams.toString());
     mutator(params);
-    const query = params.toString();
-    startTransition(() => {
-      router.push(query ? `${pathname}?${query}` : pathname, { scroll: false });
-    });
+    pushUrl(params);
   };
 
   const toggleValue = (param: string, value: string) => {
+    // Optimistic local update — checkbox anlik tepki versin
+    setOptimisticSelected((prev) => {
+      const cur = prev[param] ?? [];
+      const next = cur.includes(value) ? cur.filter((v) => v !== value) : [...cur, value];
+      return { ...prev, [param]: next };
+    });
     updateUrl((params) => {
       const current = (params.get(param) ?? "")
         .split(",")
@@ -195,7 +222,8 @@ export default function CategoryFiltersSidebar({
 
                 <div className="space-y-1">
                   {filteredOptions.map((option) => {
-                    const checked = section.selected.includes(option.value);
+                    const currentSelected = optimisticSelected[section.id] ?? section.selected;
+                    const checked = currentSelected.includes(option.value);
                     return (
                       <button
                         key={`${section.id}-${option.value}`}
