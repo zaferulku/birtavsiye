@@ -30,6 +30,29 @@ const sb = createClient(
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
+// Title'dan renk cikar (variant_color NULL ise doldurmak icin)
+function extractColorFromTitle(title) {
+  if (!title) return null;
+  const colors = {
+    siyah: /\b(siyah|space gray|space grey|jet siyah|gece siyahı)\b/i,
+    beyaz: /\b(beyaz|starlight|inci beyazı)\b/i,
+    "kırmızı": /\b(kırmızı|kirmizi|red|kızıl|product red)\b/i,
+    mavi: /\b(mavi|navy|kobalt|teal|gece mavisi|deniz mavisi)\b/i,
+    "yeşil": /\b(yeşil|yesil|alpine green|mint|orman yeşili)\b/i,
+    "sarı": /\b(sarı|sari|gold|altın|altin|yellow)\b/i,
+    pembe: /\b(pembe|pink|rose|toz pembe)\b/i,
+    mor: /\b(mor|purple|violet|lavanta|deep purple)\b/i,
+    turuncu: /\b(turuncu|orange)\b/i,
+    gri: /\b(gri|gray|grey|titan|titanyum|graphite)\b/i,
+    kahverengi: /\b(kahverengi|brown|taba|bej|krem)\b/i,
+    turkuaz: /\b(turkuaz|cyan)\b/i,
+  };
+  for (const [c, re] of Object.entries(colors)) {
+    if (re.test(title)) return c;
+  }
+  return null;
+}
+
 function loadState() {
   if (!existsSync(STATE_FILE)) {
     return {
@@ -53,6 +76,41 @@ function loadState() {
 function saveState(state) {
   writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
 }
+
+// Top-level state — process handlers icin erisilebilir
+let state = loadState();
+
+function recordFailReason(reason) {
+  if (!state.stats.failsByReason) state.stats.failsByReason = {};
+  const key = String(reason || 'unknown').slice(0, 80);
+  state.stats.failsByReason[key] = (state.stats.failsByReason[key] || 0) + 1;
+}
+
+// Process kill diagnostic — silent crash'i log'la, state'i koru
+process.on('uncaughtException', (err) => {
+  console.error('\n[FATAL] UNCAUGHT EXCEPTION:', err.message);
+  console.error(err.stack);
+  try { saveState(state); } catch {}
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason) => {
+  console.error('\n[FATAL] UNHANDLED REJECTION:', reason);
+  try { saveState(state); } catch {}
+  process.exit(1);
+});
+
+process.on('SIGTERM', () => {
+  console.warn('\n[SIGNAL] SIGTERM, state kaydediliyor...');
+  try { saveState(state); } catch {}
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  console.warn('\n[SIGNAL] SIGINT, state kaydediliyor...');
+  try { saveState(state); } catch {}
+  process.exit(0);
+});
 
 let mmTreeCache = null;
 function loadMmTree() {
@@ -112,7 +170,16 @@ async function upsertListing(scraped) {
 
   if (!productId) {
     const categoryId = await getCategoryId(scraped.dbSlug);
-    if (!categoryId) return { ok: false, reason: `category_not_found: ${scraped.dbSlug}` };
+    if (!categoryId) {
+      // Debug: ilk 3 kez tum cache durumunu goster
+      if (!globalThis.__catNotFoundDebugged) globalThis.__catNotFoundDebugged = 0;
+      if (globalThis.__catNotFoundDebugged < 3) {
+        globalThis.__catNotFoundDebugged++;
+        const cacheSnap = Array.from(dbCategoryCache.entries()).slice(0, 5);
+        console.warn(`  [DEBUG] category_not_found: dbSlug="${scraped.dbSlug}" cache_first5=${JSON.stringify(cacheSnap)}`);
+      }
+      return { ok: false, reason: `category_not_found: ${scraped.dbSlug}` };
+    }
 
     const baseSlug = `${(scraped.brand || 'mm').toLowerCase()}-${scraped.source_product_id}`
       .replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
@@ -129,6 +196,7 @@ async function upsertListing(scraped) {
 
       // SKU'yu model_family'e koy (uq_products_dedup constraint icin gecici).
       // Faz1 classifier sonra dogru model_family'e normalize eder.
+      const inferredColor = extractColorFromTitle(scraped.name);
       const { data: newP, error: newErr } = await sb.from('products').insert({
         slug: baseSlug,
         title: scraped.name,
@@ -139,6 +207,7 @@ async function upsertListing(scraped) {
         image_url: scraped.raw_images[0] ?? null,
         images: scraped.raw_images,
         specs: productSpecs,
+        variant_color: inferredColor,
         is_active: true,
         is_verified: false,
         classified_by: 'mediamarkt-scraper',
@@ -195,7 +264,7 @@ async function upsertListing(scraped) {
 async function main() {
   console.log('MediaMarkt kategori-bazli scrape');
 
-  const state = loadState();
+  // state top-level'da yuklendi
   if (!state.startedAt) state.startedAt = new Date().toISOString();
 
   const targets = ONLY_DB_SLUG
@@ -277,6 +346,7 @@ async function main() {
               else state.stats.updated++;
             } else {
               state.stats.fails++;
+              recordFailReason(result.reason);
               if (state.stats.fails <= 5) console.warn(`    Insert fail: ${result.reason?.slice(0, 100)}`);
             }
 
@@ -287,6 +357,7 @@ async function main() {
             }
           } catch (e) {
             state.stats.fails++;
+            recordFailReason(e.message);
             if (state.stats.fails <= 10) console.warn(`    PDP fail: ${e.message}`);
           }
 
@@ -309,6 +380,16 @@ async function main() {
   console.log(`Update: ${state.stats.updated}`);
   console.log(`Skip: ${state.stats.skipped}`);
   console.log(`Fail: ${state.stats.fails}`);
+
+  if (state.stats.failsByReason && Object.keys(state.stats.failsByReason).length > 0) {
+    console.log('\n=== Fail sebep dagilimi (top 10) ===');
+    const sortedFails = Object.entries(state.stats.failsByReason)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 10);
+    sortedFails.forEach(([reason, count]) => {
+      console.log(`  ${String(count).padStart(4)}x  ${reason}`);
+    });
+  }
 }
 
 main().catch(e => {

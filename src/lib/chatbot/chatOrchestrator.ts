@@ -398,6 +398,16 @@ async function runSlowPath(
     categorySlug: intent?.category_slug ?? null,
   });
 
+  // DEBUG: suggestions empty trace (suggestions her zaman bos donuyorsa neden?)
+  if (!suggestions || suggestions.length === 0) {
+    console.warn("[suggestions] empty for slow path query:", input.userMessage?.slice(0, 60), {
+      products_count: finalProducts.length,
+      intent_brand: intent?.brand_filter,
+      intent_category: intent?.category_slug,
+      is_too_vague: intent?.is_too_vague,
+    });
+  }
+
   return {
     response,
     products: finalProducts,

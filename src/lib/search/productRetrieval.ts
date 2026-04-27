@@ -142,7 +142,7 @@ const SELECT_FIELDS =
   "id, title, slug, brand, image_url, category_id, model_code, model_family, variant_storage, variant_color, created_at, prices:listings(id, price, source, last_seen, is_active, in_stock)";
 
 const ACCESSORY_CATEGORY_PATTERN =
-  /telefon-kilifi|telefon-aksesuar|telefon-yedek-parca|ekran-koruyucu|sarj-kablo/i;
+  /telefon-kilifi|telefon-aksesuar|telefon-yedek-parca|ekran-koruyucu|sarj-kablo|sarj-cihazi|telefon-tutacagi|tablet-kilif|laptop-kilif|kulaklik-aksesuar/i;
 
 const ACCESSORY_QUERY_HINTS = new Set([
   "aksesuar",
@@ -431,15 +431,13 @@ function getProductSearchScore(
       score += 22;
       reasons.add("telefon-kategori");
     }
+  }
 
-    if (
-      term === "telefon" &&
-      ACCESSORY_CATEGORY_PATTERN.test(categorySlug) &&
-      !accessoryIntent
-    ) {
-      score -= 18;
-      reasons.add("aksesuar-penalti");
-    }
+  // HARD FILTER: aksesuar kategori + accessoryIntent yoksa, score -100 ile en alta düşer
+  // (loop disinda, tek seferlik)
+  if (ACCESSORY_CATEGORY_PATTERN.test(categorySlug) && !accessoryIntent) {
+    score -= 100;
+    reasons.add("aksesuar-hard-filter");
   }
 
   if (matchedTerms === 0) {

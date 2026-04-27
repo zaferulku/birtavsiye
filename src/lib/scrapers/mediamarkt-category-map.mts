@@ -5,7 +5,30 @@ export interface MmCategoryTarget {
 }
 
 export const MEDIAMARKT_CATEGORY_MAP: MmCategoryTarget[] = [
-  { dbSlug: 'akilli-telefon', mmBreadcrumbNames: ['iPhone', 'Android Telefonlar', 'Katlanabilir Telefonlar'], priority: 1 },
+  {
+    dbSlug: 'akilli-telefon',
+    mmBreadcrumbNames: [
+      // Mevcut parent kategoriler
+      'iPhone', 'Android Telefonlar', 'Katlanabilir Telefonlar',
+      // Marka-leaf (Android altinda)
+      'Samsung Telefon', 'Xiaomi Telefon', 'Huawei Telefon', 'Oppo Telefon',
+      'Realme Telefon', 'Tecno Telefon', 'Vivo Telefon', 'Casper Telefon',
+      'TCL Telefon', 'Omix Telefon', 'General Mobile Telefon',
+      'Honor Telefon', 'Reeder Telefon', 'POCO Telefon',
+      // Samsung sub-leaf
+      'Galaxy A', 'Galaxy S', 'Galaxy Z', 'Galaxy Note', 'Galaxy M',
+      // iPhone model-leaf
+      'iPhone 11', 'iPhone 12', 'iPhone 13', 'iPhone 13 Pro Max',
+      'iPhone 14', 'iPhone 14 Plus', 'iPhone 14 Pro', 'iPhone 14 Pro Max',
+      'iPhone 15', 'iPhone 15 Plus', 'iPhone 15 Pro', 'iPhone 15 Pro Max',
+      'iPhone 16', 'iPhone 16e', 'iPhone 16 Plus', 'iPhone 16 Pro', 'iPhone 16 Pro Max',
+      'iPhone 17', 'iPhone 17 Pro', 'iPhone 17 Pro Max', 'iPhone 17e',
+      // Diger
+      'Tuşlu Telefon', 'Yenilenmiş Cep Telefonu',
+      'iPhone Yenilenmiş Telefon', 'Yapay Zeka Destekli Telefonlar',
+    ],
+    priority: 1,
+  },
   { dbSlug: 'kulaklik', mmBreadcrumbNames: ['Kulaklıklar', 'Bluetooth Kulaklıklar', 'Kulak İçi Kulaklıklar', 'Kulak Üstü Kulaklık', 'Mikrofonlu Kulaklıklar'], priority: 1 },
   { dbSlug: 'akilli-saat', mmBreadcrumbNames: ['Akıllı Saatler'], priority: 1 },
   { dbSlug: 'powerbank', mmBreadcrumbNames: ['Taşınabilir Şarj Cihazları'], priority: 2 },
