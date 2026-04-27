@@ -159,15 +159,11 @@ const UNIVERSAL_ACCESSORY_KEYWORDS = [
   "yedek başlık", "yedek bıçak",
 ];
 
+// Türkçe normalize merkezi util'den (İ.toLowerCase combining-dot bug fix).
+import { trNormalize } from "./turkishNormalize";
+
 function normalize(s: string): string {
-  return s.toLowerCase()
-    .replace(/ı/g, "i").replace(/İ/g, "i")
-    .replace(/ş/g, "s").replace(/Ş/g, "s")
-    .replace(/ğ/g, "g").replace(/Ğ/g, "g")
-    .replace(/ü/g, "u").replace(/Ü/g, "u")
-    .replace(/ö/g, "o").replace(/Ö/g, "o")
-    .replace(/ç/g, "c").replace(/Ç/g, "c")
-    .trim();
+  return trNormalize(s);
 }
 
 // Word-boundary keyword match: "kablosu" "kablosuz" icinde yakalamasin diye.

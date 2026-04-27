@@ -35,18 +35,10 @@ export async function fetchCategoryPath(categoryId: string | null): Promise<Cate
   return chain;
 }
 
+import { trSlug } from "./turkishNormalize";
+
 export function toSlug(text: string): string {
-  return text
-    .replace(/İ/g, "i")
-    .toLowerCase()
-    .replace(/ı/g, "i")
-    .replace(/ğ/g, "g")
-    .replace(/ü/g, "u")
-    .replace(/ş/g, "s")
-    .replace(/ö/g, "o")
-    .replace(/ç/g, "c")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
+  return trSlug(text, 200);
 }
 
 export const brandToSlug = toSlug;
