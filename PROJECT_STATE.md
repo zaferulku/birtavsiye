@@ -1,9 +1,9 @@
-# birtavsiye.net — Project State v7
+# birtavsiye.net — Project State v8
 
 > **Bu dosya tek kaynak gerçek.** Yeni sohbet/oturum başlattığınızda
 > bu dosyayı Claude veya Claude Code'a verin — tüm bağlamı 30 saniyede alır.
 
-**Son güncelleme:** 2026-04-27 v7 (akilli-telefon büyük scrape + ProductGroup fix + accessory pipeline + model_family backfill + brand normalize)
+**Son güncelleme:** 2026-04-27 v8 (model_family pattern 17 marka + tablet/saat/laptop + categorizeFromTitle + PttAVM kategori inference %92 + MM-source priority)
 **Production:** https://birtavsiye.net (www.birtavsiye.net canonical)
 **Stack:** Next.js 16, Supabase + pgvector, Zustand, NVIDIA Llama 3.3 70B / Groq / Gemini fallback
 
@@ -208,7 +208,8 @@ src/lib/scrapers/mediamarkt-categories.mts                    # category reader
 src/lib/scrapers/mediamarkt-category-map.mts                  # 21 DB → ~70 MM
 src/lib/productTitle.ts                                       # extractColorFromTitle
 src/lib/accessoryDetector.mts                                 # 7 kategori kuralı + universal + ACCESSORY_CATEGORY_SLUGS bypass
-src/lib/extractModelFamily.mts                                # iPhone/Galaxy canonical pattern + APPLE_SKU_REGEX
+src/lib/extractModelFamily.mts                                # 17 marka canonical pattern + tablet/saat/laptop
+src/lib/categorizeFromTitle.mts                               # title -> kategori slug (PttAVM/Gemini bypass)
 src/components/chatbot/ChatBar.tsx                            # camera split
 src/components/chatbot/ChatPanel.tsx                          # chip click intentHint
 scripts/scrape-mediamarkt-by-category.mjs                     # ana scraper
@@ -218,6 +219,8 @@ scripts/backfill-price-history.mjs                            # history backfill
 scripts/backfill-model-family.mjs                             # title -> canonical model_family + model_code
 scripts/audit-accessory-products.mjs                          # DB-wide accessory flag set
 scripts/test-accessory-detector.mjs                           # 10 vaka smoke test
+scripts/test-categorize-pttavm.mts                            # PttAVM categorizer kapsam testi
+scripts/backfill-pttavm-categories.mts                        # PttAVM source_category backfill
 scripts/seed-forum-static.mjs                                 # 21 topics + 84 answers
 mm-category-tree.json                                         # 367KB, 713 leaf
 supabase/migrations/004_smart_search_variants.sql             # variant_color_patterns
@@ -309,6 +312,11 @@ ProductDetailShell.tsx ortak nokta — uyumlu.
 | KNOWN_BRANDS_TR enrichment | 2026-04-27 | LLM brand_filter boş bırakıyordu |
 | Suggestion.categorySlug + intentHint | 2026-04-27 | "Telefon" chip too_vague düşüyordu |
 | agent_decisions output_data: suggestions + reply | 2026-04-27 | DB log eksikti, teşhis yapılamıyordu |
+| extractModelFamily scraper ingestion'da | 2026-04-27 | Backfill 2 iş yerine tek scrape ile canonical model_family insert |
+| 17 marka model pattern (iPhone/Galaxy/Xiaomi/Tecno/Vivo/...) | 2026-04-27 | Filter "Seri" listesinde tüm büyük markalar gruplanır |
+| Tablet/Saat/Laptop pattern | 2026-04-27 | iPad/Galaxy Tab/MatePad + Apple Watch/Galaxy Watch + MacBook/ThinkPad/Yoga ailesi |
+| categorizeFromTitle (title→category slug) | 2026-04-27 | Gemini bypass için %92 PttAVM, Faz1 randımanı yükselir |
+| MM-source priority (specs/description) | 2026-04-27 | MM raw_specs varsa diğer pazaryerleri overwrite etmez (MM en güvenilir) |
 | ProductGroup JSON-LD desteği | 2026-04-27 | Apple iPhone PDP'leri ProductGroup tipinde, parser eski hali kabul etmiyordu |
 | ProductGroup hasVariant offers fallback | 2026-04-27 | offers ProductGroup'ta yoksa ilk variant'tan al |
 | Stoksuz ürün kabulü (price=0, in_stock=false) | 2026-04-27 | Ürün oluşturmak için, diğer sitelerde fiyat geldiğinde eşleşir |
@@ -425,12 +433,21 @@ anne_bebek (11) = **141**
 **11:** MM scrape category-driven (04-27) — 49/49 kategori, 7.6h, 726 insert + 63 update + 5975 skipped + 1061 fails
 **12:** Search regression + 3-bug + price_history (04-27) — `bcebf6b` + `da7f09b` + `8913a79`
 **13:** akilli-telefon büyük scrape (04-27) — ProductGroup fix + accessory pipeline + model_family + brand normalize — `facc78a` + `076244c` (akilli-telefon 27 → 585 ürün)
+**14:** Pattern + categorizer + MM-source priority (04-27) — extractModelFamily 17 marka, tablet/saat/laptop, scraper ingestion entegrasyon, categorizeFromTitle (PttAVM 249→334 dolu, %92), enrich-pttavm description guard — `533f319` + `a673ff6` + `9e5dcdf` + `29d14db` + `2b5fd9f` + `76b597e` + `ec2a446`
 
 ---
 
 ## ✅ COMMIT GEÇMİŞİ (son 25)
 
 ```
+ec2a446   feat(categorizer): pattern listesi genisletme (%69 -> %92 PttAVM coverage)
+76b597e   feat(pttavm): backfill source_category from title
+2b5fd9f   feat(categorizer+pttavm): title->kategori inference + MM-source oncelik
+29d14db   feat(scrape): ingestion'da extractModelFamily ile canonical model_family
+9e5dcdf   feat(model-family): Laptop patterns (MacBook/ThinkPad/Yoga/Pavilion/MSI/Acer)
+a673ff6   feat(model-family): Tablet + Akilli Saat patterns
+533f319   feat(model-family): Tecno/Vivo/Infinix/Oppo/Huawei/Reeder/Realme/Honor patterns
+4e74782   feat(model-family): Xiaomi/Redmi/Poco pattern listesi
 076244c   feat(scrape+model): skip_24h_fresh tracking + model_family backfill
 facc78a   feat(scrape+detector): stoksuz urun + ProductGroup + accessory detector + refurb blacklist + skip diagnostic
 9688b7e   docs: PROJECT_STATE v6 — search regression + price_history + 3-bug session
@@ -577,6 +594,7 @@ C: ÇÖZÜLDÜ (`8913a79`). Scraper INSERT/UPDATE her iki path'de price_history 
 | 2026-04-26 | v5 — varyant filtre + Header slug map + Migration 005 | Claude |
 | 2026-04-27 | v6 — search regression + 3-bug + price_history + MM scrape category-driven | Claude |
 | 2026-04-27 | v7 — akilli-telefon büyük scrape (585 ürün) + ProductGroup fix + accessory pipeline (detector+filter+migration+audit) + model_family backfill + brand normalize | Claude |
+| 2026-04-27 | v8 — extractModelFamily 17 marka pattern (telefon+tablet+saat+laptop) + categorizeFromTitle.mts (PttAVM kategori inference %92) + MM-source priority (specs/description) + scraper ingestion entegrasyonu | Claude |
 
 ---
 
