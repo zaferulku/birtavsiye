@@ -3,7 +3,7 @@
 > **Bu dosya tek kaynak gerçek.** Yeni sohbet/oturum başlattığınızda
 > bu dosyayı Claude veya Claude Code'a verin — tüm bağlamı 30 saniyede alır.
 
-**Son güncelleme:** 2026-04-27 v9 (backup migrate Gemini bypass +3.9K ürün + categorizeFromTitle 30 niş kategori + MM map 132 yeni leaf segment + 25 dbSlug)
+**Son güncelleme:** 2026-04-27 v10 (uq_products_dedup constraint drop → backup migrate +7.2K ürün; brand normalize 1.9K row; title-based merge 676 duplicate sildi; siniflandirilmamis kategori + 1.3K ürün gizlendi; pattern hardening 4 round / 678 ürün re-classify; ROTATIONS 8→31; cron kill switch; index migration 008 hazır)
 **Production:** https://birtavsiye.net (www.birtavsiye.net canonical)
 **Stack:** Next.js 16, Supabase + pgvector, Zustand, NVIDIA Llama 3.3 70B / Groq / Gemini fallback
 
@@ -27,17 +27,33 @@ kişiselleştirilmiş tavsiye, kategori bazlı search, forum tartışmaları.
 
 ---
 
-## 📊 DB STATE (2026-04-27)
+## 📊 DB STATE (2026-04-27 sonrası v10)
 
 | Tablo | Sayı |
 |---|---|
-| products | **6,748+** canonical (backup-restore migrate sonrasi, classified_by: faz1/gemini/mediamarkt-scraper/backup-restore) |
-| listings (MM çoğu) | ~2900 (akilli-telefon ek scrape sonrası) |
+| products | **~16,500** canonical (backup-restore migrate sonrası 13,840 + MM scrape 2,158; title-merge -676; brand normalize 1,969 row) |
+| listings | ~2,765 (MM 2,198 + PttAVM 361 + diğer; PttAVM scrape 22 Nis'tan beri cron'dan dondurulmuş, manuel sync ile +48 yeni) |
 | price_history | büyüyor (her listing INSERT/UPDATE'de yazıyor) |
-| categories | 177 (Migration 005 sonrası) |
-| topics | 21 (forum seed, statik) |
+| categories | 178 (siniflandirilmamis eklendi — UI menü/sitemap'ten gizli, arama bulur) |
+| topics | 21 (forum seed) |
 | topic_answers | 84 |
-| akilli-telefon | **585 ürün** (Apple 230+55, Samsung 124+6, Xiaomi 50, Tecno 38, Vivo 37, Infinix 30, ...) |
+
+### Bu session'daki büyük operasyonlar
+- **Constraint drop:** `uq_products_dedup` UNIQUE INDEX silindi (rollback DDL: bkz `migration-supervisor` çıktısı). Migrate %99→%99.97 başarı, +7,210 ürün.
+- **Brand normalize:** 988 ALL-CAPS brand → TitleCase, 1,969 row update (Lenovo/Philips/Bosch/Asus/Huawei vb.)
+- **Title-based merge:** 599 duplicate group, 676 fazlalık row silindi, 7 listing winner'a yönlendi.
+- **MM variant backfill:** 1,017 mediamarkt-scraper kaynaklı ürün için title'dan storage/color extract.
+- **siniflandirilmamis kategori:** Pattern fail 1,287 ürün buraya taşındı; UI'da gizli (Header + sitemap).
+- **Pattern hardening:** 4 round, +518 mismatch düzeltme, +678 re-classify.
+- **categorizeFromTitle.mts:** word-boundary regex (substring → `(?:^|\W)kw`) — omen/ud/ipl/lenovo pil false-match çözüldü; 60+ rule, 200+ keyword.
+- **Cron kill switch:** `CRON_SCRAPE_DISABLED=1` env ile `/api/cron/scrape` no-op (Vercel'den env eklenmeli).
+- **ROTATIONS expansion:** 8 → 31 query (iPhone 17/16, S25, MacBook, watch series).
+- **Index migration 008** dosyası hazır: `supabase/migrations/008_performance_indexes.sql` — Supabase düzeldikten sonra SQL Editor'da `CONCURRENTLY` ile uygulanmalı.
+
+### Bilinen problemler (devam)
+- **Supabase incident** (2026-04-27 ~17:30 UTC): statement timeout, dashboard "Failed to retrieve schemas". Long-running query'ler asılı; restart veya `pg_terminate_backend` gerek.
+- **Tuple-merge atlandı:** HP Victus / EliteBook gibi farklı SKU'lar (KN29 vs KN30) aynı `(brand,model_family,storage,color)` tuple'ında. Merge yapılmadı (false-positive riski).
+- **PttAVM seller_name:** Liste sayfası JSON-LD'de yok; detail page fetch'i 5x scrape süresi → ertelendi.
 | KB | 141 chunk, 12 doküman |
 | agent_decisions | büyüyor (chatbot logging) |
 | backup_20260422_products | 43,176 (Faz 1 kaynak) |

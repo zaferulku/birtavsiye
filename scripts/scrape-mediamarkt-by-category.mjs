@@ -21,7 +21,9 @@ import { checkAccessory } from '../src/lib/accessoryDetector.mjs';
 import { extractModelFamily } from '../src/lib/extractModelFamily.mjs';
 import { fetchAllProductsFromCategory } from '../src/lib/scrapers/mediamarkt-categories.mjs';
 
-const DELAY_MS = 350;
+// Rate limit: MM_DELAY_MS env ile gevşetilebilir (Supabase yükü için).
+// Default 350ms; DB tıkalıysa MM_DELAY_MS=2000 önerilir.
+const DELAY_MS = process.env.MM_DELAY_MS ? Number(process.env.MM_DELAY_MS) : 350;
 const STATE_FILE = './scripts/scraper-state.json';
 const ONLY_DB_SLUG = process.env.ONLY_DB_SLUG || null;
 const SKIP_24H_FRESH = process.env.SKIP_24H !== '0';  // default true; SKIP_24H=0 ile bypass
