@@ -22,6 +22,7 @@ import { fetchAllProductsFromCategory } from '../src/lib/scrapers/mediamarkt-cat
 const DELAY_MS = 1500;
 const STATE_FILE = './scripts/scraper-state.json';
 const ONLY_DB_SLUG = process.env.ONLY_DB_SLUG || null;
+const SKIP_24H_FRESH = process.env.SKIP_24H !== '0';  // default true; SKIP_24H=0 ile bypass
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -324,7 +325,7 @@ async function main() {
               .eq('source', 'mediamarkt').eq('source_url', url)
               .maybeSingle();
 
-            if (existing?.last_seen) {
+            if (SKIP_24H_FRESH && existing?.last_seen) {
               const ageMs = Date.now() - new Date(existing.last_seen).getTime();
               if (ageMs < 24 * 3600 * 1000) {
                 state.stats.skipped++;
