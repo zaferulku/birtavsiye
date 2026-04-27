@@ -17,7 +17,7 @@ import { createClient } from '@supabase/supabase-js';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { MEDIAMARKT_CATEGORY_MAP } from '../src/lib/scrapers/mediamarkt-category-map.mjs';
 import { scrapePdpDetailed, MM_STORE_UUID, isRefurbished } from '../src/lib/scrapers/mediamarkt.mjs';
-import { checkAccessory } from '../src/lib/accessoryDetector.js';
+import { checkAccessory } from '../src/lib/accessoryDetector.mjs';
 import { extractModelFamily } from '../src/lib/extractModelFamily.mjs';
 import { fetchAllProductsFromCategory } from '../src/lib/scrapers/mediamarkt-categories.mjs';
 

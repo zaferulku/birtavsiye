@@ -89,6 +89,9 @@ async function processOne(p) {
   const data = extractFromHtml(html);
   if (!data) return { status: "no-ld" };
 
+  // MM-source field oncelikli: specs'in MM key'leri (RAM/battery/screen_size vs.)
+  // korunur (spread). PttAVM sadece kendi meta key'lerini (pttavm_category/mpn/sku/merchant)
+  // ekler. Description: sadece mevcut yoksa yaz (MM description varsa OVERWRITE etme).
   const specs = { ...(p.specs || {}) };
   if (data.category) specs.pttavm_category = data.category;
   if (data.mpn) specs.mpn = data.mpn;
@@ -96,7 +99,8 @@ async function processOne(p) {
   if (data.merchant) specs.merchant = data.merchant;
 
   const update = { specs };
-  if (data.description && data.description.length > 10) {
+  if (data.description && data.description.length > 10
+      && (!p.description || p.description.length < 10)) {
     update.description = data.description;
   }
 
