@@ -8,6 +8,7 @@ export async function GET() {
   const { data, error } = await supabaseAdmin
     .from("categories")
     .select("id, slug, parent_id, name, icon")
+    .neq("slug", "siniflandirilmamis")
     .order("name");
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

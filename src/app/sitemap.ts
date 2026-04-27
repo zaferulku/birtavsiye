@@ -36,9 +36,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.6,
   }));
 
-  // Kategori sayfaları
+  // Kategori sayfaları (siniflandirilmamis sitemap'ten gizli — sadece arama sonuçlarında görünür)
   const { data: categories } = await supabase
-    .from("categories").select("slug").limit(200);
+    .from("categories").select("slug").neq("slug", "siniflandirilmamis").limit(200);
 
   const categoryRoutes: MetadataRoute.Sitemap = (categories || []).map((c) => ({
     url: `${BASE_URL}/kategori/${c.slug}`,
