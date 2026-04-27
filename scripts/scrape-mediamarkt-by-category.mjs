@@ -18,6 +18,7 @@ import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { MEDIAMARKT_CATEGORY_MAP } from '../src/lib/scrapers/mediamarkt-category-map.mjs';
 import { scrapePdpDetailed, MM_STORE_UUID, isRefurbished } from '../src/lib/scrapers/mediamarkt.mjs';
 import { checkAccessory } from '../src/lib/accessoryDetector.js';
+import { extractModelFamily } from '../src/lib/extractModelFamily.mjs';
 import { fetchAllProductsFromCategory } from '../src/lib/scrapers/mediamarkt-categories.mjs';
 
 const DELAY_MS = 350;
@@ -196,14 +197,19 @@ async function upsertListing(scraped) {
         ? { ...scraped.raw_specs, ...(scraped.gtin13 ? { gtin13: scraped.gtin13 } : {}) }
         : (scraped.gtin13 ? { gtin13: scraped.gtin13 } : null);
 
-      // SKU'yu model_family'e koy (uq_products_dedup constraint icin gecici).
-      // Faz1 classifier sonra dogru model_family'e normalize eder.
+      // Canonical model_family + model_code title'dan extract et.
+      // Pattern match yoksa fallback olarak SKU'ya dus (constraint icin benzersiz).
+      const extracted = extractModelFamily(scraped.name || '', scraped.brand);
+      const familyToUse = extracted.family || scraped.source_product_id;
+      const codeToUse = extracted.code;
+
       const inferredColor = extractColorFromTitle(scraped.name);
       const { data: newP, error: newErr } = await sb.from('products').insert({
         slug: baseSlug,
         title: scraped.name,
         brand: scraped.brand,
-        model_family: scraped.source_product_id,
+        model_family: familyToUse,
+        model_code: codeToUse,
         category_id: categoryId,
         description: scraped.raw_description,
         image_url: scraped.raw_images[0] ?? null,
