@@ -166,6 +166,195 @@ const XIAOMI_PATTERNS: Array<{ regex: RegExp; canonical: string }> = [
   { regex: /\bXiaomi\s*12\b/i, canonical: "Xiaomi 12" },
 ];
 
+const TECNO_PATTERNS: Array<{ regex: RegExp; canonical: string }> = [
+  { regex: /Camon\s*40\s*Premier/i, canonical: "Camon 40 Premier" },
+  { regex: /Camon\s*40\s*Pro/i, canonical: "Camon 40 Pro" },
+  { regex: /Camon\s*40/i, canonical: "Camon 40" },
+  { regex: /Camon\s*30\s*Pro/i, canonical: "Camon 30 Pro" },
+  { regex: /Camon\s*30/i, canonical: "Camon 30" },
+  { regex: /Spark\s*Slim/i, canonical: "Spark Slim" },
+  { regex: /Spark\s*Go\s*2/i, canonical: "Spark Go 2" },
+  { regex: /Spark\s*Go/i, canonical: "Spark Go" },
+  { regex: /Spark\s*40\s*Pro/i, canonical: "Spark 40 Pro" },
+  { regex: /Spark\s*40/i, canonical: "Spark 40" },
+  { regex: /Spark\s*30\s*Pro/i, canonical: "Spark 30 Pro" },
+  { regex: /Spark\s*30/i, canonical: "Spark 30" },
+  { regex: /Pop\s*9/i, canonical: "Pop 9" },
+  { regex: /Pop\s*8/i, canonical: "Pop 8" },
+];
+
+const VIVO_PATTERNS: Array<{ regex: RegExp; canonical: string }> = [
+  { regex: /Vivo\s*X300\s*Pro/i, canonical: "Vivo X300 Pro" },
+  { regex: /Vivo\s*X300/i, canonical: "Vivo X300" },
+  { regex: /Vivo\s*X200\s*Pro/i, canonical: "Vivo X200 Pro" },
+  { regex: /Vivo\s*X200/i, canonical: "Vivo X200" },
+  { regex: /Vivo\s*X100\s*Pro/i, canonical: "Vivo X100 Pro" },
+  { regex: /Vivo\s*X100/i, canonical: "Vivo X100" },
+  { regex: /V60\s*Lite/i, canonical: "Vivo V60 Lite" },
+  { regex: /V60\b/i, canonical: "Vivo V60" },
+  { regex: /V50\s*Lite/i, canonical: "Vivo V50 Lite" },
+  { regex: /V50\b/i, canonical: "Vivo V50" },
+  { regex: /V40\s*Lite/i, canonical: "Vivo V40 Lite" },
+  { regex: /V40\b/i, canonical: "Vivo V40" },
+  { regex: /V30\s*Pro/i, canonical: "Vivo V30 Pro" },
+  { regex: /V30\b/i, canonical: "Vivo V30" },
+  { regex: /Y31\b/i, canonical: "Vivo Y31" },
+  { regex: /Y29S/i, canonical: "Vivo Y29S" },
+  { regex: /Y29\b/i, canonical: "Vivo Y29" },
+  { regex: /Y28\b/i, canonical: "Vivo Y28" },
+];
+
+const INFINIX_PATTERNS: Array<{ regex: RegExp; canonical: string }> = [
+  { regex: /Hot\s*60\s*Pro\+/i, canonical: "Infinix Hot 60 Pro+" },
+  { regex: /Hot\s*60\s*Pro/i, canonical: "Infinix Hot 60 Pro" },
+  { regex: /Hot\s*60i/i, canonical: "Infinix Hot 60i" },
+  { regex: /Hot\s*60\b/i, canonical: "Infinix Hot 60" },
+  { regex: /Hot\s*50\s*Pro\+|Hot\s*50\s*Pro\s*Plus/i, canonical: "Infinix Hot 50 Pro+" },
+  { regex: /Hot\s*50\s*Pro/i, canonical: "Infinix Hot 50 Pro" },
+  { regex: /Hot\s*50i/i, canonical: "Infinix Hot 50i" },
+  { regex: /Hot\s*50\b/i, canonical: "Infinix Hot 50" },
+  { regex: /Note\s*50\s*Pro/i, canonical: "Infinix Note 50 Pro" },
+  { regex: /Note\s*50\b/i, canonical: "Infinix Note 50" },
+  { regex: /Smart\s*9/i, canonical: "Infinix Smart 9" },
+  { regex: /Smart\s*8/i, canonical: "Infinix Smart 8" },
+];
+
+const OPPO_PATTERNS: Array<{ regex: RegExp; canonical: string }> = [
+  { regex: /Find\s*X8\s*Ultra/i, canonical: "Oppo Find X8 Ultra" },
+  { regex: /Find\s*X8\s*Pro/i, canonical: "Oppo Find X8 Pro" },
+  { regex: /Find\s*X8/i, canonical: "Oppo Find X8" },
+  { regex: /Find\s*X7\s*Ultra/i, canonical: "Oppo Find X7 Ultra" },
+  { regex: /Find\s*X7/i, canonical: "Oppo Find X7" },
+  { regex: /Reno\s*15\s*F/i, canonical: "Oppo Reno 15 F" },
+  { regex: /Reno\s*15\s*Pro/i, canonical: "Oppo Reno 15 Pro" },
+  { regex: /Reno\s*15\b/i, canonical: "Oppo Reno 15" },
+  { regex: /Reno\s*14\s*F/i, canonical: "Oppo Reno 14 F" },
+  { regex: /Reno\s*14\s*Pro/i, canonical: "Oppo Reno 14 Pro" },
+  { regex: /Reno\s*14\b/i, canonical: "Oppo Reno 14" },
+  { regex: /Reno\s*13\s*F/i, canonical: "Oppo Reno 13 F" },
+  { regex: /Reno\s*13\s*Pro/i, canonical: "Oppo Reno 13 Pro" },
+  { regex: /Reno\s*13\b/i, canonical: "Oppo Reno 13" },
+  { regex: /Reno\s*12\s*Pro/i, canonical: "Oppo Reno 12 Pro" },
+  { regex: /Reno\s*12\b/i, canonical: "Oppo Reno 12" },
+  { regex: /A6T\s*5G/i, canonical: "Oppo A6T 5G" },
+  { regex: /A6\s*Pro\s*5G/i, canonical: "Oppo A6 Pro 5G" },
+  { regex: /A6\s*Pro\s*4G/i, canonical: "Oppo A6 Pro 4G" },
+  { regex: /A6\b/i, canonical: "Oppo A6" },
+  { regex: /A5\s*5G/i, canonical: "Oppo A5 5G" },
+  { regex: /A5\b/i, canonical: "Oppo A5" },
+  { regex: /A79\b/i, canonical: "Oppo A79" },
+  { regex: /A78\b/i, canonical: "Oppo A78" },
+];
+
+const HUAWEI_PATTERNS: Array<{ regex: RegExp; canonical: string }> = [
+  { regex: /Pura\s*80\s*Ultra/i, canonical: "Huawei Pura 80 Ultra" },
+  { regex: /Pura\s*80\s*Pro/i, canonical: "Huawei Pura 80 Pro" },
+  { regex: /Pura\s*80\b/i, canonical: "Huawei Pura 80" },
+  { regex: /Pura\s*70\s*Ultra/i, canonical: "Huawei Pura 70 Ultra" },
+  { regex: /Pura\s*70\s*Pro/i, canonical: "Huawei Pura 70 Pro" },
+  { regex: /Pura\s*70\b/i, canonical: "Huawei Pura 70" },
+  { regex: /Mate\s*X6/i, canonical: "Huawei Mate X6" },
+  { regex: /Mate\s*X5/i, canonical: "Huawei Mate X5" },
+  { regex: /Mate\s*70\s*Pro/i, canonical: "Huawei Mate 70 Pro" },
+  { regex: /Mate\s*70\b/i, canonical: "Huawei Mate 70" },
+  { regex: /Mate\s*60\s*Pro/i, canonical: "Huawei Mate 60 Pro" },
+  { regex: /Mate\s*60\b/i, canonical: "Huawei Mate 60" },
+  { regex: /Mate\s*50\s*Pro/i, canonical: "Huawei Mate 50 Pro" },
+  { regex: /Mate\s*50\b/i, canonical: "Huawei Mate 50" },
+  { regex: /Nova\s*13\s*Pro/i, canonical: "Huawei Nova 13 Pro" },
+  { regex: /Nova\s*13/i, canonical: "Huawei Nova 13" },
+  { regex: /Nova\s*12\s*Pro/i, canonical: "Huawei Nova 12 Pro" },
+  { regex: /Nova\s*12/i, canonical: "Huawei Nova 12" },
+  { regex: /Nova\s*11\s*Pro/i, canonical: "Huawei Nova 11 Pro" },
+  { regex: /Nova\s*11/i, canonical: "Huawei Nova 11" },
+  { regex: /P60\s*Pro/i, canonical: "Huawei P60 Pro" },
+  { regex: /P60\b/i, canonical: "Huawei P60" },
+];
+
+const REEDER_PATTERNS: Array<{ regex: RegExp; canonical: string }> = [
+  { regex: /S23\s*Pro\s*Max/i, canonical: "Reeder S23 Pro Max" },
+  { regex: /S23\s*Pro/i, canonical: "Reeder S23 Pro" },
+  { regex: /S23\b/i, canonical: "Reeder S23" },
+  { regex: /S19\s*Max\s*Pro\s*S\s*Edge/i, canonical: "Reeder S19 Max Pro S Edge" },
+  { regex: /S19\s*Max\s*Pro\s*S/i, canonical: "Reeder S19 Max Pro S" },
+  { regex: /S19\s*Max\s*Pro/i, canonical: "Reeder S19 Max Pro" },
+  { regex: /S19\s*Max/i, canonical: "Reeder S19 Max" },
+  { regex: /S19\b/i, canonical: "Reeder S19" },
+  { regex: /S71/i, canonical: "Reeder S71" },
+  { regex: /P13\s*Blue\s*Max/i, canonical: "Reeder P13 Blue Max" },
+  { regex: /P13\s*Blue/i, canonical: "Reeder P13 Blue" },
+];
+
+const REALME_PATTERNS: Array<{ regex: RegExp; canonical: string }> = [
+  { regex: /Realme\s*GT\s*7\s*Pro/i, canonical: "Realme GT 7 Pro" },
+  { regex: /Realme\s*GT\s*6/i, canonical: "Realme GT 6" },
+  { regex: /Realme\s*GT\s*5/i, canonical: "Realme GT 5" },
+  { regex: /Realme\s*Note\s*60/i, canonical: "Realme Note 60" },
+  { regex: /Realme\s*C75/i, canonical: "Realme C75" },
+  { regex: /Realme\s*C61/i, canonical: "Realme C61" },
+  { regex: /Realme\s*C55/i, canonical: "Realme C55" },
+  { regex: /Realme\s*C53/i, canonical: "Realme C53" },
+  { regex: /Realme\s*12\s*Pro\+/i, canonical: "Realme 12 Pro+" },
+  { regex: /Realme\s*12\s*Pro/i, canonical: "Realme 12 Pro" },
+  { regex: /Realme\s*12\s*Lite/i, canonical: "Realme 12 Lite" },
+  { regex: /Realme\s*12\b/i, canonical: "Realme 12" },
+  { regex: /Realme\s*11\s*Pro/i, canonical: "Realme 11 Pro" },
+  { regex: /Realme\s*11\b/i, canonical: "Realme 11" },
+  { regex: /Realme\s*10\s*Pro/i, canonical: "Realme 10 Pro" },
+  { regex: /Realme\s*10\b/i, canonical: "Realme 10" },
+];
+
+const HONOR_PATTERNS: Array<{ regex: RegExp; canonical: string }> = [
+  { regex: /Magic\s*8\s*Pro/i, canonical: "Honor Magic 8 Pro" },
+  { regex: /Magic\s*8\s*Lite/i, canonical: "Honor Magic 8 Lite" },
+  { regex: /Magic\s*8\b/i, canonical: "Honor Magic 8" },
+  { regex: /Magic\s*7\s*Pro/i, canonical: "Honor Magic 7 Pro" },
+  { regex: /Magic\s*7\s*Lite/i, canonical: "Honor Magic 7 Lite" },
+  { regex: /Magic\s*7\b/i, canonical: "Honor Magic 7" },
+  { regex: /Magic\s*6\s*Pro/i, canonical: "Honor Magic 6 Pro" },
+  { regex: /Magic\s*6\s*Lite/i, canonical: "Honor Magic 6 Lite" },
+  { regex: /Magic\s*6\b/i, canonical: "Honor Magic 6" },
+  { regex: /400\s*Pro/i, canonical: "Honor 400 Pro" },
+  { regex: /400\b/i, canonical: "Honor 400" },
+  { regex: /200\s*Pro/i, canonical: "Honor 200 Pro" },
+  { regex: /200\b/i, canonical: "Honor 200" },
+  { regex: /X9b/i, canonical: "Honor X9b" },
+  { regex: /90\s*Lite/i, canonical: "Honor 90 Lite" },
+  { regex: /90\b/i, canonical: "Honor 90" },
+];
+
+const CASPER_PATTERNS: Array<{ regex: RegExp; canonical: string }> = [
+  { regex: /Via\s*X45/i, canonical: "Casper Via X45" },
+  { regex: /Via\s*X40/i, canonical: "Casper Via X40" },
+  { regex: /Via\s*X30\s*Plus/i, canonical: "Casper Via X30 Plus" },
+  { regex: /Via\s*X30/i, canonical: "Casper Via X30" },
+  { regex: /Via\s*A40/i, canonical: "Casper Via A40" },
+  { regex: /Via\s*A30/i, canonical: "Casper Via A30" },
+  { regex: /Via\s*M40/i, canonical: "Casper Via M40" },
+];
+
+const OMIX_PATTERNS: Array<{ regex: RegExp; canonical: string }> = [
+  { regex: /O1\s*Icon/i, canonical: "Omix O1 Icon" },
+  { regex: /O1\s*Neo/i, canonical: "Omix O1 Neo" },
+  { regex: /O1\s*Next/i, canonical: "Omix O1 Next" },
+  { regex: /O1\b/i, canonical: "Omix O1" },
+  { regex: /X400/i, canonical: "Omix X400" },
+  { regex: /X4\b/i, canonical: "Omix X4" },
+  { regex: /X3\b/i, canonical: "Omix X3" },
+];
+
+const GENERAL_MOBILE_PATTERNS: Array<{ regex: RegExp; canonical: string }> = [
+  { regex: /Era\s*30\s*Pro/i, canonical: "GM Era 30 Pro" },
+  { regex: /Era\s*30/i, canonical: "GM Era 30" },
+  { regex: /Era\s*20/i, canonical: "GM Era 20" },
+  { regex: /GM\s*26\s*Pro/i, canonical: "GM 26 Pro" },
+  { regex: /GM\s*23\b/i, canonical: "GM 23" },
+  { regex: /GM\s*22\s*Pro/i, canonical: "GM 22 Pro" },
+  { regex: /GM\s*22\b/i, canonical: "GM 22" },
+  { regex: /GM20\s*Pro|GM\s*20\s*Pro/i, canonical: "GM 20 Pro" },
+  { regex: /GM\s*20\b/i, canonical: "GM 20" },
+];
+
 const APPLE_SKU_REGEX = /\b([A-Z]{2}[A-Z0-9]{2,6}TU\/A)\b/i;
 const NUMERIC_SKU_REGEX = /^\d{6,13}$/;
 
@@ -192,6 +381,72 @@ export function extractModelFamily(title: string, brand?: string | null): ModelE
 
   if (/xiaomi|redmi|poco/i.test(title) || brandLower === "xiaomi" || brandLower === "poco") {
     for (const { regex, canonical } of XIAOMI_PATTERNS) {
+      if (regex.test(title)) return { family: canonical, code };
+    }
+  }
+
+  if (/tecno/i.test(title) || brandLower === "tecno" || brandLower === "tecno mobile") {
+    for (const { regex, canonical } of TECNO_PATTERNS) {
+      if (regex.test(title)) return { family: canonical, code };
+    }
+  }
+
+  if (/vivo/i.test(title) || brandLower === "vivo") {
+    for (const { regex, canonical } of VIVO_PATTERNS) {
+      if (regex.test(title)) return { family: canonical, code };
+    }
+  }
+
+  if (/infinix/i.test(title) || brandLower === "infinix") {
+    for (const { regex, canonical } of INFINIX_PATTERNS) {
+      if (regex.test(title)) return { family: canonical, code };
+    }
+  }
+
+  if (/oppo/i.test(title) || brandLower === "oppo") {
+    for (const { regex, canonical } of OPPO_PATTERNS) {
+      if (regex.test(title)) return { family: canonical, code };
+    }
+  }
+
+  if (/huawei/i.test(title) || brandLower === "huawei") {
+    for (const { regex, canonical } of HUAWEI_PATTERNS) {
+      if (regex.test(title)) return { family: canonical, code };
+    }
+  }
+
+  if (/reeder/i.test(title) || brandLower === "reeder") {
+    for (const { regex, canonical } of REEDER_PATTERNS) {
+      if (regex.test(title)) return { family: canonical, code };
+    }
+  }
+
+  if (/realme/i.test(title) || brandLower === "realme") {
+    for (const { regex, canonical } of REALME_PATTERNS) {
+      if (regex.test(title)) return { family: canonical, code };
+    }
+  }
+
+  if (/honor/i.test(title) || brandLower === "honor") {
+    for (const { regex, canonical } of HONOR_PATTERNS) {
+      if (regex.test(title)) return { family: canonical, code };
+    }
+  }
+
+  if (/casper/i.test(title) || brandLower === "casper") {
+    for (const { regex, canonical } of CASPER_PATTERNS) {
+      if (regex.test(title)) return { family: canonical, code };
+    }
+  }
+
+  if (/omix/i.test(title) || brandLower === "omix") {
+    for (const { regex, canonical } of OMIX_PATTERNS) {
+      if (regex.test(title)) return { family: canonical, code };
+    }
+  }
+
+  if (/general\s*mobile|gm\s/i.test(title) || brandLower === "general mobile") {
+    for (const { regex, canonical } of GENERAL_MOBILE_PATTERNS) {
       if (regex.test(title)) return { family: canonical, code };
     }
   }
