@@ -348,6 +348,10 @@ export async function POST(req: Request) {
       typeof body?.decisionId === "number" && Number.isFinite(body.decisionId)
         ? body.decisionId
         : null;
+    const intentHintCategory =
+      typeof body?.intentHint?.category_slug === "string"
+        ? body.intentHint.category_slug
+        : null;
     const image =
       typeof body?.image === "string" && body.image.startsWith("data:image/")
         ? body.image
@@ -405,11 +409,14 @@ export async function POST(req: Request) {
     const parsed = parseQuery(message, categories);
     const categoryTaxonomy = categories.map((category) => category.slug);
 
+    const effectiveCategory =
+      intentHintCategory || parsed.category_slugs?.[0] || null;
+
     const orchResult = await orchestrateChat({
       userMessage: message,
       legacySearch: searchProducts,
       parsed: {
-        category: parsed.category_slugs?.[0] || null,
+        category: effectiveCategory,
         brand: parsed.brand,
         model_family: null,
         variant_storage: null,
@@ -417,7 +424,11 @@ export async function POST(req: Request) {
         price_min: parsed.price_min,
         price_max: parsed.price_max,
         keywords: parsed.keywords || [],
-        confidence: parsed.category_slugs?.length ? 0.8 : 0.4,
+        confidence: intentHintCategory
+          ? 1.0
+          : parsed.category_slugs?.length
+            ? 0.8
+            : 0.4,
       },
       categoryTaxonomy,
       sb,
@@ -448,10 +459,13 @@ export async function POST(req: Request) {
                   confidence: orchResult.intent.confidence,
                   is_too_vague: orchResult.intent.is_too_vague,
                   is_off_topic: orchResult.intent.is_off_topic,
+                  brand_filter: orchResult.intent.brand_filter ?? [],
                 }
               : null,
             kb_chunks: orchResult.kbChunkCount,
             product_count: orchResult.products.length,
+            suggestions: orchResult.suggestions ?? [],
+            reply: typeof orchResult.response === "string" ? orchResult.response.slice(0, 200) : null,
             latency_ms: orchResult.latencyMs,
             diagnostics: orchResult.diagnostics,
           },

@@ -224,7 +224,7 @@ export function parseIntentResponse(rawResponse: string): StructuredIntent {
  * Parse edilmiş objeyi beklenen şemaya göre dşula ve normalize et.
  */
 function validateAndNormalize(raw: any): StructuredIntent {
-  return {
+  const normalized: StructuredIntent = {
     category_slug: typeof raw.category_slug === "string" ? raw.category_slug : null,
     semantic_keywords: Array.isArray(raw.semantic_keywords)
       ? raw.semantic_keywords.filter((k: any) => typeof k === "string").slice(0, 10)
@@ -247,10 +247,45 @@ function validateAndNormalize(raw: any): StructuredIntent {
     is_too_vague: raw.is_too_vague === true,
     is_off_topic: raw.is_off_topic === true,
   };
+  return enrichBrandFilterFromKeywords(normalized);
 }
 
 function isObject(v: any): boolean {
   return v !== null && typeof v === "object" && !Array.isArray(v);
+}
+
+const KNOWN_BRANDS_TR = [
+  "Apple", "Samsung", "Xiaomi", "Huawei", "Oppo", "Realme",
+  "Tecno", "Vivo", "Casper", "TCL", "Omix", "General Mobile",
+  "Honor", "POCO", "Reeder", "Nubia", "Nokia",
+  "Lenovo", "HP", "Dell", "Asus", "Acer", "MSI",
+  "Sony", "LG", "Philips", "Vestel", "Arcelik", "Beko", "Bosch", "Siemens",
+  "Dyson", "Karcher", "Tefal", "Fakir",
+  "JBL", "Bose", "Sennheiser", "Audio-Technica",
+  "Nintendo", "Microsoft", "PlayStation",
+];
+
+function enrichBrandFilterFromKeywords(intent: StructuredIntent): StructuredIntent {
+  const existing = new Set((intent.brand_filter || []).map((b) => b.toLowerCase()));
+  const additions: string[] = [];
+
+  for (const kw of intent.semantic_keywords || []) {
+    const kwLower = String(kw).toLowerCase().trim();
+    if (!kwLower) continue;
+    for (const brand of KNOWN_BRANDS_TR) {
+      if (kwLower === brand.toLowerCase() && !existing.has(brand.toLowerCase())) {
+        additions.push(brand);
+        existing.add(brand.toLowerCase());
+      }
+    }
+  }
+
+  if (additions.length === 0) return intent;
+
+  return {
+    ...intent,
+    brand_filter: [...(intent.brand_filter || []), ...additions].slice(0, 5),
+  };
 }
 
 /**

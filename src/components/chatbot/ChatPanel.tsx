@@ -372,7 +372,13 @@ export function ChatPanel() {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: s.value, history, chatSessionId, decisionId }),
+        body: JSON.stringify({
+          message: s.value,
+          history,
+          chatSessionId,
+          decisionId,
+          intentHint: s.categorySlug ? { category_slug: s.categorySlug } : undefined,
+        }),
       });
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);

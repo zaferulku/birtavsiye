@@ -26,6 +26,7 @@ export type Suggestion = {
   value: string;
   type: "shortcut" | "brand" | "price" | "category" | "freetext";
   icon?: string;
+  categorySlug?: string;
 };
 
 export type SuggestionContext = {
@@ -136,11 +137,11 @@ function wasPopularRequested(message: string): boolean {
 
 function buildCategorySuggestions(): Suggestion[] {
   return [
-    { label: "Telefon", value: "telefon", type: "category", icon: "📱" },
-    { label: "Laptop", value: "laptop", type: "category", icon: "💻" },
-    { label: "Tablet", value: "tablet", type: "category", icon: "📲" },
-    { label: "Akıllı saat", value: "akıllı saat", type: "category", icon: "⌚" },
-    { label: "Beyaz eşya", value: "beyaz eşya", type: "category", icon: "🧊" },
+    { label: "Telefon", value: "telefon", type: "category", icon: "📱", categorySlug: "akilli-telefon" },
+    { label: "Laptop", value: "laptop", type: "category", icon: "💻", categorySlug: "laptop" },
+    { label: "Tablet", value: "tablet", type: "category", icon: "📲", categorySlug: "tablet" },
+    { label: "Akıllı saat", value: "akıllı saat", type: "category", icon: "⌚", categorySlug: "akilli-saat" },
+    { label: "Beyaz eşya", value: "beyaz eşya", type: "category", icon: "🧊", categorySlug: "buzdolabi" },
   ];
 }
 
