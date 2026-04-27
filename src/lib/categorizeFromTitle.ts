@@ -59,7 +59,10 @@ const RULES: CategoryRule[] = [
     slug: "telefon-aksesuar",
     keywords: ["telefon tutucu", "araç tutucu", "selfie çubuğu", "selfie stick",
                "popsocket", "yüzük tutucu", "telefon askısı", "boyun askısı",
-               "kamera lens koruyucu",
+               // Kamera koruma — TR ek varyantları
+               "kamera lens koruyucu", "kamera lens koruma", "kamera koruma lensi",
+               "kamera koruma lens", "kamera lensi koruyucu", "lens koruyucu",
+               "lens koruma", "kamera korumalı", "metal çerçeveli kamera",
                "stylus kalem", "dokunmatik kalem",
                "kayış silikon", "süet kordon",
                "raze metal kamera"],
