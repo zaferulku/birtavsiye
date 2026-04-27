@@ -172,7 +172,9 @@ export default async function Page({ params, searchParams }: PageProps) {
     }
 
     const actualBrand = visibleRows[0].brand ?? brandGuess;
-    const GENERIC_EXCLUDE = /^(Kılıf|Kılıfı|Ekran\s*Koruyucu|Aksesuar|Batarya|Adaptör|Kordon|Kayış|Tablet|Akıllı\s*Saat|Android\s*Tablet|Android\s*Telefon|Güç\s*Kablosu|Hoparlör|Mouse|Klavye|Powerbank)$/i;
+    // Aksesuar/parça/kategori-mismatch model_family'leri liste sayfasında gösterme.
+    // Bunlar genelde yanlış model_family'ye düşmüş ürünler (kategori re-eval gerekir).
+    const GENERIC_EXCLUDE = /^(Kılıf|Kılıfı|Ekran\s*Koruyucu|Aksesuar|Batarya|Adaptör|Kordon|Kayış|Tablet|Akıllı\s*Saat|Android\s*Tablet|Android\s*Telefon|Güç\s*Kablosu|Hoparlör|Mouse|Klavye|Powerbank|Tripod|Ölçüm\s*Aletleri|Ölçüm|Ekran\s*Yansıtıcı|Yansıtıcı|Lens|Lens\s*Koruyucu|Kamera\s*Lens|Kamera\s*Koruma|Şarj|Şarj\s*Kablosu|Şarj\s*Aleti|Speaker|Mikrofon|Anten|Sim\s*Tray|Soket|Kapak|Gimbal|Tutucu|Stand|Stylus|Kalem|Yedek|Yedek\s*Pil|Yedek\s*Ekran|Yedek\s*Kamera|Filtre|Hortum|Torba|Motor|Vibratör|Anakart|Flex|Joko|PRANHA|Tkgz|Mettzchrom|Pdx|Cep|Akıllı|Eğitici|Paraply|Aptal|Yenilenmi|Yenilenmiş)$/i;
 
     type Group = { rep: Row; count: number; minPrice: number };
     const groups = new Map<string, Group>();
