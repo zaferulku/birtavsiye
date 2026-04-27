@@ -417,6 +417,142 @@ const RULES: CategoryRule[] = [
     confidence: "high",
   },
 
+  // --- Ev tekstili ---
+  {
+    slug: "ev-tekstili",
+    keywords: ["havlu", "yorgan", "çarşaf", "nevresim takımı", "yastık kılıfı", "battaniye",
+               "perde", "tül perde", "halı kilim", "halı yıkama", "minder", "yatak örtüsü",
+               "pike", "oda halısı", "salon halısı"],
+    confidence: "high",
+  },
+
+  // --- Gıda / atıştırmalık ---
+  {
+    slug: "atistirmalik-cikolata",
+    keywords: ["çikolata", "gofret", "bisküvi", "kraker", "cips", "atıştırmalık",
+               "gummi", "şekerleme", "kuruyemiş", "fıstık", "badem", "fındık",
+               "kahve çekirdek"],
+    excludeIfPresent: ["kahve makinesi"],
+    confidence: "high",
+  },
+  {
+    slug: "dondurma-tatli",
+    keywords: ["dondurma", "tatlı şurubu", "puding", "şerbet"],
+    confidence: "high",
+  },
+  {
+    slug: "bakliyat-makarna",
+    keywords: ["makarna", "pirinç", "mercimek", "nohut", "bulgur", "fasulye",
+               "kuru bakliyat"],
+    confidence: "high",
+  },
+
+  // --- Kitap ---
+  {
+    slug: "kitap-hobi",
+    keywords: ["roman kitap", "edebiyat kitap", "hikaye kitap", "şiir kitap",
+               "hobi kitap", "kişisel gelişim", "biyografi", "tarih kitap"],
+    confidence: "high",
+  },
+  {
+    slug: "cocuk-kitaplari",
+    keywords: ["çocuk kitap", "boyama kitap", "masal kitap", "okul öncesi kitap",
+               "yaş çocuk kitap"],
+    confidence: "high",
+  },
+  {
+    slug: "kirtasiye",
+    keywords: ["defter", "kalem seti", "boya kalem", "silgi", "kalemtraş",
+               "yapışkan not", "post-it", "klasör", "okul seti"],
+    confidence: "high",
+  },
+
+  // --- Oyuncak ---
+  {
+    slug: "oyuncak-lego",
+    keywords: ["lego ", "lego seti", "lego classic", "lego star wars", "lego city",
+               "lego technic", "lego friends", "lego ninjago"],
+    confidence: "high",
+  },
+  {
+    slug: "oyuncak-figur",
+    keywords: ["aksiyon figür", "koleksiyon figür", "anime figür", "marvel figür"],
+    confidence: "high",
+  },
+  {
+    slug: "oyuncak-egitici",
+    keywords: ["eğitici oyuncak", "puzzle 1000", "puzzle 500", "yapboz", "ahşap puzzle",
+               "okul öncesi oyuncak", "montessori"],
+    confidence: "high",
+  },
+  {
+    slug: "oyuncak-rc",
+    keywords: ["rc araba", "uzaktan kumandalı araç", "rc helikopter", "rc drone"],
+    confidence: "high",
+  },
+  {
+    slug: "oyuncak-diger",
+    keywords: ["bebek arabası", "oyuncak araba", "peluş oyuncak", "oyuncak set"],
+    confidence: "medium",
+  },
+
+  // --- Otomotiv ---
+  {
+    slug: "arac-aksesuar",
+    keywords: ["araç paspas", "araç koltuk kılıfı", "direksiyon kılıfı", "araç aroma",
+               "araç telefon tutucu", "araç şarj", "oto temizleme", "araç kamera"],
+    excludeIfPresent: ["telefon kılıfı"],
+    confidence: "high",
+  },
+  {
+    slug: "arac-elektronigi",
+    keywords: ["araç multimedia", "carbon araç teyp", "araç dvd", "geri görüş kamerası",
+               "araç gps", "araç dashcam"],
+    confidence: "high",
+  },
+  {
+    slug: "oto-aku",
+    keywords: ["otomotiv akü", "akü 12v", "12v 60ah akü", "12v 70ah akü", "12v 75ah akü",
+               "araba aküsü"],
+    confidence: "high",
+  },
+
+  // --- El aletleri ---
+  {
+    slug: "el-aletleri",
+    keywords: ["matkap seti", "tornavida seti", "alet çantası", "el matkabı", "tornavida",
+               "akülü matkap", "vidalama makinesi", "şarjlı matkap"],
+    confidence: "high",
+  },
+  {
+    slug: "elektrikli-aletler",
+    keywords: ["taşlama makinesi", "şarjlı vidalama", "spiral makinesi", "kompresör",
+               "darbeli matkap", "kırıcı delici", "lehim havyası"],
+    confidence: "high",
+  },
+
+  // --- Aydınlatma / Ev yaşam ---
+  {
+    slug: "aydinlatma",
+    keywords: ["led ampul", "akıllı ampul", "spot lamba", "avize", "abajur",
+               "led şerit", "masa lambası", "gece lambası", "led panel"],
+    confidence: "high",
+  },
+  {
+    slug: "bahce-balkon",
+    keywords: ["bahçe seti", "balkon seti", "bbq mangal", "barbekü", "şezlong",
+               "bahçe sandalye", "şemsiye balkon"],
+    confidence: "high",
+  },
+
+  // --- Pet ---
+  {
+    slug: "pet-shop",
+    keywords: ["kedi maması", "köpek maması", "kuş yemi", "balık yemi", "kedi kumu",
+               "köpek kumu", "kedi oyuncak", "köpek tasması"],
+    confidence: "high",
+  },
+
   // --- Bebek ---
   {
     slug: "bebek-bezi",
