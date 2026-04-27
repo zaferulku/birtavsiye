@@ -45,6 +45,12 @@ const UNAMBIGUOUS_ACC = [
   "flash bellek", "usb hub", "otg kablo", "otg adaptör",
   "hafıza kartı", "sd kart", "micro sd", "memory card",
   "type c girişli flash",
+  // Silikon kılıf çeşitleri ("Apple iPhone 16E Kelvin Kartvizitli Silikon - Bordo")
+  // gerçek telefon başlığında geçmez. Kartvizit hazneli/bölmeli, mat silikon, vs.
+  "kartvizitli", "kartvizit hazneli", "kartvizit bölmeli",
+  "silikon - ", // "Silikon - Bordo" gibi suffix kalıbı (renk öncesi tire)
+  "şeffaf silikon", "darbe emici silikon", "mat silikon",
+  "kelvin kartvizit", "magsafe silikon",
 ];
 
 const ACC_KEYWORDS = [...STRONG_AFTERMARKET, ...UNAMBIGUOUS_ACC];
@@ -74,8 +80,9 @@ const PATTERN_TO_SLUG: Array<[RegExp, string]> = [
   [/(iç speaker|iç hoparlör|lcd panel|lcd dokunmatik|yedek pil|yedek batarya|orjinal pil|sim tray|sim yuva|şarj soketi|vibratör motor|titreşim motoru|flex kablo|telefon anakart|kamera değişim|ekran değişim|şarj portu yedek)/i, "telefon-yedek-parca"],
   // Genel aksesuar (tutucu/stand/lens koruma/selfie/kamera lens/kordon/kayış)
   [/(selfie çubuğu|selfie stick|popsocket|telefon tutucu|araç tutucu|stylus kalem|lens koruyucu|kamera lens|metal kamera lens|kamera koruma lens|kamera koruma|metal çerçeveli kamera|gimbal|tripod|monopod|kordon|kayış|saat kordonu|saat kayışı|silikon kordon|hasır kordon|deri kordon|spor kordon|metal kordon|dokunmatik lens)/i, "telefon-aksesuar"],
-  // Kılıf/kapak (fallback)
-  [/(kılıf|kapak|case|cover|airbag|cüzdanlı|silikon kapak|deri kılıf|magsafe kılıf|hasır kılıf|spigen|ringke|gpack|youngkit)/i, "telefon-kilifi"],
+  // Kılıf/kapak (fallback) — "Silikon" tek başına eskiden eksikti; artık silikon
+  // + (renk|kartvizit|magsafe|mat|şeffaf|darbe) kombinasyonu da kılıf sayılır.
+  [/(kılıf|kapak|case|cover|airbag|cüzdanlı|silikon kapak|deri kılıf|magsafe kılıf|hasır kılıf|spigen|ringke|gpack|youngkit|kartvizitli|kartvizit hazneli|kartvizit bölmeli|silikon\s*-\s*(bordo|mavi|siyah|beyaz|sarı|kırmızı|yeşil|mor|gri|kahve|pembe|turuncu|lacivert|gümüş|altın)|şeffaf silikon|darbe emici silikon|mat silikon|kelvin kartvizit|magsafe silikon|stüdyolux|epico)/i, "telefon-kilifi"],
 ];
 
 interface ListingRow {
