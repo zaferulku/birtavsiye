@@ -53,16 +53,70 @@ type ProductMetrics = {
   freshnessRank: number;
 };
 
+// Build sırasında Supabase 5xx/timeout durumunda home/urunler prerender'ı
+// düşmesin diye query'i timeout ve try/catch ile sarmaladık. ISR (revalidate=300)
+// runtime'da boş gelen sayfayı 5dk içinde yenileyecek.
+const FEATURED_QUERY_TIMEOUT_MS = 25_000;
+
+async function withTimeout<T>(thenable: PromiseLike<T>, label: string): Promise<T | null> {
+  return await Promise.race([
+    Promise.resolve(thenable),
+    new Promise<null>((resolve) =>
+      setTimeout(() => {
+        console.warn(`[FeaturedProducts] ${label} timed out after ${FEATURED_QUERY_TIMEOUT_MS}ms`);
+        resolve(null);
+      }, FEATURED_QUERY_TIMEOUT_MS),
+    ),
+  ]);
+}
+
 async function loadProducts(): Promise<Product[]> {
-  const { data, error } = await supabaseAdmin
-    .from("products")
-    .select(
-      "id, title, slug, brand, image_url, category_id, model_code, model_family, variant_storage, variant_color, created_at, listings:listings!inner(id, price, source, last_seen, is_active, in_stock)"
-    )
-    .eq("is_active", true)
-    .eq("listings.is_active", true)
-    .order("created_at", { ascending: false })
-    .limit(192);
+  type ProductsRes = {
+    data: Array<{
+      id: string;
+      title: string;
+      slug: string;
+      brand: string | null;
+      image_url: string | null;
+      category_id: string | null;
+      model_code: string | null;
+      model_family: string | null;
+      variant_storage: string | null;
+      variant_color: string | null;
+      created_at: string | null;
+      listings?: Array<{
+        id: string;
+        price: number | string;
+        source?: string | null;
+        last_seen?: string | null;
+        is_active?: boolean | null;
+        in_stock?: boolean | null;
+      }> | null;
+    }> | null;
+    error: { message: string } | null;
+  };
+
+  let res: ProductsRes | null = null;
+  try {
+    res = await withTimeout(
+      supabaseAdmin
+        .from("products")
+        .select(
+          "id, title, slug, brand, image_url, category_id, model_code, model_family, variant_storage, variant_color, created_at, listings:listings!inner(id, price, source, last_seen, is_active, in_stock)"
+        )
+        .eq("is_active", true)
+        .eq("listings.is_active", true)
+        .order("created_at", { ascending: false })
+        .limit(192) as PromiseLike<ProductsRes>,
+      "products",
+    );
+  } catch (err) {
+    console.error("[FeaturedProducts] product load threw:", err instanceof Error ? err.message : err);
+    return [];
+  }
+
+  if (!res) return [];
+  const { data, error } = res;
 
   if (error) {
     console.error("[FeaturedProducts] product load failed:", error.message);
@@ -313,14 +367,24 @@ async function loadProductMetrics(products: Product[]): Promise<Map<string, Prod
 
   if (listingIds.length > 0) {
     const weekAgoIso = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const { data } = await supabaseAdmin
-      .from("price_history")
-      .select("listing_id, price, recorded_at")
-      .in("listing_id", listingIds)
-      .gte("recorded_at", weekAgoIso)
-      .order("recorded_at", { ascending: true });
+    type HistoryRes = { data: ProductHistoryRow[] | null };
+    let historyRes: HistoryRes | null = null;
+    try {
+      historyRes = await withTimeout(
+        supabaseAdmin
+          .from("price_history")
+          .select("listing_id, price, recorded_at")
+          .in("listing_id", listingIds)
+          .gte("recorded_at", weekAgoIso)
+          .order("recorded_at", { ascending: true }) as PromiseLike<HistoryRes>,
+        "price_history",
+      );
+    } catch (err) {
+      console.error("[FeaturedProducts] price_history load threw:", err instanceof Error ? err.message : err);
+      historyRes = null;
+    }
 
-    for (const row of (data ?? []) as ProductHistoryRow[]) {
+    for (const row of (historyRes?.data ?? []) as ProductHistoryRow[]) {
       const existing = historyMap.get(row.listing_id) ?? [];
       existing.push(row);
       historyMap.set(row.listing_id, existing);
