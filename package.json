@@ -10,7 +10,11 @@
     "backup": "git add src scripts public .claude/agents && git diff --cached --quiet || git commit -m \"backup: $(node -e \"console.log(new Date().toISOString().slice(0,16).replace('T',' '))\")\"",
     "undo": "git reset --soft HEAD~1",
     "history": "git log --oneline -20",
-    "status": "git status --short"
+    "status": "git status --short",
+    "eval:chatbot": "node scripts/eval-chatbot-dialogs.mjs --input tests/chatbot/fixtures/chatbot_dialogs_200.jsonl",
+    "eval:chatbot:dryrun": "node scripts/eval-chatbot-dialogs.mjs --input tests/chatbot/fixtures/chatbot_dialogs_200.jsonl --limit 5",
+    "eval:chatbot:scenario": "node scripts/eval-chatbot-dialogs.mjs --input tests/chatbot/fixtures/chatbot_dialogs_200.jsonl --scenario",
+    "eval:chatbot:category": "node scripts/eval-chatbot-dialogs.mjs --input tests/chatbot/fixtures/chatbot_dialogs_200.jsonl --category"
   },
   "dependencies": {
     "@google/genai": "^1.50.1",

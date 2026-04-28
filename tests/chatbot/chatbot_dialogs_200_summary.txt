@@ -1,0 +1,69 @@
+Total dialogs: 200
+
+=== Scenario distribution ===
+  spec_narrow: 24
+  price_drilldown: 21
+  edge_typo: 21
+  budget_first: 19
+  filter_remove: 18
+  comparison: 17
+  category_change: 17
+  gift: 16
+  recommendation: 15
+  vague_widen: 13
+  zero_result_fallback: 11
+  filter_replace: 8
+
+=== Category distribution (top 30) ===
+  kitap-kisisel-gelisim: 3
+  klavye: 3
+  yoga-mat: 3
+  camasir-makinesi: 2
+  bebek-bezi: 2
+  kahve: 2
+  tisort-erkek: 2
+  spor-cantasi: 2
+  serum: 2
+  vitamin-takviye: 2
+  kalem: 2
+  fitness-aksesuar: 2
+  fondoten: 2
+  temizleme-jeli: 2
+  rc-oyuncak: 2
+  dizustu-bilgisayar: 2
+  klavye-piyano: 2
+  oje: 2
+  saat-aksesuar: 2
+  tonik: 2
+  guneş-kremi: 2
+  dis-firca-elektrikli: 2
+  kitap-cocuk: 2
+  araç-aksesuar: 2
+  babet: 2
+  sapka: 2
+  gitar: 2
+  bulasik-makinesi: 2
+  parfum-erkek: 2
+  dumbel-agirlik: 2
+
+=== Total unique categories: 157 ===
+
+=== First 3 dialogs (preview) ===
+
+--- Dialog 1 | camasir-makinesi | filter_remove ---
+  [USER     ] beyaz Beko çamaşır makinesi
+  [BOT      ] Beko marka beyaz çamaşır makinesi listeleniyor.
+  [USER     ] renk farketmez
+  [BOT      ] Renk filtresi kaldırıldı. Tüm Beko çamaşır makinesi listeleniyor.
+
+--- Dialog 2 | bebek-bezi | spec_narrow ---
+  [USER     ] Huggies bebek bezi arıyorum
+  [BOT      ] Huggies bebek bezi seçeneklerini listeliyorum.
+  [USER     ] 1-3 bin TL aralığında olsun
+  [BOT      ] 1.000 TL - 3.000 TL arası Huggies bebek bezi.
+
+--- Dialog 3 | kahve | vague_widen ---
+  [USER     ] kahve
+  [BOT      ] Kahve arıyorsun. Popüler markalar arasında Lavazza, Nescafé ve Mehmet Efendi var. Hangi marka veya bütçe aralığı seninle uyumlu?
+  [USER     ] Lavazza
+  [BOT      ] Lavazza marka kahve listeleniyor. İncelemek ister misin?
