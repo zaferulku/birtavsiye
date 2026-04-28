@@ -41,6 +41,12 @@ const ROTATIONS = [
   { source: "pttavm",     query: "xiaomi 15",              category_id: PHONE_CAT },
   { source: "pttavm",     query: "huawei pura",            category_id: PHONE_CAT },
   { source: "pttavm",     query: "redmi note",             category_id: PHONE_CAT },
+  // "redmi note" tek başına PttAVM'de eski Note 13/14 modellerini önce gösterip
+  // yeni Note 15 Pro alt sayfalarda kalıyordu (max 2 sayfa scrape ediyoruz).
+  // Spesifik query'lerle coverage genişletildi.
+  { source: "pttavm",     query: "redmi note 15 pro",      category_id: PHONE_CAT },
+  { source: "pttavm",     query: "redmi note 14 pro",      category_id: PHONE_CAT },
+  { source: "pttavm",     query: "redmi note 13 pro",      category_id: PHONE_CAT },
 
   // Laptop
   { source: "pttavm",     query: "macbook pro",            category_id: LAPTOP_CAT },
