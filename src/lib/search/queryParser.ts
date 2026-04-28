@@ -73,7 +73,8 @@ const COLORS: Record<string, string> = {
   turuncu: "Turuncu",
   gri: "Gri",
   kahverengi: "Kahverengi",
-  kahve: "Kahverengi",
+  // Note: bare "kahve" deliberately NOT mapped — it's a category/product
+  // ("kahve makinesi", "filtre kahve"), not a color. Use "kahverengi" for color.
   lacivert: "Lacivert",
   bordo: "Bordo",
   altın: "Altın",

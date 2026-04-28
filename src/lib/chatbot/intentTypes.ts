@@ -76,14 +76,17 @@ export const INTENT_ROUTING: Record<
  *
  * Match yoksa null döner — caller fallback'e (product_search default) gider.
  */
+// Vocative tail allowed: "selam claude", "merhaba dostum" — but only one extra
+// word, so "merhaba telefon arıyorum" still falls through to LLM/product_search.
 const GREETING_PATTERNS = [
-  /^(merhaba|selam|hey|hello|hi|sa|selamün aleyküm|günaydın|iyi akşamlar|iyi geceler)\.?!?\??$/i,
+  /^(merhaba|selam|hey|hello|hi|sa|selamün aleyküm|günaydın|iyi akşamlar|iyi geceler)([,\s]+\w+)?\.?!?\??$/i,
+  /^(naber|nasılsın|nasılsınız)\??$/i,
 ];
 const THANKS_PATTERNS = [
   /^(teşekkür(ler)?|sağol(asın)?|eyvallah|sağ ol|tşk|tesekkur|tesekkurler|thanks)\.?!?$/i,
 ];
 const SMALLTALK_PATTERNS = [
-  /^(naber|nasılsın|napıyorsun|ne haber|nasıl gidiyor)\??$/i,
+  /^(napıyorsun|ne haber|nasıl gidiyor)\??$/i,
 ];
 const STORE_HELP_PATTERNS = [
   /\b(kargo|gönderim|teslimat|iade|iadem|garanti|fatura|kapıda ödeme|havale|kredi kartı taksit|şifre(mi)?|hesab(ım|ımı)|üyelik|abonelik|aboneliğ)\b/i,

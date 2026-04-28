@@ -83,6 +83,16 @@ KURALLAR:
 - Alakasız sorgu ("saat kaç") → is_off_topic: true
 - Spesifik ürün adı → category_slug + brand + semantic_keywords doldur
 
+KRİTİK KURAL — RENK VS KATEGORİ AYRIMI:
+- "kahve" başlı başına bir kategori/ürün, RENK DEĞİL
+- "kahverengi" = renk; "kahve" = ürün/kategori
+- "kahve makinesi", "kahve çekirdeği", "filtre kahve" = kategori
+- Renk olarak SADECE şunlar geçerlidir:
+  beyaz, siyah, kırmızı, mavi, yeşil, mor, sarı, pembe, kahverengi,
+  bej, bordo, gri, lacivert, turkuaz, krem, altın, gümüş, bronz, inox
+- YANLIŞ: semantic_keywords'a "kahve" rengi olarak koyma
+- DOĞRU: category_slug: "kahve" (veya alt-kategori), semantic_keywords: ["kahve"]
+
 ÖNEMLİ VAGUE KURALI:
 - Tek kelime kategori adı ("telefon", "laptop", "ayakkabı", "deodorant", "buzdolabı", "kulaklık")
   VAGUE DEĞİLDİR → kategori sorgusu olarak yorumla:
@@ -254,16 +264,41 @@ function isObject(v: any): boolean {
   return v !== null && typeof v === "object" && !Array.isArray(v);
 }
 
-const KNOWN_BRANDS_TR = [
-  "Apple", "Samsung", "Xiaomi", "Huawei", "Oppo", "Realme",
-  "Tecno", "Vivo", "Casper", "TCL", "Omix", "General Mobile",
-  "Honor", "POCO", "Reeder", "Nubia", "Nokia",
-  "Lenovo", "HP", "Dell", "Asus", "Acer", "MSI",
-  "Sony", "LG", "Philips", "Vestel", "Arcelik", "Beko", "Bosch", "Siemens",
-  "Dyson", "Karcher", "Tefal", "Fakir",
-  "JBL", "Bose", "Sennheiser", "Audio-Technica",
-  "Nintendo", "Microsoft", "PlayStation",
-];
+const KNOWN_BRANDS_TR: string[] = (() => {
+  const seed = [
+    // Mobile / electronics
+    "Apple", "Samsung", "Xiaomi", "Huawei", "Oppo", "Realme",
+    "Tecno", "Vivo", "Casper", "TCL", "Omix", "General Mobile",
+    "Honor", "POCO", "Reeder", "Nubia", "Nokia",
+    "Lenovo", "HP", "Dell", "Asus", "Acer", "MSI",
+    "Sony", "LG", "Philips", "Vestel", "Arcelik", "Arçelik", "Beko", "Bosch", "Siemens",
+    "Dyson", "Karcher", "Tefal", "Fakir",
+    "JBL", "Bose", "Sennheiser", "Audio-Technica", "Marshall", "Anker",
+    "Nintendo", "Microsoft", "PlayStation",
+    // Bebek
+    "Prima", "Joonies", "Sleepy", "Huggies", "Aptamil", "Hipp", "Bebelac", "Milupa",
+    "Avent", "NUK", "Tommee Tippee", "Mam", "Cybex", "Maxi-Cosi", "Chicco", "Britax",
+    // Pet
+    "Royal Canin", "Pro Plan", "Hills", "Whiskas", "Friskies", "Pedigree",
+    // Kahve & mutfak
+    "Nespresso", "Krups", "Sage", "DeLonghi", "Korkmaz", "Schafer",
+    // Süpürge
+    "Dreame", "iRobot", "Roborock",
+    // Ev tekstil & mobilya
+    "Karaca", "English Home", "Madame Coco", "Yataş", "İstikbal", "Bellona",
+    // Kozmetik
+    "Pastel", "Flormar", "Golden Rose", "Vichy", "Bioderma", "La Roche-Posay",
+  ];
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const b of seed) {
+    const key = b.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(b);
+  }
+  return out;
+})();
 
 function enrichBrandFilterFromKeywords(intent: StructuredIntent): StructuredIntent {
   const existing = new Set((intent.brand_filter || []).map((b) => b.toLowerCase()));

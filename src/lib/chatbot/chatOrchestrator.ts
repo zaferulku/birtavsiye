@@ -497,7 +497,8 @@ const STORAGE_KEYS = new Set([
 const COLOR_WORDS = [
   // TR diacritic'li
   "siyah", "beyaz", "kırmızı", "mavi", "yeşil", "sarı", "mor",
-  "pembe", "gri", "kahverengi", "kahve", "turuncu", "lacivert",
+  // "kahve" deliberately omitted: category/product ("kahve makinesi"), not color.
+  "pembe", "gri", "kahverengi", "turuncu", "lacivert",
   "bej", "krem", "altın", "gümüş", "bronz", "bordo", "şampanya",
   "antrasit", "lila", "fuşya", "turkuaz", "jet", "şeffaf", "mat", "rose",
   // TR diacritic'siz (LLM bazen normalize ediyor)

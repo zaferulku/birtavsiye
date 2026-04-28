@@ -441,7 +441,9 @@ export async function POST(req: Request) {
       intent_type: heuristicClassify(message) ?? "product_search",
       category_slug: parsed.category_slugs?.[0] ?? null,
       brand_filter: parsed.brand ? [parsed.brand] : [],
-      variant_color_patterns: parsed.color ? [`%${parsed.color}%`] : [],
+      // State holds raw colors (e.g. "Beyaz"); the RPC layer adds %…% wildcards
+      // when calling smart_search. Avoids leaking SQL LIKE syntax into state.
+      variant_color_patterns: parsed.color ? [parsed.color] : [],
       variant_storage_patterns: [],
       price_min: parsed.price_min ?? null,
       price_max: parsed.price_max ?? null,
@@ -468,7 +470,8 @@ export async function POST(req: Request) {
         ? conversationState.brand_filter[0]
         : parsed.brand;
 
-    // Effective color: extract raw color string from first pattern (strip % wildcards)
+    // Effective color: state holds raw values now; legacy strip kept defensive
+    // in case rebuildStateFromHistory rehydrates old wildcard-wrapped entries.
     const effectiveColor =
       conversationState.variant_color_patterns.length > 0
         ? conversationState.variant_color_patterns[0].replace(/%/g, "")
