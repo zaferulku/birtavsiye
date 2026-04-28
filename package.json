@@ -14,7 +14,11 @@
     "eval:chatbot": "node scripts/eval-chatbot-dialogs.mjs --input tests/chatbot/fixtures/chatbot_dialogs_200.jsonl",
     "eval:chatbot:dryrun": "node scripts/eval-chatbot-dialogs.mjs --input tests/chatbot/fixtures/chatbot_dialogs_200.jsonl --limit 5",
     "eval:chatbot:scenario": "node scripts/eval-chatbot-dialogs.mjs --input tests/chatbot/fixtures/chatbot_dialogs_200.jsonl --scenario",
-    "eval:chatbot:category": "node scripts/eval-chatbot-dialogs.mjs --input tests/chatbot/fixtures/chatbot_dialogs_200.jsonl --category"
+    "eval:chatbot:category": "node scripts/eval-chatbot-dialogs.mjs --input tests/chatbot/fixtures/chatbot_dialogs_200.jsonl --category",
+    "eval:chatbot:2": "node scripts/eval-chatbot-dialogs.mjs --input tests/chatbot/fixtures/chatbot_dialogs_eval2_200.jsonl",
+    "eval:chatbot:2:dryrun": "node scripts/eval-chatbot-dialogs.mjs --input tests/chatbot/fixtures/chatbot_dialogs_eval2_200.jsonl --limit 5",
+    "eval:chatbot:2:scenario": "node scripts/eval-chatbot-dialogs.mjs --input tests/chatbot/fixtures/chatbot_dialogs_eval2_200.jsonl --scenario",
+    "eval:chatbot:2:category": "node scripts/eval-chatbot-dialogs.mjs --input tests/chatbot/fixtures/chatbot_dialogs_eval2_200.jsonl --category"
   },
   "dependencies": {
     "@google/genai": "^1.50.1",

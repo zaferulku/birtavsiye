@@ -97,25 +97,89 @@ function deepEqual(a, b) {
   return ak.every((k) => deepEqual(a[k], b[k]));
 }
 
+// Internal Paket Ç counters/helpers that should not be part of regression spec.
+const IGNORE_STATE_FIELDS = ["turn_count_in_category", "last_set_dimensions"];
+
+// variant_color_patterns appears two ways:
+//   intentParser output (state):  ["beyaz", "kırmızı"]              (raw)
+//   smart_search RPC layer:       ["%Beyaz%", "%Kırmızı%"]           (LIKE wildcards)
+// Until the architectural split is enforced (state ham, RPC wildcards),
+// the eval normalizes both sides to the raw lowercase form.
+function normalizeColorPatterns(patterns) {
+  if (!Array.isArray(patterns)) return [];
+  return patterns
+    .map((p) => String(p).toLowerCase().replace(/^%+|%+$/g, "").trim())
+    .filter((p) => p.length > 0)
+    .sort();
+}
+
+function arraysEqual(a, b) {
+  if (a.length !== b.length) return false;
+  return a.every((x, i) => x === b[i]);
+}
+
+// Subset semantics: every key declared in `expected` must match in `actual`.
+// Keys present in `actual` but absent in `expected` are tolerated — this lets
+// older fixtures (no intent_type field) coexist with newer ones (with it).
+// IGNORE_STATE_FIELDS are stripped from both sides regardless.
+function compareState(expected, actual) {
+  if (expected == null) return true;
+  if (actual == null) return false;
+  const exp = { ...expected };
+  const act = { ...actual };
+  for (const f of IGNORE_STATE_FIELDS) {
+    delete exp[f];
+    delete act[f];
+  }
+  for (const k of Object.keys(exp)) {
+    if (k === "variant_color_patterns") {
+      if (!arraysEqual(normalizeColorPatterns(exp[k]), normalizeColorPatterns(act[k]))) {
+        return false;
+      }
+      continue;
+    }
+    if (!deepEqual(exp[k], act[k])) return false;
+  }
+  return true;
+}
+
+// Diff for human-readable failure reports. Mirrors compareState semantics:
+// only surfaces keys from `expected` (plus the same key from actual) and
+// hides IGNORE_STATE_FIELDS, so the diff doesn't drown in internal noise.
 function diffObj(expected, actual) {
   const out = {};
-  const keys = new Set([...Object.keys(expected || {}), ...Object.keys(actual || {})]);
-  for (const k of keys) {
-    if (!deepEqual(expected?.[k], actual?.[k])) {
-      out[k] = { expected: expected?.[k], actual: actual?.[k] };
+  if (expected == null) return out;
+  for (const k of Object.keys(expected)) {
+    if (IGNORE_STATE_FIELDS.includes(k)) continue;
+    if (k === "variant_color_patterns") {
+      const e = normalizeColorPatterns(expected[k]);
+      const a = normalizeColorPatterns(actual?.[k]);
+      if (!arraysEqual(e, a)) {
+        out[k] = { expected: expected[k], actual: actual?.[k] };
+      }
+      continue;
+    }
+    if (!deepEqual(expected[k], actual?.[k])) {
+      out[k] = { expected: expected[k], actual: actual?.[k] };
     }
   }
   return out;
 }
 
-async function postChat(messages, abortMs) {
+// Body shape matches /api/chat route contract:
+//   { message: string, history: Array<{role,content,meta?}>, chatSessionId: string }
+// Each assistant entry in `history` MUST carry meta.state so Paket Ç
+// (rebuildStateFromHistory) can rehydrate conversationState across turns —
+// otherwise the bot evaluates each turn statelessly and the regression suite
+// loses its point.
+async function postChat(message, history, chatSessionId, abortMs) {
   const ctrl = new AbortController();
   const t = setTimeout(() => ctrl.abort(), abortMs);
   try {
     const res = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages }),
+      body: JSON.stringify({ message, history, chatSessionId }),
       signal: ctrl.signal,
     });
     clearTimeout(t);
@@ -150,20 +214,33 @@ for (const dialog of dialogs) {
 
   let history = [];
   let dialogPass = true;
+  const chatSessionId = `eval-${dialog.id}-${startTime}`;
 
   for (let ti = 0; ti < dialog.turns.length; ti++) {
     const turn = dialog.turns[ti];
     if (turn.role !== "user") continue;
 
-    history.push({ role: "user", content: turn.msg });
+    const userMsg = turn.msg;
 
-    const nextBot = dialog.turns[ti + 1];
+    // Skip proactive bot turns (is_proactive_suggestion: true) when looking up
+    // the next expected-bot turn — they have no preceding user input.
+    let nextBotIdx = ti + 1;
+    while (
+      dialog.turns[nextBotIdx] &&
+      dialog.turns[nextBotIdx].role === "bot" &&
+      dialog.turns[nextBotIdx].is_proactive_suggestion === true
+    ) {
+      nextBotIdx++;
+    }
+    const nextBot = dialog.turns[nextBotIdx];
     const hasExpected = nextBot && nextBot.role === "bot" &&
       (nextBot.expected_state !== undefined ||
         nextBot.expected_action !== undefined ||
+        nextBot.expected_intent_type !== undefined ||
+        nextBot.expected_short_response !== undefined ||
         nextBot.expected_product_count_min !== undefined);
 
-    const result = await postChat(history, turnTimeoutMs);
+    const result = await postChat(userMsg, history, chatSessionId, turnTimeoutMs);
 
     if (!result.ok) {
       dialogPass = false;
@@ -187,14 +264,21 @@ for (const dialog of dialogs) {
 
     if (hasExpected) {
       const stateOk = nextBot.expected_state === undefined ||
-        deepEqual(actualState, nextBot.expected_state);
+        compareState(nextBot.expected_state, actualState);
       const actionOk = nextBot.expected_action === undefined ||
         actualAction === nextBot.expected_action;
+      const intentOk = nextBot.expected_intent_type === undefined ||
+        (actualState?.intent_type ?? null) === nextBot.expected_intent_type;
+      const replyText = typeof j.reply === "string" ? j.reply : "";
+      const SHORT_RESP_MAX_LEN = 120;
+      const shortOk = nextBot.expected_short_response === undefined ||
+        nextBot.expected_short_response !== true ||
+        replyText.length <= SHORT_RESP_MAX_LEN;
       const countMin = nextBot.expected_product_count_min ?? 0;
       const countMax = nextBot.expected_product_count_max ?? Number.POSITIVE_INFINITY;
       const countOk = productCount >= countMin && productCount <= countMax;
 
-      if (!stateOk || !actionOk || !countOk) {
+      if (!stateOk || !actionOk || !intentOk || !shortOk || !countOk) {
         dialogPass = false;
         if (stats.fails.length < 10) {
           stats.fails.push({
@@ -204,20 +288,34 @@ for (const dialog of dialogs) {
             turn_index: ti,
             stateOk,
             actionOk,
+            intentOk,
+            shortOk,
             countOk,
             state_diff: stateOk ? null : diffObj(nextBot.expected_state, actualState),
             expected_action: nextBot.expected_action,
             actual_action: actualAction,
+            expected_intent_type: nextBot.expected_intent_type,
+            actual_intent_type: actualState?.intent_type ?? null,
+            expected_short_response: nextBot.expected_short_response,
+            actual_reply_len: replyText.length,
             expected_count: [countMin, Number.isFinite(countMax) ? countMax : null],
             actual_count: productCount,
-            bot_msg: typeof j.reply === "string" ? j.reply.slice(0, 150) : null,
+            bot_msg: replyText.slice(0, 150),
           });
         }
         break;
       }
     }
 
-    history.push({ role: "assistant", content: j.reply ?? "" });
+    // Persist the round-trip so the next turn carries full state context.
+    // assistant.meta.state is REQUIRED — Paket Ç rebuildStateFromHistory
+    // walks history backwards to find the last assistant state.
+    history.push({ role: "user", content: userMsg });
+    history.push({
+      role: "assistant",
+      content: j.reply ?? "",
+      meta: { state: actualState },
+    });
   }
 
   stats.total++;
@@ -272,6 +370,8 @@ if (stats.fails.length > 0) {
       console.log(`    request_failed: ${f.detail}`);
     } else {
       if (!f.actionOk) console.log(`    action: expected=${f.expected_action} actual=${f.actual_action}`);
+      if (f.intentOk === false) console.log(`    intent: expected=${f.expected_intent_type} actual=${f.actual_intent_type}`);
+      if (f.shortOk === false) console.log(`    short_resp: expected=true actual_len=${f.actual_reply_len} (max 120)`);
       if (!f.countOk) console.log(`    count: expected=[${f.expected_count.join(",")}] actual=${f.actual_count}`);
       if (f.state_diff) console.log(`    state_diff: ${JSON.stringify(f.state_diff).slice(0, 250)}`);
       if (f.bot_msg) console.log(`    bot: "${f.bot_msg}"`);
