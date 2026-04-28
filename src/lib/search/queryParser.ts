@@ -12,6 +12,8 @@
 //          Başarısızsa boş döner (null values). Çağıran taraf fallback'e geçer.
 // =============================================================================
 
+import { KNOWN_BRANDS_TR } from "../data/known-brands";
+
 export type ParsedQuery = {
   // Ana filtreler
   category_slugs: string[] | null;  // ["akilli-telefon"] → match_products'a geçer
@@ -204,12 +206,18 @@ function extractBrand(
 ): string | null {
   const normalizedQuery = normalize(query);
 
-  // Tüm kategorilerin related_brands'ını topla
+  // Brand source = DB-driven (categories.related_brands) ∪ static
+  // KNOWN_BRANDS_TR. DB takes precedence implicitly via Set semantics; the
+  // static list backfills brands not yet wired into categories.related_brands
+  // (e.g. Prima, Huggies, Nescafé) so the parser doesn't go blind on them.
   const allBrands = new Set<string>();
   for (const cat of categories) {
     for (const b of cat.related_brands ?? []) {
       allBrands.add(b);
     }
+  }
+  for (const b of KNOWN_BRANDS_TR) {
+    allBrands.add(b);
   }
 
   // En uzun marka adından başla (false positive önleme: "Samsung Galaxy" → Samsung yakalansın, "Mi" → Xiaomi false positive olmasın)
