@@ -499,6 +499,7 @@ export async function POST(req: Request) {
       sb,
       conversationHistory: history,
       conversationState,
+      intentType: conversationState.intent_type,
     });
 
     const productLimit = calculateProductLimit(conversationState, mergeAction);

@@ -21,6 +21,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { detectPath, type PathDecision, type QueryParserResult } from "./fastPathDetector";
 import { retrieveKnowledge } from "./retrieveKnowledge";
+import { INTENT_ROUTING, type IntentType } from "./intentTypes";
 import { parseIntent } from "./intentParserRuntime";
 import { aiEmbed } from "../ai/aiClient";
 import { generateResponse, type ProductForResponse } from "./generateResponse";
@@ -57,6 +58,9 @@ export type OrchestratorInput = {
     variant_color_patterns?: string[];
     variant_storage_patterns?: string[];
   } | null;
+  // Heuristic-resolved intent type (greeting/smalltalk/off_topic short-circuit
+  // KB retrieval + smart_search). Defaults to product_search when absent.
+  intentType?: IntentType | null;
 };
 
 export type ChatProductResult = {
@@ -150,6 +154,17 @@ export async function orchestrateChat(
 ): Promise<OrchestratorOutput> {
   const startTime = Date.now();
 
+  // 0. Short-response intents (greeting/smalltalk/off_topic) bypass KB
+  // retrieval and smart_search entirely — the LLM otherwise pollutes
+  // these conversational turns with KB excerpts ("Cilt Tipleri — Genel
+  // Giriş ile ilgili mi arıyorsun?" for "selam"). Full Faz 2 routing
+  // remains deferred; this is the minimal short-circuit.
+  const intentType = input.intentType ?? "product_search";
+  const routing = INTENT_ROUTING[intentType];
+  if (routing.short_response) {
+    return runShortResponse(intentType, startTime);
+  }
+
   // 1. Path decision (fast vs slow)
   const decision = detectPath(input.userMessage, input.parsed);
 
@@ -158,6 +173,50 @@ export async function orchestrateChat(
   } else {
     return await runSlowPath(input, decision, startTime);
   }
+}
+
+const SHORT_RESPONSE_REPLIES: Record<IntentType, string> = {
+  product_search: "",
+  knowledge_query: "",
+  store_help: "",
+  greeting: "Merhaba! Ne aramama yardım edebilirim?",
+  smalltalk: "Rica ederim, başka bir şey arıyor musunuz?",
+  off_topic:
+    "Ben birtavsiye.net asistanıyım, alışverişle ilgili yardımcı olabilirim. Bir ürün arıyor musunuz?",
+};
+
+function runShortResponse(
+  intentType: IntentType,
+  startTime: number
+): OrchestratorOutput {
+  const reply =
+    SHORT_RESPONSE_REPLIES[intentType] || SHORT_RESPONSE_REPLIES.greeting;
+  return {
+    response: reply,
+    products: [],
+    method: `short_${intentType}`,
+    pathDecision: {
+      path: "fast",
+      reason: `short_response_${intentType}`,
+      confidence: 1,
+    },
+    intent: null,
+    kbChunkCount: 0,
+    latencyMs: Date.now() - startTime,
+    suggestions: [],
+    diagnostics: {
+      path: "fast",
+      retrieval_stage: "skipped_short_response",
+      query_profile: null,
+      rerank_applied: false,
+      kb_chunk_count: 0,
+      candidate_count: 0,
+      top_candidates: [],
+      strict_term_count: 0,
+      vector_candidate_count: 0,
+      filters: {},
+    },
+  };
 }
 
 // ============================================================================
