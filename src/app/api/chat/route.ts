@@ -14,6 +14,7 @@ import {
   type ConversationState,
   type RawIntent,
 } from "../../../lib/chatbot/conversationState";
+import { heuristicClassify } from "../../../lib/chatbot/intentTypes";
 import {
   getQueryRankingProfile,
   isStrictIntentTerm,
@@ -437,6 +438,7 @@ export async function POST(req: Request) {
     );
 
     const rawIntent: RawIntent = {
+      intent_type: heuristicClassify(message) ?? "product_search",
       category_slug: parsed.category_slugs?.[0] ?? null,
       brand_filter: parsed.brand ? [parsed.brand] : [],
       variant_color_patterns: parsed.color ? [`%${parsed.color}%`] : [],
@@ -560,6 +562,7 @@ export async function POST(req: Request) {
         decisionId: loggedDecisionId,
         latency_ms: Date.now() - startTime,
         state: {
+          intent_type: conversationState.intent_type,
           category_slug: conversationState.category_slug,
           brand_filter: conversationState.brand_filter,
           variant_color_patterns: conversationState.variant_color_patterns,
@@ -569,6 +572,7 @@ export async function POST(req: Request) {
           turn_count_in_category: conversationState.turn_count_in_category,
         },
         mergeAction,
+        intentType: conversationState.intent_type,
         productLimit,
       },
       _debug: {

@@ -17,7 +17,11 @@
  *   shortcut chip         → preserveCategoryOnly (popüler / tavsiye)
  */
 
+import type { IntentType } from "./intentTypes";
+
 export interface ConversationState {
+  /** Üst-düzey niyet — "product_search" varsayılan (mevcut akış). */
+  intent_type: IntentType;
   category_slug: string | null;
   brand_filter: string[];
   variant_color_patterns: string[];
@@ -32,6 +36,7 @@ export interface ConversationState {
 
 export function emptyState(): ConversationState {
   return {
+    intent_type: "product_search",
     category_slug: null,
     brand_filter: [],
     variant_color_patterns: [],
@@ -44,6 +49,8 @@ export function emptyState(): ConversationState {
 }
 
 export interface RawIntent {
+  /** Heuristic/LLM ile tespit edilmiş intent_type — eksikse product_search varsayılır. */
+  intent_type?: IntentType;
   category_slug?: string | null;
   brand_filter?: string[];
   variant_color_patterns?: string[];
@@ -112,6 +119,24 @@ export function mergeIntent(
   userMessage: string,
   intentHint?: { category_slug?: string | null } | null,
 ): { next: ConversationState; action: string } {
+  // 0. INTENT TYPE DEĞİŞTİ — non-product mesajlar için filters'ı KORU
+  // (kullanıcı "merhaba" deyip sonra "telefon" derse, telefon araması için
+  //  state baştan başlamasın — sadece intent_type "greeting" olarak işaretlensin.)
+  const newIntentType = rawIntent.intent_type ?? "product_search";
+  if (newIntentType !== "product_search") {
+    return {
+      next: {
+        ...prev,
+        intent_type: newIntentType,
+      },
+      action: `intent_type_${newIntentType}`,
+    };
+  }
+
+  // intent_type === "product_search" — mevcut tüm logic devam:
+  // Eğer prev.intent_type non-product idiyse, şimdi product_search'e geçilir.
+  const baseIntentType: IntentType = "product_search";
+
   const newCategory = intentHint?.category_slug ?? rawIntent.category_slug ?? null;
   if (newCategory && prev.category_slug && newCategory !== prev.category_slug) {
     return {
@@ -147,7 +172,11 @@ export function mergeIntent(
   }
   const removals = detectRemoval(userMessage);
   if (Object.keys(removals).length > 0) {
-    const next = { ...prev, turn_count_in_category: prev.turn_count_in_category + 1 };
+    const next = {
+      ...prev,
+      intent_type: baseIntentType,
+      turn_count_in_category: prev.turn_count_in_category + 1,
+    };
     if (removals.brand) next.brand_filter = [];
     if (removals.color) next.variant_color_patterns = [];
     if (removals.price) { next.price_min = null; next.price_max = null; }
@@ -156,6 +185,7 @@ export function mergeIntent(
   }
   const setDimensions: string[] = [];
   const next: ConversationState = {
+    intent_type: baseIntentType,
     category_slug: newCategory ?? prev.category_slug,
     brand_filter: prev.brand_filter,
     variant_color_patterns: prev.variant_color_patterns,
