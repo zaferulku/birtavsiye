@@ -219,10 +219,16 @@ export function rebuildStateFromHistory(
 ): ConversationState {
   for (let i = history.length - 1; i >= 0; i--) {
     const m = history[i];
-    // Bug fix: önceki check (category_slug !== undefined) null-set turn'lerde
-    // de tetikleniyor ve emptyState dönüyordu → state kayboluyordu.
     if (m.role === "assistant" && m.meta != null) {
-      return { ...emptyState(), ...m.meta };
+      // Defensive: production frontend store getHistoryForBackend()'de
+      // meta.state'i flat'a unwrap eder → m.meta = state.
+      // Eval/test fixture'lar raw meta wrapper gönderebilir → m.meta.state nested.
+      // İkisini de destekle.
+      const meta = m.meta as Record<string, unknown>;
+      const state = (meta.state && typeof meta.state === "object")
+        ? meta.state as Partial<ConversationState>
+        : (m.meta as Partial<ConversationState>);
+      return { ...emptyState(), ...state };
     }
   }
   return emptyState();
