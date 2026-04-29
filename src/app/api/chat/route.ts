@@ -107,6 +107,37 @@ type SearchResult = {
 let categoriesCache: { data: CategoryRef[]; timestamp: number } | null = null;
 const CATEGORY_CACHE_TTL_MS = 5 * 60 * 1000;
 
+// Server-side input limitleri (client koruması güvenilmez)
+const MAX_MESSAGE_CHARS = 2000;
+const MAX_HISTORY_ITEMS = 20;
+const MAX_IMAGE_BYTES = 7_000_000; // ~5 MB binary as base64
+
+// In-memory rate limiter — per Vercel instance bazlı.
+// Production'da Upstash/Redis ile global'e taşınmalı.
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX_REQUESTS = 30;
+const rateLimitBuckets = new Map<string, { count: number; resetAt: number }>();
+
+function getClientIp(req: Request): string {
+  const xf = req.headers.get("x-forwarded-for");
+  if (xf) return xf.split(",")[0].trim();
+  return req.headers.get("x-real-ip") || "unknown";
+}
+
+function checkRateLimit(ip: string): { allowed: boolean; retryAfterSec: number } {
+  const now = Date.now();
+  const bucket = rateLimitBuckets.get(ip);
+  if (!bucket || bucket.resetAt < now) {
+    rateLimitBuckets.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return { allowed: true, retryAfterSec: 0 };
+  }
+  if (bucket.count >= RATE_LIMIT_MAX_REQUESTS) {
+    return { allowed: false, retryAfterSec: Math.ceil((bucket.resetAt - now) / 1000) };
+  }
+  bucket.count += 1;
+  return { allowed: true, retryAfterSec: 0 };
+}
+
 function detectFeedback(message: string): FeedbackType {
   const trimmed = message.trim();
   if (trimmed.length > 30) return null;
@@ -358,11 +389,21 @@ function calculateProductLimit(state: ConversationState, mergeAction: string): n
 export async function POST(req: Request) {
   const startTime = Date.now();
 
+  // Rate limit (per-IP, in-memory) — bot/DoS koruması
+  const ip = getClientIp(req);
+  const rl = checkRateLimit(ip);
+  if (!rl.allowed) {
+    return NextResponse.json(
+      { error: "Çok fazla istek. Biraz sonra tekrar dene." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } }
+    );
+  }
+
   try {
     const body = await req.json();
     const rawMessage = (body?.message || "").toString().trim();
     const userId = body?.userId || null;
-    const history = Array.isArray(body?.history) ? body.history : [];
+    const history = Array.isArray(body?.history) ? body.history.slice(-MAX_HISTORY_ITEMS) : [];
     const chatSessionId =
       typeof body?.chatSessionId === "string" ? body.chatSessionId : null;
     const decisionIdFromBody =
@@ -379,6 +420,20 @@ export async function POST(req: Request) {
       typeof body?.image === "string" && body.image.startsWith("data:image/")
         ? body.image
         : null;
+
+    // Server-side guards (client cap'leri güvenilmez)
+    if (rawMessage.length > MAX_MESSAGE_CHARS) {
+      return NextResponse.json(
+        { error: `Mesaj cok uzun (max ${MAX_MESSAGE_CHARS} karakter)` },
+        { status: 400 }
+      );
+    }
+    if (image && image.length > MAX_IMAGE_BYTES) {
+      return NextResponse.json(
+        { error: "Gorsel cok buyuk (max ~5 MB)" },
+        { status: 413 }
+      );
+    }
 
     const message = image
       ? rawMessage
