@@ -218,28 +218,24 @@ Process clean kill sonrası:
      yeni leaf'lerle resume
 
 ### 🟡 ORTA
-2. **Apple/APPLE duplicate brand chip**
-   - ✅ Bug B (known-brands Set) ile muhtemelen çözüldü, baseline'da teyit
-   - DB'de mixed casing varsa suggestionBuilder buildBrandSuggestions normalize gerek
-   - Veya scrape ingestion'da brand TitleCase normalize
+2. **Apple/APPLE duplicate brand chip** — ✅ DONE (Bug B `known-brands.ts` Set ile çözüldü, commit `419d73c`)
 
-3. **Chatbot timeout** (15 dk → 2 dk + 1 dk uyarı)
+3. **Chatbot timeout** (15 dk → 2 dk + 1 dk uyarı) — POSTPONE (MVP launch sonrası UX iyileştirme)
    - useChatStore inactivity logic revize
    - mouse/touch event listener
 
-4. **MM frontend gösterim test**
-   - "MM fiyatı yok" şikayeti araştırma
-   - LivePriceComparison.tsx + useLivePrices.ts
+4. **MM frontend gösterim test** — ❌ İPTAL (MVP launch sonrası gerçek kullanıcı feedback gerekli, şu an bot/kullanıcı trafiği yok)
 
 ### 🟢 OPSİYONEL
-5. variant_color backfill 2. tur (yeni 500 telefon için)
-6. MM Faz 2 enrichment (specs zenginleştirme)
-7. /tavsiyeler kategori sekmeleri parent vs child slug fix
+5. **variant_color backfill 2. tur** — ❌ İPTAL/MERGED (MM scraper ingestion'da `extractColorFromTitle` zaten çalışıyor, Dalga 12+ — manuel backfill gereksiz)
+6. **MM Faz 2 enrichment** (specs zenginleştirme) — POSTPONE (uzun vadeli)
+7. **/tavsiyeler kategori sekmeleri** — POSTPONE (UI iyileştirme, MVP launch sonrası)
 
 ### 🔴 KRİTİK (yarın sabah 30 Apr 2026)
-- **MAINTENANCE_MODE = false** + commit + push (önce Disk IO recovery doğrula)
-- **Migration 011 SQL**: `kahve` (parent: `1b056a91-32f3-4695-b982-4d02d4b157b3`) + `spor-cantasi` (parent: `76500641-97c6-4200-be1d-6735612cdd81`)
-- **Tur 2 final**: 2.D `single_word_widen` drop + JSONL valid + Commit 2 (pending: keywords drop, count relax, Nescafé→Jacobs zaten dosyada)
+- **MAINTENANCE_MODE = false** + commit + push (önce DB Cloudflare 522 recovery doğrula — `b1r7pm2tf` probe'da hâlâ takılı)
+- **Migration 011 SQL** — ✅ DONE (kullanıcı uyguladı, kahve + spor-cantasi DB'de)
+- **Tur 2 final** — ✅ DONE (commit `411293c`)
+- **Bug E.2 idempotent retry** (DB sağlık olunca, kalan `Şr` chunk'ları için)
 - **Eval re-run**: `eval:chatbot:dryrun` + `eval:chatbot:2:dryrun`
 - **Pass oranı raporu**
 - **Baseline ≥%60** ise Paket M Faz M.1 başlat
@@ -247,7 +243,9 @@ Process clean kill sonrası:
 ### 🟡 ORTA
 - **Nescafé regex** (Türkçe é `\b`) — Paket M.2 tokenizer'da çözülecek
 - **mergeIntent single_word_widen branch** — Paket M sonrası derin tanı
-- **Vercel ISR aralığı uzat** (60s → 24h) — bot trafiği azalt
+- **Vercel ISR aralığı uzat** — ✅ DONE (commit `6d4d5f7`, 60s → 86400s kategori; 30s → 300s forum; 60s → 600s products)
+- **Migration 007 deploy doğrulaması** + DB audit run (Cloudflare 522 sonrası probe)
+- **Aksesuar 3-katman**: Katman 1+2 kodda aktif; Katman 3 (audit script) çalıştırma teyidi gerek
 
 ### 🟢 OPSİYONEL
 - **Paket M Faz M.1-M.6** (multi-strategy search)
