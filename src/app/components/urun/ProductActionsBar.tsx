@@ -152,8 +152,8 @@ export default function ProductActionsBar({
 
   const handleAlertSubmit = async () => {
     const numericTargetPrice = Number(targetPrice.replace(",", "."));
-    if (!email.trim() || !Number.isFinite(numericTargetPrice) || numericTargetPrice <= 0) {
-      setMessage("Alarm icin e-posta ve hedef fiyat gir.");
+    if (!Number.isFinite(numericTargetPrice) || numericTargetPrice <= 0) {
+      setMessage("Gecerli bir hedef fiyat gir.");
       return;
     }
 
@@ -161,14 +161,20 @@ export default function ProductActionsBar({
     setMessage(null);
 
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.access_token) {
+        setMessage("Alarm kurmak icin giris yap.");
+        return;
+      }
+
       const response = await fetch("/api/price-alert", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
         },
         body: JSON.stringify({
           product_id: productId,
-          email: email.trim(),
           target_price: numericTargetPrice,
         }),
       });
@@ -216,13 +222,13 @@ export default function ProductActionsBar({
         <div className="rounded-2xl border border-[#EFE7DF] bg-[#FAF7F4] p-4">
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto]">
             <label className="flex flex-col gap-1 text-xs font-semibold text-[#5E5750]">
-              E-posta
+              E-posta (hesabindan)
               <input
                 type="email"
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="ornek@mail.com"
-                className="rounded-xl border border-[#E8E4DF] bg-white px-3 py-2.5 text-sm font-normal text-[#171412] outline-none transition focus:border-[#E8460A]"
+                readOnly
+                placeholder={email ? "" : "Once giris yap"}
+                className="rounded-xl border border-[#E8E4DF] bg-gray-50 px-3 py-2.5 text-sm font-normal text-[#171412] outline-none cursor-not-allowed"
               />
             </label>
 
