@@ -105,6 +105,7 @@ type SearchResult = {
 };
 
 let categoriesCache: { data: CategoryRef[]; timestamp: number } | null = null;
+let categoriesPromise: Promise<CategoryRef[]> | null = null; // in-flight dedup
 const CATEGORY_CACHE_TTL_MS = 5 * 60 * 1000;
 
 // Server-side input limitleri (client koruması güvenilmez)
@@ -193,23 +194,34 @@ async function loadCategories(): Promise<CategoryRef[]> {
   if (categoriesCache && now - categoriesCache.timestamp < CATEGORY_CACHE_TTL_MS) {
     return categoriesCache.data;
   }
-
-  const { data, error } = await sb
-    .from("categories")
-    .select("id, slug, name, keywords, exclude_keywords, related_brands")
-    .eq("is_active", true)
-    .eq("is_leaf", true);
-
-  if (error) {
-    throw new Error(`Categories load failed: ${error.message}`);
+  // In-flight dedup — eşzamanlı request'lerde tek DB call
+  if (categoriesPromise) {
+    return categoriesPromise;
   }
 
-  categoriesCache = {
-    data: (data ?? []) as CategoryRef[],
-    timestamp: now,
-  };
+  categoriesPromise = (async () => {
+    try {
+      const { data, error } = await sb
+        .from("categories")
+        .select("id, slug, name, keywords, exclude_keywords, related_brands")
+        .eq("is_active", true)
+        .eq("is_leaf", true);
 
-  return categoriesCache.data;
+      if (error) {
+        throw new Error(`Categories load failed: ${error.message}`);
+      }
+
+      categoriesCache = {
+        data: (data ?? []) as CategoryRef[],
+        timestamp: Date.now(),
+      };
+      return categoriesCache.data;
+    } finally {
+      categoriesPromise = null;
+    }
+  })();
+
+  return categoriesPromise;
 }
 
 function toMatchedProduct(product: RankedProduct): MatchedProduct {
@@ -634,14 +646,17 @@ export async function POST(req: Request) {
         intentType: conversationState.intent_type,
         productLimit,
       },
-      _debug: {
-        path: orchResult.pathDecision.path,
-        reason: orchResult.pathDecision.reason,
-        intent: orchResult.intent,
-        kb_chunks: orchResult.kbChunkCount,
-        orchestrator_latency_ms: orchResult.latencyMs,
-        diagnostics: orchResult.diagnostics,
-      },
+      // _debug field sadece dev/preview'de — prod'a internal architecture sızdırma
+      ...(process.env.NODE_ENV !== "production" && {
+        _debug: {
+          path: orchResult.pathDecision.path,
+          reason: orchResult.pathDecision.reason,
+          intent: orchResult.intent,
+          kb_chunks: orchResult.kbChunkCount,
+          orchestrator_latency_ms: orchResult.latencyMs,
+          diagnostics: orchResult.diagnostics,
+        },
+      }),
     });
   } catch (err) {
     console.error("[chat] POST error:", err);

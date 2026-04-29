@@ -395,6 +395,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // SSRF guard — source TypeScript type'i runtime guarantee degil.
+  if (!(source in STORE_NAME_BY_SOURCE)) {
+    return NextResponse.json(
+      { error: "gecersiz source" },
+      { status: 400 }
+    );
+  }
+
   const scraperRes = await fetch(
     `${BASE_URL}/api/${source}?q=${encodeURIComponent(query)}&page=${page}`
   );
