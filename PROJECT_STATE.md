@@ -1,9 +1,38 @@
-# birtavsiye.net — Project State v11
+# birtavsiye.net — Project State v12
 
 > **Bu dosya tek kaynak gerçek.** Yeni sohbet/oturum başlattığınızda
 > bu dosyayı Claude veya Claude Code'a verin — tüm bağlamı 30 saniyede alır.
 
-**Son güncelleme:** 2026-04-29 v11 (Paket Ç + Faz 1 + Tur 1 bug fix + Eval suite)
+**Son güncelleme:** 2026-04-29 v12 (DB capacity outage + cron disable + maintenance mode)
+
+---
+
+## 🔴 GÜNCEL DURUM (29 Apr 2026 akşam)
+
+**YAPILDIKLAR (bugün, sırayla):**
+- Bug A,B,C,D commit ✅
+- Bug E.1 filesystem (commit `19638ee`) ✅
+- Bug E.2 sadece 3/12 chunk (commit `b7e7efc`, DB outage devam etti)
+- Eval baseline 1/10 = %10 (Tur 2 fixture refresh yarısı: keywords drop, count relax, Nescafé→Jacobs)
+- 7 cron-job.org cron disable ✅ (asıl yük buydu — günlük ~10K tetik)
+- Robots.txt block-all (commit `ac22eeb` + `f390595`) ✅
+- Maintenance mode 503 (commit `2ab4622`) ✅ — bot trafiği komple blok
+- Supabase Pro plan satın alındı ($25/ay, NANO compute)
+
+**ANA TANI:**
+1. cron-job.org × 7 cron her 15 dk tetik → DB CPU %85 → DİSABLE
+2. Vercel ISR + bot trafiği → robots.txt push + maintenance 503
+3. NANO Disk IO bütçesi 30 dk burst limit → tükendi
+4. NANO 0.5GB RAM yetersiz ama maliyet kritik → ay sonu karar
+
+**YARIN İÇİN PLAN (30 Apr 2026):**
+- 03:00 (UTC 00:00) → Disk IO bütçesi reset
+- DB temiz başlamalı
+- Maintenance OFF (`MAINTENANCE_MODE=false` + commit + push)
+- Migration 011 SQL: `kahve` (parent UUID `1b056a91-32f3-4695-b982-4d02d4b157b3` supermarket) + `spor-cantasi` (parent UUID `76500641-97c6-4200-be1d-6735612cdd81` spor-outdoor)
+- 2.D `single_word_widen` drop
+- Tur 2 commit + eval re-run
+- Pass ≥%60 → Paket M Faz M.1 / <%60 → Tur 3
 **Production:** https://birtavsiye.net (www.birtavsiye.net canonical)
 **Stack:** Next.js 16, Supabase + pgvector, Zustand, NVIDIA Llama 3.3 70B / Groq / Gemini fallback
 
@@ -207,17 +236,23 @@ Process clean kill sonrası:
 6. MM Faz 2 enrichment (specs zenginleştirme)
 7. /tavsiyeler kategori sekmeleri parent vs child slug fix
 
-### 🔴 KRİTİK (Tur 1 sonrası)
-- **Bug E.2**: KB DB chunks UPDATE + 7 chunk re-embed (Supabase outage geçince)
-- **Eval baseline alma**: pass oranı ≥%60 mı?
-- **Paket M Faz M.1-M.6** (multi-strategy search + tokenizer + yazım düzeltme)
+### 🔴 KRİTİK (yarın sabah 30 Apr 2026)
+- **MAINTENANCE_MODE = false** + commit + push (önce Disk IO recovery doğrula)
+- **Migration 011 SQL**: `kahve` (parent: `1b056a91-32f3-4695-b982-4d02d4b157b3`) + `spor-cantasi` (parent: `76500641-97c6-4200-be1d-6735612cdd81`)
+- **Tur 2 final**: 2.D `single_word_widen` drop + JSONL valid + Commit 2 (pending: keywords drop, count relax, Nescafé→Jacobs zaten dosyada)
+- **Eval re-run**: `eval:chatbot:dryrun` + `eval:chatbot:2:dryrun`
+- **Pass oranı raporu**
+- **Baseline ≥%60** ise Paket M Faz M.1 başlat
 
-### 🟡 BELİRSİZ DURUM (kullanıcı doğrulasın)
-- **Migration 007** (products.is_accessory + accessory_reason + accessory_detected_at)
-  deploy durumu belirsiz — Supabase outage geçince teyit
-- **Aksesuar 3-katman** (frontend filter + ingestion guard + DB audit) durumu belirsiz —
-  önceki sohbette paste-ready paket verildi, uygulandı mı?
-- **Faz 1 embedding NULL** durumu (yeni 16K ürün) — re-embed gerek mi?
+### 🟡 ORTA
+- **Nescafé regex** (Türkçe é `\b`) — Paket M.2 tokenizer'da çözülecek
+- **mergeIntent single_word_widen branch** — Paket M sonrası derin tanı
+- **Vercel ISR aralığı uzat** (60s → 24h) — bot trafiği azalt
+
+### 🟢 OPSİYONEL
+- **Paket M Faz M.1-M.6** (multi-strategy search)
+- **Pro plan iptal kararı** (1 ay sonra, 29 May)
+- **Compute upgrade kararı**
 
 ---
 
@@ -266,6 +301,9 @@ scripts/fix-mojibake-jsonl.mjs                                # Latin-1→UTF-8 
 tests/chatbot/fixtures/chatbot_dialogs_200.jsonl              # Eval 1 dataset
 tests/chatbot/fixtures/chatbot_dialogs_eval2_200.jsonl        # Eval 2 dataset
 tests/chatbot/mergeIntent.test.ts                             # Bug C unit test (3 case)
+public/robots.txt                                             # block-all (MVP launch'ta açılacak)
+src/proxy.ts                                                  # MAINTENANCE_MODE flag — yarın false yapılacak
+scripts/probe-categories.ts                                   # taxonomy probe utility
 /tmp/mm-full-resume.log                                       # resume log
 ```
 
@@ -376,6 +414,12 @@ ProductDetailShell.tsx ortak nokta — uyumlu.
 | Bug E: KB mojibake repair (Şrünleri → Ürünleri) | 2026-04-29 | Filesystem 13 yer + DB 7 chunk yarım UTF-8 byte |
 | Yazım düzeltme: D hibrit (Levenshtein 1 sessiz, 2 bildirim) | 2026-04-29 | Paket M.2 tasarım kararı |
 | Paket M (multi-strategy search) — baseline sonrası uygulanacak | 2026-04-29 | Tek smart_search yetersiz; 4 paralel strateji + tokenizer + yazım düzeltme |
+| cron-job.org 7 cron disable | 2026-04-29 | DB CPU %85, asıl yük; konsol: console.cron-job.org |
+| robots.txt block-all (MVP) | 2026-04-29 | Bot trafiği DB IOPS tüketiyordu; launch'ta açılacak |
+| Maintenance mode 503 (proxy.ts) | 2026-04-29 | DB recovery için geçici, MAINTENANCE_MODE=true; yarın false |
+| Supabase Pro plan tutuluyor (NANO) | 2026-04-29 | Compute upgrade $15 maliyetli, 1 ay sonra karar |
+| Disk IO bütçesi limiti tespit | 2026-04-29 | NANO 30 dk burst (2085 Mbps), sonra 43 Mbps baseline |
+| Migration 011 (kahve + spor-cantasi) | 2026-04-29 | Tur 2 fixture taxonomy; YARIN uygulanacak |
 
 ---
 
@@ -485,6 +529,7 @@ anne_bebek (11) = **141**
 **14:** Pattern + categorizer + MM-source priority (04-27) — extractModelFamily 17 marka, tablet/saat/laptop, scraper ingestion entegrasyon, categorizeFromTitle (PttAVM 249→334 dolu, %92), enrich-pttavm description guard — `533f319` + `a673ff6` + `9e5dcdf` + `29d14db` + `2b5fd9f` + `76b597e` + `ec2a446`
 **15:** Backup migrate + niş kategori + MM map genişletme (04-27) — backup-restore (43K backup, %99.9 cat dolu ama orphan, categorizeFromTitle ile re-infer), Round 1+2+3 = +4,030 ürün migrate, 30 niş kategori (kıyafet/kozmetik/oyuncak/otomotiv/aydınlatma/pet), MM map 21→25 dbSlug + 132 yeni leaf segment, Vercel build fix (tsconfig scripts exclude) — `881e78e` + `19890df` + `fafbbc2` + `f0758cd`
 **16:** Chatbot eval suite + Paket Ç + Faz 1 + Tur 1 bug fix (04-28→04-29) — Eval suite (eval-chatbot-dialogs.mjs + 400 dialog 17 senaryo), intentTypes.ts (Faz 1: greeting/smalltalk/store_help heuristic + early-return), conversationState.ts (Paket Ç: mergeIntent stateful intent merge), 5 bug fix: A taksonomi, B brand unify, C merge category as new dim, D short_response, E mojibake repair (filesystem ✅, DB ⏸ outage) — `42f0b06` + `8dee737` + `f9a64a6` + `e35e404` + `2243591` + `419d73c` + `527f0b5` + `ef6ed35` + `19638ee`
+**17:** DB capacity outage tanı + cron disable + maintenance (29 Apr 2026) — Cron-job.org 7 cron disable (asıl yük); Robots.txt + maintenance mode 503; Supabase Pro plan satın alındı (NANO bırakıldı); Disk IO bütçesi limiti tespit (30 dk burst → tükenince 24 saat); Bug E.2 kısmen (3/12 chunk); Tur 2 yarım (keywords drop + count relax + Nescafé→Jacobs); Eval 1/10 baseline (fixture refresh devam edecek) — `b7e7efc` + `36eb4d7` + `ac22eeb` + `f390595` + `2ab4622`
 
 ---
 
@@ -554,6 +599,12 @@ e0b318d   fix(ui): liste kart başlığı = brand + model_family + storage + col
 10. **Eval baseline ≥%60 pass olmadan Paket M (multi-strategy search) deploy
     edilmesin.** Mevcut akışı sabit tutmadan yeni mimari getirmek regresyon
     riski. Kullanıcı kararı.
+11. **Disk IO bütçesi 30 dk burst, sonra 43 Mbps baseline.**
+    Eğer query timeout başlarsa:
+    - Cron-job.org disable mı kontrol
+    - Browser tab'lar kapalı mı
+    - Maintenance mode aktif mi (proxy.ts MAINTENANCE_MODE)
+    - 24 saat bekle (UTC 00:00 reset)
 
 ### Kullanıcı için
 
@@ -648,6 +699,26 @@ C: Terminal 1: `npm run dev`. Terminal 2:
 - `npm run eval:chatbot`              (200 full)
 Çıktı: `tests/chatbot/eval-report-{timestamp}.json`
 
+**S: Maintenance mode nasıl kapatılır?**
+C: `src/proxy.ts:5` `MAINTENANCE_MODE = false` yap, commit + push.
+Vercel auto-deploy 1-2 dk sonra site açılır.
+Önce Supabase Disk IO grafiği kontrol et.
+
+**S: Cron-job.org cron'ları nasıl yönetilir?**
+C: console.cron-job.org/jobs (sahibi). 29 Apr 2026'da 7 cron disabled
+(asıl DB yükü). MVP launch'ta tekrar aç, schedule değiştir
+(her 15 dk → günde 1 kez gece).
+
+**S: Disk IO bütçesi nedir, ne zaman reset olur?**
+C: Supabase NANO compute: 30 dk burst (2085 Mbps) + baseline 43 Mbps.
+Bütçe tükenirse SQL timeout. Recovery: UTC 00:00 reset
+(TR saatiyle 03:00). Compute upgrade SMALL ($15/ay) bütçeyi büyütür.
+
+**S: Migration 011 ne yapıyor?**
+C: `kahve` slug (parent: supermarket UUID `1b056a91-32f3-4695-b982-4d02d4b157b3`)
++ `spor-cantasi` slug (parent: spor-outdoor UUID `76500641-97c6-4200-be1d-6735612cdd81`)
+yeni kategoriler ekler. Tur 2 fixture taxonomy gereği.
+
 ---
 
 ## 📌 GÜNCELLEME LOG'U
@@ -664,6 +735,7 @@ C: Terminal 1: `npm run dev`. Terminal 2:
 | 2026-04-27 | v8 — extractModelFamily 17 marka pattern (telefon+tablet+saat+laptop) + categorizeFromTitle.mts (PttAVM kategori inference %92) + MM-source priority (specs/description) + scraper ingestion entegrasyonu | Claude |
 | 2026-04-27 | v9 — backup-restore migrate (Gemini bypass +3,964 ürün) + categorizeFromTitle 30 niş kategori (kıyafet/kozmetik/oyuncak/otomotiv/aydınlatma/pet) + MM map +132 leaf segment + 25 dbSlug (fotograf-kamera/aksiyon-kamera/aspirator-davlumbaz/sac-kurutma) + tsconfig scripts/ exclude (Vercel build fix) | Claude |
 | 2026-04-29 | v11 — Paket Ç + Faz 1 + Tur 1 bug fix (A,B,C,D,E.1) + Eval suite | Claude |
+| 2026-04-29 | v12 — DB capacity outage + cron disable + maintenance mode | Claude |
 
 ---
 
