@@ -1,11 +1,2 @@
 User-agent: *
-Allow: /
-Disallow: /admin
-Disallow: /api/
-Disallow: /api/internal/
-
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 0
-
-Sitemap: https://birtavsiye.net/sitemap.xml
+Disallow: /
