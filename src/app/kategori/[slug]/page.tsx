@@ -32,7 +32,7 @@ import {
   shouldHideDiscoveryProduct,
 } from "../../../lib/productDiscovery";
 
-export const revalidate = 60;
+export const revalidate = 86400;
 
 type ListingRow = {
   id?: string | null;

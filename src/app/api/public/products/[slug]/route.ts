@@ -12,7 +12,7 @@ import {
 } from "../../../../../lib/productCluster";
 
 export const runtime = "nodejs";
-export const revalidate = 60;
+export const revalidate = 600;
 
 type PublicPriceRow = {
   id: string;

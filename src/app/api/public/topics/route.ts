@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabaseServer";
 
 export const runtime = "nodejs";
-export const revalidate = 30;
+export const revalidate = 300;
 
 export async function GET(req: Request) {
   const url = new URL(req.url);

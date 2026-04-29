@@ -3,7 +3,7 @@ import { supabaseAdmin } from "../../../../../lib/supabaseServer";
 import { getFreshestSeenAt, getLowestActivePrice } from "../../../../../lib/listingSignals";
 
 export const runtime = "nodejs";
-export const revalidate = 60;
+export const revalidate = 600;
 
 export async function GET(req: Request) {
   const url = new URL(req.url);

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../../lib/supabaseServer";
 
 export const runtime = "nodejs";
-export const revalidate = 30;
+export const revalidate = 300;
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
