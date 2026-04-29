@@ -132,7 +132,8 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
       }
       setUserLoaded(true);
     });
-    fetchTopics();
+    const abortController = new AbortController();
+    fetchTopics(abortController.signal).catch(() => { /* abort or network — silently ignore */ });
     const ch = supabase.channel("topics-rt3")
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "topics" }, p => {
         if (isFirst.current) return;
@@ -144,11 +145,15 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
         setTopics(prev => prev.map(t => t.id === u.id ? { ...t, votes: u.votes, answer_count: u.answer_count } : t));
       })
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    return () => {
+      abortController.abort();
+      supabase.removeChannel(ch);
+    };
   }, []);
 
-  const fetchTopics = async () => {
-    const res = await fetch("/api/public/topics?limit=60").then(r => r.json()).catch(() => null);
+  const fetchTopics = async (signal?: AbortSignal) => {
+    const res = await fetch("/api/public/topics?limit=60", { signal }).then(r => r.json()).catch(() => null);
+    if (signal?.aborted) return;
     const data = res?.topics as Topic[] | undefined;
     if (!data) return;
     setTopics(data);
@@ -157,8 +162,9 @@ export default function TopicFeed({ compact: _compact }: { compact?: boolean }) 
     // Tüm topic'lerin cevaplarını tek sorguda çek
     const ids = data.map((t: Topic) => t.id);
     if (ids.length > 0) {
-      const aRes = await fetch(`/api/public/topic-answers?topic_ids=${ids.join(",")}`)
+      const aRes = await fetch(`/api/public/topic-answers?topic_ids=${ids.join(",")}`, { signal })
         .then(r => r.json()).catch(() => null);
+      if (signal?.aborted) return;
       const ans = aRes?.answers as Answer[] | undefined;
       if (ans) {
         const grouped: Record<string, Answer[]> = {};
