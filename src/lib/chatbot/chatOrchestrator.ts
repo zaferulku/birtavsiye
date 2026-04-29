@@ -154,18 +154,24 @@ export async function orchestrateChat(
 ): Promise<OrchestratorOutput> {
   const startTime = Date.now();
 
-  // 0. Short-response intents (greeting/smalltalk/off_topic) bypass KB
-  // retrieval and smart_search entirely — the LLM otherwise pollutes
-  // these conversational turns with KB excerpts ("Cilt Tipleri — Genel
-  // Giriş ile ilgili mi arıyorsun?" for "selam"). Full Faz 2 routing
-  // remains deferred; this is the minimal short-circuit.
+  // 0. INTENT_ROUTING dispatch — intent_type'a göre pipeline seç:
+  //    short_response (greeting/smalltalk/off_topic) → kısa hazır cevap
+  //    knowledge_query → KB-only (smart_search atla)
+  //    store_help → KB + forum (community_posts + topic_answers)
+  //    product_search (default) → fast/slow path (smart_search aktif)
   const intentType = input.intentType ?? "product_search";
   const routing = INTENT_ROUTING[intentType];
   if (routing.short_response) {
     return runShortResponse(intentType, startTime);
   }
+  if (intentType === "knowledge_query") {
+    return await runKnowledgeQuery(input, startTime);
+  }
+  if (intentType === "store_help") {
+    return await runStoreHelp(input, startTime);
+  }
 
-  // 1. Path decision (fast vs slow)
+  // 1. Path decision (fast vs slow) — sadece product_search için
   const decision = detectPath(input.userMessage, input.parsed);
 
   if (decision.path === "fast") {
@@ -173,6 +179,147 @@ export async function orchestrateChat(
   } else {
     return await runSlowPath(input, decision, startTime);
   }
+}
+
+// ============================================================================
+// KNOWLEDGE_QUERY PATH — KB-only, smart_search atla
+// ============================================================================
+
+async function runKnowledgeQuery(
+  input: OrchestratorInput,
+  startTime: number
+): Promise<OrchestratorOutput> {
+  const knowledgeChunks = await retrieveKnowledge(input.sb, input.userMessage, {
+    topN: 6,
+    minSim: 0.4,
+  });
+  const response = await generateResponse({
+    userMessage: input.userMessage,
+    intent: null,
+    knowledgeChunks,
+    products: [],
+    searchMethod: "failed",
+    conversationHistory: input.conversationHistory || [],
+  });
+  return {
+    response,
+    products: [],
+    method: "knowledge_query",
+    pathDecision: { path: "slow", reason: "knowledge_query_kb_only", confidence: 1 },
+    intent: null,
+    kbChunkCount: knowledgeChunks.length,
+    latencyMs: Date.now() - startTime,
+    suggestions: [],
+    diagnostics: {
+      path: "slow",
+      retrieval_stage: "kb_only",
+      query_profile: null,
+      rerank_applied: false,
+      kb_chunk_count: knowledgeChunks.length,
+      candidate_count: 0,
+      top_candidates: [],
+      strict_term_count: 0,
+      vector_candidate_count: 0,
+      filters: {},
+    },
+  };
+}
+
+// ============================================================================
+// STORE_HELP PATH — KB + forum (community_posts + topic_answers)
+// ============================================================================
+
+async function retrieveForumChunks(
+  sb: SupabaseClient,
+  query: string,
+  limit = 4
+): Promise<Array<{ source: string; title: string | null; topic: string | null; content: string; similarity: number }>> {
+  // Basit ILIKE search — vektörel değil, RPC gerek yok. store_help mesajları
+  // genelde "kargo nasıl", "iade", "garanti" gibi anahtar kelime sorguları.
+  const term = query.trim().slice(0, 80);
+  if (!term) return [];
+  const pattern = `%${term}%`;
+
+  const [topicAns, communityPosts] = await Promise.all([
+    sb
+      .from("topic_answers")
+      .select("id, content, topic_id")
+      .ilike("content", pattern)
+      .limit(limit),
+    sb
+      .from("community_posts")
+      .select("id, content, title")
+      .ilike("content", pattern)
+      .limit(limit),
+  ]);
+
+  const chunks: Array<{
+    source: string;
+    title: string | null;
+    topic: string | null;
+    content: string;
+    similarity: number;
+  }> = [];
+  for (const row of topicAns.data ?? []) {
+    chunks.push({
+      source: "topic_answer",
+      title: null,
+      topic: row.topic_id ?? null,
+      content: String(row.content ?? "").slice(0, 600),
+      similarity: 0.5,
+    });
+  }
+  for (const row of communityPosts.data ?? []) {
+    chunks.push({
+      source: "community_post",
+      title: row.title ?? null,
+      topic: null,
+      content: String(row.content ?? "").slice(0, 600),
+      similarity: 0.5,
+    });
+  }
+  return chunks;
+}
+
+async function runStoreHelp(
+  input: OrchestratorInput,
+  startTime: number
+): Promise<OrchestratorOutput> {
+  const [knowledgeChunks, forumChunks] = await Promise.all([
+    retrieveKnowledge(input.sb, input.userMessage, { topN: 4, minSim: 0.4 }),
+    retrieveForumChunks(input.sb, input.userMessage, 4),
+  ]);
+  const combined = [...knowledgeChunks, ...forumChunks];
+  const response = await generateResponse({
+    userMessage: input.userMessage,
+    intent: null,
+    knowledgeChunks: combined,
+    products: [],
+    searchMethod: "failed",
+    conversationHistory: input.conversationHistory || [],
+  });
+  return {
+    response,
+    products: [],
+    method: "store_help",
+    pathDecision: { path: "slow", reason: "store_help_kb_forum", confidence: 1 },
+    intent: null,
+    kbChunkCount: combined.length,
+    latencyMs: Date.now() - startTime,
+    suggestions: [],
+    diagnostics: {
+      path: "slow",
+      retrieval_stage: "kb_plus_forum",
+      query_profile: null,
+      rerank_applied: false,
+      kb_chunk_count: combined.length,
+      candidate_count: 0,
+      top_candidates: [],
+      strict_term_count: 0,
+      vector_candidate_count: 0,
+      filters: {},
+    },
+  };
 }
 
 const SHORT_RESPONSE_REPLIES: Record<IntentType, string> = {
