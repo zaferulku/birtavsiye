@@ -32,7 +32,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     .eq("id", id)
     .select("*")
     .single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: "Sunucu hatasi" }, { status: 500 });
   return NextResponse.json({ answer: data });
 }
 
@@ -52,7 +52,7 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ id: s
   if (existing.user_id !== user.id) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const { error } = await supabaseAdmin.from("topic_answers").delete().eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: "Sunucu hatasi" }, { status: 500 });
 
   await adjustTopicAnswerCount(existing.topic_id, -1);
 

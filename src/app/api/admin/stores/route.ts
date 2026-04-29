@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabaseServer";
 import { getAdminUser } from "../../../../lib/apiAdmin";
 
@@ -9,7 +9,7 @@ export async function GET(req: Request) {
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
 
   const { data, error } = await supabaseAdmin.from("stores").select("*").order("name");
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: "Sunucu hatasi" }, { status: 500 });
   return NextResponse.json({ stores: data ?? [] });
 }
 
@@ -36,6 +36,6 @@ export async function POST(req: Request) {
     .insert({ name, url: url || null })
     .select("id")
     .single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: "Sunucu hatasi" }, { status: 500 });
   return NextResponse.json({ store: data, created: true });
 }

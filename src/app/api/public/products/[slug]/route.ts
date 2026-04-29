@@ -40,7 +40,7 @@ export async function GET(
     .eq("slug", slug)
     .maybeSingle();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: "Sunucu hatasi" }, { status: 500 });
   if (!product) return NextResponse.json({ error: "not found" }, { status: 404 });
 
   const clusterProductIds = await resolveProductClusterIds(supabaseAdmin, {

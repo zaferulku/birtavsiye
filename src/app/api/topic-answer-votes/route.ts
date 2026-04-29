@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../lib/supabaseServer";
 import { getUserFromRequest } from "../../../lib/apiAuth";
 
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
   const { error } = await supabaseAdmin
     .from("topic_answer_votes")
     .upsert({ answer_id, user_id: user.id, vote }, { onConflict: "answer_id,user_id" });
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: "Sunucu hatasi" }, { status: 500 });
 
   const total = await recalcAnswerTotal(answer_id);
   return NextResponse.json({ ok: true, total });
@@ -48,7 +48,7 @@ export async function DELETE(req: Request) {
     .delete()
     .eq("answer_id", answer_id)
     .eq("user_id", user.id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: "Sunucu hatasi" }, { status: 500 });
 
   const total = await recalcAnswerTotal(answer_id);
   return NextResponse.json({ ok: true, total });

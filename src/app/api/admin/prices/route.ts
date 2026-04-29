@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabaseServer";
 import { getAdminUser } from "../../../../lib/apiAdmin";
 
@@ -47,7 +47,7 @@ export async function GET(req: Request) {
       .select("id, price, store_id, stores(name, url)")
       .eq("product_id", product_id)
       .order("price", { ascending: true });
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) return NextResponse.json({ error: "Sunucu hatasi" }, { status: 500 });
     return NextResponse.json({ prices: data ?? [] });
   }
 
@@ -55,7 +55,7 @@ export async function GET(req: Request) {
     .from("listings")
     .select("id, price, product_id, store_id, products(title), stores(name, url)")
     .order("price", { ascending: true });
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: "Sunucu hatasi" }, { status: 500 });
   return NextResponse.json({ prices: data ?? [] });
 }
 
@@ -136,6 +136,6 @@ export async function DELETE(req: Request) {
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
   const { error } = await supabaseAdmin.from("listings").delete().eq("id", id);
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: "Sunucu hatasi" }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

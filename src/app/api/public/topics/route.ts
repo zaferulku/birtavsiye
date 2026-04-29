@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabaseServer";
 
 export const runtime = "nodejs";
@@ -26,7 +26,7 @@ export async function GET(req: Request) {
   if (product_id) q = q.eq("product_id", product_id);
 
   const { data, error } = await q;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: "Sunucu hatasi" }, { status: 500 });
 
   return NextResponse.json(
     { topics: data ?? [] },

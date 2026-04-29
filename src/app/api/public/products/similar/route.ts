@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../../lib/supabaseServer";
 import { getFreshestSeenAt, getLowestActivePrice } from "../../../../../lib/listingSignals";
 
@@ -30,7 +30,7 @@ export async function GET(req: Request) {
   if (thisProd.model_family) q = q.neq("model_family", thisProd.model_family);
 
   const { data, error } = await q;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: "Sunucu hatasi" }, { status: 500 });
 
   const list = (data ?? []).map((product) => ({
     ...product,

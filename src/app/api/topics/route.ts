@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../lib/supabaseServer";
 import { getUserFromRequest } from "../../../lib/apiAuth";
 
@@ -34,6 +34,6 @@ export async function POST(req: Request) {
   if (body.product_brand) payload.product_brand = String(body.product_brand).slice(0, 100);
 
   const { data, error } = await supabaseAdmin.from("topics").insert(payload).select("*").single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: "Sunucu hatasi" }, { status: 500 });
   return NextResponse.json({ topic: data });
 }

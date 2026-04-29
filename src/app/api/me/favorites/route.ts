@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../../lib/supabaseServer";
 import { getUserFromRequest } from "../../../../lib/apiAuth";
 
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
     .from("favorites")
     .upsert({ user_id: user.id, product_id: body.product_id }, { onConflict: "user_id,product_id" });
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: "Sunucu hatasi" }, { status: 500 });
   return NextResponse.json({ ok: true });
 }
 
@@ -70,6 +70,6 @@ export async function DELETE(req: Request) {
     .eq("user_id", user.id)
     .eq("product_id", productId);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: "Sunucu hatasi" }, { status: 500 });
   return NextResponse.json({ ok: true });
 }

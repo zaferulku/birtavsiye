@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { supabaseAdmin } from "../../../lib/supabaseServer";
 import { getUserFromRequest } from "../../../lib/apiAuth";
 import { adjustTopicAnswerCount } from "../../../lib/forumCounters";
@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     .insert({ topic_id, user_id: user.id, user_name: userName, body: text, gender, votes: 0, parent_id })
     .select("*")
     .single();
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return NextResponse.json({ error: "Sunucu hatasi" }, { status: 500 });
 
   await adjustTopicAnswerCount(topic_id, 1);
 
