@@ -12,6 +12,12 @@ tmp/
 # Scraper state
 scripts/scraper-state.json
 
+# Next.js auto-generated
+next-env.d.ts
+
+# Eval test reports (auto-generated each run)
+tests/chatbot/eval-report-*.json
+
 # Scraper artifacts
 mm-cat-html/
 mm-sample.html

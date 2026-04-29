@@ -160,7 +160,7 @@ const UNIVERSAL_ACCESSORY_KEYWORDS = [
 ];
 
 // Türkçe normalize merkezi util'den (İ.toLowerCase combining-dot bug fix).
-import { trNormalize } from "./turkishNormalize";
+import { trNormalize } from "./turkishNormalize.mts";
 
 function normalize(s: string): string {
   return trNormalize(s);
