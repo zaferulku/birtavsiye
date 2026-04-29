@@ -4,7 +4,7 @@ topic: pet_rehberi
 language: tr
 ---
 
-# Pet (Evcil Hayvan) Şrünleri — Genel Giriş
+# Pet (Evcil Hayvan) Ürünleri — Genel Giriş
 
 Pet shop kategorisi **kedi, köpek, kuş, balık, kemirgen (hamster, taşn), sürüngen** için ürünleri kapsar. En geniş alt kategoriler kedi ve köpek.
 
@@ -12,7 +12,7 @@ Kullanıcılar genelde **hayvan türü, yaş grubu, ırk, ürün tipi (mama/oyun
 
 ---
 
-# Kedi Şrünleri
+# Kedi Ürünleri
 
 ## Mama (Yiyecek)
 
@@ -89,7 +89,7 @@ Kullanıcılar genelde **hayvan türü, yaş grubu, ırk, ürün tipi (mama/oyun
 
 ---
 
-# Köpek Şrünleri
+# Köpek Ürünleri
 
 ## Mama
 
@@ -148,7 +148,7 @@ Kullanıcılar genelde **hayvan türü, yaş grubu, ırk, ürün tipi (mama/oyun
 
 ---
 
-# Kuş Şrünleri
+# Kuş Ürünleri
 
 - **Mama** — Muhabbet kş, kanarya, papaşan, ispinoz
   - Karşk tohum
@@ -246,7 +246,7 @@ Kullanıcılar genelde **hayvan türü, yaş grubu, ırk, ürün tipi (mama/oyun
 
 ---
 
-# Şrnek Çeviri Uygulamaları
+# Örnek Çeviri Uygulamaları
 
 **Kullanıcı:** "yavru kedi için tahılsız kuru mama"
 
@@ -269,7 +269,7 @@ Kullanıcılar genelde **hayvan türü, yaş grubu, ırk, ürün tipi (mama/oyun
 
 **Chatbot niyet çıkarımı:**
 - Kategori: pet_shop.kedi.aksesuar
-- Şrün: kedi kumu
+- Ürün: kedi kumu
 - Özellik: clumping (topaklanan)
 - Tercih: kokusuz (unscented)
 - Şnerilenler: Cats Best, Pretty Cat, Catsan
@@ -278,6 +278,6 @@ Kullanıcılar genelde **hayvan türü, yaş grubu, ırk, ürün tipi (mama/oyun
 
 **Chatbot niyet çıkarımı:**
 - Kategori: pet_shop.kopek.aksesuar
-- Şrün: harness (göğüs tasması)
+- Ürün: harness (göğüs tasması)
 - Boyut: orta (medium)
 - Şnerilenler: Julius K9, RuffWear, Trixie

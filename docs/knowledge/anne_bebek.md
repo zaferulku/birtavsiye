@@ -272,7 +272,7 @@ Türkiye standart numaralandırması:
 
 ---
 
-# Anne Şrünleri
+# Anne Ürünleri
 
 **Hamilelik:**
 
@@ -351,7 +351,7 @@ Türkiye standart numaralandırması:
 
 ---
 
-# Şrnek Çeviri Uygulamaları
+# Örnek Çeviri Uygulamaları
 
 **Kullanıcı:** "3 numara Pampers premium care 100 adet"
 

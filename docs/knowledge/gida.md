@@ -4,7 +4,7 @@ topic: gida_rehberi
 language: tr
 ---
 
-# Gıda Şrünleri — Genel Giriş
+# Gıda Ürünleri — Genel Giriş
 
 Gıda kategorisi çok geniş — **kahvaltılık, atşırmalık, içecek, temel mutfak, dondurulmuş, organik, vegan, glutensiz** gibi alt segmentler var. Kullanıcılar genelde **diyet kısıtlaması, marka, içerik, organik/doğal** gibi kriterlere bakar.
 
@@ -120,7 +120,7 @@ Bu rehber özellikle "lavanta kokulu deodorant" benzeri çoklu özellik aramalar
 - "%100 doğal" — katkısız
 - "Organic" — sertifikalı organik
 
-## Süt ve Süt Şrünleri
+## Süt ve Süt Ürünleri
 
 - **Süt** — tam yaşlı, yarı yaşlı, yaşsız, light
 - **Laktozsuz süt** — laktoz intoleransı için
@@ -364,7 +364,7 @@ Bu rehber özellikle "lavanta kokulu deodorant" benzeri çoklu özellik aramalar
 
 ---
 
-# Şrnek Çeviri Uygulamaları
+# Örnek Çeviri Uygulamaları
 
 **Kullanıcı:** "Çekersiz vanilyalı protein bar"
 
