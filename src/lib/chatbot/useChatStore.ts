@@ -63,7 +63,19 @@ export type RecommendedProduct = {
 };
 
 export type PanelState = "closed" | "open" | "minimized";
+export type ChatPanelSize = "closed" | "minimized" | "half" | "fullscreen";
 export type ChatStatus = "idle" | "sending" | "streaming" | "error";
+
+function detectIsMobile(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.innerWidth < 768;
+}
+
+function panelStateForSize(size: ChatPanelSize): PanelState {
+  if (size === "closed") return "closed";
+  if (size === "minimized") return "minimized";
+  return "open"; // half | fullscreen
+}
 
 // ============================================================================
 // Store interface
@@ -86,9 +98,11 @@ interface ChatStore {
 
   // ----- Panel -----
   panelState: PanelState;
+  panelSize: ChatPanelSize;
   openPanel: () => void;
   closePanel: () => void;
   minimizePanel: () => void;
+  setPanelSize: (size: ChatPanelSize) => void;
 
   // ----- ÃrÃ¼nler -----
   recommendedProducts: RecommendedProduct[];
@@ -167,9 +181,20 @@ export const useChatStore = create<ChatStore>()(
           displayLabel,
         };
 
+        // Mobile'da yeni mesaj 'half', desktop'ta 'fullscreen' (PROJECT_STATE
+        // 320×600 köşe pencere desktop davranışı korunmuyor — ChatPanel
+        // sizeClasses'ta md: prefix ile bunu yöneteceğiz; burada sadece state).
+        const nextSize: ChatPanelSize =
+          state.panelSize !== "closed" && state.panelSize !== "minimized"
+            ? state.panelSize
+            : detectIsMobile()
+              ? "half"
+              : "fullscreen";
+
         set({
           messages: [...newMessages, message],
           panelState: state.panelState === "closed" ? "open" : state.panelState,
+          panelSize: nextSize,
           status: "sending",
           errorMessage: null,
           conversationEnded: false,
@@ -228,13 +253,19 @@ export const useChatStore = create<ChatStore>()(
 
       // ----- Panel -----
       panelState: "closed",
+      panelSize: "closed",
 
-      openPanel: () => set({ panelState: "open" }),
+      openPanel: () =>
+        set({
+          panelState: "open",
+          panelSize: detectIsMobile() ? "half" : "fullscreen",
+        }),
 
       closePanel: () => {
-        // KAPATMA = SÄ°LME
+        // KAPATMA = SİLME
         set({
           panelState: "closed",
+          panelSize: "closed",
           messages: [],
           recommendedProducts: [],
           lastQuery: null,
@@ -247,7 +278,11 @@ export const useChatStore = create<ChatStore>()(
         });
       },
 
-      minimizePanel: () => set({ panelState: "minimized" }),
+      minimizePanel: () =>
+        set({ panelState: "minimized", panelSize: "minimized" }),
+
+      setPanelSize: (size) =>
+        set({ panelSize: size, panelState: panelStateForSize(size) }),
 
       // ----- ÃrÃ¼nler -----
       recommendedProducts: [],
@@ -318,6 +353,7 @@ export const useChatStore = create<ChatStore>()(
       partialize: (state) => ({
         messages: state.messages,
         panelState: state.panelState,
+        panelSize: state.panelSize,
         recommendedProducts: state.recommendedProducts,
         lastQuery: state.lastQuery,
         conversationEnded: state.conversationEnded,

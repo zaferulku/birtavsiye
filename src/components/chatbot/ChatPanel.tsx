@@ -59,6 +59,28 @@ function ChevronUpIcon({ className = "" }: { className?: string }) {
   );
 }
 
+function MaximizeIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="4 14 4 20 10 20" />
+      <polyline points="20 10 20 4 14 4" />
+      <line x1="14" y1="10" x2="20" y2="4" />
+      <line x1="4" y1="20" x2="10" y2="14" />
+    </svg>
+  );
+}
+
+function RestoreIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="10 14 4 14 4 20" />
+      <polyline points="14 10 20 10 20 4" />
+      <line x1="14" y1="10" x2="20" y2="4" />
+      <line x1="4" y1="20" x2="10" y2="14" />
+    </svg>
+  );
+}
+
 function ChatIcon({ className = "" }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -323,6 +345,8 @@ function PanelInputBar() {
 export function ChatPanel() {
   const router = useRouter();
   const panelState = useChatStore((s) => s.panelState);
+  const panelSize = useChatStore((s) => s.panelSize);
+  const setPanelSize = useChatStore((s) => s.setPanelSize);
   const messages = useChatStore((s) => s.messages);
   const status = useChatStore((s) => s.status);
   const conversationEnded = useChatStore((s) => s.conversationEnded);
@@ -336,6 +360,27 @@ export function ChatPanel() {
   const getHistoryForBackend = useChatStore((s) => s.getHistoryForBackend);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const touchStartYRef = useRef<number | null>(null);
+
+  // ----- Touch swipe (drag handle) -----
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartYRef.current = e.touches[0]?.clientY ?? null;
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const start = touchStartYRef.current;
+    touchStartYRef.current = null;
+    if (start == null) return;
+    const end = e.changedTouches[0]?.clientY ?? start;
+    const deltaY = end - start;
+    if (deltaY > 80) {
+      // Aşağı kaydır → küçült
+      if (panelSize === "fullscreen") setPanelSize("half");
+      else minimizePanel();
+    } else if (deltaY < -80) {
+      // Yukarı kaydır → büyüt
+      if (panelSize === "half") setPanelSize("fullscreen");
+    }
+  };
 
   // ----- Auto scroll -----
   useEffect(() => {
@@ -405,28 +450,58 @@ export function ChatPanel() {
   if (panelState === "closed") return null;
   if (panelState === "minimized") return <MinimizedBar />;
 
+  // Mobile bottom-sheet (half) vs fullscreen vs desktop pop-up.
+  // panelSize fallback'i: panelState=open ama panelSize=closed kalmışsa
+  // (eski persist edilmiş state) detect edip half/fullscreen seç.
+  const effectiveSize: "half" | "fullscreen" =
+    panelSize === "half" || panelSize === "fullscreen"
+      ? panelSize
+      : "fullscreen";
+
+  // Mobile bottom-sheet half: alt %55, üst %45 boş kalır → ürün grid görünür.
+  // Mobile fullscreen: tüm ekran (eski davranış).
+  // Desktop tüm panelSize'larda: 320×600 sağ alt köşe (PROJECT_STATE kararı).
+  const sizeClasses =
+    effectiveSize === "half"
+      ? "fixed left-0 right-0 bottom-0 h-[55vh] rounded-t-2xl md:inset-auto md:bottom-24 md:right-4 md:left-auto md:w-[320px] md:h-[600px] md:rounded-2xl"
+      : "fixed inset-0 rounded-none md:inset-auto md:bottom-24 md:right-4 md:w-[320px] md:h-[600px] md:rounded-2xl";
+
+  // Mobile arka plan overlay sadece fullscreen'de (half'da grid'e tıklanabilsin)
+  const showOverlay = effectiveSize === "fullscreen";
+
   return (
     <>
-      {/* Mobil arka plan overlay */}
-      <div
-        className="md:hidden fixed inset-0 bg-black/30 z-40"
-        onClick={minimizePanel}
-        aria-hidden="true"
-      />
+      {showOverlay && (
+        <div
+          className="md:hidden fixed inset-0 bg-black/30 z-40"
+          onClick={minimizePanel}
+          aria-hidden="true"
+        />
+      )}
 
-      {/* Panel — DESKTOP: sağ alt köşe pop-up, MOBILE: tam ekran */}
+      {/* Panel — sizeClasses dinamik (half / fullscreen mobile, desktop sabit) */}
       <aside
-        className="
+        className={`
           fixed z-40 bg-white shadow-2xl border border-gray-200
           flex flex-col overflow-hidden
-          inset-0 rounded-none
-          md:inset-auto md:bottom-24 md:right-4
-          md:w-[320px] md:h-[600px] md:rounded-2xl
+          transition-all duration-300
+          ${sizeClasses}
           animate-slide-in-right
-        "
+        `}
         role="complementary"
         aria-label="Birtavsiye AI sohbet penceresi"
       >
+        {/* Drag handle (mobile only) — yukarı/aşağı kaydır */}
+        <div
+          className="md:hidden flex justify-center pt-1.5 pb-1 cursor-grab active:cursor-grabbing flex-shrink-0 bg-white"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          role="button"
+          aria-label="Paneli kaydır"
+        >
+          <span className="block w-10 h-1 rounded-full bg-gray-300" aria-hidden="true" />
+        </div>
+
         {/* Header */}
         <header className="flex items-center justify-between px-3 py-2.5 border-b border-gray-200 flex-shrink-0 bg-white">
           <div className="flex items-center gap-2 min-w-0">
@@ -459,6 +534,19 @@ export function ChatPanel() {
                 <PlusIcon className="w-4 h-4" />
               </button>
             )}
+            <button
+              type="button"
+              onClick={() => setPanelSize(panelSize === "fullscreen" ? "half" : "fullscreen")}
+              className="md:hidden w-8 h-8 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors"
+              aria-label={panelSize === "fullscreen" ? "Yarıya küçült" : "Tam ekran"}
+              title={panelSize === "fullscreen" ? "Yarıya küçült" : "Tam ekran"}
+            >
+              {panelSize === "fullscreen" ? (
+                <RestoreIcon className="w-4 h-4" />
+              ) : (
+                <MaximizeIcon className="w-4 h-4" />
+              )}
+            </button>
             <button
               type="button"
               onClick={minimizePanel}

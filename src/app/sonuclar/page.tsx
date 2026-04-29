@@ -14,7 +14,7 @@
  */
 
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import {
   useChatStore,
   type RecommendedProduct,
@@ -183,6 +183,16 @@ function SonuclarContent() {
   const products = useChatStore((s) => s.recommendedProducts);
   const lastQuery = useChatStore((s) => s.lastQuery);
   const status = useChatStore((s) => s.status);
+
+  // Mobile + /sonuclar: panel açıksa half-mode'a düşür ki ürün grid'i görünür kalsın
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.innerWidth >= 768) return;
+    const { panelState, panelSize, setPanelSize } = useChatStore.getState();
+    if (panelState === "open" && panelSize === "fullscreen") {
+      setPanelSize("half");
+    }
+  }, []);
 
   // HiÃ§ sorgu yoksa initial state
   if (!query && products.length === 0) {
