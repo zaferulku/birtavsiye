@@ -198,6 +198,11 @@ export function mergeIntent(
         ? 1
         : prev.turn_count_in_category + 1,
   };
+  // Category change is a dimension too. Without this, an opening turn that
+  // sets only the category (e.g. "çamaşır makinesi arıyorum") leaves
+  // setDimensions empty and the action falls through to "no_new_dims_keep".
+  const categoryChanged = newCategory != null && newCategory !== prev.category_slug;
+  if (categoryChanged) setDimensions.push("category");
   if (rawIntent.brand_filter?.length) { next.brand_filter = rawIntent.brand_filter; setDimensions.push("brand"); }
   if (rawIntent.variant_color_patterns?.length) { next.variant_color_patterns = rawIntent.variant_color_patterns; setDimensions.push("color"); }
   if (rawIntent.variant_storage_patterns?.length) { next.variant_storage_patterns = rawIntent.variant_storage_patterns; setDimensions.push("storage"); }
