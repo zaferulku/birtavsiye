@@ -308,13 +308,16 @@ for (const dialog of dialogs) {
     }
 
     // Persist the round-trip so the next turn carries full state context.
-    // assistant.meta.state is REQUIRED — Paket Ç rebuildStateFromHistory
-    // walks history backwards to find the last assistant state.
+    // assistant.meta is REQUIRED — Paket Ç rebuildStateFromHistory walks
+    // history backwards looking for `m.meta.category_slug` (TOP-LEVEL on
+    // meta, NOT meta.state). Production useChatStore.getHistoryForBackend
+    // already unwraps response.meta.state into history's `meta:` field;
+    // we must mirror that here.
     history.push({ role: "user", content: userMsg });
     history.push({
       role: "assistant",
       content: j.reply ?? "",
-      meta: { state: actualState },
+      meta: actualState ?? undefined,
     });
   }
 
