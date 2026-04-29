@@ -31,6 +31,7 @@ import {
   getDiscoveryProductLabel,
   shouldHideDiscoveryProduct,
 } from "../../../lib/productDiscovery";
+import { cleanProductTitle } from "../../../lib/productTitle";
 
 export const revalidate = 86400;
 
@@ -812,7 +813,8 @@ export default async function KategoriSayfasi({ params, searchParams }: {
                         <div className="p-3 pb-2">
                           <div className="text-[10px] font-bold text-[#E8460A] uppercase tracking-wider mb-0.5">{p.brand}</div>
                           <div className="text-xs font-medium text-gray-800 leading-snug line-clamp-2 min-h-[2.5rem] mb-2">
-                            {getDiscoveryProductLabel(p)}
+                            {/* Detay sayfasıyla aynı title — kart kısaltma yapmıyor */}
+                            {cleanProductTitle(p.title) || getDiscoveryProductLabel(p)}
                           </div>
                           {minPrice ? (
                             <>
