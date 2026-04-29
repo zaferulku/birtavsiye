@@ -35,7 +35,9 @@ const nextConfig = {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              // 'unsafe-eval' kaldırıldı (RCE riski).
+              // 'unsafe-inline' geçici — TODO: nonce-based CSP migrasyonu (proxy.ts üzerinden per-request nonce inject)
+              "script-src 'self' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
               "font-src 'self' data:",
               "img-src 'self' data: blob: https:",

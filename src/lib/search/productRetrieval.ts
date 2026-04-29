@@ -934,6 +934,7 @@ export async function retrieveRankedProducts(
         .from("products")
         .select(SELECT_FIELDS)
         .or(textClauses.join(","))
+        .eq("is_active", true)
         .range(0, fetchLimit - 1)
         .order("created_at", { ascending: false });
 
@@ -954,6 +955,7 @@ export async function retrieveRankedProducts(
           .from("products")
           .select(SELECT_FIELDS)
           .in("category_id", categoryScopedIds)
+          .eq("is_active", true)
           .range(0, fetchLimit - 1)
           .order("created_at", { ascending: false });
 
@@ -1047,6 +1049,7 @@ export async function retrieveRankedProducts(
   let listQuery = sb
     .from("products")
     .select(SELECT_FIELDS)
+    .eq("is_active", true)
     .range(0, fetchLimit - 1)
     .order("created_at", { ascending: false });
 

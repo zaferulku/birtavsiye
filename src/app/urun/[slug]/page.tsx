@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { cache } from "react";
 import type { Metadata } from "next";
 import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
@@ -340,7 +341,7 @@ async function loadVariantOptions(
   });
 }
 
-async function loadProduct(slug: string): Promise<ProductPageData | null> {
+const loadProduct = cache(async (slug: string): Promise<ProductPageData | null> => {
   const { data: product, error } = await supabaseAdmin
     .from("products")
     .select(`
@@ -422,7 +423,7 @@ async function loadProduct(slug: string): Promise<ProductPageData | null> {
     cluster_product_ids: clusterProductIds,
     variants,
   };
-}
+});
 
 export async function generateMetadata({
   params,
