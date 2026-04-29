@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// Maintenance kill-switch: true iken tüm trafiğe 503 döndürür.
-// false yapınca normal proxy davranışı (rate limit + internal secret) çalışır.
-const MAINTENANCE_MODE = true
+// Maintenance kill-switch: env-driven (MAINTENANCE_MODE=true → 503 all traffic).
+// Code push gerektirmez; Vercel env değişkeniyle açılır/kapanır.
+const MAINTENANCE_MODE = process.env.MAINTENANCE_MODE === "true"
 
 // Rate limiting için basit in-memory store (production'da Redis kullanılmalı)
 const rateLimit = new Map<string, { count: number; resetAt: number }>()

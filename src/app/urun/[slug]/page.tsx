@@ -16,6 +16,13 @@ import type { InitialListing, StoreDefinition } from "../../components/urun/offe
 import type { ReviewSummary } from "../../components/urun/CommunitySection";
 import { cleanProductTitle } from "@/lib/productTitle";
 
+/** XSS guard: JSON-LD tag içinde </script>, <!--, <![CDATA[ kırılmasını engelle */
+function safeJsonLd(obj: unknown): string {
+  return JSON.stringify(obj)
+    .replace(/</g, "\\u003c")
+    .replace(/-->/g, "--\\u003e");
+}
+
 type ProductPageData = {
   id: string;
   slug: string;
@@ -582,11 +589,11 @@ export default async function ProductPage({
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(productJsonLd) }}
       />
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }}
       />
 
       <Header />
