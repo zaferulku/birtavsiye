@@ -3,7 +3,11 @@ export function cleanProductTitle(title: string | null | undefined): string {
   if (!value) return "";
 
   return value
+    // Multi-segment SKU code: "WD123/AB-CD" gibi
     .replace(/\s+[A-Z0-9]{5,}(?:[/-][A-Z0-9]{2,})+$/g, "")
+    // Single-segment SKU code: en az 6 karakter, içinde rakam ZORUNLU (yoksa
+    // SAMSUNG gibi marka isimleri silinmesin). Örn: MTP23TU, WD12345AB.
+    .replace(/\s+(?=[A-Z0-9]*\d)[A-Z][A-Z0-9]{5,}$/g, "")
     .replace(/\s{2,}/g, " ")
     .trim();
 }

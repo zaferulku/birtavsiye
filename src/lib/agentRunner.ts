@@ -19,13 +19,23 @@ export interface AgentResult {
   provider?: "gemini" | "groq";
 }
 
+// Module-level cache — agent prompt'ları .md dosyalarından okunuyor; cold start dışında değişmez
+const promptCache = new Map<string, string>();
+
 function loadSystemPrompt(agentName: string): string {
+  const cached = promptCache.get(agentName);
+  if (cached !== undefined) return cached;
+
   const filePath = path.join(AGENT_DIR, `${agentName}.md`);
+  let prompt: string;
   if (!fs.existsSync(filePath)) {
-    return `You are the ${agentName} agent. Analyze the given task and return a structured JSON response.`;
+    prompt = `You are the ${agentName} agent. Analyze the given task and return a structured JSON response.`;
+  } else {
+    const raw = fs.readFileSync(filePath, "utf-8");
+    prompt = raw.replace(/^---[\s\S]*?---\n/, "").trim();
   }
-  const raw = fs.readFileSync(filePath, "utf-8");
-  return raw.replace(/^---[\s\S]*?---\n/, "").trim();
+  promptCache.set(agentName, prompt);
+  return prompt;
 }
 
 function parseResult(raw: string): Record<string, unknown> {

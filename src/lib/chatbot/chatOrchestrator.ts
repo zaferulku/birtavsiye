@@ -438,13 +438,12 @@ async function runSlowPath(
   decision: PathDecision,
   startTime: number
 ): Promise<OrchestratorOutput> {
-  // 1. Paralel: KB retrieval + query embedding (slow path optimizasyonu)
-  const [knowledgeChunks] = await Promise.all([
-    retrieveKnowledge(input.sb, input.userMessage, {
-      topN: 5,
-      minSim: 0.5,
-    }),
-  ]);
+  // KB retrieval — query embedding zaten retrieveKnowledge içinde yapılıyor.
+  // Eskiden Promise.all single-item idi (ölü paralelleştirme); kaldırıldı.
+  const knowledgeChunks = await retrieveKnowledge(input.sb, input.userMessage, {
+    topN: 5,
+    minSim: 0.5,
+  });
 
   // 2. Intent parser (Llama ş Groq ş Gemini Flash chain)
   const intent = await parseIntent(
