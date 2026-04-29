@@ -16,7 +16,9 @@ import {
   shouldHideDiscoveryProduct,
 } from "../../lib/productDiscovery";
 
-export const revalidate = 120;
+// Catch-all kategori/brand/model rotası — yüzlerce permütasyon × bot crawl
+// = en yoğun ISR tetikleyici. 120s → 3600s (1 saat). Kullanıcı bot değil, fark etmez.
+export const revalidate = 3600;
 
 type PageProps = {
   params: Promise<{ segments: string[] }>;

@@ -17,6 +17,10 @@ import type { InitialListing, StoreDefinition } from "../../components/urun/offe
 import type { ReviewSummary } from "../../components/urun/CommunitySection";
 import { cleanProductTitle } from "@/lib/productTitle";
 
+// Ürün sayfası ISR — 30 dk cache. Önceden dynamic (her request DB'ye iniyordu);
+// 14 .from() × bot crawl × bin ürün = DB egress kuotası tüketme nedeni.
+export const revalidate = 1800;
+
 /** XSS guard: JSON-LD tag içinde </script>, <!--, <![CDATA[ kırılmasını engelle */
 function safeJsonLd(obj: unknown): string {
   return JSON.stringify(obj)

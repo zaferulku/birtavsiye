@@ -2,7 +2,7 @@
 import { supabaseAdmin } from "../../../../lib/supabaseServer";
 
 export const runtime = "nodejs";
-export const revalidate = 300;
+export const revalidate = 600;
 
 export async function GET(req: Request) {
   const url = new URL(req.url);
