@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+// Maintenance kill-switch: true iken tüm trafiğe 503 döndürür.
+// false yapınca normal proxy davranışı (rate limit + internal secret) çalışır.
+const MAINTENANCE_MODE = true
+
 // Rate limiting için basit in-memory store (production'da Redis kullanılmalı)
 const rateLimit = new Map<string, { count: number; resetAt: number }>()
 const RATE_LIMIT = 60       // 60 istek
@@ -26,6 +30,19 @@ function isRateLimited(key: string): boolean {
 }
 
 export function proxy(req: NextRequest) {
+  if (MAINTENANCE_MODE) {
+    return new NextResponse(
+      'Site geçici olarak bakımda — Yarın tekrar deneyin',
+      {
+        status: 503,
+        headers: {
+          'Retry-After': '86400',
+          'Content-Type': 'text/plain; charset=utf-8',
+        },
+      },
+    )
+  }
+
   const { pathname } = req.nextUrl
 
   const res = NextResponse.next()
