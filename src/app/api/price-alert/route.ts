@@ -30,10 +30,11 @@ export async function POST(request: NextRequest) {
 
   const sb = getSupabase();
 
+  // user_id kolonu henüz şemada yok; analytics için sonradan migration ile eklenmeli.
+  // Şimdilik email auth'tan alındığı için kullanıcı kimliği yine zincirli.
   const { error } = await sb.from("price_alerts").insert({
     product_id,
     email: user.email,
-    user_id: user.id,
     target_price,
   });
 
