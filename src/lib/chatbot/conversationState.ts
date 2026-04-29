@@ -107,7 +107,9 @@ function detectRemoval(msg: string): { brand?: boolean; color?: boolean; price?:
       if (norm.includes("marka")) out.brand = true;
       if (norm.includes("renk")) out.color = true;
       if (norm.includes("fiyat") || norm.includes("butce")) out.price = true;
-      if (Object.keys(out).length === 0) out.color = true;
+      // Default'a düşmüyoruz — boyut belirtilmemişse hiçbir şey kaldırma.
+      // (Eskiden out.color = true varsayılırdı; "fark etmez" demek yanlış
+      // dimension kaldırmaya sebep oluyordu.)
     }
   }
   return out;
@@ -217,7 +219,9 @@ export function rebuildStateFromHistory(
 ): ConversationState {
   for (let i = history.length - 1; i >= 0; i--) {
     const m = history[i];
-    if (m.role === "assistant" && m.meta?.category_slug !== undefined) {
+    // Bug fix: önceki check (category_slug !== undefined) null-set turn'lerde
+    // de tetikleniyor ve emptyState dönüyordu → state kayboluyordu.
+    if (m.role === "assistant" && m.meta != null) {
       return { ...emptyState(), ...m.meta };
     }
   }

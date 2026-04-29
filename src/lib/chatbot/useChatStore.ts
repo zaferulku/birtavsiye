@@ -361,6 +361,21 @@ export const useChatStore = create<ChatStore>()(
         chatSessionId: state.chatSessionId,
         lastDecisionId: state.lastDecisionId,
       }),
+      // Hydration sonrası panelState ↔ panelSize tutarsızlığını düzelt.
+      // Eski persist'lerde panelSize="closed" + panelState="open" gibi mismatch
+      // kalmış olabilir; tutarlı hâle getir.
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        if (state.panelState === "open" && (state.panelSize === "closed" || state.panelSize === "minimized")) {
+          state.panelSize = detectIsMobile() ? "half" : "fullscreen";
+        }
+        if (state.panelState === "closed" && state.panelSize !== "closed") {
+          state.panelSize = "closed";
+        }
+        if (state.panelState === "minimized" && state.panelSize !== "minimized") {
+          state.panelSize = "minimized";
+        }
+      },
     }
   )
 );

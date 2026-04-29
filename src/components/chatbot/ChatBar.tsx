@@ -254,7 +254,7 @@ export function ChatBar() {
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
 
       const data = await response.json();
-      addAssistantMessage(data.reply || "Yanıt alınamadı.", data.suggestions ?? null);
+      addAssistantMessage(data.reply || "Yanıt alınamadı.", data.suggestions ?? null, data.meta ?? null);
 
       if (typeof data?.meta?.decisionId === "number") {
         useChatStore.getState().setLastDecisionId(data.meta.decisionId);
@@ -336,7 +336,7 @@ export function ChatBar() {
       });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      addAssistantMessage(data.reply || "Yanıt alınamadı.", data.suggestions ?? null);
+      addAssistantMessage(data.reply || "Yanıt alınamadı.", data.suggestions ?? null, data.meta ?? null);
       if (typeof data?.meta?.decisionId === "number") {
         useChatStore.getState().setLastDecisionId(data.meta.decisionId);
       }
