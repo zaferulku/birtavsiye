@@ -495,17 +495,17 @@ anne_bebek (11) = **141**
 
 ### Bilinen teknik borçlar
 
-| Borç | Etki | Plan |
+| Borç | Etki | Plan / Status |
 |---|---|---|
-| 83 keşfedilmemiş DB sub-kategorisi | Erişilemiyor | Sonraki Header turu |
-| `products.specs` kirli | Search zayıf | Specs whitelist |
-| `brand: "null"` string | Eski kayıtlarda yanlış | Migration veya re-classify |
-| Apple/APPLE mixed casing | Duplicate brand chip | suggestionBuilder normalize |
-| Latency yüksek (slow 16s) | UX | Paralel KB+search |
-| Faz 1 embedding NULL | Vector search'te yok | Backfill cron veya 29-gün sonu |
-| AbortController eksik | Token israfı | intentParserRuntime + provider chain |
-| Header tam yeniden yapı | DB'den dinamik değil | Uzak öncelik |
-| MM bg scrape modül cache | yeni fix'ler resume sonrası geçer | Restart sonra geçerli |
+| 83 keşfedilmemiş DB sub-kategorisi | Erişilemiyor | DB sağlık olunca dump al, Header tam yeniden yapı (uzun vadeli) |
+| `products.specs` kirli | Search zayıf | Specs whitelist tasarımı (POSTPONE — Paket M sonrası) |
+| `brand: "null"` string | Eski kayıtlarda yanlış | DB sağlık olunca count + UPDATE NULL → user kararı (re-classify vs delete) |
+| Apple/APPLE mixed casing | ✅ DONE | Bug B `known-brands.ts` Set ile çözüldü (commit `419d73c`) |
+| Latency yüksek (slow 16s) | UX | Paket M (multi-strategy + tokenizer) çözecek — baseline ≥%60 sonrası |
+| Faz 1 embedding NULL | Vector search'te yok | Probe `b1r7pm2tf` Cloudflare 522, recovery sonrası ölçüm |
+| AbortController eksik | ✅ DONE | `intentParserRuntime.ts:258-275` `withAbortTimeout` helper aktif (üç provider signal ile çağırıyor) |
+| Header tam yeniden yapı | DB'den dinamik değil | POSTPONE (uzak öncelik, MVP sonrası) |
+| MM bg scrape modül cache | ✅ DONE | 2026-04-29 22:51 MM scrape restart (`b922kxqsc`); turkishNormalize.mts + accessoryDetector fix yeni kod aktif |
 
 ---
 
