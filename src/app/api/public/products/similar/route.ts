@@ -14,6 +14,7 @@ export async function GET(req: Request) {
     .from("products")
     .select("brand, model_family, category_id")
     .eq("id", productId)
+    .eq("is_active", true)
     .maybeSingle();
 
   if (!thisProd?.category_id) {
@@ -24,6 +25,7 @@ export async function GET(req: Request) {
     .from("products")
     .select("id,title,slug,brand,image_url,model_family,prices:listings(price, last_seen, is_active, in_stock)")
     .eq("category_id", thisProd.category_id)
+    .eq("is_active", true)
     .neq("id", productId)
     .limit(40);
 

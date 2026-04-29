@@ -180,9 +180,10 @@ export default async function KategoriSayfasi({ params, searchParams }: {
         .from("products")
         .select("image_url, category_id, prices:listings(source, is_active, in_stock)")
         .in("category_id", allDescIds)
+        .eq("is_active", true)
         .not("image_url", "is", null)
         .order("created_at", { ascending: false })
-        .limit(2000);
+        .limit(500);
       // Her child için en güvenilir source'un görselini seç
       const bestPerChild = new Map<string, { url: string; trustScore: number }>();
       for (const row of prodData ?? []) {
@@ -223,7 +224,8 @@ export default async function KategoriSayfasi({ params, searchParams }: {
     .from("products")
     .select("id, title, slug, brand, image_url, specs, category_id, model_code, model_family, variant_storage, variant_color, created_at, prices:listings(id, price, source, is_active, in_stock, last_seen)")
     .in("category_id", descendantIds.length > 0 ? descendantIds : [category?.id ?? ""])
-    .eq("is_active", true);
+    .eq("is_active", true)
+    .limit(2000);
   const mainPromise = query.limit(300);
   const [mainRes, allRes] = await Promise.all([mainPromise, allBrandsPromise]);
   const { data: rawProducts } = mainRes;

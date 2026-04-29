@@ -57,10 +57,11 @@ export async function GET(
     .from("listings")
     .select("id, product_id, source, price, last_seen, source_url, affiliate_url, in_stock, is_active, stores(name, url)")
     .in("product_id", clusterProductIds)
-    .eq("is_active", true);
+    .eq("is_active", true)
+    .neq("in_stock", false);
 
   if (clusterPricesError) {
-    return NextResponse.json({ error: clusterPricesError.message }, { status: 500 });
+    return NextResponse.json({ error: "Sunucu hatasi" }, { status: 500 });
   }
 
   const mergedPrices = dedupeClusterListingsBySource<PublicPriceRow>(
