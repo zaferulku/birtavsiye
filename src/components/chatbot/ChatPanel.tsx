@@ -372,13 +372,13 @@ export function ChatPanel() {
     if (start == null) return;
     const end = e.changedTouches[0]?.clientY ?? start;
     const deltaY = end - start;
+    // Live read — closure'daki panelSize stream/render arası eskimiş olabilir
+    const currentSize = useChatStore.getState().panelSize;
     if (deltaY > 80) {
-      // Aşağı kaydır → küçült
-      if (panelSize === "fullscreen") setPanelSize("half");
+      if (currentSize === "fullscreen") setPanelSize("half");
       else minimizePanel();
     } else if (deltaY < -80) {
-      // Yukarı kaydır → büyüt
-      if (panelSize === "half") setPanelSize("fullscreen");
+      if (currentSize === "half") setPanelSize("fullscreen");
     }
   };
 
@@ -536,12 +536,12 @@ export function ChatPanel() {
             )}
             <button
               type="button"
-              onClick={() => setPanelSize(panelSize === "fullscreen" ? "half" : "fullscreen")}
+              onClick={() => setPanelSize(effectiveSize === "fullscreen" ? "half" : "fullscreen")}
               className="md:hidden w-8 h-8 flex items-center justify-center rounded-full text-gray-600 hover:bg-gray-100 active:bg-gray-200 transition-colors"
-              aria-label={panelSize === "fullscreen" ? "Yarıya küçült" : "Tam ekran"}
-              title={panelSize === "fullscreen" ? "Yarıya küçült" : "Tam ekran"}
+              aria-label={effectiveSize === "fullscreen" ? "Yarıya küçült" : "Tam ekran"}
+              title={effectiveSize === "fullscreen" ? "Yarıya küçült" : "Tam ekran"}
             >
-              {panelSize === "fullscreen" ? (
+              {effectiveSize === "fullscreen" ? (
                 <RestoreIcon className="w-4 h-4" />
               ) : (
                 <MaximizeIcon className="w-4 h-4" />
