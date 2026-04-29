@@ -1,9 +1,9 @@
-# birtavsiye.net — Project State v9
+# birtavsiye.net — Project State v11
 
 > **Bu dosya tek kaynak gerçek.** Yeni sohbet/oturum başlattığınızda
 > bu dosyayı Claude veya Claude Code'a verin — tüm bağlamı 30 saniyede alır.
 
-**Son güncelleme:** 2026-04-27 v10 (uq_products_dedup constraint drop → backup migrate +7.2K ürün; brand normalize 1.9K row; title-based merge 676 duplicate sildi; siniflandirilmamis kategori + 1.3K ürün gizlendi; pattern hardening 4 round / 678 ürün re-classify; ROTATIONS 8→31; cron kill switch; index migration 008 hazır)
+**Son güncelleme:** 2026-04-29 v11 (Paket Ç + Faz 1 + Tur 1 bug fix + Eval suite)
 **Production:** https://birtavsiye.net (www.birtavsiye.net canonical)
 **Stack:** Next.js 16, Supabase + pgvector, Zustand, NVIDIA Llama 3.3 70B / Groq / Gemini fallback
 
@@ -27,16 +27,18 @@ kişiselleştirilmiş tavsiye, kategori bazlı search, forum tartışmaları.
 
 ---
 
-## 📊 DB STATE (2026-04-27 sonrası v10)
+## 📊 DB STATE (2026-04-29 sonrası v11)
 
 | Tablo | Sayı |
 |---|---|
-| products | **~16,500** canonical (backup-restore migrate sonrası 13,840 + MM scrape 2,158; title-merge -676; brand normalize 1,969 row) |
-| listings | ~2,765 (MM 2,198 + PttAVM 361 + diğer; PttAVM scrape 22 Nis'tan beri cron'dan dondurulmuş, manuel sync ile +48 yeni) |
-| price_history | büyüyor (her listing INSERT/UPDATE'de yazıyor) |
-| categories | 178 (siniflandirilmamis eklendi — UI menü/sitemap'ten gizli, arama bulur) |
+| products | ~16,486 (Supabase outage sonrası teyit gerekli) |
+| listings | ~2,765 (MM 2,198 + PttAVM 361 + diğer; PttAVM scrape 22 Nis'tan beri cron'dan dondurulmuş) |
+| price_history | (eski 1294'ten artmış olabilir; her listing INSERT/UPDATE'de yazıyor) |
+| categories | 177 (siniflandirilmamis dahil; UI menü/sitemap'ten gizli, arama bulur) |
+| knowledge_chunks | 121 (NOT: önceki PROJECT_STATE'de yanlış isim "knowledge_base" geçiyordu — gerçek tablo ismi `knowledge_chunks`) |
 | topics | 21 (forum seed) |
 | topic_answers | 84 |
+| agent_decisions | büyüyor (chatbot logging) |
 
 ### Bu session'daki büyük operasyonlar
 - **Constraint drop:** `uq_products_dedup` UNIQUE INDEX silindi (rollback DDL: bkz `migration-supervisor` çıktısı). Migrate %99→%99.97 başarı, +7,210 ürün.
@@ -188,8 +190,8 @@ Process clean kill sonrası:
 
 ### 🟡 ORTA
 2. **Apple/APPLE duplicate brand chip**
-   - DB'de mixed casing
-   - suggestionBuilder buildBrandSuggestions normalize
+   - ✅ Bug B (known-brands Set) ile muhtemelen çözüldü, baseline'da teyit
+   - DB'de mixed casing varsa suggestionBuilder buildBrandSuggestions normalize gerek
    - Veya scrape ingestion'da brand TitleCase normalize
 
 3. **Chatbot timeout** (15 dk → 2 dk + 1 dk uyarı)
@@ -204,6 +206,18 @@ Process clean kill sonrası:
 5. variant_color backfill 2. tur (yeni 500 telefon için)
 6. MM Faz 2 enrichment (specs zenginleştirme)
 7. /tavsiyeler kategori sekmeleri parent vs child slug fix
+
+### 🔴 KRİTİK (Tur 1 sonrası)
+- **Bug E.2**: KB DB chunks UPDATE + 7 chunk re-embed (Supabase outage geçince)
+- **Eval baseline alma**: pass oranı ≥%60 mı?
+- **Paket M Faz M.1-M.6** (multi-strategy search + tokenizer + yazım düzeltme)
+
+### 🟡 BELİRSİZ DURUM (kullanıcı doğrulasın)
+- **Migration 007** (products.is_accessory + accessory_reason + accessory_detected_at)
+  deploy durumu belirsiz — Supabase outage geçince teyit
+- **Aksesuar 3-katman** (frontend filter + ingestion guard + DB audit) durumu belirsiz —
+  önceki sohbette paste-ready paket verildi, uygulandı mı?
+- **Faz 1 embedding NULL** durumu (yeni 16K ürün) — re-embed gerek mi?
 
 ---
 
@@ -244,6 +258,14 @@ supabase/migrations/004_smart_search_variants.sql             # variant_color_pa
 supabase/migrations/005_header_missing_categories.sql         # babet/etek/film-dizi
 supabase/migrations/006_listings_raw_columns.sql              # raw_specs/images/desc
 supabase/migrations/007_products_is_accessory.sql             # is_accessory flag (manuel uygulama gerek)
+src/lib/chatbot/intentTypes.ts                                # Faz 1 — IntentType, INTENT_ROUTING, heuristicClassify
+src/lib/chatbot/conversationState.ts                          # Paket Ç — mergeIntent, ConversationState
+src/lib/data/known-brands.ts                                  # Bug B — single source brand list
+scripts/eval-chatbot-dialogs.mjs                              # Eval suite runner
+scripts/fix-mojibake-jsonl.mjs                                # Latin-1→UTF-8 utility
+tests/chatbot/fixtures/chatbot_dialogs_200.jsonl              # Eval 1 dataset
+tests/chatbot/fixtures/chatbot_dialogs_eval2_200.jsonl        # Eval 2 dataset
+tests/chatbot/mergeIntent.test.ts                             # Bug C unit test (3 case)
 /tmp/mm-full-resume.log                                       # resume log
 ```
 
@@ -344,6 +366,16 @@ ProductDetailShell.tsx ortak nokta — uyumlu.
 | extractModelFamily canonical patterns | 2026-04-27 | iPhone/Galaxy başlıklarından doğru model çıkarma; SKU/EAN'lardan kurtulma |
 | Brand TitleCase normalize (acronym hariç) | 2026-04-27 | Apple/APPLE duplicate chip vs sorunu; HP/DJI/JBL all-caps |
 | skip_24h_fresh failsByReason'a | 2026-04-27 | Skip diagnostic eksikti (24h skip görünmez) |
+| conversationState (Paket Ç) — stateful intent merge | 2026-04-28 | Filter yapışıyor + single-word vague + daralma var genişletme yok |
+| intent_type layer Faz 1 (heuristic + early-return) | 2026-04-28 | Greeting/smalltalk/store_help için ürün araması yapılmıyor |
+| Eval suite kuruldu (eval-chatbot-dialogs.mjs + 400 dialog) | 2026-04-28 | Regression test, Paket M baseline için |
+| Bug A: Fixture taxonomy (tisort-erkek → erkek-giyim-ust) | 2026-04-29 | DB'de tisort-erkek yok, erkek-giyim-ust var; fixture beklentisi DB ile uyumsuzdu |
+| Bug B: known-brands.ts single source | 2026-04-29 | queryParser + intentParser ayrı brand listeleri drift yaratıyordu |
+| Bug C: mergeIntent category change = new dim | 2026-04-29 | İlk turn no_new_dims_keep dönüyordu, action karar bug'ı |
+| Bug D: short_response early-return (greeting/smalltalk) | 2026-04-29 | KB pollution, greeting'de cilt tipleri reply'ı |
+| Bug E: KB mojibake repair (Şrünleri → Ürünleri) | 2026-04-29 | Filesystem 13 yer + DB 7 chunk yarım UTF-8 byte |
+| Yazım düzeltme: D hibrit (Levenshtein 1 sessiz, 2 bildirim) | 2026-04-29 | Paket M.2 tasarım kararı |
+| Paket M (multi-strategy search) — baseline sonrası uygulanacak | 2026-04-29 | Tek smart_search yetersiz; 4 paralel strateji + tokenizer + yazım düzeltme |
 
 ---
 
@@ -452,52 +484,38 @@ anne_bebek (11) = **141**
 **13:** akilli-telefon büyük scrape (04-27) — ProductGroup fix + accessory pipeline + model_family + brand normalize — `facc78a` + `076244c` (akilli-telefon 27 → 585 ürün)
 **14:** Pattern + categorizer + MM-source priority (04-27) — extractModelFamily 17 marka, tablet/saat/laptop, scraper ingestion entegrasyon, categorizeFromTitle (PttAVM 249→334 dolu, %92), enrich-pttavm description guard — `533f319` + `a673ff6` + `9e5dcdf` + `29d14db` + `2b5fd9f` + `76b597e` + `ec2a446`
 **15:** Backup migrate + niş kategori + MM map genişletme (04-27) — backup-restore (43K backup, %99.9 cat dolu ama orphan, categorizeFromTitle ile re-infer), Round 1+2+3 = +4,030 ürün migrate, 30 niş kategori (kıyafet/kozmetik/oyuncak/otomotiv/aydınlatma/pet), MM map 21→25 dbSlug + 132 yeni leaf segment, Vercel build fix (tsconfig scripts exclude) — `881e78e` + `19890df` + `fafbbc2` + `f0758cd`
+**16:** Chatbot eval suite + Paket Ç + Faz 1 + Tur 1 bug fix (04-28→04-29) — Eval suite (eval-chatbot-dialogs.mjs + 400 dialog 17 senaryo), intentTypes.ts (Faz 1: greeting/smalltalk/store_help heuristic + early-return), conversationState.ts (Paket Ç: mergeIntent stateful intent merge), 5 bug fix: A taksonomi, B brand unify, C merge category as new dim, D short_response, E mojibake repair (filesystem ✅, DB ⏸ outage) — `42f0b06` + `8dee737` + `f9a64a6` + `e35e404` + `2243591` + `419d73c` + `527f0b5` + `ef6ed35` + `19638ee`
 
 ---
 
 ## ✅ COMMIT GEÇMİŞİ (son 25)
 
 ```
-f0758cd   feat(mm-map): 132 yeni leaf segment + 4 yeni dbSlug
-fafbbc2   fix(build): tsconfig exclude scripts/ (Vercel build .mts fix)
-19890df   feat(categorizer): nis kategoriler ek (ev-tekstili, gida, kitap, oyuncak, ...)
-881e78e   feat(categorizer+migrate): backup -> products migrate + nis kategori patterns
-ec2a446   feat(categorizer): pattern listesi genisletme (%69 -> %92 PttAVM coverage)
-76b597e   feat(pttavm): backfill source_category from title
-2b5fd9f   feat(categorizer+pttavm): title->kategori inference + MM-source oncelik
-29d14db   feat(scrape): ingestion'da extractModelFamily ile canonical model_family
-9e5dcdf   feat(model-family): Laptop patterns (MacBook/ThinkPad/Yoga/Pavilion/MSI/Acer)
-a673ff6   feat(model-family): Tablet + Akilli Saat patterns
-533f319   feat(model-family): Tecno/Vivo/Infinix/Oppo/Huawei/Reeder/Realme/Honor patterns
-4e74782   feat(model-family): Xiaomi/Redmi/Poco pattern listesi
-076244c   feat(scrape+model): skip_24h_fresh tracking + model_family backfill
-facc78a   feat(scrape+detector): stoksuz urun + ProductGroup + accessory detector + refurb blacklist + skip diagnostic
-9688b7e   docs: PROJECT_STATE v6 — search regression + price_history + 3-bug session
-da7f09b   fix(chat): suggestion log + brand parser + chip kategori hint
-afbd879   feat: add category filters and hide refurbished products
-8913a79   fix(scraper): price_history insert in upsertListing + backfill
-bcebf6b   fix(scraper): DB slug uyumsuzlugu + SKIP_24H bypass flag
-141f6f8   feat(search): aksesuar hard filter + variant color extraction + MM map genisletme
-10c208c   feat: knowledge base docs for cosmetics and fashion
-cac1013   feat: knowledge base foundation for chatbot RAG
-7eaaae0   feat: real PttAVM fetcher implementation + FetchContext
-6c9b4ec   feat: day 1-2 migration baseline
-27c4cf5   fix: add Header/Footer chrome to product + comparison pages
-bf38b3d   fix: homepage products + non-priced product pages
-56cabf2   fix: category routes server data access
-4511297   feat: similar product cards freshness
-ca90fbb   perf(faz1): gemma-3 kaldırıldı
-00f62d9   fix: chip butonları — siyah telefon → marka chip
-c05c7bf   feat: Header 68 kırık slug fix (categorySlugMap)
-85681a6   feat: Migration 005 — babet/etek/film-dizi
-e40dd65   feat: suggestionBuilder + chip render
-7a6e357   feat: v3 + Parça 6/7 yeniden bağla
-9be4f7f   feat: ChatPanel v3 320×600 + ChatBar v3
-87c376d   fix: variant filter renk sözlüğü
-8877d61   feat: variant filter + Faz 1 classifier
-2977207   docs: PROJECT_STATE.md v3
-25b5223   feat: Parça 7 mikrofon
-a56dcd9   feat: Parça 6 görsel yükleme
+19638ee   fix(kb): mojibake repair filesystem — Şrünleri → Ürünleri
+ef6ed35   fix(state): mergeIntent counts category change as new dim
+527f0b5   fix(chatbot): short_response intents bypass KB retrieval and smart_search
+419d73c   fix(search): unify brand recognition via shared known-brands module
+2243591   fix(eval): align fixture taxonomy with live DB (no tisort-erkek slug)
+e35e404   fix(chatbot): greeting vocative, brand list, kahve vs kahverengi, raw color state
+f9a64a6   fix(eval): backward-compat state cmp + variant_color tolerance + eval2 dataset
+8dee737   feat(chatbot): intent_type layer — Faz 1 (heuristic + state + meta)
+42f0b06   feat(eval): chatbot dialog regression suite — script + npm scripts
+56e133e   fix(server): supabaseServer module-level throw → warn + placeholder
+0af4f30   feat(db): listings.condition column - migration 010
+f105980   feat(cron): redmi note coverage expansion (15 pro / 14 pro / 13 pro)
+69647bf   feat(diag): scripts/diagnose-product.mjs - tekil ürün tanı aracı
+b1c1a37   fix: FeaturedProducts build timeout/5xx resilience (Vercel)
+06e99bd   fix: /api/public/categories build timeout (Vercel)
+4dff2f4   fix: sitemap.xml build timeout (Vercel)
+bb192a4   feat: silikon-kılıf relink pattern + slug from-title migration script
+20672d7   feat: split-variant-listings script for variant-mismatch repair
+5e9e6be   fix: MM stock false-negative + variant_storage RAM bug + slug from source title
+698dcf7   feat(chat): stateful conversation + intent diff/shift detection
+0ea768d   fix: aksesuar listing'lerinin telefon canonical'larına bağlanması
+10ced47   fix(identity): title=originalTitle (source aynen tutulur)
+a79bc75   feat(relink): scripts/relink-misplaced-listings.ts — 108 aksesuar listing
+e0b318d   fix(ui): liste kart başlığı = brand + model_family + storage + color
+596dc88   feat(ui): GENERIC_EXCLUDE genişletildi (Tripod/Lens/Speaker/Yedek)
 ```
 
 ---
@@ -533,6 +551,9 @@ a56dcd9   feat: Parça 6 görsel yükleme
    `src/lib/categoryTree.ts`. Commit `bf38b3d`/`56cabf2`/`4511297` bu sebeple.
 9. **MM scraper kodu değişince** background scrape modül cache'inden dolayı
    eski koda devam eder — restart sonrası geçerli olur.
+10. **Eval baseline ≥%60 pass olmadan Paket M (multi-strategy search) deploy
+    edilmesin.** Mevcut akışı sabit tutmadan yeni mimari getirmek regresyon
+    riski. Kullanıcı kararı.
 
 ### Kullanıcı için
 
@@ -603,6 +624,30 @@ C: ÇÖZÜLDÜ (`da7f09b`). output_data'ya suggestions + reply + brand_filter ek
 **S: price_history sadece 7 satırdı?**
 C: ÇÖZÜLDÜ (`8913a79`). Scraper INSERT/UPDATE her iki path'de price_history insert + backfill 1283 satır = %100 coverage.
 
+**S: Chatbot greeting vermiyor, kategori soruyordu?**
+C: ÇÖZÜLDÜ (Bug D, commit `527f0b5`). intent_type=greeting/smalltalk/off_topic
+→ orchestrator short-circuit, KB çekmez, kısa reply döner.
+
+**S: "samsung kırmızı" → "telefon" deyince filtreler yapışıyordu?**
+C: ÇÖZÜLDÜ (Paket Ç + Bug C, commit `ef6ed35`). conversationState.mergeIntent —
+single_word_widen action: aynı kategoride tek kelime kategori = filtreleri sıfırla.
+
+**S: İlk turn'de mergeAction "no_new_dims_keep" dönüyordu?**
+C: ÇÖZÜLDÜ (Bug C). category değişimi `setDimensions.push("category")` ile
+sayılır, action artık "merge_with_new_dims" döner.
+
+**S: KB'de "Anne Şrünleri" yazıyordu, neden?**
+C: ÇÖZÜLDÜ filesystem (Bug E.1, commit `19638ee`). 3 .md dosyada 13 yer Şrün → Ürün replace.
+DB chunks (7 satır) ⏸ Supabase outage nedeniyle bekletildi, outage geçince
++ 7 chunk re-embed yapılacak.
+
+**S: Eval suite'i nasıl çalıştırırım?**
+C: Terminal 1: `npm run dev`. Terminal 2:
+- `npm run eval:chatbot:dryrun`       (5 dialog)
+- `npm run eval:chatbot:2:dryrun`     (5 dialog eval2)
+- `npm run eval:chatbot`              (200 full)
+Çıktı: `tests/chatbot/eval-report-{timestamp}.json`
+
 ---
 
 ## 📌 GÜNCELLEME LOG'U
@@ -618,6 +663,7 @@ C: ÇÖZÜLDÜ (`8913a79`). Scraper INSERT/UPDATE her iki path'de price_history 
 | 2026-04-27 | v7 — akilli-telefon büyük scrape (585 ürün) + ProductGroup fix + accessory pipeline (detector+filter+migration+audit) + model_family backfill + brand normalize | Claude |
 | 2026-04-27 | v8 — extractModelFamily 17 marka pattern (telefon+tablet+saat+laptop) + categorizeFromTitle.mts (PttAVM kategori inference %92) + MM-source priority (specs/description) + scraper ingestion entegrasyonu | Claude |
 | 2026-04-27 | v9 — backup-restore migrate (Gemini bypass +3,964 ürün) + categorizeFromTitle 30 niş kategori (kıyafet/kozmetik/oyuncak/otomotiv/aydınlatma/pet) + MM map +132 leaf segment + 25 dbSlug (fotograf-kamera/aksiyon-kamera/aspirator-davlumbaz/sac-kurutma) + tsconfig scripts/ exclude (Vercel build fix) | Claude |
+| 2026-04-29 | v11 — Paket Ç + Faz 1 + Tur 1 bug fix (A,B,C,D,E.1) + Eval suite | Claude |
 
 ---
 
