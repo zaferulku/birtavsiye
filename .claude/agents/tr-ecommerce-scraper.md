@@ -202,24 +202,45 @@ If a source's selectors break (HTML change):
 3. Notify admin channel
 4. Continue with other sources (one breakage doesn't stop the pipeline)
 
-## Category Mapping
+## Category Mapping — `scrapeClassifier.ts` (CANONICAL — kullan, yeniden yazma)
 
-Source categories → canonical categories via `source_category_mappings` table:
+**Tüm pazaryerleri için ortak filter zinciri** `src/lib/scrapers/scrapeClassifier.ts` modülünde implement edildi (commit `15de223`). Yeni scraper eklerken kategori logic'i yazma — bu modülü kullan.
 
-```sql
-INSERT INTO source_category_mappings (source, source_category, canonical_slug, confidence)
-VALUES ('trendyol', 'Telefon > Akıllı Telefon', 'akilli-telefon', 1.0);
+### Akış (öncelik sırası)
+1. `source_category` `SOURCE_CATEGORY_MAP`'te varsa → mapped slug (en güvenilir)
+2. `categorizeFromTitle` "high" confidence → matched slug
+3. `categorizeFromTitle` "medium" confidence → matched slug
+4. `source_category` MAP'te yok ama "temiz" string → **AUTO-CREATE** kategori (parent=siniflandirilmamis, slug=`auto-<source>-<slugified>`, name=`<source>: <raw>`)
+5. `fallbackCategoryId` (cron'un sağladığı) → kullan
+6. `siniflandirilmamis` (last resort)
+
+### Kullanım — `/api/sync` route'unda
+
+`src/app/api/sync/route.ts` her ürün için `classifyScrapedProduct()` çağırıyor. Yeni pazaryeri ekleyince **scraper sadece şu alanları doldursun**:
+
+```ts
+interface ScrapedProduct {
+  name: string;
+  url: string;
+  image: string;
+  price: number;
+  specs?: Record<string, string>;
+  source_category?: string | null;  // pazaryeri-spesifik kategori (varsa)
+}
 ```
 
-Before classifying with LLM, check if source_category has a known mapping:
-```sql
-SELECT canonical_slug FROM source_category_mappings
-WHERE source = $source AND source_category = $source_category AND confidence >= 0.8;
-```
+Sonra `/api/sync` POST → classifier devreye girer, kategori atar. Scraper kodda kategori logic YAZMA.
 
-If found → use as hint for classifier, not as final answer (source sites also miscategorize).
+### Yeni pazaryeri checklist
+1. Scraper route'u: ürün listesini `ScrapedProduct[]` formatında döndür. `source_category` HTML'den extract edebiliyorsan ekle (breadcrumb / facet / category badge), edemiyorsan `null` bırak.
+2. `/api/sync` çağır: `{source, query, category_id?, products: [...]}`. classifier kategorisini otomatik halleder.
+3. `SOURCE_CATEGORY_MAP`'i `scrapeClassifier.ts`'de ihtiyaç duyduğun source_category'lerle genişlet (aksi takdirde auto-create kullanılır → manuel review gerekir).
+4. Yeni store'u `STORE_NAME_BY_SOURCE` (sync route) ve `stores` tablosuna ekle.
 
-New source_category values discovered during scraping → auto-create a mapping entry with `confidence = 0.5`, `created_by = 'auto'`. Human or LLM verification raises confidence.
+### Auto-create policy
+- Kategori sadece "temiz" string için oluşturulur (3-60 char, harf içerir, salt-rakam değil)
+- Slug: `auto-<source>-<slugified>` (ör. `auto-pttavm-bahce-mumlari`)
+- Manuel review gerek: oluşturulan kategorileri haftada bir incele — iyi olanları proper slug'a taşı (UPDATE), gerisini siniflandirilmamis'a düşür.
 
 ## Handling Variants (source-level)
 
