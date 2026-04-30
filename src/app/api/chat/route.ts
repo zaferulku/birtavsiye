@@ -621,11 +621,13 @@ export async function POST(req: Request) {
         conversationState.brand_filter = llmBrands;
         enrichedDims.push("brand");
       }
-      if (conversationState.price_min == null && llmIntent.price_range?.min != null) {
+      // LLM bazen kullanıcı sadece "max 400" dediğinde min: 0 hallüsünasyonu yapar.
+      // 0 anlamlı bir fiyat filtresi değil (negatif fiyat yok); sadece > 0 değerleri kabul et.
+      if (conversationState.price_min == null && typeof llmIntent.price_range?.min === "number" && llmIntent.price_range.min > 0) {
         conversationState.price_min = llmIntent.price_range.min;
         enrichedDims.push("price_min");
       }
-      if (conversationState.price_max == null && llmIntent.price_range?.max != null) {
+      if (conversationState.price_max == null && typeof llmIntent.price_range?.max === "number" && llmIntent.price_range.max > 0) {
         conversationState.price_max = llmIntent.price_range.max;
         enrichedDims.push("price_max");
       }
