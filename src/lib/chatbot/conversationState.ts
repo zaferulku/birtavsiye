@@ -28,6 +28,10 @@ export interface ConversationState {
   variant_storage_patterns: string[];
   price_min: number | null;
   price_max: number | null;
+  /** Feature attributes — "enerji_tasarruflu", "su_korumasi", "qled" gibi. Additive. */
+  features: string[];
+  /** Taksit ay sayısı (advanced_filter senaryosu). */
+  installment_months_min: number | null;
   /** Son turda hangi dimension'lar set edildi — diff için */
   last_set_dimensions: string[];
   /** Kaç turdur aynı kategoride — "alternatife bak" sinyali için */
@@ -43,6 +47,8 @@ export function emptyState(): ConversationState {
     variant_storage_patterns: [],
     price_min: null,
     price_max: null,
+    features: [],
+    installment_months_min: null,
     last_set_dimensions: [],
     turn_count_in_category: 0,
   };
@@ -57,6 +63,8 @@ export interface RawIntent {
   variant_storage_patterns?: string[];
   price_min?: number | null;
   price_max?: number | null;
+  features?: string[];
+  installment_months_min?: number | null;
   raw_query?: string;
   keywords?: string[];
 }
@@ -194,6 +202,8 @@ export function mergeIntent(
     variant_storage_patterns: prev.variant_storage_patterns,
     price_min: prev.price_min,
     price_max: prev.price_max,
+    features: prev.features ?? [],
+    installment_months_min: prev.installment_months_min ?? null,
     last_set_dimensions: [],
     turn_count_in_category:
       newCategory && newCategory !== prev.category_slug
@@ -220,6 +230,15 @@ export function mergeIntent(
   if (rawIntent.variant_storage_patterns?.length) { next.variant_storage_patterns = rawIntent.variant_storage_patterns; setDimensions.push("storage"); }
   if (rawIntent.price_min != null) { next.price_min = rawIntent.price_min; setDimensions.push("price_min"); }
   if (rawIntent.price_max != null) { next.price_max = rawIntent.price_max; setDimensions.push("price_max"); }
+  // Features additive (önceki + yeni union, sırasız set)
+  if (rawIntent.features?.length) {
+    next.features = [...new Set([...(prev.features ?? []), ...rawIntent.features])];
+    if (next.features.length > (prev.features?.length ?? 0)) setDimensions.push("features");
+  }
+  if (rawIntent.installment_months_min != null) {
+    next.installment_months_min = rawIntent.installment_months_min;
+    setDimensions.push("installment");
+  }
   next.last_set_dimensions = setDimensions;
   return { next, action: setDimensions.length > 0 ? "merge_with_new_dims" : "no_new_dims_keep" };
 }

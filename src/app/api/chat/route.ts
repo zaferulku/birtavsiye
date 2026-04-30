@@ -509,6 +509,25 @@ export async function POST(req: Request) {
     // LLM intent ile state enrich orchestrator sonrası yapılıyor (aşağıda).
     const parsedCategoryRaw = parsed.category_slugs?.[0] ?? null;
     const validParsedCategory = await validateOrFuzzyMatchSlug(parsedCategoryRaw, 1);
+
+    // Feature dimension extraction (basit regex-based)
+    const features: string[] = [];
+    const msgLower = message.toLowerCase();
+    if (/(enerji tasarruflu|a\+\+|a\+\+\+|enerji sınıfı a)/i.test(msgLower)) features.push("enerji_tasarruflu");
+    if (/(su (geçirmez|korumas)|ip6[78])/i.test(msgLower)) features.push("su_korumasi");
+    if (/(gürültü (önleyici|engel)|noise (cancelling|cancel)|anc)/i.test(msgLower)) features.push("anc");
+    if (/(qled|oled|hdr|4k|8k|smart tv)/i.test(msgLower)) features.push("smart_display");
+    if (/(şarj hızlı|hızlı şarj|fast charg|65w|100w)/i.test(msgLower)) features.push("hizli_sarj");
+    if (/(kablosuz|wireless)/i.test(msgLower)) features.push("kablosuz");
+    if (/(spor(luk|ty)?|aktivewear|active ?wear)/i.test(msgLower)) features.push("spor");
+    if (/(slim fit|skinny|regular fit)/i.test(msgLower)) features.push("slim_fit");
+
+    // Installment (taksit) ay sayısı extraction
+    let installmentMin: number | null = null;
+    const installMatch = message.match(/(\d{1,2})\s*(ay\s*taksit|taksit|ay\s*vade|vade)/i);
+    if (installMatch) installmentMin = parseInt(installMatch[1], 10);
+    if (!installMatch && /(taksit imkân|taksit olsun|taksitli)/i.test(message)) installmentMin = 12; // generic
+
     const rawIntent: RawIntent = {
       intent_type: heuristicClassify(message) ?? "product_search",
       category_slug: validParsedCategory,
@@ -519,6 +538,8 @@ export async function POST(req: Request) {
       variant_storage_patterns: parsed.storage ? [parsed.storage] : [],
       price_min: parsed.price_min ?? null,
       price_max: parsed.price_max ?? null,
+      features: features.length > 0 ? features : undefined,
+      installment_months_min: installmentMin,
       keywords: parsed.keywords ?? [],
     };
 
@@ -689,6 +710,8 @@ export async function POST(req: Request) {
           variant_storage_patterns: conversationState.variant_storage_patterns,
           price_min: conversationState.price_min,
           price_max: conversationState.price_max,
+          features: conversationState.features ?? [],
+          installment_months_min: conversationState.installment_months_min ?? null,
           turn_count_in_category: conversationState.turn_count_in_category,
         },
         mergeAction,
