@@ -205,7 +205,17 @@ export function mergeIntent(
   // setDimensions empty and the action falls through to "no_new_dims_keep".
   const categoryChanged = newCategory != null && newCategory !== prev.category_slug;
   if (categoryChanged) setDimensions.push("category");
-  if (rawIntent.brand_filter?.length) { next.brand_filter = rawIntent.brand_filter; setDimensions.push("brand"); }
+  if (rawIntent.brand_filter?.length) {
+    // Additive multi-brand: kullanıcı mesajında "da", "ya da", "veya", "or" ya da
+    // "aslında ... da" gibi marker varsa önceki brand'i koru, yenisini ekle.
+    const additiveMarker = /\b(ya da|veya|aslında.+da\b|.+ da olabilir|or)\b/i.test(userMessage);
+    if (additiveMarker && prev.brand_filter.length > 0) {
+      next.brand_filter = [...new Set([...prev.brand_filter, ...rawIntent.brand_filter])];
+    } else {
+      next.brand_filter = rawIntent.brand_filter;
+    }
+    setDimensions.push("brand");
+  }
   if (rawIntent.variant_color_patterns?.length) { next.variant_color_patterns = rawIntent.variant_color_patterns; setDimensions.push("color"); }
   if (rawIntent.variant_storage_patterns?.length) { next.variant_storage_patterns = rawIntent.variant_storage_patterns; setDimensions.push("storage"); }
   if (rawIntent.price_min != null) { next.price_min = rawIntent.price_min; setDimensions.push("price_min"); }
