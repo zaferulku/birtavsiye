@@ -34,6 +34,11 @@ const SEED: readonly string[] = [
   "Karaca", "English Home", "Madame Coco", "Yataş", "İstikbal", "Bellona",
   // Kozmetik
   "Pastel", "Flormar", "Golden Rose", "Vichy", "Bioderma", "La Roche-Posay",
+  // Moda / giyim
+  "LCW", "LC Waikiki", "Mavi", "Koton", "Defacto", "DeFacto", "U.S. Polo Assn",
+  "Polo", "Lacoste", "Nike", "Adidas", "Puma", "Reebok", "New Balance", "Skechers",
+  "Pull&Bear", "Bershka", "Zara", "Mango", "H&M", "Stradivarius",
+  "Columbia", "The North Face", "Salomon", "Timberland", "Decathlon", "Quechua",
 ];
 
 export const KNOWN_BRANDS_TR: string[] = (() => {
