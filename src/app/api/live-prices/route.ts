@@ -14,6 +14,7 @@ export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const productId = url.searchParams.get("product_id");
   const forceFresh = url.searchParams.get("fresh") === "1";
+  const discover = url.searchParams.get("discover") === "1";
 
   if (!productId) {
     return new Response(
@@ -60,6 +61,7 @@ export async function GET(request: Request): Promise<Response> {
       try {
         await fetchLivePricesForProduct(supabase, productId, emit, {
           forceFresh,
+          discover,
           globalTimeoutMs: 5000,
         });
       } catch (err: any) {

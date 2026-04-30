@@ -36,9 +36,23 @@ export type FetchContext = {
   sourceUrl: string | null;
 };
 
+/**
+ * Search-augmentation context — kullanıcı detail page'e geldiğinde, mevcut
+ * listing'lerimiz olmayan mağazalar için title+brand ile canlı arama.
+ */
+export type SearchContext = {
+  title: string;
+  brand: string | null;
+};
+
 export type StoreFetcher = {
   source: string;
   fetch: (ctx: FetchContext) => Promise<StoreLiveData>;
+  /**
+   * Opsiyonel: title+brand'den arama yaparak ilk match'i döner. Detail page
+   * "discover" akışı için kullanılır. Mağazada listing yoksa search ile keşfet.
+   */
+  searchByTitle?: (ctx: SearchContext) => Promise<StoreLiveData | null>;
   timeoutMs: number;
   rpmLimit: number;
 };
@@ -89,4 +103,10 @@ export type FetchOptions = {
   globalTimeoutMs?: number;
   forceFresh?: boolean;
   cacheTtlMs?: number;
+  /**
+   * Discover (search-augmentation) flow: mevcut listing'i olmayan mağazalarda
+   * title+brand ile arama yap, ilk match'in fiyatını ephemeral olarak emit et.
+   * Default false (eski davranış).
+   */
+  discover?: boolean;
 };

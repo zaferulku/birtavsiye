@@ -25,11 +25,15 @@ import type {
 import { pttavmFetcher } from "./pttavm";
 import { mediamarktFetcher } from "./mediamarkt";
 import { trendyolFetcher } from "./trendyol";
+import { hepsiburadaFetcher } from "./hepsiburada";
+import { amazonTrFetcher } from "./amazon-tr";
 
 const FETCHERS: Record<string, StoreFetcher> = {
   pttavm: pttavmFetcher,
   mediamarkt: mediamarktFetcher,
   trendyol: trendyolFetcher,
+  hepsiburada: hepsiburadaFetcher,
+  "amazon-tr": amazonTrFetcher,
 };
 
 export function isSourceSupported(source: string): boolean {
@@ -84,7 +88,7 @@ export async function fetchLivePricesForProduct(
   let successful = 0;
   let failed = 0;
 
-  const tasks = uniqueListings.map((listing) =>
+  const tasks: Promise<unknown>[] = uniqueListings.map((listing) =>
     fetchOneListing(listing, emit, forceFresh, options.cacheTtlMs)
       .then((outcome) => {
         if (outcome.ok) {
@@ -100,6 +104,42 @@ export async function fetchLivePricesForProduct(
       })
   );
 
+  // Discover augmentation: mevcut listing'i olmayan mağazalarda title+brand
+  // araması yap. Synthetic event ("listing_id: discover:{source}") emit et,
+  // DB'ye yazma. Orphan ürünler için diğer pazaryeri fiyatlarını gösterir.
+  let discoverAttempts = 0;
+  if (options.discover) {
+    const existingSources = new Set(uniqueListings.map((l) => l.source));
+    const missingSources = Object.keys(FETCHERS).filter(
+      (s) => !existingSources.has(s) && !!FETCHERS[s].searchByTitle
+    );
+    if (missingSources.length > 0) {
+      const { data: prod } = await supabase
+        .from("products")
+        .select("title, brand")
+        .eq("id", productId)
+        .maybeSingle();
+      const title = (prod as { title?: string; brand?: string } | null)?.title ?? null;
+      const brand = (prod as { title?: string; brand?: string } | null)?.brand ?? null;
+      if (title) {
+        for (const source of missingSources) {
+          discoverAttempts++;
+          tasks.push(
+            discoverOneSource(source, { title, brand }, emit)
+              .then((outcome) => {
+                if (outcome.ok) successful++;
+                else failed++;
+              })
+              .catch((err) => {
+                failed++;
+                console.error(`[live-prices] Discover failed for ${source}:`, err);
+              })
+          );
+        }
+      }
+    }
+  }
+
   await Promise.race([
     Promise.allSettled(tasks),
     sleep(globalTimeoutMs),
@@ -107,11 +147,60 @@ export async function fetchLivePricesForProduct(
 
   emit({
     type: "done",
-    total_stores: uniqueListings.length,
+    total_stores: uniqueListings.length + discoverAttempts,
     successful,
     failed,
     duration_ms: Date.now() - startTime,
   });
+}
+
+async function discoverOneSource(
+  source: string,
+  ctx: { title: string; brand: string | null },
+  emit: EmitFn
+): Promise<FetchOutcome> {
+  const fetcher = FETCHERS[source];
+  if (!fetcher?.searchByTitle) {
+    return { ok: false, error: "no_search_support" };
+  }
+
+  if (!rateLimiter.tryConsume(source)) {
+    emit({
+      type: "error",
+      listing_id: `discover:${source}`,
+      source,
+      error: "rate_limited",
+    });
+    return { ok: false, error: "rate_limited" };
+  }
+
+  const key = cacheKey(`discover:${source}`, `${ctx.brand ?? ""}|${ctx.title}`);
+  const cached = cacheGet(key);
+  if (cached) {
+    emit({ type: "price", listing_id: `discover:${source}`, source, data: cached });
+    return { ok: true, data: cached };
+  }
+
+  try {
+    const data = await fetchWithDedupe(key, async () => {
+      const result = await fetcher.searchByTitle!(ctx);
+      if (!result) throw new Error("no_match");
+      return result;
+    });
+    cacheSet(key, data);
+    emit({ type: "price", listing_id: `discover:${source}`, source, data });
+    return { ok: true, data };
+  } catch (err: unknown) {
+    const errorMsg =
+      err instanceof Error ? err.message.slice(0, 120) : String(err).slice(0, 120);
+    emit({
+      type: "error",
+      listing_id: `discover:${source}`,
+      source,
+      error: errorMsg,
+    });
+    return { ok: false, error: errorMsg };
+  }
 }
 
 type FetchOutcome =
