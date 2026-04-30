@@ -54,6 +54,7 @@ export type OrchestratorInput = {
   conversationHistory?: Array<{ role: string; content: string }>;
   // Stateful conversation (opsiyonel — dinamik match_count için)
   conversationState?: {
+    category_slug?: string | null;
     brand_filter?: string[];
     variant_color_patterns?: string[];
     variant_storage_patterns?: string[];
@@ -457,7 +458,17 @@ async function runSlowPath(
   const strictTermCount = queryTerms.filter(isStrictIntentTerm).length;
 
   // 3. Off-topic veya çok genel ş search yapma, direkt yanıt üret
-  if (intent.is_off_topic || (intent.is_too_vague && intent.confidence < 0.3)) {
+  // Override: LLM kategori/brand çıkardıysa veya conversationState/parsed kategori
+  // varsa → too_vague override edilir, search devam eder.
+  // Sebep: "erkek tişört" gibi parseQuery'nin yakaladığı sorgular LLM tarafından
+  // is_too_vague=true işaretleniyor; ama state'de category var, search yapılmalı.
+  const hasResolvedDimension =
+    Boolean(intent.category_slug) ||
+    (Array.isArray(intent.brand_filter) && intent.brand_filter.length > 0) ||
+    Boolean(input.conversationState?.category_slug) ||
+    (Array.isArray(input.conversationState?.brand_filter) &&
+      (input.conversationState?.brand_filter?.length ?? 0) > 0);
+  if (intent.is_off_topic || (intent.is_too_vague && intent.confidence < 0.3 && !hasResolvedDimension)) {
     const response = await generateResponse({
       userMessage: input.userMessage,
       intent,
