@@ -7,6 +7,7 @@ import {
   resolveExistingProduct,
 } from "@/lib/productIdentity";
 import { categorizeFromTitle } from "@/lib/categorizeFromTitle";
+import { classifyScrapedProduct } from "@/lib/scrapers/scrapeClassifier";
 
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET;
 const BASE_URL = process.env.NEXTAUTH_URL || "http://localhost:3000";
@@ -34,6 +35,10 @@ interface ScrapedProduct {
   image: string;
   price: number;
   specs?: Record<string, string>;
+  // Pazaryeri-spesifik kategori (PttAVM kebab-case, MM PascalCase). classifier
+  // önce bu alanı SOURCE_CATEGORY_MAP'e karşı kontrol eder, sonra title
+  // classifier'a düşer. Yoksa null/undefined kabul edilir.
+  source_category?: string | null;
 }
 
 function normalizeForSecondhand(text: string): string {
@@ -116,6 +121,8 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
   const slugToId = new Map<string, string>(
     (catRows ?? []).map((c: { id: string; slug: string }) => [c.slug, c.id])
   );
+  // siniflandirilmamis parent (auto-create için)
+  const unclassParentId = slugToId.get("siniflandirilmamis") ?? null;
 
   let inserted = 0;
   let errors = 0;
@@ -135,15 +142,20 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
     });
     const sourceProductId = getSourceProductId(product.url);
 
-    // Title-based dinamik kategori override:
-    // PttAVM "iphone 16 plus" query'si aksesuarları da getirebilir.
-    // categorizeFromTitle high-confidence eşleşme verirse cron category'sini override et.
-    let effectiveCategoryId = categoryId;
-    const catGuess = categorizeFromTitle(product.name);
-    if (catGuess.slug && catGuess.confidence === "high") {
-      const guessedId = slugToId.get(catGuess.slug);
-      if (guessedId) effectiveCategoryId = guessedId;
-    }
+    // Generic scrape classifier — tüm pazaryerleri için ortak.
+    // Sıra: source_category map → title-high → title-medium → auto-create → fallback (cron) → siniflandirilmamis
+    const classified = await classifyScrapedProduct(
+      {
+        sb,
+        title: product.name,
+        source,
+        sourceCategoryRaw: product.source_category ?? null,
+        fallbackCategoryId: categoryId ?? null,
+        slugToId,
+      },
+      unclassParentId,
+    );
+    let effectiveCategoryId = classified.categoryId ?? categoryId;
 
     let productId: string | null = null;
     let queueAgentValidation = false;
@@ -280,6 +292,7 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
       source_product_id: sourceProductId,
       source_url: product.url,
       source_title: product.name,
+      source_category: product.source_category ?? null,
       price: product.price,
       affiliate_url: product.url,
       currency: "TRY",
