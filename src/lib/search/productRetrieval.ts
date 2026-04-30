@@ -943,6 +943,27 @@ export async function retrieveRankedProducts(
 
       promises.push(textQuery as unknown as Promise<{ data: SearchProductRow[] | null; error: { message: string } | null }>);
 
+      // BUG FIX: OR query .range(0, fetchLimit-1) created_at DESC sırasıyla top-N
+      // alıyor; eski tarihli ama tüm term'leri içeren ürünler (örn iPhone 15
+      // Plus 128GB phones) candidate pool'a girmiyordu. AND-on-title ile ek
+      // hedefli query — tüm term'ler title'da olan ürünleri kesin getir.
+      if (searchTerms.length >= 2) {
+        let andTitleQuery = sb
+          .from("products")
+          .select(SELECT_FIELDS)
+          .eq("is_active", true)
+          .range(0, fetchLimit - 1)
+          .order("created_at", { ascending: false });
+
+        for (const term of searchTerms) {
+          andTitleQuery = andTitleQuery.ilike("title", `%${escapeIlikeTerm(term)}%`);
+        }
+        if (categoryIds) andTitleQuery = andTitleQuery.in("category_id", categoryIds);
+        if (brand) andTitleQuery = andTitleQuery.ilike("brand", brand);
+
+        promises.push(andTitleQuery as unknown as Promise<{ data: SearchProductRow[] | null; error: { message: string } | null }>);
+      }
+
       const matchedCategoryIds = [
         ...new Set(searchTerms.flatMap((term) => getMatchedCategoryIds(categories, term))),
       ];
