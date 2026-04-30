@@ -148,6 +148,7 @@ function extractPrice(query: string): { min: number | null; max: number | null; 
 
 // Migration 011 sonrası categories tablosunda keywords henüz boş olan slug'lar
 // için static fallback. parseQuery DB keywords + bu map'i birlikte kullanır.
+// rev: standalone scan (cache-bağımsız) — Tur 3 Fix 1.
 const STATIC_CATEGORY_KEYWORDS: Record<string, string[]> = {
   "kahve": ["kahve", "turk kahvesi", "filtre kahve", "espresso", "cekirdek kahve", "granul kahve"],
   "spor-cantasi": ["spor cantasi", "gym cantasi", "fitness cantasi", "antrenman cantasi"],
@@ -161,6 +162,23 @@ function extractCategories(
   const normalizedQuery = normalize(query);
   const matchedSlugs: { slug: string; score: number }[] = [];
   const matchedWords = new Set<string>();
+
+  // 1) DB-bağımsız static keyword scan — DAIMA çalışır (cache'ten bağımsız).
+  // Aşağıdaki DB loop ile çakışma olursa son aşamadaki dedupe handle eder.
+  for (const [slug, keywords] of Object.entries(STATIC_CATEGORY_KEYWORDS)) {
+    let score = 0;
+    for (const kw of keywords) {
+      const normKw = normalize(kw);
+      const re = new RegExp(`\\b${escapeRegExp(normKw)}\\b`, "i");
+      if (re.test(normalizedQuery)) {
+        score += normKw.length;
+        matchedWords.add(normKw);
+      }
+    }
+    if (score > 0) {
+      matchedSlugs.push({ slug, score });
+    }
+  }
 
   for (const cat of categories) {
     const dbKeywords = cat.keywords ?? [];
@@ -196,9 +214,19 @@ function extractCategories(
     }
   }
 
+  // Aynı slug iki yerden de geldi (static + DB) → en yüksek score'u tut
+  const bestPerSlug = new Map<string, number>();
+  for (const m of matchedSlugs) {
+    const existing = bestPerSlug.get(m.slug);
+    if (existing === undefined || m.score > existing) {
+      bestPerSlug.set(m.slug, m.score);
+    }
+  }
+  const dedupedMatches = Array.from(bestPerSlug.entries()).map(([slug, score]) => ({ slug, score }));
+
   // En yüksek skordan aşağı sırala, top 2'yi al
-  matchedSlugs.sort((a, b) => b.score - a.score);
-  const topSlugs = matchedSlugs.slice(0, 2).map(m => m.slug);
+  dedupedMatches.sort((a, b) => b.score - a.score);
+  const topSlugs = dedupedMatches.slice(0, 2).map(m => m.slug);
 
   return { slugs: topSlugs, matchedWords };
 }
