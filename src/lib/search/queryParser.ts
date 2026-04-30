@@ -146,6 +146,14 @@ function extractPrice(query: string): { min: number | null; max: number | null; 
 // Category detection (YAML keywords'e bakarak)
 // =============================================================================
 
+// Migration 011 sonrası categories tablosunda keywords henüz boş olan slug'lar
+// için static fallback. parseQuery DB keywords + bu map'i birlikte kullanır.
+const STATIC_CATEGORY_KEYWORDS: Record<string, string[]> = {
+  "kahve": ["kahve", "turk kahvesi", "filtre kahve", "espresso", "cekirdek kahve", "granul kahve"],
+  "spor-cantasi": ["spor cantasi", "gym cantasi", "fitness cantasi", "antrenman cantasi"],
+  "icecek": ["icecek", "mesrubat", "soda", "gazoz", "kola"],
+};
+
 function extractCategories(
   query: string,
   categories: CategoryRef[]
@@ -155,10 +163,13 @@ function extractCategories(
   const matchedWords = new Set<string>();
 
   for (const cat of categories) {
-    if (!cat.keywords || cat.keywords.length === 0) continue;
+    const dbKeywords = cat.keywords ?? [];
+    const staticKeywords = STATIC_CATEGORY_KEYWORDS[cat.slug] ?? [];
+    const allKeywords = [...dbKeywords, ...staticKeywords];
+    if (allKeywords.length === 0) continue;
 
     let score = 0;
-    for (const kw of cat.keywords) {
+    for (const kw of allKeywords) {
       const normKw = normalize(kw);
       // Tam kelime olarak mı geçiyor (kelime sınırlarıyla)
       const re = new RegExp(`\\b${escapeRegExp(normKw)}\\b`, "i");

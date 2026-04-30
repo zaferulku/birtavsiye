@@ -15,6 +15,7 @@ import {
   type RawIntent,
 } from "../../../lib/chatbot/conversationState";
 import { heuristicClassify } from "../../../lib/chatbot/intentTypes";
+import { validateOrFuzzyMatchSlug } from "../../../lib/chatbot/categoryValidation";
 import {
   getQueryRankingProfile,
   isStrictIntentTerm,
@@ -504,25 +505,30 @@ export async function POST(req: Request) {
       (history ?? []) as Array<{ role: string; content: string; meta?: Partial<ConversationState> }>
     );
 
+    // İlk pass: parseQuery (heuristic) — orchResult henüz yok.
+    // LLM intent ile state enrich orchestrator sonrası yapılıyor (aşağıda).
+    const parsedCategoryRaw = parsed.category_slugs?.[0] ?? null;
+    const validParsedCategory = await validateOrFuzzyMatchSlug(parsedCategoryRaw, 1);
     const rawIntent: RawIntent = {
       intent_type: heuristicClassify(message) ?? "product_search",
-      category_slug: parsed.category_slugs?.[0] ?? null,
+      category_slug: validParsedCategory,
       brand_filter: parsed.brand ? [parsed.brand] : [],
       // State holds raw colors (e.g. "Beyaz"); the RPC layer adds %…% wildcards
       // when calling smart_search. Avoids leaking SQL LIKE syntax into state.
       variant_color_patterns: parsed.color ? [parsed.color] : [],
-      variant_storage_patterns: [],
+      variant_storage_patterns: parsed.storage ? [parsed.storage] : [],
       price_min: parsed.price_min ?? null,
       price_max: parsed.price_max ?? null,
       keywords: parsed.keywords ?? [],
     };
 
-    const { next: conversationState, action: mergeAction } = mergeIntent(
+    const { next: conversationState, action: initialMergeAction } = mergeIntent(
       previousState,
       rawIntent,
       message,
       intentHintFull
     );
+    let mergeAction = initialMergeAction;
 
     console.log("[chat] mergeAction=", mergeAction, {
       prev: { category: previousState.category_slug, brand: previousState.brand_filter, color: previousState.variant_color_patterns },
@@ -568,6 +574,49 @@ export async function POST(req: Request) {
       conversationState,
       intentType: conversationState.intent_type,
     });
+
+    // İkinci pass: LLM intent (orchResult.intent) state'i enrich eder.
+    // LLM bazen yanlış slug üretir (iccekler ↔ icecek); fuzzy match düzeltir.
+    const llmIntent = orchResult.intent as
+      | {
+          category_slug?: string | null;
+          brand_filter?: string[] | null;
+          price_range?: { min?: number | null; max?: number | null } | null;
+        }
+      | null
+      | undefined;
+    if (llmIntent) {
+      const enrichedDims: string[] = [];
+      const llmCategoryRaw = llmIntent.category_slug ?? null;
+      const validLlmCategory = await validateOrFuzzyMatchSlug(llmCategoryRaw, 2);
+      if (validLlmCategory && !conversationState.category_slug) {
+        conversationState.category_slug = validLlmCategory;
+        enrichedDims.push("category");
+      }
+      const llmBrands = Array.isArray(llmIntent.brand_filter)
+        ? llmIntent.brand_filter.filter((b): b is string => typeof b === "string" && b.length > 0)
+        : [];
+      if (llmBrands.length > 0 && conversationState.brand_filter.length === 0) {
+        conversationState.brand_filter = llmBrands;
+        enrichedDims.push("brand");
+      }
+      if (conversationState.price_min == null && llmIntent.price_range?.min != null) {
+        conversationState.price_min = llmIntent.price_range.min;
+        enrichedDims.push("price_min");
+      }
+      if (conversationState.price_max == null && llmIntent.price_range?.max != null) {
+        conversationState.price_max = llmIntent.price_range.max;
+        enrichedDims.push("price_max");
+      }
+      // mergeAction'i de update et — eval expects merge_with_new_dims
+      if (enrichedDims.length > 0 && mergeAction === "no_new_dims_keep") {
+        conversationState.last_set_dimensions = [
+          ...(conversationState.last_set_dimensions ?? []),
+          ...enrichedDims,
+        ];
+        mergeAction = "merge_with_new_dims";
+      }
+    }
 
     const productLimit = calculateProductLimit(conversationState, mergeAction);
     const responseProducts = orchResult.products.slice(0, productLimit);
