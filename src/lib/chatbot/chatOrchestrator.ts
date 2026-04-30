@@ -379,6 +379,19 @@ async function runFastPath(
   // Mevcut searchProducts() ş vector + keyword fallback zaten içinde
   const searchResult = await input.legacySearch(input.userMessage);
 
+  // Migration 013 fix: fast path 0 sonuç döndü ve state'te kategori varsa
+  // (multi-turn carry-over) slow path'e düş — smart_search RPC'nin
+  // category_browse kanalı ürün döndürebilir.
+  if (
+    searchResult.products.length === 0 &&
+    input.conversationState?.category_slug
+  ) {
+    console.log(
+      `[orchestrator] fast path 0 sonuç + state.cat=${input.conversationState.category_slug} → slow path retry`
+    );
+    return await runSlowPath(input, decision, startTime);
+  }
+
   // KB çşrmıyoruz, intent parse etmiyoruz ş fast path saf direkt arama
   // Response oluşturma: KB ve intent yok, ürünler var (umarız)
   const response = await generateResponse({
@@ -453,6 +466,28 @@ async function runSlowPath(
     input.categoryTaxonomy,
     input.conversationHistory || []
   );
+
+  // Override: LLM bazen DB'de OLMAYAN slug halüsinasyonu yapar ("spor-antas",
+  // "spor-malzemeleri"). Eğer intent.category_slug taxonomy'de yoksa, state'in
+  // (parseQuery + validateOrFuzzyMatchSlug ile geçmiş) kategorisini kullan.
+  // Smart search ve rerank intent.category_slug'ı kullanıyor — burası fix edilmezse
+  // search filtre uygulamadan vector fallback'e düşer.
+  const taxonomySet = new Set(input.categoryTaxonomy);
+  const stateCategory = input.conversationState?.category_slug ?? null;
+  if (intent.category_slug && !taxonomySet.has(intent.category_slug)) {
+    if (stateCategory && taxonomySet.has(stateCategory)) {
+      console.log(
+        `[orchestrator] override LLM hallucinated slug "${intent.category_slug}" → state "${stateCategory}"`
+      );
+      intent.category_slug = stateCategory;
+    } else {
+      intent.category_slug = null;
+    }
+  } else if (!intent.category_slug && stateCategory && taxonomySet.has(stateCategory)) {
+    // LLM hiç kategori vermedi ama state'te var — kullan
+    intent.category_slug = stateCategory;
+  }
+
   const queryTerms = splitSearchTerms(input.userMessage);
   const queryProfile = getQueryRankingProfile(queryTerms);
   const strictTermCount = queryTerms.filter(isStrictIntentTerm).length;
@@ -815,10 +850,23 @@ async function runSmartSearch(
   userMessage: string,
   intent: StructuredIntent
 ): Promise<SmartSearchRow[]> {
-  // Embedding (slow path için query embedding alıyoruz)
-  const embed = await aiEmbed({ input: userMessage });
-  if (embed.dimensions !== 768) {
-    throw new Error(`Embedding dim mismatch: ${embed.dimensions}`);
+  // Embedding (slow path için query embedding alıyoruz).
+  // Embed provider quota'sı tükenirse RPC'yi yine de çağır — keyword +
+  // category_browse kanalları embed'siz çalışıyor (Migration 013).
+  // Zero-vector vector_matches'i etkisizleştirir (sim ~ 0), diğer kanallar
+  // normal döner.
+  let queryEmbedding: number[];
+  try {
+    const embed = await aiEmbed({ input: userMessage });
+    if (embed.dimensions !== 768) {
+      throw new Error(`Embedding dim mismatch: ${embed.dimensions}`);
+    }
+    queryEmbedding = embed.embedding;
+  } catch (err) {
+    console.warn(
+      `[orchestrator] aiEmbed failed, zero-vector fallback: ${err instanceof Error ? err.message : err}`
+    );
+    queryEmbedding = new Array(768).fill(0);
   }
 
   // Variant patterns'i must_have_specs'ten ayıkla (renk/storage kolonlara).
@@ -839,7 +887,7 @@ async function runSmartSearch(
 
   // RPC parametreleri
   const params = {
-    query_embedding: embed.embedding,
+    query_embedding: queryEmbedding,
     category_filter: intent.category_slug,
     specs_must: Object.keys(remaining_specs).length > 0
       ? remaining_specs
