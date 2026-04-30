@@ -139,6 +139,37 @@ function extractPrice(query: string): { min: number | null; max: number | null; 
     remaining = remaining.replace(rangeM[0], "").trim();
   }
 
+  // "X-Y bin TL" / "X-Y bin lira" / "1-3 bin TL aralığında" — bin = ×1000
+  // Önce dene (specific), sonra plain dash. Sadece henüz min/max yoksa apply.
+  if (min === null && max === null) {
+    const binRangeRe = /(\d+(?:\.\d{3})*)\s*[-–—]\s*(\d+(?:\.\d{3})*)\s*bin\s*(?:tl|lira|₺)?/i;
+    const binM = query.match(binRangeRe);
+    if (binM) {
+      const a = parseInt(binM[1].replace(/\./g, "")) * 1000;
+      const b = parseInt(binM[2].replace(/\./g, "")) * 1000;
+      if (a < b) {
+        min = a;
+        max = b;
+        remaining = remaining.replace(binM[0], "").trim();
+      }
+    }
+  }
+
+  // "X-Y TL" / "X TL-Y TL" plain dash range (bin yok)
+  if (min === null && max === null) {
+    const dashRe = /(\d+(?:\.\d{3})*)\s*(?:tl|lira|₺)?\s*[-–—]\s*(\d+(?:\.\d{3})*)\s*(?:tl|lira|₺)/i;
+    const dashM = query.match(dashRe);
+    if (dashM) {
+      const a = parseInt(dashM[1].replace(/\./g, ""));
+      const b = parseInt(dashM[2].replace(/\./g, ""));
+      if (a < b) {
+        min = a;
+        max = b;
+        remaining = remaining.replace(dashM[0], "").trim();
+      }
+    }
+  }
+
   return { min, max, remaining };
 }
 
@@ -149,10 +180,17 @@ function extractPrice(query: string): { min: number | null; max: number | null; 
 // Migration 011 sonrası categories tablosunda keywords henüz boş olan slug'lar
 // için static fallback. parseQuery DB keywords + bu map'i birlikte kullanır.
 // rev: standalone scan (cache-bağımsız) — Tur 3 Fix 1.
+// TUR 4: giyim eklendi — erkek-giyim-ust, erkek-giyim-alt, kadin-giyim-*, kadin-elbise.
 const STATIC_CATEGORY_KEYWORDS: Record<string, string[]> = {
   "kahve": ["kahve", "turk kahvesi", "filtre kahve", "espresso", "cekirdek kahve", "granul kahve"],
   "spor-cantasi": ["spor cantasi", "gym cantasi", "fitness cantasi", "antrenman cantasi"],
   "icecek": ["icecek", "mesrubat", "soda", "gazoz", "kola"],
+  // Giyim — cache-bağımsız fallback (LLM dotted slug korumalı)
+  "erkek-giyim-ust": ["erkek tisort", "erkek tişört", "erkek gomlek", "erkek gömlek", "erkek kazak", "erkek sweatshirt", "erkek polo"],
+  "erkek-giyim-alt": ["erkek pantolon", "erkek jean", "erkek esofman", "erkek şort"],
+  "kadin-giyim-ust": ["kadin tisort", "kadın tişört", "kadin bluz", "kadın bluz", "kadin gomlek", "bayan tisort", "bayan bluz"],
+  "kadin-giyim-alt": ["kadin pantolon", "kadın pantolon", "kadin jean", "kadin tayt"],
+  "kadin-elbise": ["kadin elbise", "kadın elbise", "abiye"],
 };
 
 function extractCategories(
