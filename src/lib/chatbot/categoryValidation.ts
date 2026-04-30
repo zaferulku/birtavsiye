@@ -50,6 +50,24 @@ function levenshtein(a: string, b: string): number {
  * Geçersizse fuzzy match dener (Levenshtein ≤ maxDistance).
  * Hiçbir match yoksa null döner.
  */
+// LLM bazen dotted-namespace ("moda.erkek_ust_giyim") veya underscore varyantı
+// üretir. DB taxonomy kebab-case ("erkek-giyim-ust"). Normalize et.
+function normalizeSlugCandidate(input: string): string[] {
+  const variants = new Set<string>();
+  const lower = input.toLowerCase().trim();
+  variants.add(lower);
+  // dotted prefix strip (moda.X → X, teknoloji.Y → Y)
+  if (lower.includes(".")) {
+    const tail = lower.split(".").pop();
+    if (tail) variants.add(tail);
+  }
+  // underscore → dash
+  for (const v of [...variants]) {
+    if (v.includes("_")) variants.add(v.replace(/_/g, "-"));
+  }
+  return [...variants];
+}
+
 export async function validateOrFuzzyMatchSlug(
   inputSlug: string | null,
   maxDistance: number = 2,
@@ -57,17 +75,36 @@ export async function validateOrFuzzyMatchSlug(
   if (!inputSlug) return null;
 
   const taxonomy = await getCategoryTaxonomy();
+  const candidates = normalizeSlugCandidate(inputSlug);
 
-  // Exact match
-  if (taxonomy.has(inputSlug)) return inputSlug;
+  // Exact match (any normalized variant)
+  for (const c of candidates) {
+    if (taxonomy.has(c)) return c;
+  }
 
-  // Fuzzy match
+  // Token-set match: aynı kelimeler farklı sırada (erkek-ust-giyim ↔ erkek-giyim-ust)
+  for (const c of candidates) {
+    const inputTokens = new Set(c.split("-").filter(Boolean));
+    for (const candidate of taxonomy) {
+      const candTokens = new Set(candidate.toLowerCase().split("-").filter(Boolean));
+      if (inputTokens.size === candTokens.size && inputTokens.size >= 2) {
+        const allMatch = [...inputTokens].every((t) => candTokens.has(t));
+        if (allMatch) {
+          console.log(`[categoryValidation] token-set match: "${inputSlug}" → "${candidate}"`);
+          return candidate;
+        }
+      }
+    }
+  }
+
+  // Fuzzy match (try all variants, pick best)
   let best: { slug: string; dist: number } | null = null;
-  const lower = inputSlug.toLowerCase();
-  for (const candidate of taxonomy) {
-    const d = levenshtein(lower, candidate.toLowerCase());
-    if (d <= maxDistance && (!best || d < best.dist)) {
-      best = { slug: candidate, dist: d };
+  for (const c of candidates) {
+    for (const candidate of taxonomy) {
+      const d = levenshtein(c, candidate.toLowerCase());
+      if (d <= maxDistance && (!best || d < best.dist)) {
+        best = { slug: candidate, dist: d };
+      }
     }
   }
 
