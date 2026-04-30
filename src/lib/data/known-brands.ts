@@ -26,8 +26,9 @@ const SEED: readonly string[] = [
   "Royal Canin", "Pro Plan", "Hills", "Whiskas", "Friskies", "Pedigree",
   // Kahve & mutfak
   "Nespresso", "Krups", "Sage", "DeLonghi", "Korkmaz", "Schafer",
-  // Gıda
-  "Nescafé",
+  // Gıda - Kahve markaları
+  "Nescafé", "Nescafe", "Jacobs", "Lavazza", "Tchibo", "Mehmet Efendi", "Kurukahveci",
+  "Kurukahveci Mehmet Efendi", "illy", "Starbucks",
   // Süpürge
   "Dreame", "iRobot", "Roborock",
   // Ev tekstil & mobilya
