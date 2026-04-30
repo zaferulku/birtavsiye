@@ -33,3 +33,4 @@ backups/
 .claude/scheduled_tasks.lock
 .claude/settings.local.json
 .claude/settings.json
+scripts/.reclassify-plan.json
