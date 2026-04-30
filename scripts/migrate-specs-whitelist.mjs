@@ -1,3 +1,25 @@
+/**
+ * ⚠️ DO NOT RUN --apply ⚠️
+ *
+ * Karar (29 Apr 2026): Bu migration ASLA çalıştırılmayacak.
+ *
+ * Sebep:
+ * - Cosmetic problem (kullanıcıya gerçek zarar vermez)
+ * - Geri dönüşsüz (silinen key'ler restore edilemez)
+ * - Frontend kategori filter sidebar etkilenebilir (paralel editör)
+ * - Scraper geri kirletecek (tek paket olarak yapılırsa daha karmaşık)
+ *
+ * Bu script sadece DRY-RUN ile analiz amaçlı kullanılabilir.
+ *
+ * Eğer ileride APPLY düşünülürse:
+ * 1. Önce backup tablo (specs full kopya)
+ * 2. Frontend grep + manuel test (kategori sidebar)
+ * 3. Scraper filterSpecsWhitelist() patch eş zamanlı
+ * 4. Stage'de test
+ *
+ * Şu an: ASLA --apply.
+ */
+
 import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
 import { filterSpecsWhitelist, ALL_ALLOWED_KEYS, EXPLICIT_BLACKLIST } from './specs-whitelist.mjs';

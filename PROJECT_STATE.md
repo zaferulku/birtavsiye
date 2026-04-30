@@ -418,6 +418,7 @@ ProductDetailShell.tsx ortak nokta — uyumlu.
 | Supabase Pro plan tutuluyor (NANO) | 2026-04-29 | Compute upgrade $15 maliyetli, 1 ay sonra karar |
 | Disk IO bütçesi limiti tespit | 2026-04-29 | NANO 30 dk burst (2085 Mbps), sonra 43 Mbps baseline |
 | Migration 011 (kahve + spor-cantasi) | 2026-04-29 | Tur 2 fixture taxonomy; YARIN uygulanacak |
+| M1 specs whitelist APPLY ASLA | 2026-04-29 | Cosmetic, geri dönüşsüz, MVP launch sonrası bile yapılmayacak |
 
 ---
 
@@ -498,7 +499,7 @@ anne_bebek (11) = **141**
 | Borç | Etki | Plan / Status |
 |---|---|---|
 | 83 keşfedilmemiş DB sub-kategorisi | Erişilemiyor | DB sağlık olunca dump al, Header tam yeniden yapı (uzun vadeli) |
-| `products.specs` kirli | Search zayıf | Specs whitelist tasarımı (POSTPONE — Paket M sonrası) |
+| `products.specs` kirli | Cosmetic | ❌ ASLA APPLY (29 Apr karar; dry-run script ref `9fe120c`) |
 | `brand: "null"` string | Eski kayıtlarda yanlış | DB sağlık olunca count + UPDATE NULL → user kararı (re-classify vs delete) |
 | Apple/APPLE mixed casing | ✅ DONE | Bug B `known-brands.ts` Set ile çözüldü (commit `419d73c`) |
 | Latency yüksek (slow 16s) | UX | Paket M (multi-strategy + tokenizer) çözecek — baseline ≥%60 sonrası |
