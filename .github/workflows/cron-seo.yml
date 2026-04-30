@@ -12,4 +12,4 @@ jobs:
     steps:
       - name: Call Vercel cron endpoint
         run: |
-          curl -fsS -X GET             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"             "https://birtavsiye.net/api/cron/seo"
+          curl -fsS -X GET             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"             "https://www.birtavsiye.net/api/cron/seo"

@@ -16,4 +16,4 @@ jobs:
         run: |
           curl -fsS -X GET \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            "https://birtavsiye.net/api/cron/scrape"
+            "https://www.birtavsiye.net/api/cron/scrape"
