@@ -1,8 +1,10 @@
-name: Cron — Scrape (DISABLED, manual only)
+name: Cron — Scrape (MM + PttAVM + Vatan rotation)
 
-# NOT: Faz 1 sırasında Gemini kotasını korumak için schedule kapalı.
-# Manuel tetikleme: GitHub Actions UI → "Run workflow"
+# 4 saatte bir tetiklenir → 6 run/gün → 46 query rotation ~8 günde komple tur.
+# Manuel tetikleme: GitHub Actions UI → "Run workflow" hâlâ aktif.
 on:
+  schedule:
+    - cron: '0 */4 * * *'
   workflow_dispatch:
 
 jobs:
