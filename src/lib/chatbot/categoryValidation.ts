@@ -82,6 +82,25 @@ export async function validateOrFuzzyMatchSlug(
     if (taxonomy.has(c)) return c;
   }
 
+  // Leaf-suffix match: DB slug'ları full hierarchik path
+  // (örn "elektronik/telefon/akilli-telefon"); LLM/queryParser leaf-only
+  // ("akilli-telefon") üretirse "/leaf" suffix ile match'le. Tek match varsa
+  // onu kullan; çoklu match → fuzzy'ye bırak (tie-break belirsiz).
+  for (const c of candidates) {
+    if (c.includes("/")) continue; // zaten path-li, leaf değil
+    const matches: string[] = [];
+    for (const candidate of taxonomy) {
+      if (candidate === c || candidate.endsWith("/" + c)) {
+        matches.push(candidate);
+      }
+    }
+    if (matches.length === 1) {
+      console.log(`[categoryValidation] leaf-suffix match: "${inputSlug}" → "${matches[0]}"`);
+      return matches[0];
+    }
+    // Çoklu match: ambiguity, fuzzy aşamasına bırak
+  }
+
   // Token-set match: aynı kelimeler farklı sırada (erkek-ust-giyim ↔ erkek-giyim-ust)
   for (const c of candidates) {
     const inputTokens = new Set(c.split("-").filter(Boolean));
