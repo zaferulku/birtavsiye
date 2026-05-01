@@ -31,8 +31,17 @@ const RULES: CategoryRule[] = [
                "kılıf negro", "kılıf first", "kılıf silikon", "kılıf airbagli", "kılıf mat",
                "kılıf kamera korumalı", "kılıf biye", "kılıf bright simli", "kılıf kelvin",
                "kılıf renkli", "kılıf resimli", "kılıf yumuşak", "kılıf darbeye",
-               "kılıf magnum", "kılıf kapaklı", "kılıf aras deri", "kılıf ananas"],
-    excludeIfPresent: ["watch", "ipad", "tablet", "tv "],
+               "kılıf magnum", "kılıf kapaklı", "kılıf aras deri", "kılıf ananas",
+               // Agresif tek-kelime (2. tur)
+               "kılıf"],
+    excludeIfPresent: ["watch", "ipad", "tablet", "tv ",
+                       // Agresif tek-kelime için ek exclude
+                       "laptop", "macbook", "kamera kılıfı", "fotoğraf makinesi kılıfı",
+                       "yastık kılıf", "yastık kılıfı", "yorgan kılıf", "yorgan kılıfı",
+                       "nevresim kılıf", "kart kılıf", "kart kılıfı", "kalem kılıfı",
+                       "ehliyet kılıfı", "kimlik kılıfı", "pasaport kılıfı",
+                       "kulaklık kılıfı", "saat kılıfı", "kitap kılıfı",
+                       "ütü kılıfı", "şemsiye kılıfı"],
     confidence: "high",
   },
   {
@@ -50,9 +59,13 @@ const RULES: CategoryRule[] = [
                "type-c / usb kablo",
                "magsafe", "qi2", "kablosuz şarj", "wireless charger",
                "şarj istasyonu", "manyetik magsafe",
-               "modem router adaptörü", "router adaptörü", "adaptör kablosu"],
+               "modem router adaptörü", "router adaptörü", "adaptör kablosu",
+               // Genişleme — 3. tur (2026-05)
+               "şarj cihazı", "duvar şarj", "araç şarj", "akıllı şarj",
+               "tip c şarj", "iphone şarj", "samsung şarj"],
     excludeIfPresent: ["powerbank", "taşınabilir şarj", "robot süpürge", "fotoğraf makinesi",
-                       "akıllı saat", "watch series", "watch ultra"],
+                       "akıllı saat", "watch series", "watch ultra",
+                       "akü", "araba aküsü", "otomotiv akü"],
     confidence: "high",
   },
   {
@@ -148,7 +161,11 @@ const RULES: CategoryRule[] = [
                "kontrolfreek", "oyun kolu", "gamepad",
                "retro oyun konsolu", "taşınabilir oyun konsolu", "video oyun konsolu",
                "oyun konsolu", "atari ", "hdmi oyun konsolu", "emülatör destekli",
-               "klasik oyunlu", "1000 oyun yüklü", "oyun yüklü"],
+               "klasik oyunlu", "1000 oyun yüklü", "oyun yüklü",
+               // Genişleme — 7. tur (2026-05)
+               "ps5 oyun", "ps4 oyun", "xbox oyun", "switch oyun",
+               "ghost of tsushima", "matchbox driving", "ps5 cd", "xbox cd",
+               "oyun cd", "ikinci el oyun", "konsol oyun"],
     confidence: "high",
   },
 
@@ -159,7 +176,14 @@ const RULES: CategoryRule[] = [
                "rdimm", "udimm", "sodimm", "ssd nvme", "ssd m.2", "ssd sata",
                "pc4-2133", "pc5-", "ram bellek",
                "8gb ddr4", "16gb ddr4", "32gb ddr4", "64gb ddr4", "ddr4 2133",
-               "soğutucu pad", "notebook soğutucu"],
+               "soğutucu pad", "notebook soğutucu",
+               // Genişleme — unclassified analiz (2026-05)
+               "kingston", "kingston ram", "corsair ram", "gskill", "g.skill",
+               "8 gb 3200 mhz", "16 gb 3200", "32 gb 3200", "ddr3 ram",
+               "kingston ssd", "samsung ssd", "wd ssd", "western digital ssd",
+               "sandisk ssd", "crucial ssd", "patriot ssd",
+               "harddisk", "hard disk", "hdd 1tb", "hdd 2tb", "hdd 4tb",
+               "internal ssd", "harici ssd", "nvme harici", "external ssd"],
     excludeIfPresent: ["telefon", "tablet", "laptop", "macbook", "thinkpad",
                        "ideapad", "vivobook", "zenbook", "rog ", "victus",
                        "pavilion", "elitebook", "omen ", "yoga slim", "yoga pro",
@@ -173,7 +197,11 @@ const RULES: CategoryRule[] = [
     slug: "klima",
     keywords: ["btu klima", "duvar tipi split", "windfree", "multi inverter",
                "inverter klima", "9000 btu", "12000 btu", "18000 btu", "24000 btu",
-               "duvar tipi multi"],
+               "duvar tipi multi",
+               // Genişleme — 6. tur (2026-05)
+               "btu inverter", "btu duvar tipi", "btu split",
+               "9000btu", "12000btu", "18000btu", "24000btu",
+               "duvar tipi inverter", "soğutucu klima", "klima inverter"],
     confidence: "high",
   },
 
@@ -188,6 +216,11 @@ const RULES: CategoryRule[] = [
   {
     slug: "akilli-saat",
     keywords: ["akıllı saat", "smart watch", "smartwatch", "fitness saat", "spor saati",
+               // Genişleme — 6. tur (2026-05)
+               "amoled ekran kordon", "amoled bataryası", "amoled tasarım kordon",
+               "watch ultra batarya", "watch s9", "watch s10", "watch fit",
+               "imıkı", "linktech smartwatch", "iwo watch", "huawei band",
+               "bileklikli akıllı", "ultra 15 gün batarya",
                "garmin fenix", "garmin forerunner", "garmin descent", "garmin venu",
                "apple watch", "apple watch series", "apple watch ultra", "apple watch se",
                "watch se 3", "watch series", "watch sport",
@@ -232,7 +265,10 @@ const RULES: CategoryRule[] = [
     keywords: ["ipad pro", "ipad air", "ipad mini", "ipad a16", "ipad 11", "ipad 10",
                "galaxy tab s", "galaxy tab a", "matepad", "huawei matepad",
                "huawei mate pad", "xiaomi pad", "redmi pad",
-               "lenovo tab", "android tablet"],
+               "lenovo tab", "android tablet",
+               // Genişleme — 8. tur (2026-05)
+               "apple ipad", "ipad 9", "ipad 8", "ipad 13", " ipad ",
+               "lenovo ideatab", "samsung tab"],
     excludeIfPresent: ["kılıf", "kapak", "ekran koruyucu", "kalem", "kordon", "kayış"],
     confidence: "high",
   },
@@ -250,7 +286,15 @@ const RULES: CategoryRule[] = [
                "legion pro", "legion slim", "ideapad slim", "predator helios",
                "nitro 5", "aspire", "swift go", "nirvana", "excalibur",
                "msi stealth", "msi katana", "msi raider", "msi prestige", "msi modern",
-               "oyuncu laptop", "gaming laptop"],
+               "oyuncu laptop", "gaming laptop",
+               // Genişleme — 6. tur (2026-05)
+               "asus tuf", "tuf f16", "tuf f15", "tuf a16", "tuf gaming f16",
+               "rog flow", "vivobook s", "vivobook pro", "zenbook s",
+               "intel core ultra", "core ultra 5", "core ultra 7", "core ultra 9",
+               "i7 14650hx", "i5 13450hx", "i9 14900hx",
+               "165hz wuxga", "165hz wqxga", "144hz fhd", "240hz oled",
+               "rtx 4060 laptop", "rtx 4070 laptop", "rtx 5070 laptop",
+               "lenovo legion", "hp omen", "msi cyborg", "msi sword"],
     excludeIfPresent: ["çantası", "standı", "soğutucu", "klavye kılıfı", "şarj cihazı"],
     confidence: "high",
   },
@@ -275,7 +319,11 @@ const RULES: CategoryRule[] = [
   },
   {
     slug: "camasir-makinesi",
-    keywords: ["çamaşır makinesi", "camasir makinesi", "kurutmalı çamaşır", "ankastre çamaşır"],
+    keywords: ["çamaşır makinesi", "camasir makinesi", "kurutmalı çamaşır", "ankastre çamaşır",
+               // Genişleme — 4. tur (2026-05)
+               "1400 devir", "1200 devir", "1000 devir", "800 devir",
+               "9 kg çamaşır", "10 kg çamaşır", "8 kg çamaşır", "7 kg çamaşır",
+               "enerji sınıfı a", "yan yana çamaşır", "front load çamaşır"],
     excludeIfPresent: ["deterjanı", "tableti", "yumuşatıcı", "filtre"],
     confidence: "high",
   },
@@ -331,6 +379,16 @@ const RULES: CategoryRule[] = [
     keywords: ["bluetooth kulaklık", "kablosuz kulaklık",
                "airpods", "airpods pro", "airpods 2", "airpods 3", "airpods 4",
                "kulak içi kulaklık", "kulak üstü kulaklık", "earbuds",
+               // Genişleme — 3. tur (2026-05)
+               "tws kulaklık", "tws bluetooth", " tws ", "true wireless",
+               "kulak içi", "kulak üstü", "gaming kulaklık", "spor kulaklık",
+               "jbl tune", "jbl wave", "sony wf", "sony wh", "bose qc",
+               "anker soundcore", "anc kulaklık", "noise cancelling",
+               // Genişleme — 8. tur (2026-05)
+               "kablosuz bluetooth kulaklık", "tws kulaklık bluetooth",
+               "air pro", "air buds", "y13 kablosuz bluetooth", "y50",
+               "redmi buds", "freebuds", "galaxy buds", "buds pro",
+               "soundpeats", "edifier kulaklık", "huawei freebuds",
                "kulak içi kablosuz", "tws kulaklık", "bt 5.0 tws", "tws bt",
                "echo buds", "amazon echo buds", "redmi buds", "galaxy buds",
                "anc kulaklık", "aktif gürültü engelleme"],
@@ -358,7 +416,11 @@ const RULES: CategoryRule[] = [
   },
   {
     slug: "fotograf-kamera",
-    keywords: ["dslr kamera", "mirrorless kamera", "kompakt kamera", "vlog kamera", "fotokapan kamera"],
+    keywords: ["dslr kamera", "mirrorless kamera", "kompakt kamera", "vlog kamera", "fotokapan kamera",
+               // Genişleme — 3. tur (2026-05)
+               "fotoğraf makinesi", "nikon", "canon eos", "sony alpha", "sony zv",
+               "pentax k", "fujifilm x", "lumix", "olympus om",
+               "lens kit", "fotoğraf lens", "nikkor lens", "objektif lens"],
     excludeIfPresent: ["aksiyon kamera", "tripod"],
     confidence: "high",
   },
@@ -372,7 +434,10 @@ const RULES: CategoryRule[] = [
   // --- Kıyafet (en büyük niş) ---
   {
     slug: "erkek-ayakkabi-sneaker",
-    keywords: ["erkek sneaker", "erkek spor ayakkabı", "spor ayakkabı erkek", "sneaker erkek"],
+    keywords: ["erkek sneaker", "erkek spor ayakkabı", "spor ayakkabı erkek", "sneaker erkek",
+               // Genişleme — 3. tur (2026-05)
+               "erkek ayakkabı", "ayakkabı erkek", "casual erkek ayakkabı"],
+    excludeIfPresent: ["topuklu", "klasik", "bot ", "sandalet", "terlik"],
     confidence: "high",
   },
   {
@@ -442,14 +507,35 @@ const RULES: CategoryRule[] = [
     slug: "cilt-bakim",
     keywords: ["nemlendirici krem", "nemlendirici", "yüz bakım", "yüz kremi", "anti-aging",
                "vitamin c serum", "hyaluronic", "yüz serumu", "göz kremi", "leke kremi",
-               "akne kremi", "güneş kremi", "spf "],
-    excludeIfPresent: ["saç", "el kremi"],
+               "akne kremi", "güneş kremi", "spf ",
+               // Genişleme — unclassified analiz (2026-05)
+               "retinol", "tonik", "yüz tonik", "leke karşıtı", "leke karşıt",
+               "yaşlanma karşıtı", "yaşlanma karşıt", "kırışıklık karşıt",
+               "yüz maskesi", "yüz peeling", "peeling jel", "temizleme jeli",
+               "temizleyici jel", "yüz temizleme", "salisilik asit", "niacinamide",
+               "hyaluronik asit", "kollajen krem", "vitamin e krem", "yüz kontur",
+               "cilt bakım seti", "yüz bakım seti", "anti aging serum",
+               "spf 50", "spf 30", "fps krem", "fps güneş", "leke giderici",
+               // Agresif tek-kelime (2. tur)
+               "kremi", "krem"],
+    excludeIfPresent: ["saç", "el kremi", "ayak kremi",
+                       // Agresif tek-kelime için ek exclude
+                       "krem peynir", "krem renk", "krem rengi",
+                       "araç kremi", "ayakkabı kremi", "ayakkabi kremi",
+                       "kek kremi", "pasta kremi", "donut kremi"],
     confidence: "high",
   },
   {
     slug: "makyaj",
     keywords: ["far paleti", "makyaj paleti", "fondöten", "kapatıcı", "pudra",
-               "eyeliner", "maskara", "kaş kalemi", "allık", "highlighter"],
+               "eyeliner", "maskara", "kaş kalemi", "allık", "highlighter",
+               // Genişleme — unclassified analiz (2026-05)
+               "göz kalemi", "dudak kalemi", "göz farı", "göz far",
+               "kapak farı", "stylo eyeliner", "waterproof eyeliner",
+               "siyah maskara", "uzatıcı maskara", "hacim maskara",
+               "fondoten", "krem fondöten", "stik fondöten", "likit fondöten",
+               "bb krem", "cc krem", "kontur paleti", "blush", "blush allık",
+               "terekota allık", "rose allık", "matt ruj", "siyah eyeliner"],
     confidence: "high",
   },
   {
@@ -459,7 +545,10 @@ const RULES: CategoryRule[] = [
   },
   {
     slug: "sac-bakim",
-    keywords: ["saç kremi", "saç maskesi", "saç bakım"],
+    keywords: ["saç kremi", "saç maskesi", "saç bakım",
+               // Genişleme — 4. tur (2026-05)
+               "saç serumu", "saç bakımı", "saç onarıcı", "saç parlatıcı",
+               "saç kremi", "saç losyonu", "saç toniği"],
     excludeIfPresent: ["fön", "kurutma", "düzleştirici", "saç fırçası",
                        "şampuan", "saç boyası", "saç serumu"],
     confidence: "high",
@@ -486,7 +575,24 @@ const RULES: CategoryRule[] = [
   {
     slug: "kamp-outdoor",
     keywords: ["kamp çadırı", "uyku tulumu", "kamp sandalyesi", "termos", "kamp seti",
-               "outdoor sırt çantası"],
+               "outdoor sırt çantası",
+               // Genişleme — unclassified analiz (2026-05)
+               "kapüşonlu uyku tulumu", "uyku tulumu mumya", "kompresyon tulumu",
+               "outdoor", "trekking", "trekking ayakkabı", "trekking çantası",
+               "kamp çantası", "kamp lambası", "kamp masası", "kamp ocağı",
+               "outdoor lamba", "outdoor mont", "outdoor pantolon",
+               "termos bardak", "termos şişe", "su termosu", "kahve termosu",
+               "kamp kova", "kamp aksesuar", "kamp matı", "kamp matı şişme",
+               // Agresif tek-kelime (2. tur)
+               "kamp", "çadır", "çadırı",
+               // 8. tur — niche kalanlar
+               "hiking", "trekking", "doğa yürüyüş", "outdoor mont",
+               "balıkçılık", "olta takımı", "kamp yatağı",
+               "outdoor eldiven", "fitness eldiveni"],
+    excludeIfPresent: ["kampanya", "kampüs",
+                       "kamp ateş", "kamp ateşi",
+                       "yastık kılıfı", "duş çadırı", "soyunma çadırı",
+                       "düğün çadırı", "etkinlik çadırı"],
     confidence: "high",
   },
   {
@@ -494,7 +600,13 @@ const RULES: CategoryRule[] = [
     keywords: ["dumbell", "dambıl", "kettlebell", "yoga matı", "yoga blok",
                "fitness band", "direnç bandı", "spor bandı",
                "koşu bandı", "treadmill", "kondisyon bisikleti", "eliptik bisiklet",
-               "halter seti", "ağırlık seti", "bench press"],
+               "halter seti", "ağırlık seti", "bench press",
+               // Genişleme — 4. tur (2026-05)
+               "halter", "halter yaka", "spor aleti", "egzersiz aleti",
+               "body trimmer", "kas güçlendirici", "kondisyon aleti",
+               "tahta egzersiz", "trambolin", "ip atlama", "atlama ipi",
+               "core slider", "ab roller", "karın kası", "fitness ekipman"],
+    excludeIfPresent: ["protein tozu", "whey protein"],
     confidence: "high",
   },
 
@@ -504,6 +616,32 @@ const RULES: CategoryRule[] = [
     keywords: ["havlu", "yorgan", "çarşaf", "nevresim takımı", "yastık kılıfı", "battaniye",
                "perde", "tül perde", "halı kilim", "halı yıkama", "minder", "yatak örtüsü",
                "pike", "oda halısı", "salon halısı"],
+    confidence: "high",
+  },
+
+  // --- Spor besin takviyesi (4. tur, 2026-05) ---
+  {
+    slug: "spor-besin",
+    keywords: ["whey protein", "protein tozu", "protein bar", "izole protein",
+               "creatine", "kreatin", "bcaa", "mass gainer", "weight gainer",
+               "pre workout", "preworkout", "post workout", "amino asit",
+               "glutamine", "glutamin", "fitness besin", "ergojenik",
+               "performans tozu", "kas geliştirici toz", "casein protein",
+               "whey isolate", "whey concentrate", "vegan protein"],
+    excludeIfPresent: ["bebek mama", "bebek protein"],
+    confidence: "high",
+  },
+
+  // --- Parti & eğlence (4. tur, 2026-05) ---
+  {
+    slug: "parti-eglence",
+    keywords: ["halloween maske", "halloween kostüm", "doğum günü süs",
+               "balon seti", "konfeti", "parti şapka", "parti malzeme",
+               "doğum günü mum", "yaş günü süs", "süsleme seti",
+               "cadılar bayramı", "yılbaşı süs", "yılbaşı şapka",
+               "parti garland", "parti afiş", "doğum günü afiş",
+               "kostüm parti", "tema parti", "bachelor parti"],
+    excludeIfPresent: ["bebek", "çocuk oyun"],
     confidence: "high",
   },
 
@@ -582,8 +720,21 @@ const RULES: CategoryRule[] = [
   {
     slug: "arac-aksesuar",
     keywords: ["araç paspas", "araç koltuk kılıfı", "direksiyon kılıfı", "araç aroma",
-               "araç telefon tutucu", "araç şarj", "oto temizleme", "araç kamera"],
-    excludeIfPresent: ["telefon kılıfı"],
+               "araç telefon tutucu", "araç şarj", "oto temizleme", "araç kamera",
+               // Genişleme — 3. tur (2026-05)
+               "oto paspas", "araba paspas", "paspas seti", "araç paspas seti",
+               "bmw seri", "audi a3", "audi a4", "audi a6", "mercedes c serisi",
+               "vw passat", "vw golf", "renault clio", "renault megane",
+               "fiat egea", "fiat doblo", "ford focus", "ford fiesta",
+               "araç koltuk", "koltuk minderi araç", "araba kılıfı",
+               "araç organizer", "bagaj organizer", "araç bagaj",
+               "ön cam buharlanma", "yağmur tutucu", "rüzgarlık araç",
+               // Genişleme — 7. tur (2026-05)
+               "akü şarj cihazı", "akü şarjı", "araba aksesuar",
+               "rizline", "mercedes silecek", "bagaj havuzu", "muz silecek",
+               "araç içi vakumlu", "araç tutucu ayna",
+               "mercedes gla", "mercedes glb", "audi q3", "audi q5"],
+    excludeIfPresent: ["telefon kılıfı", "araç akü", "akü 12v"],
     confidence: "high",
   },
   {
@@ -643,7 +794,18 @@ const RULES: CategoryRule[] = [
     keywords: ["wi-fi router", "wi-fi 6", "wi-fi 7", "mesh router", "access point",
                "ethernet switch", "tp-link router", "asus router", "netgear router",
                "huawei router", "5g modem", "4g modem", "modem router", "wifi tekrarlayıcı",
-               "powerline adapter"],
+               "powerline adapter",
+               // Genişleme — unclassified analiz (2026-05)
+               "tp-link", "tp link", "gigabit switch", "desktop switch",
+               "10/100/1000", "ethernet kablo", "rj45 kablo", "cat6 kablo",
+               "fiber switch", "managed switch", "unmanaged switch",
+               "poe switch", "poe injector", "wifi 6 access point",
+               "outdoor access point", "router wifi", "modem wifi",
+               "vdsl modem", "adsl modem", "fiber modem", "huawei modem",
+               // Genişleme — 7. tur (2026-05)
+               "wireless modem", "kablosuz modem", "300mbps modem",
+               "150mbps modem", "adsl2 wireless", "asus rt", "tp link archer",
+               "tenda router", "mercusys", "zyxel modem", "pix-link"],
     confidence: "high",
   },
 
@@ -727,7 +889,11 @@ const RULES: CategoryRule[] = [
   {
     slug: "kisisel-hijyen",
     keywords: ["sabun", "duş jeli", "kolonya el", "antibakteriyel jel",
-               "ıslak mendil", "tıraş bıçağı", "tıraş köpüğü"],
+               "ıslak mendil", "tıraş bıçağı", "tıraş köpüğü",
+               // Genişleme — 7. tur (2026-05)
+               "cerrahi maske", "filtreli maske", "burun telli maske", "tıbbi maske",
+               "n95 maske", "ffp2 maske", "filtreli burun telli",
+               "el dezenfektan", "yüzey dezenfektan"],
     excludeIfPresent: ["şampuan", "saç boyası", "saç serumu", "saç kremi",
                        "saç maskesi", "saç bakım"],
     confidence: "high",
@@ -896,12 +1062,19 @@ const RULES: CategoryRule[] = [
   // --- Kadın ayakkabı detay ---
   {
     slug: "kadin-ayakkabi-topuklu",
-    keywords: ["topuklu ayakkabı", "stiletto"],
+    keywords: ["topuklu ayakkabı", "stiletto",
+               // Genişleme — 4. tur (2026-05)
+               "kadın topuklu", "topuklu kadın", "topuk gizli",
+               "topuklu sandalet", "platform topuklu", "kalın topuk"],
     confidence: "high",
   },
   {
     slug: "kadin-ayakkabi-sneaker",
-    keywords: ["kadın sneaker", "kadın spor ayakkabı"],
+    keywords: ["kadın sneaker", "kadın spor ayakkabı",
+               // Genişleme — 3. tur (2026-05)
+               "kadın ayakkabı", "ayakkabı kadın", "casual kadın ayakkabı",
+               "spor kadın ayakkabı"],
+    excludeIfPresent: ["topuklu", "sandalet", "bot ", "terlik"],
     confidence: "high",
   },
   {
@@ -1004,7 +1177,11 @@ const RULES: CategoryRule[] = [
   {
     slug: "olcum-aletleri",
     keywords: ["dijital tartı", "mutfak terazisi", "lazer metre", "şerit metre",
-               "kumpas", "termometre"],
+               "kumpas", "termometre",
+               // 8. tur
+               "kablo test cihazı", "multimetre", "ampermetre", "voltmetre",
+               "fluke", "fluke metre", "ölçüm cihazı", "lazer mesafe",
+               "su terazisi", "açıölçer", "açıkölçer", "ph metre"],
     confidence: "high",
   },
 
