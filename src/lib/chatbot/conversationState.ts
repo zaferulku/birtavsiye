@@ -19,6 +19,31 @@
 
 import type { IntentType } from "./intentTypes";
 
+/**
+ * mergeIntent fonksiyonunun dönüş action label'ları.
+ * Eval fixture'larındaki expected_action değerleri ile birebir uyumlu.
+ * String yerine literal union — type safety.
+ */
+export type MergeAction =
+  // Intent-type based (intent_type_${IntentType})
+  | "intent_type_greeting"
+  | "intent_type_smalltalk"
+  | "intent_type_store_help"
+  | "intent_type_knowledge_query"
+  | "intent_type_off_topic"
+  | "intent_type_product_search"
+  // State transitions
+  | "category_changed_reset"
+  | "shortcut_keep_category"
+  | "single_word_widen"
+  | "user_requested_removal"
+  | "no_new_dims_keep"
+  // Filter additions
+  | "merge_with_new_dims"
+  | "installment_filter_added"
+  | "rating_filter_added"
+  | "best_value_sort_applied";
+
 export interface ConversationState {
   /** Üst-düzey niyet — "product_search" varsayılan (mevcut akış). */
   intent_type: IntentType;
@@ -32,6 +57,10 @@ export interface ConversationState {
   features: string[];
   /** Taksit ay sayısı (advanced_filter senaryosu). */
   installment_months_min: number | null;
+  /** Minimum ortalama puan (rating_filter_added). */
+  min_avg_rating: number | null;
+  /** Sıralama tercihi: 'best_value' | 'rating' | 'price_asc' | 'price_desc' | null */
+  sort_by: string | null;
   /** Son turda hangi dimension'lar set edildi — diff için */
   last_set_dimensions: string[];
   /** Kaç turdur aynı kategoride — "alternatife bak" sinyali için */
@@ -49,6 +78,8 @@ export function emptyState(): ConversationState {
     price_max: null,
     features: [],
     installment_months_min: null,
+    min_avg_rating: null,
+    sort_by: null,
     last_set_dimensions: [],
     turn_count_in_category: 0,
   };
@@ -65,6 +96,8 @@ export interface RawIntent {
   price_max?: number | null;
   features?: string[];
   installment_months_min?: number | null;
+  min_avg_rating?: number | null;
+  sort_by?: string | null;
   raw_query?: string;
   keywords?: string[];
 }
@@ -128,7 +161,7 @@ export function mergeIntent(
   rawIntent: RawIntent,
   userMessage: string,
   intentHint?: { category_slug?: string | null } | null,
-): { next: ConversationState; action: string } {
+): { next: ConversationState; action: MergeAction } {
   // 0. INTENT TYPE DEĞİŞTİ — non-product mesajlar için filters'ı KORU
   // (kullanıcı "merhaba" deyip sonra "telefon" derse, telefon araması için
   //  state baştan başlamasın — sadece intent_type "greeting" olarak işaretlensin.)
@@ -139,7 +172,7 @@ export function mergeIntent(
         ...prev,
         intent_type: newIntentType,
       },
-      action: `intent_type_${newIntentType}`,
+      action: `intent_type_${newIntentType}` as MergeAction,
     };
   }
 
@@ -204,6 +237,8 @@ export function mergeIntent(
     price_max: prev.price_max,
     features: prev.features ?? [],
     installment_months_min: prev.installment_months_min ?? null,
+    min_avg_rating: prev.min_avg_rating ?? null,
+    sort_by: prev.sort_by ?? null,
     last_set_dimensions: [],
     turn_count_in_category:
       newCategory && newCategory !== prev.category_slug
@@ -239,7 +274,23 @@ export function mergeIntent(
     next.installment_months_min = rawIntent.installment_months_min;
     setDimensions.push("installment");
   }
+  if (rawIntent.min_avg_rating != null && rawIntent.min_avg_rating !== prev.min_avg_rating) {
+    next.min_avg_rating = rawIntent.min_avg_rating;
+    setDimensions.push("rating");
+  }
+  if (rawIntent.sort_by != null && rawIntent.sort_by !== prev.sort_by) {
+    next.sort_by = rawIntent.sort_by;
+    setDimensions.push("sort_by");
+  }
   next.last_set_dimensions = setDimensions;
+
+  // Specialized single-dimension labels (eval expectations).
+  // Multi-dim ekleme ya da hiç yok ise generic label.
+  if (setDimensions.length === 1) {
+    if (setDimensions[0] === "installment") return { next, action: "installment_filter_added" };
+    if (setDimensions[0] === "rating") return { next, action: "rating_filter_added" };
+    if (setDimensions[0] === "sort_by") return { next, action: "best_value_sort_applied" };
+  }
   return { next, action: setDimensions.length > 0 ? "merge_with_new_dims" : "no_new_dims_keep" };
 }
 

@@ -15,6 +15,7 @@ import {
   type RawIntent,
 } from "../../../lib/chatbot/conversationState";
 import { heuristicClassify } from "../../../lib/chatbot/intentTypes";
+import { classifyTurn, type TurnType } from "../../../lib/chatbot/turnClassifier";
 import { validateOrFuzzyMatchSlug } from "../../../lib/chatbot/categoryValidation";
 import {
   getQueryRankingProfile,
@@ -526,7 +527,18 @@ export async function POST(req: Request) {
     let installmentMin: number | null = null;
     const installMatch = message.match(/(\d{1,2})\s*(ay\s*taksit|taksit|ay\s*vade|vade)/i);
     if (installMatch) installmentMin = parseInt(installMatch[1], 10);
-    if (!installMatch && /(taksit imkân|taksit olsun|taksitli)/i.test(message)) installmentMin = 12; // generic
+    if (!installMatch && /(taksit imkân|taksit olsun|taksitli)/i.test(message)) installmentMin = 12;
+
+    // Rating filtresi (yüksek/iyi puanlı)
+    let minAvgRating: number | null = null;
+    if (/(?:iyi|y[üu]ksek|en iyi)\s*puanl[ıi]|y[üu]ksek\s*rated|en iyi rated/i.test(message)) {
+      minAvgRating = 4.0;
+    }
+
+    // Sort tercihi (popülerlik / puan / fiyat)
+    let sortBy: string | null = null;
+    if (/en\s*pop[üu]ler|en\s*çok\s*tercih|en\s*çok\s*satan/i.test(message)) sortBy = "best_value";
+    else if (/en\s*y[üu]ksek\s*puan|en\s*iyi\s*rated/i.test(message)) sortBy = "rating";
 
     const rawIntent: RawIntent = {
       intent_type: heuristicClassify(message) ?? "product_search",
@@ -540,6 +552,8 @@ export async function POST(req: Request) {
       price_max: parsed.price_max ?? null,
       features: features.length > 0 ? features : undefined,
       installment_months_min: installmentMin,
+      min_avg_rating: minAvgRating,
+      sort_by: sortBy,
       keywords: parsed.keywords ?? [],
     };
 
@@ -550,8 +564,9 @@ export async function POST(req: Request) {
       intentHintFull
     );
     let mergeAction = initialMergeAction;
+    let turnType: TurnType = classifyTurn(mergeAction, previousState);
 
-    console.log("[chat] mergeAction=", mergeAction, {
+    console.log("[chat] mergeAction=", mergeAction, "turnType=", turnType, {
       prev: { category: previousState.category_slug, brand: previousState.brand_filter, color: previousState.variant_color_patterns },
       next: { category: conversationState.category_slug, brand: conversationState.brand_filter, color: conversationState.variant_color_patterns },
     });
@@ -638,6 +653,8 @@ export async function POST(req: Request) {
           ...enrichedDims,
         ];
         mergeAction = "merge_with_new_dims";
+        // mergeAction değişti → turn_type'ı da yeniden sınıflandır
+        turnType = classifyTurn(mergeAction, previousState);
       }
     }
 
@@ -677,6 +694,8 @@ export async function POST(req: Request) {
             reply: typeof orchResult.response === "string" ? orchResult.response.slice(0, 200) : null,
             latency_ms: orchResult.latencyMs,
             diagnostics: orchResult.diagnostics,
+            turn_type: turnType,
+            merge_action: mergeAction,
           },
           method: orchResult.method,
           confidence: orchResult.intent?.confidence ?? 0.5,
