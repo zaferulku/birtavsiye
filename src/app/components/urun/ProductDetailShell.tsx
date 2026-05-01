@@ -169,7 +169,7 @@ export default function ProductDetailShell({
         {product.category && (
           <>
             <span aria-hidden="true">/</span>
-            <Link href={`/kategori/${product.category.slug}`} className="transition hover:text-[#171412]">
+            <Link href={`/anasayfa/${product.category.slug}`} className="transition hover:text-[#171412]">
               {product.category.name}
             </Link>
           </>

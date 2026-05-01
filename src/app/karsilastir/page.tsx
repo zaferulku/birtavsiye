@@ -286,7 +286,7 @@ export default async function ComparisonPage({
         <nav className="breadcrumb" aria-label="Navigasyon">
           <a href="/">Anasayfa</a>
           <span aria-hidden="true"> › </span>
-          <a href={`/kategori/${products[0].category_slug}`}>{categoryName}</a>
+          <a href={`/anasayfa/${products[0].category_slug}`}>{categoryName}</a>
           <span aria-hidden="true"> › </span>
           <span>Karşılaştırma</span>
         </nav>

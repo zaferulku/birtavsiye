@@ -531,7 +531,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
             {ancestors.map((c) => (
               <span key={c.id} className="flex gap-2">
                 <span className="flex-shrink-0">/</span>
-                <Link href={`/kategori/${c.slug}`} className="hover:text-[#E8460A] transition-colors flex-shrink-0">{c.name}</Link>
+                <Link href={`/anasayfa/${c.slug}`} className="hover:text-[#E8460A] transition-colors flex-shrink-0">{c.name}</Link>
               </span>
             ))}
             <span className="flex gap-2 min-w-0">
@@ -555,7 +555,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
               return (
                 <Link
                   key={c.id}
-                  href={`/kategori/${c.slug}`}
+                  href={`/anasayfa/${c.slug}`}
                   className="flex-shrink-0 w-24 sm:w-28 lg:w-32 bg-white rounded-xl p-2 text-center shadow-sm hover:shadow-md hover:border-[#E8460A] border border-transparent transition group"
                 >
                   <div className="relative w-full aspect-square mb-1.5 overflow-hidden rounded-lg bg-gray-50 flex items-center justify-center">
@@ -609,7 +609,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
               .filter(([, v]) => v != null && v !== "")
               .map(([k, v]) => `${k}=${encodeURIComponent(v as string)}`)
               .join("&");
-            return `/kategori/${slug}${qs ? "?" + qs : ""}`;
+            return `/anasayfa/${slug}${qs ? "?" + qs : ""}`;
           };
 
           return (
@@ -625,7 +625,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
               <aside className="w-full md:w-60 flex-shrink-0 space-y-3">
                 {/* Aktif filtreler (varsa) clear linki */}
                 {(marka || model || q || hafiza || renk || min || max || kaynak) && (
-                  <Link href={`/kategori/${slug}${siralama ? "?siralama=" + siralama : ""}`}>
+                  <Link href={`/anasayfa/${slug}${siralama ? "?siralama=" + siralama : ""}`}>
                     <div className="text-xs text-[#E8460A] font-semibold hover:underline cursor-pointer px-1">
                       × Filtreleri temizle
                     </div>
@@ -789,7 +789,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
               <div className="text-4xl mb-3">{category.icon}</div>
               <div className="text-sm font-medium text-gray-700 mb-1">Ürün bulunamadı</div>
               <div className="text-xs text-gray-400">Farklı bir marka seç veya filtreyi kaldır</div>
-              <Link href={"/kategori/" + slug} className="text-xs text-[#E8460A] mt-3 block hover:underline">
+              <Link href={"/anasayfa/" + slug} className="text-xs text-[#E8460A] mt-3 block hover:underline">
                 Filtreyi kaldır →
               </Link>
             </div>

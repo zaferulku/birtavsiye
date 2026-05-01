@@ -16,7 +16,7 @@ const SLIDES = [
     title: "Telefon & Laptop\nFırsatları",
     sub: "Samsung, Apple, Lenovo ve daha fazlası",
     cta: "Elektronik Ürünler",
-    href: "/kategori/akilli-telefon",
+    href: "/anasayfa/elektronik/telefon/akilli-telefon",
     bg: "from-slate-800 to-slate-600",
     accent: "#3B82F6",
   },
@@ -25,21 +25,21 @@ const SLIDES = [
     title: "Güzellik &\nKişisel Bakım",
     sub: "Binlerce ürün, en uygun fiyatlarla",
     cta: "Kozmetik Ürünler",
-    href: "/kategori/makyaj",
+    href: "/anasayfa/kozmetik/makyaj",
     bg: "from-rose-900 to-rose-700",
     accent: "#F43F5E",
   },
 ];
 
 const QUICK_CATS = [
-  { label: "Telefon",    href: "/kategori/akilli-telefon",    icon: "📱" },
-  { label: "Laptop",     href: "/kategori/bilgisayar-laptop", icon: "💻" },
-  { label: "TV",         href: "/kategori/tv",                icon: "📺" },
-  { label: "Kulaklık",   href: "/kategori/ses-kulaklik",      icon: "🎧" },
-  { label: "Beyaz Eşya", href: "/kategori/beyaz-esya",        icon: "🫙" },
-  { label: "Makyaj",     href: "/kategori/makyaj",            icon: "💋" },
-  { label: "Spor",       href: "/kategori/fitness",           icon: "🏋️" },
-  { label: "Giyim",      href: "/kategori/kadin-giyim",       icon: "👗" },
+  { label: "Telefon",    href: "/anasayfa/elektronik/telefon/akilli-telefon",   icon: "📱" },
+  { label: "Laptop",     href: "/anasayfa/elektronik/bilgisayar-tablet/laptop", icon: "💻" },
+  { label: "TV",         href: "/anasayfa/elektronik/tv-ses-goruntu/televizyon", icon: "📺" },
+  { label: "Kulaklık",   href: "/anasayfa/elektronik/tv-ses-goruntu/kulaklik",  icon: "🎧" },
+  { label: "Beyaz Eşya", href: "/anasayfa/beyaz-esya",                          icon: "🫙" },
+  { label: "Makyaj",     href: "/anasayfa/kozmetik/makyaj",                     icon: "💋" },
+  { label: "Spor",       href: "/anasayfa/spor-outdoor/fitness",                icon: "🏋️" },
+  { label: "Giyim",      href: "/anasayfa/moda/kadin-giyim",                    icon: "👗" },
 ];
 
 export default function HomeBanner() {

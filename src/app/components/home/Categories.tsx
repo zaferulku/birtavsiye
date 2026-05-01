@@ -27,7 +27,7 @@ export default async function Categories() {
       </div>
       <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
         {rootsWithCount.map((c) => (
-          <Link href={"/kategori/" + c.slug} key={c.id}>
+          <Link href={"/anasayfa/" + c.slug} key={c.id}>
             <div className="flex flex-col items-center gap-2 p-3 rounded-xl hover:bg-[#FFF0EB] transition-all cursor-pointer group">
               <div className="w-14 h-14 bg-[#F3F3F3] rounded-full flex items-center justify-center text-2xl group-hover:bg-[#FFE0D6] transition-all">
                 {c.icon ?? "📦"}

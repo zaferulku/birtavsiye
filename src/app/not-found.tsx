@@ -36,8 +36,8 @@ export default function NotFound() {
 
         <div className="mt-10 sm:mt-12 grid grid-cols-3 gap-3 sm:gap-4 w-full max-w-lg">
           {[
-            { href: "/kategori/akilli-telefon",    icon: "📱", label: "Akıllı Telefon" },
-            { href: "/kategori/bilgisayar-laptop", icon: "💻", label: "Laptop" },
+            { href: "/anasayfa/elektronik/telefon/akilli-telefon",   icon: "📱", label: "Akıllı Telefon" },
+            { href: "/anasayfa/elektronik/bilgisayar-tablet/laptop", icon: "💻", label: "Laptop" },
             { href: "/karsilastir",                icon: "💰", label: "Karşılaştır" },
           ].map((c) => (
             <Link href={c.href} key={c.label}>

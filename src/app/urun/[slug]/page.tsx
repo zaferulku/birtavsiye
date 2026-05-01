@@ -569,7 +569,7 @@ export default async function ProductPage({
               "@type": "ListItem",
               position: 2,
               name: product.category.name,
-              item: `https://birtavsiye.net/kategori/${product.category.slug}`,
+              item: `https://birtavsiye.net/anasayfa/${product.category.slug}`,
             },
           ]
         : []),
