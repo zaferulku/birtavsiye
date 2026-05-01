@@ -14,6 +14,7 @@ type ExistingProductRow = {
   variant_color: string | null;
   image_url: string | null;
   specs: Record<string, unknown> | null;
+  gtin: string | null;
 };
 
 export type ProductIdentity = {
@@ -25,12 +26,15 @@ export type ProductIdentity = {
   modelFamily: string | null;
   variantStorage: string | null;
   variantColor: string | null;
+  gtin: string | null;
 };
 
 type InferIdentityInput = {
   title: string;
   brand?: string | null;
   specs?: SpecMap | null;
+  gtin?: string | null;          // scraper'dan direkt gelen (ör. MM gtin13)
+  description?: string | null;   // raw_description'tan GTIN regex extraction için
 };
 
 type ResolveExistingProductInput = {
@@ -54,7 +58,7 @@ type BuildCreatePayloadInput = {
 };
 
 const PRODUCT_FIELDS =
-  "id, title, slug, brand, category_id, model_code, model_family, variant_storage, variant_color, image_url, specs";
+  "id, title, slug, brand, category_id, model_code, model_family, variant_storage, variant_color, image_url, specs, gtin";
 
 // Brand alias: title'da X geçerse brand = Y kabul et
 // Örn. "iPhone 17 Pro" başlığı → brand=Apple, "Galaxy S25" → Samsung
@@ -685,6 +689,77 @@ function normalizeModelCodeCandidate(value: string | null | undefined): string |
   return compact;
 }
 
+// ============================================================================
+// GTIN extraction (EAN-8/12/13/14 barkod)
+// ============================================================================
+// Akakçe-style canonical product matching anchor. Title/specs/description'dan
+// 8-14 hane numerik barkod çıkar + Luhn checksum ile doğrula.
+
+const GTIN_LENGTHS = new Set([8, 12, 13, 14]);
+
+function isValidGtinChecksum(gtin: string): boolean {
+  if (!GTIN_LENGTHS.has(gtin.length)) return false;
+  if (!/^\d+$/.test(gtin)) return false;
+  // GS1 standard mod-10 checksum: pad to 14, weight 3 for odd-positioned (from right, 0-indexed)
+  const padded = gtin.padStart(14, "0");
+  let sum = 0;
+  for (let i = 0; i < 13; i++) {
+    const digit = parseInt(padded[i], 10);
+    // Position from right (excluding check digit): 13-1=12, 13-2=11, ...
+    const positionFromRight = 13 - i;
+    const weight = positionFromRight % 2 === 0 ? 3 : 1;
+    sum += digit * weight;
+  }
+  const expectedCheck = (10 - (sum % 10)) % 10;
+  return parseInt(padded[13], 10) === expectedCheck;
+}
+
+function extractGtin(
+  title: string,
+  specs?: SpecMap | null,
+  hint?: string | null,
+  description?: string | null,
+): string | null {
+  // 1. Hint öncelikli (scraper'dan direkt)
+  if (hint) {
+    const cleaned = String(hint).replace(/[^\d]/g, "");
+    if (isValidGtinChecksum(cleaned)) return cleaned;
+  }
+
+  // 2. Specs map'inde ean/gtin/barkod alanları
+  const specVal = extractSpecValue(specs, [
+    /\bgtin/i,
+    /\bean\b/i,
+    /\bbarkod\b/i,
+    /\bbarcode\b/i,
+    /\bupc\b/i,
+  ]);
+  if (specVal) {
+    const cleaned = specVal.replace(/[^\d]/g, "");
+    if (isValidGtinChecksum(cleaned)) return cleaned;
+  }
+
+  // 3. Title regex — 8/12/13/14 hane standalone numerik token
+  // (model_code çakışmasını önlemek için word-boundary + length filtresi)
+  const candidates: string[] = [];
+  const tokenMatches = title.match(/\b\d{8,14}\b/g) ?? [];
+  candidates.push(...tokenMatches);
+
+  // 4. Description regex — aynı pattern
+  if (description) {
+    const descMatches = description.match(/\b\d{8,14}\b/g) ?? [];
+    candidates.push(...descMatches);
+  }
+
+  for (const cand of candidates) {
+    if (GTIN_LENGTHS.has(cand.length) && isValidGtinChecksum(cand)) {
+      return cand;
+    }
+  }
+
+  return null;
+}
+
 function extractModelCode(title: string, specs?: SpecMap | null): string | null {
   const specCode = extractSpecValue(specs, [
     /\bmpn\b/i,
@@ -1045,6 +1120,7 @@ export function inferProductIdentity(input: InferIdentityInput): ProductIdentity
   const variantStorage = extractVariantStorage(input.title, input.specs);
   const variantColor = extractVariantColor(input.title, input.specs);
   const modelFamily = extractModelFamily(input.title, brand, modelCode);
+  const gtin = extractGtin(input.title, input.specs, input.gtin, input.description);
   const canonicalTitle = buildCanonicalTitle(
     input.title,
     brand,
@@ -1057,7 +1133,7 @@ export function inferProductIdentity(input: InferIdentityInput): ProductIdentity
   // Slug source title'tan üretilir — kullanıcının isteği. Aynı ürünün farklı
   // store'lardan gelen varyasyonları (PttAVM "Apple iPhone 15 256GB Mavi" vs MM
   // "iPhone 15 256 GB Mavi") farklı slug üretir; resolveExistingProduct bu durumda
-  // brand+model_family+variant tuple'ından match'liyor (slug-by-name fallback'a değil).
+  // GTIN > model_code > brand+model_family+variant tuple sırasıyla match'liyor.
   return {
     originalTitle: input.title.trim(),
     brand,
@@ -1067,6 +1143,7 @@ export function inferProductIdentity(input: InferIdentityInput): ProductIdentity
     modelFamily,
     variantStorage,
     variantColor,
+    gtin,
   };
 }
 
@@ -1075,6 +1152,19 @@ export async function resolveExistingProduct({
   identity,
   categoryId,
 }: ResolveExistingProductInput): Promise<ExistingProductRow | null> {
+  // 1. GTIN match — en güçlü sinyal (Akakçe-style canonical anchor)
+  if (identity.gtin) {
+    const { data: byGtin } = await sb
+      .from("products")
+      .select(PRODUCT_FIELDS)
+      .eq("gtin", identity.gtin)
+      .limit(2);
+    if (byGtin && byGtin.length > 0) {
+      // GTIN UNIQUE olduğu için tek satır beklenir; yine de ilk match'i döner
+      return byGtin[0] as ExistingProductRow;
+    }
+  }
+
   if (identity.modelCode) {
     const { data: byModelCode } = await sb
       .from("products")
@@ -1181,6 +1271,7 @@ export function buildProductUpdatePayload({
   if (!existing.model_family && identity.modelFamily) payload.model_family = identity.modelFamily;
   if (!existing.variant_storage && identity.variantStorage) payload.variant_storage = identity.variantStorage;
   if (!existing.variant_color && identity.variantColor) payload.variant_color = identity.variantColor;
+  if (!existing.gtin && identity.gtin) payload.gtin = identity.gtin;
 
   const mergedSpecs = mergeSpecs(existing.specs, specs);
   if (mergedSpecs) payload.specs = mergedSpecs;
@@ -1208,6 +1299,7 @@ export function buildProductCreatePayload({
   if (identity.modelFamily) payload.model_family = identity.modelFamily;
   if (identity.variantStorage) payload.variant_storage = identity.variantStorage;
   if (identity.variantColor) payload.variant_color = identity.variantColor;
+  if (identity.gtin) payload.gtin = identity.gtin;
   if (specs && Object.keys(specs).length > 0) payload.specs = specs;
 
   return payload;

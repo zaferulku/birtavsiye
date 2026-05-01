@@ -154,16 +154,28 @@ async function upsertListing(scraped) {
   let productId = null;
 
   if (scraped.gtin13) {
-    const { data: p } = await sb
+    // Önce yeni canonical gtin kolonu üzerinden ara, sonra legacy specs->>gtin13
+    let { data: p } = await sb
       .from('products')
-      .select('id, specs, description, image_url, images')
-      .eq('specs->>gtin13', scraped.gtin13)
+      .select('id, specs, description, image_url, images, gtin')
+      .eq('gtin', scraped.gtin13)
       .limit(1)
       .maybeSingle();
+    if (!p) {
+      const fallback = await sb
+        .from('products')
+        .select('id, specs, description, image_url, images, gtin')
+        .eq('specs->>gtin13', scraped.gtin13)
+        .limit(1)
+        .maybeSingle();
+      p = fallback.data;
+    }
 
     if (p) {
       productId = p.id;
       const updates = {};
+      // GTIN backfill — Migration 020 sonrası canonical kolon
+      if (!p.gtin) updates.gtin = scraped.gtin13;
       if (!p.specs || Object.keys(p.specs).length <= 1) {
         if (scraped.raw_specs) updates.specs = { ...scraped.raw_specs, gtin13: scraped.gtin13 };
       }
@@ -225,6 +237,7 @@ async function upsertListing(scraped) {
         image_url: scraped.raw_images[0] ?? null,
         images: scraped.raw_images,
         specs: productSpecs,
+        gtin: scraped.gtin13 ?? null,
         variant_color: inferredColor,
         variant_storage: inferredStorage,
         is_active: true,

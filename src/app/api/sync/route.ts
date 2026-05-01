@@ -39,6 +39,10 @@ interface ScrapedProduct {
   // önce bu alanı SOURCE_CATEGORY_MAP'e karşı kontrol eder, sonra title
   // classifier'a düşer. Yoksa null/undefined kabul edilir.
   source_category?: string | null;
+  // GTIN/EAN barkod — MM scraper gtin13'ü çekiyor; diğer scraper'lar için
+  // title/specs/description'dan extract edilir (Migration 020)
+  gtin?: string | null;
+  description?: string | null;
 }
 
 function normalizeForSecondhand(text: string): string {
@@ -139,6 +143,8 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
     const identity = inferProductIdentity({
       title: product.name,
       specs: product.specs,
+      gtin: product.gtin,
+      description: product.description,
     });
     const sourceProductId = getSourceProductId(product.url);
 
