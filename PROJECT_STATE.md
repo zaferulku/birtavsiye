@@ -1,13 +1,119 @@
-# birtavsiye.net — Project State v12
+# birtavsiye.net — Project State v13
 
 > **Bu dosya tek kaynak gerçek.** Yeni sohbet/oturum başlattığınızda
 > bu dosyayı Claude veya Claude Code'a verin — tüm bağlamı 30 saniyede alır.
 
-**Son güncelleme:** 2026-04-29 v12 (Mega gün — DB outage + eval %80 + güvenlik krizi + kategori refactor v2)
+**Son güncelleme:** 2026-05-01 v13 (Schema enhancement v1: Migrations 024-028 + 027b BLOCKER fix + turn-type detection paketi + Phase 5 smoke test tanı)
 
 ---
 
-## 🔴 GÜNCEL DURUM (29 Apr 2026 gece, ~02:00)
+## 🟢 GÜNCEL DURUM (1 May 2026 gece — Tonight, v13 paket)
+
+**YAPILAN İŞLER (tonight oturumu):**
+
+**Schema enhancement v1 (Migrations 024-028 + 027b):**
+- Migration 024 — `adjust_topic_answer_count` RPC `EXECUTE` revoke
+  (PUBLIC + anon + authenticated → KAPALI, 42501 permission denied verify)
+- Migration 025 — Schema foundation:
+  * `pg_trgm` extension
+  * `normalize_gtin(text)` IMMUTABLE function (8/12/13/14 → 14 hane GS1 padding)
+  * `update_updated_at()` trigger (4 tablo bağlandı: products/categories/listings/stores)
+  * `log_price_change()` function — TRIGGER **BAĞLANMADI** (5 scraper manuel
+    INSERT; 025b'de bağlanacak — çift kayıt önleme)
+  * `categories.level INT` denormalize + recursive backfill + `sync_category_level` trigger
+  * `products.category_slug TEXT` denormalize + 2 trigger (sync + cascade)
+  * `idx_products_title_trgm` GIN
+  * `product_summary` materialized view + 3 index + ilk REFRESH
+  * Verify: top 10 kategori dağılımı sağlıklı, mat view ~44K satır
+- Migration 026 — stores enhancement:
+  * `merchant_type` enum (marketplace | brand_store | retailer)
+  * 6 yeni kolon (slug/base_url/type/affiliate_tag/trust_score/is_active)
+  * 9 mevcut store backfill: Trendyol/Hepsiburada/Amazon TR/n11/GittiGidiyor/
+    PttAVM = marketplace, MediaMarkt/Vatan/Teknosa = retailer
+  * Verify: 9/9 doluluk, 0 NULL slug, type 6/3
+- Migration 027 — listings stock_status enum:
+  * 'in_stock' | 'out_of_stock' | 'limited' | 'unknown'
+  * `in_stock` BOOLEAN coexist (kod 14+ yerde okuyor; 6 ay sonra DROP)
+  * `sync_stock_status_from_boolean` trigger (in_stock → stock_status sync)
+  * Verify: 8830 listing, 8662 in + 168 out, 0 mismatch
+- **Migration 027b — BLOCKER fix** (INSERT trigger desteği):
+  * 027 trigger sadece `BEFORE UPDATE OF in_stock` idi → INSERT'te
+    stock_status='unknown' kalıyordu, frontend ranking bozuluyordu
+  * Function `TG_OP='INSERT'` kapsamı + trigger `BEFORE INSERT OR UPDATE OF in_stock`
+  * Smoke test: TRUE→'in_stock', FALSE→'out_of_stock' OK
+- Migration 028 — raw_offers staging table:
+  * `matching_status` enum (pending/matched/unmatched/review/rejected)
+  * 19 kolon (raw scraped + matching audit + temporal)
+  * 4 index, updated_at trigger, REVOKE ALL PUBLIC/anon/authenticated
+  * Boş tablo — mevcut scraper'a dokunmaz, 025b sonrası opsiyonel kullanım
+
+**Turn-type detection + eval2 specialized actions:**
+- `MergeAction` type union (15 literal — 6 intent_type + 5 transition + 4 filter)
+- `ConversationState` +2 field: `min_avg_rating`, `sort_by`
+- `RawIntent` +2 opsiyonel field
+- `mergeIntent` specialized labels (setDimensions.length===1):
+  * `installment_filter_added` (eval2 d4 turn 8 fix)
+  * `rating_filter_added` (id=7 fix)
+  * `best_value_sort_applied` (id=10 fix)
+- `route.ts` 2 yeni regex extractor (rating + sort)
+- **`turnClassifier.ts` (yeni 72 satır)** — 7 TurnType: open/refine/broaden/
+  switch_category/sort_only/clarify/ack. Pure function, LLM yok.
+- agent_decisions log'a `turn_type` + `merge_action` eklendi
+
+**Phase 5 frontend smoke test (TANI — refactor henüz yapılmadı):**
+- TEST 1 `/kategori/elektronik/telefon/akilli-telefon` → 🔴 KIRIK
+  ("Model bulunamadı" — `[...segments]` route slash'lı slug çözemiyor;
+   "kategori" segment brandSlug yorumlanıyor)
+- TEST 2 `/kategori/akilli-telefon` (eski flat) → 🟢 Temiz "Kategori bulunamadı"
+- TEST 3 Header arama → 🟢 OK
+- TEST 4 Chatbot "iphone 15 pro max" → 🟢 İYİ (3 doğru + 1 aksesuar minor)
+- TEST 5 Brand chip / "samsung göster" → 🟢 OK
+
+**KRİTİK BULGU:** `categories.slug` artık full hierarchik path
+(`elektronik/telefon/akilli-telefon`). Mevcut frontend route'ları
+(`[slug]` single-segment + `[...segments]` segment-by-segment lookup) bu
+formatı çözemiyor. Phase 5 frontend refactor ZORUNLU.
+
+**Davranış kuralları:**
+- Madde 16 (NAMING): yeni kod/dosya/commit message/comment'lerde "akakce" /
+  "cimri" YASAK. Generic terim kullan ("spec scraper", "external spec
+  source", "Turkish price aggregator", "rakip analizi"). Yeni
+  enrichment_source: "external_spec_source". Eski legacy referanslara
+  DOKUNULMAZ. Sadece yeni commit'ler için kural.
+
+**Commit'ler (tonight 4 push):**
+- `2ecb45b` fix(security): Migration 024 RPC EXECUTE revoke
+- `19fb979` feat(schema): Migrations 025-028 schema foundation
+- `896ef96` fix(schema): Migration 027b BLOCKER (INSERT trigger)
+- `6b2dd05` docs(state): kural 16
+- `075a62d` feat(chatbot): turn-type detection + eval2 specialized actions
+
+**YARIN PLAN (2026-05-02):**
+
+🔴 KRİTİK (sabah ilk):
+1. **Phase 5 frontend refactor (3h)** — kategori v2 hierarchik slug → route uyumu:
+   * `src/app/kategori/[slug]/page.tsx` → `[...slug]/page.tsx` (multi-segment)
+   * `src/app/[...segments]/page.tsx` `resolveSegments()` — full-path lookup
+   * `src/lib/categoryAliases.ts` — eski flat slug → yeni hierarchik 301 redirect
+   * `<Link href="/kategori/...">` URL builder helper
+   * 5 smoke test re-run (Test 1 PASS olmalı)
+2. **Eval2 re-run** — `npx tsx scripts/eval-chatbot-dialogs.mjs --input
+   tests/chatbot/fixtures/chatbot_dialogs_eval2_200.jsonl` (LLM quota +
+   dev server hazır olunca). Hedef: d4/id7/id10 PASS.
+
+🟡 ORTA:
+- Migration 025b (scraper price_history manuel INSERT'leri kaldır + log_price_change
+  trigger bağla — 5 yer: scrape-mediamarkt, scrape-pttavm, src/app/api/sync, 2 ek)
+- Aksesuar sızıntı fix (TEST 4 minor — chatbot kalite)
+
+🟢 OPSIYONEL:
+- listings.in_stock BOOLEAN DROP (6 ay sonra, frontend/scraper migrate sonrası)
+- raw_offers ingestion (yeni scraper davranışı)
+- eski migration 015/019 backup tablo silme kararı
+
+---
+
+## 🔵 ÖNCEKİ DURUM (29 Apr 2026 gece, ~02:00)
 
 **YAPILAN MEGA İŞLER (16+ saat oturum):**
 
@@ -563,6 +669,28 @@ ProductDetailShell.tsx ortak nokta — uyumlu.
 | 005_header_missing_categories.sql | ✅ |
 | 006_listings_raw_columns.sql | ✅ |
 | 007_products_is_accessory.sql | ⚠️ MANUEL uygulama bekliyor |
+| 008_performance_indexes.sql | ✅ |
+| 009_listings_warranty.sql | ✅ |
+| 010_listings_condition.sql | ✅ |
+| 013_smart_search_text_fallback.sql | ✅ |
+| 014_smart_search_brand_caseless.sql | ✅ |
+| 016_revoke_anon_dangerous_privileges.sql | ✅ (anon REVOKE 30 tablo) |
+| 017_revoke_anon_from_public_profiles_view.sql | ✅ |
+| 018_rls_hardening_and_internal_select_revoke.sql | ✅ |
+| 020_products_gtin.sql | ✅ (GTIN kolon + UNIQUE partial) |
+| 021_category_hierarchy_v2.sql + part1/2/3 | ✅ (14 root + 113 leaf + 88 mid) |
+| 023_drop_old_flat_categories.sql | ✅ (177 eski flat DROP) |
+| 024_revoke_anon_execute_rpc.sql | ✅ (RPC EXECUTE PUBLIC+anon revoke) |
+| **025_schema_foundation.sql** | ✅ (pg_trgm + normalize_gtin + triggers + mat view) |
+| **026_stores_enhancement.sql** | ✅ (slug/base_url/type + 9 store backfill) |
+| **027_listings_stock_status.sql** | ✅ (stock_status enum) |
+| **027b_listings_stock_sync_insert_fix.sql** | ✅ (BLOCKER: INSERT trigger) |
+| **028_raw_offers_staging.sql** | ✅ (staging tablosu, boş) |
+
+**Bekleyen (ÖNEMLI):**
+- Migration **025b** (yarın): scraper'lardaki manuel `price_history INSERT`'leri
+  kaldır + `log_price_change` trigger bağla (5 yer). Çift kayıt önleme.
+- Migration **listings.in_stock DROP** (6 ay sonra, frontend/scraper migrate sonrası).
 
 ### Knowledge Base
 12 doküman / 141 chunk (`docs/knowledge/`):
@@ -651,9 +779,26 @@ anne_bebek (11) = **141**
 
 ---
 
-## ✅ COMMIT GEÇMİŞİ (son 25)
+## ✅ COMMIT GEÇMİŞİ (son 30)
 
 ```
+075a62d   feat(chatbot): turn-type detection + eval2 specialized actions (1 May tonight)
+6b2dd05   docs(state): kural 16 — yeni kodda akakce/cimri ismi yasağı
+896ef96   fix(schema): listings stock_sync trigger INSERT desteği (Migration 027b — BLOCKER)
+19fb979   feat(schema): multi-merchant price comparison foundation (025-028)
+2ecb45b   fix(security): revoke EXECUTE adjust_topic_answer_count from PUBLIC+anon+authenticated (Migration 024)
+4eebf68   docs(state): v12 — mega gün özeti (16+ saat) — 29 Apr
+779468a   feat(category): refactor v2 — 14 root hierarchik yapı + 44K ürün taşıma
+9ca17e8   feat(canonical): products.gtin kolonu + GTIN-based canonical anchor
+9d5b886   feat(classify): inhouse Faz 1 + 8 tur kategori genişleme + brand-based fallback
+466a74e   fix(security): RLS hardening + backup tablo silme (Migrations 018+019)
+e22f22b   fix(security): anon REVOKE public_profiles view (Migration 017)
+253c368   fix(security): anon REVOKE 30 public tabloda (Migration 016)
+2733cf5   feat(live-prices): tüm detail page'lerde discover flow aktif
+283e76b   fix(live-prices): trendyol + n11 mobile-only UA (Cloudflare 403 fix)
+35affeb   feat(live-prices): N11 fetcher + Trendyol searchByTitle (discover flow)
+ba707c6   fix(search): drop accessory category products entirely on non-accessory queries
+3fed9d8   feat(live-prices): Hepsiburada + Amazon TR fetcher + search-augmentation discover flow
 19638ee   fix(kb): mojibake repair filesystem — Şrünleri → Ürünleri
 ef6ed35   fix(state): mergeIntent counts category change as new dim
 527f0b5   fix(chatbot): short_response intents bypass KB retrieval and smart_search
@@ -873,6 +1018,7 @@ yeni kategoriler ekler. Tur 2 fixture taxonomy gereği.
 | 2026-04-27 | v9 — backup-restore migrate (Gemini bypass +3,964 ürün) + categorizeFromTitle 30 niş kategori (kıyafet/kozmetik/oyuncak/otomotiv/aydınlatma/pet) + MM map +132 leaf segment + 25 dbSlug (fotograf-kamera/aksiyon-kamera/aspirator-davlumbaz/sac-kurutma) + tsconfig scripts/ exclude (Vercel build fix) | Claude |
 | 2026-04-29 | v11 — Paket Ç + Faz 1 + Tur 1 bug fix (A,B,C,D,E.1) + Eval suite | Claude |
 | 2026-04-29 | v12 — Mega gün (16+ saat): Migration 013-023, eval %80, güvenlik krizi, kategori refactor v2 | Claude |
+| 2026-05-01 | v13 — Tonight paketi: Migrations 024-028 + 027b BLOCKER, turn-type detection (MergeAction + 7 TurnType + classifyTurn pure func), eval2 specialized actions (installment_filter_added/rating_filter_added/best_value_sort_applied), Phase 5 frontend smoke test (TEST 1 KIRIK — yarın refactor), naming kuralı 16 | Claude |
 
 ---
 
