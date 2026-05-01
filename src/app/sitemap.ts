@@ -1,5 +1,10 @@
-import { supabase } from "../lib/supabase";
+import { supabaseAdmin } from "../lib/supabaseServer";
 import type { MetadataRoute } from "next";
+
+// Server-side render: service_role ile RLS bypass.
+// Migration 016 sonrası anon SELECT'in categories+products üzerinde
+// kısıtlı olması nedeniyle anon client 0 satır dönüyordu (sitemap kategori
+// + ürün URL'leri eksik). Sitemap güvenli server context, service_role uygun.
 
 const BASE_URL = "https://birtavsiye.net";
 
@@ -40,7 +45,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   type CategoryRow = { slug: string };
 
   const productsRes = await withTimeout(
-    supabase
+    supabaseAdmin
       .from("products")
       .select("slug, updated_at")
       .eq("is_active", true)
@@ -58,7 +63,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const topicsRes = await withTimeout(
-    supabase
+    supabaseAdmin
       .from("topics")
       .select("id, created_at")
       .order("created_at", { ascending: false })
@@ -75,7 +80,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const categoriesRes = await withTimeout(
-    supabase
+    supabaseAdmin
       .from("categories")
       .select("slug")
       .neq("slug", "siniflandirilmamis")
