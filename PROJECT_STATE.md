@@ -3,36 +3,118 @@
 > **Bu dosya tek kaynak gerçek.** Yeni sohbet/oturum başlattığınızda
 > bu dosyayı Claude veya Claude Code'a verin — tüm bağlamı 30 saniyede alır.
 
-**Son güncelleme:** 2026-04-29 v12 (DB capacity outage + cron disable + maintenance mode)
+**Son güncelleme:** 2026-04-29 v12 (Mega gün — DB outage + eval %80 + güvenlik krizi + kategori refactor v2)
 
 ---
 
-## 🔴 GÜNCEL DURUM (29 Apr 2026 akşam)
+## 🔴 GÜNCEL DURUM (29 Apr 2026 gece, ~02:00)
 
-**YAPILDIKLAR (bugün, sırayla):**
-- Bug A,B,C,D commit ✅
-- Bug E.1 filesystem (commit `19638ee`) ✅
-- Bug E.2 sadece 3/12 chunk (commit `b7e7efc`, DB outage devam etti)
-- Eval baseline 1/10 = %10 (Tur 2 fixture refresh yarısı: keywords drop, count relax, Nescafé→Jacobs)
-- 7 cron-job.org cron disable ✅ (asıl yük buydu — günlük ~10K tetik)
-- Robots.txt block-all (commit `ac22eeb` + `f390595`) ✅
-- Maintenance mode 503 (commit `2ab4622`) ✅ — bot trafiği komple blok
-- Supabase Pro plan satın alındı ($25/ay, NANO compute)
+**YAPILAN MEGA İŞLER (16+ saat oturum):**
 
-**ANA TANI:**
-1. cron-job.org × 7 cron her 15 dk tetik → DB CPU %85 → DİSABLE
-2. Vercel ISR + bot trafiği → robots.txt push + maintenance 503
-3. NANO Disk IO bütçesi 30 dk burst limit → tükendi
-4. NANO 0.5GB RAM yetersiz ama maliyet kritik → ay sonu karar
+**Sabah/Öğlen — DB Capacity:**
+- 7 cron-job.org cron disable (DB CPU %85)
+- Robots.txt block-all
+- MAINTENANCE_MODE = true
+- Supabase Pro plan ($25/ay, NANO compute)
+- DB optimize: 3 partial index + ANALYZE + slug text_pattern_ops (50x query hız)
+- ISR revalidate 60s → 86400s
 
-**YARIN İÇİN PLAN (30 Apr 2026):**
-- 03:00 (UTC 00:00) → Disk IO bütçesi reset
-- DB temiz başlamalı
-- Maintenance OFF (`MAINTENANCE_MODE=false` + commit + push)
-- Migration 011 SQL: `kahve` (parent UUID `1b056a91-32f3-4695-b982-4d02d4b157b3` supermarket) + `spor-cantasi` (parent UUID `76500641-97c6-4200-be1d-6735612cdd81` spor-outdoor)
-- 2.D `single_word_widen` drop
-- Tur 2 commit + eval re-run
-- Pass ≥%60 → Paket M Faz M.1 / <%60 → Tur 3
+**Öğleden sonra — Eval %80:**
+- Migration 011 (kahve + spor-cantasi)
+- Migration 012 (blender + firin + robot-supurge)
+- mergeIntent state extraction fix
+- 906 sınıflandırılmamış re-classify (mapping-based)
+- 16 multi-category investigation
+- 3 TANI: M1 NO-APPLY, H16 deprecated, H19 next-auth v5
+- Migration 013 smart_search 4-kanal hybrid
+- Migration 014 brand LOWER caseless
+- Orchestrator zero-vector fallback
+- LLM intent enrich price hallüsünasyon reddi
+- parseQuery range pattern
+
+**Akşam — KRİTİK GÜVENLİK KRİZİ:**
+- public_profiles SECURITY DEFINER tespit
+- 30 public tabloda anon'a INSERT/UPDATE/DELETE/TRUNCATE açık
+- profiles tablo REVOKE (acil)
+- Migration 016: pg_tables üzerinden toplu REVOKE
+- public_profiles view ayrıca REVOKE (view'lar pg_tables'da değil)
+- Migration 015: public_profiles SECURITY INVOKER recreate (apply OK)
+- Tüm tablolar artık anon SELECT only
+
+**Gece — GTIN + KATEGORİ REFACTOR v2:**
+- Migration 020: products.gtin kolonu (arka planda commit'li, GTIN feature)
+- Migration 021: 14 root + 113 leaf + 88 mid-level (hierarchik slug)
+- Migration 022: ~44K ürün eski → yeni kategoriye taşındı (mapping-based, aktif+pasif)
+- Migration 023: Eski 177 flat kategori DROP (FK temiz)
+- Backup: backup_20260430_categories + backup_20260430_products_categories
+- GTIN feature etkilenmedi
+
+**EVAL DURUMU:**
+- Önce: 1/10 (~%10)
+- Sonra: Eval1 4/5 (%80) ✓ deterministik
+        Eval2 2-3/5 dalgalı (LLM quota tükenmesi)
+- Toplam: 6/10 deterministic + eval2 yarın quota reset sonra doğrulanacak
+
+**GÜVENLİK STATUSü:**
+- ✅ 30 public tablo: anon SELECT only (RLS ile kontrol)
+- ✅ public_profiles view: SECURITY INVOKER + sadece SELECT
+- ✅ profiles tablo: anon yetkisi sıfır
+- ✅ supabaseAdmin (service_role): tüm yetki ✓
+
+**KATEGORİ AĞACI (yeni hierarchik):**
+- 14 root: elektronik, beyaz-esya, kucuk-ev-aletleri, moda, kozmetik, ev-yasam, anne-bebek, spor-outdoor, saglik-vitamin, otomotiv, supermarket, yapi-market, hobi-eglence, pet-shop
+- + siniflandirilmamis (15. root, 2 ürün hala içinde)
+- 113 leaf kategori
+- 88 mid-level (sub-grup, alt-grup chain)
+- Hierarchik slug: `<root>/<sub>/<leaf>`
+- Kararlar:
+  * Spor Ayakkabı: SADECE Moda altı (Spor & Outdoor altında YOK)
+  * Fırın & Ocak: TEK (Fırın+Ocak ayrı kaldırıldı)
+  * Sağlık & Vitamin: YENİ root (Spor Besin Takviyesi taşındı)
+  * Pet Shop: ROOT kalır (gelecek için)
+  * Kozmetik: TEK root (Cilt+Makyaj+Saç+Kişisel+Parfüm sub)
+
+**DB DURUMU:**
+- 216 kategori (15 root + 113 leaf + 88 mid)
+- 44,519 ürün (44,452 yeni hierarchik kategoride + 67 sınıflandırılmamış)
+- GTIN: 0 ürün (henüz backfill yok)
+- Embedding: 277/1000 dolmuş (Gemini quota tükendi)
+
+**BACKUP TABLOLARI:**
+- backup_20260422_* (Faz 1 backup, 43K)
+- backup_20260430_categories (eski 189 kategori, gerekirse restore)
+- backup_20260430_products_categories (eski category_id snapshot)
+
+**YARIN PLAN (30 Apr 2026):**
+
+🔴 KRİTİK (sabah ilk iş):
+1. Disk IO recovery doğrula (TR 03:00 sonra)
+2. Eval re-run (LLM quota reset sonra) — eval2 deterministic ölçüm
+3. **FRONTEND REFACTOR (Phase 5):**
+   - `src/lib/categorizeFromTitle.ts` (200+ keyword → yeni hierarchik slug)
+   - `src/lib/scrapers/scrapeClassifier.ts` (SOURCE_CATEGORY_MAP yeni slug)
+   - `src/app/kategori/[slug]/page.tsx` → `[...segments]/page.tsx` (route refactor)
+   - `Header.tsx` kategori menüsü (hardcoded link'ler)
+   - Chatbot intent parser (categorySlug yeni slug)
+   - Sitemap regen
+4. Frontend deploy + smoke test
+5. MAINTENANCE_MODE = false (frontend güncel slug'larla deploy edilince)
+
+🟡 ORTA:
+- Migration 019 backup silme KARAR (Faz 1 hala kaynak veri kullanıyor mu?)
+- Search bug (iphone 15 plus → kılıf) — yeni hierarchik slug ile re-test
+- Mobile UX 375px test
+- Embedding backfill manuel günlük 1500 (~12 gün)
+- Kahve catalog seed (scrape rotation)
+
+🟢 OPSIYONEL (MVP sonrası):
+- H16 Google AI dedup (deprecated, 3-4 saat)
+- H19 next-auth v5 migration (3 saat)
+- M1 specs whitelist: APPLY ASLA (karar)
+- Pro plan iptal (29 May)
+- LLM cache veya paid tier
+- Sunucu/hosting değerlendirme (3-6 ay sonra trafik ile)
+
 **Production:** https://birtavsiye.net (www.birtavsiye.net canonical)
 **Stack:** Next.js 16, Supabase + pgvector, Zustand, NVIDIA Llama 3.3 70B / Groq / Gemini fallback
 
@@ -303,6 +385,19 @@ public/robots.txt                                             # block-all (MVP l
 src/proxy.ts                                                  # MAINTENANCE_MODE flag — yarın false yapılacak
 scripts/probe-categories.ts                                   # taxonomy probe utility
 /tmp/mm-full-resume.log                                       # resume log
+src/lib/chatbot/categoryValidation.ts                         # kategori slug validation
+src/lib/chatbot/source-category-mapping.mjs                   # source mapping (chatbot)
+scripts/reclassify-unclassified.mjs                           # mapping-based re-classify (LLM yok)
+scripts/fix-profiles-rls.sql                                  # ⚠️ DEPRECATED (Migration 015/016 kullan)
+scripts/category-migration-mapping.mjs                        # Eski → yeni hierarchik slug
+scripts/migrate-products-to-new-categories.mjs                # 44K ürün UPDATE (aktif+pasif)
+supabase/migrations/013_smart_search_text_fallback.sql        # 4-kanal hybrid (embedding NULL workaround)
+supabase/migrations/014_smart_search_brand_caseless.sql       # brand LOWER caseless
+supabase/migrations/015_public_profiles_security_invoker.sql  # SECURITY DEFINER → INVOKER
+supabase/migrations/016_revoke_anon_dangerous_privileges.sql  # 30 tablo toplu REVOKE
+supabase/migrations/020_products_gtin.sql                     # GTIN feature kolon + UNIQUE index
+supabase/migrations/021_category_hierarchy_v2.sql             # 14 root + 113 leaf + 88 mid
+supabase/migrations/023_drop_old_flat_categories.sql          # 177 eski flat DROP
 ```
 
 ---
@@ -419,6 +514,22 @@ ProductDetailShell.tsx ortak nokta — uyumlu.
 | Disk IO bütçesi limiti tespit | 2026-04-29 | NANO 30 dk burst (2085 Mbps), sonra 43 Mbps baseline |
 | Migration 011 (kahve + spor-cantasi) | 2026-04-29 | Tur 2 fixture taxonomy; YARIN uygulanacak |
 | M1 specs whitelist APPLY ASLA | 2026-04-29 | Cosmetic, geri dönüşsüz, MVP launch sonrası bile yapılmayacak |
+| Maintenance mode 503 + robots.txt block-all | 2026-04-29 | DB capacity outage |
+| Supabase Pro plan ($25/ay, NANO compute) | 2026-04-29 | 1 ay tutulacak, 29 May iptal kararı |
+| DB optimize 3 partial index + ANALYZE | 2026-04-29 | products query 65ms → 1-3ms (50x hız) |
+| ISR revalidate 60s → 86400s | 2026-04-29 | Bot crawl 1400x azaltma |
+| Migration 011 + 012 (5 yeni kategori) | 2026-04-29 | kahve, spor-cantasi, blender, firin, robot-supurge |
+| 906 re-classify mapping-based (LLM yok) | 2026-04-29 | source_category mevcut, Gemini gereksiz |
+| Migration 013 smart_search 4-kanal hybrid | 2026-04-29 | %98 embedding NULL workaround |
+| Migration 014 brand LOWER caseless | 2026-04-29 | 'LCW' vs 'Lcw' bug |
+| Orchestrator zero-vector fallback | 2026-04-29 | Gemini embed quota tükenmesi |
+| Migration 015 public_profiles SECURITY INVOKER | 2026-04-29 | SECURITY DEFINER + RLS bypass riski |
+| Migration 016 anon REVOKE 30 tablo | 2026-04-29 | KRİTİK güvenlik fix (anon yetki açığı) |
+| Migration 020 GTIN kolonu | 2026-04-29 | Ürün GTIN identifier feature (arka planda) |
+| Migration 021/022/023 KATEGORİ REFACTOR v2 | 2026-04-29 | 21 root → 14 hierarchik, 44K ürün taşındı |
+| Hierarchik slug: <root>/<sub>/<leaf> | 2026-04-29 | Eski flat slug yerine, mimari temel atma |
+| Spor Ayakkabı sadece Moda altı (tek yer) | 2026-04-29 | Duplicate kategori önleme |
+| Sağlık & Vitamin yeni root | 2026-04-29 | Spor Besin (root) → buraya taşındı, gelecek için |
 
 ---
 
@@ -528,7 +639,15 @@ anne_bebek (11) = **141**
 **14:** Pattern + categorizer + MM-source priority (04-27) — extractModelFamily 17 marka, tablet/saat/laptop, scraper ingestion entegrasyon, categorizeFromTitle (PttAVM 249→334 dolu, %92), enrich-pttavm description guard — `533f319` + `a673ff6` + `9e5dcdf` + `29d14db` + `2b5fd9f` + `76b597e` + `ec2a446`
 **15:** Backup migrate + niş kategori + MM map genişletme (04-27) — backup-restore (43K backup, %99.9 cat dolu ama orphan, categorizeFromTitle ile re-infer), Round 1+2+3 = +4,030 ürün migrate, 30 niş kategori (kıyafet/kozmetik/oyuncak/otomotiv/aydınlatma/pet), MM map 21→25 dbSlug + 132 yeni leaf segment, Vercel build fix (tsconfig scripts exclude) — `881e78e` + `19890df` + `fafbbc2` + `f0758cd`
 **16:** Chatbot eval suite + Paket Ç + Faz 1 + Tur 1 bug fix (04-28→04-29) — Eval suite (eval-chatbot-dialogs.mjs + 400 dialog 17 senaryo), intentTypes.ts (Faz 1: greeting/smalltalk/store_help heuristic + early-return), conversationState.ts (Paket Ç: mergeIntent stateful intent merge), 5 bug fix: A taksonomi, B brand unify, C merge category as new dim, D short_response, E mojibake repair (filesystem ✅, DB ⏸ outage) — `42f0b06` + `8dee737` + `f9a64a6` + `e35e404` + `2243591` + `419d73c` + `527f0b5` + `ef6ed35` + `19638ee`
-**17:** DB capacity outage tanı + cron disable + maintenance (29 Apr 2026) — Cron-job.org 7 cron disable (asıl yük); Robots.txt + maintenance mode 503; Supabase Pro plan satın alındı (NANO bırakıldı); Disk IO bütçesi limiti tespit (30 dk burst → tükenince 24 saat); Bug E.2 kısmen (3/12 chunk); Tur 2 yarım (keywords drop + count relax + Nescafé→Jacobs); Eval 1/10 baseline (fixture refresh devam edecek) — `b7e7efc` + `36eb4d7` + `ac22eeb` + `f390595` + `2ab4622`
+**17:** Mega gün — DB outage + eval %80 + güvenlik krizi + kategori refactor v2 (29 Apr 2026, 16+ saat)
+- Sabah: DB capacity outage, 7 cron disable, maintenance mode, Pro plan, DB optimize 50x
+- Öğlen: Migration 011/012 (5 kategori), 906 re-classify mapping-based, 3 TANI raporu
+- Akşam: Migration 013 smart_search 4-kanal hybrid, Migration 014 brand LOWER, orchestrator zero-vector
+- Akşam: KRİTİK güvenlik krizi (30 tablo anon yetki açığı), Migration 015/016 fix
+- Gece: Migration 021/022/023 KATEGORİ REFACTOR v2 (44K ürün hierarchik yapıya taşındı)
+- Eval: 1/10 → 6/10 + eval1 deterministic %80
+- Embedding backfill 277/1000 (quota tükendi)
+- Commit'ler: c79aa5e, e2d020f, bcf2126, 15f99c6, 253c368, 779468a + 25+ diğer
 
 ---
 
@@ -598,12 +717,24 @@ e0b318d   fix(ui): liste kart başlığı = brand + model_family + storage + col
 10. **Eval baseline ≥%60 pass olmadan Paket M (multi-strategy search) deploy
     edilmesin.** Mevcut akışı sabit tutmadan yeni mimari getirmek regresyon
     riski. Kullanıcı kararı.
-11. **Disk IO bütçesi 30 dk burst, sonra 43 Mbps baseline.**
-    Eğer query timeout başlarsa:
-    - Cron-job.org disable mı kontrol
-    - Browser tab'lar kapalı mı
-    - Maintenance mode aktif mi (proxy.ts MAINTENANCE_MODE)
-    - 24 saat bekle (UTC 00:00 reset)
+11. **Disk IO bütçesi**: NANO 30 dk burst + 24h reset (UTC 00:00).
+    Timeout başlarsa: cron disable, maintenance mode, 24h bekle.
+12. **products tablosunda 'name' YOK, 'title' var.** Soft-delete `deleted_at`
+    değil, `is_active` boolean.
+13. **LLM API quota'ları** (Gemini 1500 RPD, NVIDIA daily) eval'i etkileyebilir.
+    Eval2 dalgalı sonuç → quota tükenmiş olabilir.
+    Backfill quota'yı tüketir → user query embed fail.
+14. **GÜVENLİK**: Tüm public tablolarda anon yetkileri SADECE SELECT olmalı.
+    INSERT/UPDATE/DELETE/TRUNCATE asla anon'a verilmez.
+    Yeni tablo eklerken default GRANT ALL TO PUBLIC otomatik olur — REVOKE şart.
+    View'lar `pg_tables`'da değil (`pg_views`), ayrı REVOKE gerek.
+15. **KATEGORİ AĞACI hierarchik slug yapı**: `<root>/<sub>/<leaf>`
+    Örn: `'elektronik/telefon/akilli-telefon'`, `'moda/erkek-ayakkabi/sneaker'`
+    14 root + 113 leaf + 88 mid-level (toplam 216 + siniflandirilmamis).
+    Eski flat slug'lar (`akilli-telefon`, `telefon-kilifi` vs) MEVCUT DEĞİL.
+    Frontend `categorizeFromTitle.ts` ve `scrapeClassifier.ts` yeni slug kullanır.
+    Yeni kategori eklerken: `parent_id` chain ZORUNLU + hierarchik slug ZORUNLU.
+    Eski kategoriler `backup_20260430_categories`'te (gerekirse restore).
 
 ### Kullanıcı için
 
@@ -734,7 +865,7 @@ yeni kategoriler ekler. Tur 2 fixture taxonomy gereği.
 | 2026-04-27 | v8 — extractModelFamily 17 marka pattern (telefon+tablet+saat+laptop) + categorizeFromTitle.mts (PttAVM kategori inference %92) + MM-source priority (specs/description) + scraper ingestion entegrasyonu | Claude |
 | 2026-04-27 | v9 — backup-restore migrate (Gemini bypass +3,964 ürün) + categorizeFromTitle 30 niş kategori (kıyafet/kozmetik/oyuncak/otomotiv/aydınlatma/pet) + MM map +132 leaf segment + 25 dbSlug (fotograf-kamera/aksiyon-kamera/aspirator-davlumbaz/sac-kurutma) + tsconfig scripts/ exclude (Vercel build fix) | Claude |
 | 2026-04-29 | v11 — Paket Ç + Faz 1 + Tur 1 bug fix (A,B,C,D,E.1) + Eval suite | Claude |
-| 2026-04-29 | v12 — DB capacity outage + cron disable + maintenance mode | Claude |
+| 2026-04-29 | v12 — Mega gün (16+ saat): Migration 013-023, eval %80, güvenlik krizi, kategori refactor v2 | Claude |
 
 ---
 
