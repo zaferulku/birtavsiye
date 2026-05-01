@@ -70,7 +70,9 @@ export function useLivePrices(productId: string | null): UseLivePricesResult {
     setIsDone(false);
     setStats({ totalStores: 0, successful: 0, failed: 0, durationMs: 0 });
 
-    const url = `/api/live-prices?product_id=${encodeURIComponent(productId)}${
+    // discover=1 → mevcut listing'i olmayan mağazalarda title+brand araması yap.
+    // Orphan ürünlerde (tek-mağaza) diğer pazaryeri fiyatları gösterir.
+    const url = `/api/live-prices?product_id=${encodeURIComponent(productId)}&discover=1${
       refreshToken > 0 ? "&fresh=1" : ""
     }`;
 
