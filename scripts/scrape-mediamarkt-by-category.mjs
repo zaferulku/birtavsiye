@@ -17,7 +17,12 @@ import { createClient } from '@supabase/supabase-js';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { MEDIAMARKT_CATEGORY_MAP } from '../src/lib/scrapers/mediamarkt-category-map.mjs';
 import { scrapePdpDetailed, MM_STORE_UUID, isRefurbished } from '../src/lib/scrapers/mediamarkt.mjs';
-import { checkAccessory } from '../src/lib/accessoryDetector.mjs';
+// tsx ESM .mjs ↔ .ts named export interop sorunu — dynamic import ile çöz
+const accessoryMod = await import('../src/lib/accessoryDetector.ts');
+const checkAccessory = accessoryMod.checkAccessory ?? accessoryMod.default?.checkAccessory;
+if (typeof checkAccessory !== 'function') {
+  throw new Error('checkAccessory accessoryDetector modülünden import edilemedi');
+}
 import { extractModelFamily } from '../src/lib/extractModelFamily.mjs';
 import { fetchAllProductsFromCategory } from '../src/lib/scrapers/mediamarkt-categories.mjs';
 
