@@ -10,7 +10,7 @@
  *   - Otherwise construct API URL from sourceProductId.
  */
 
-import type { StoreFetcher, StoreLiveData, FetchContext } from "./types";
+import type { StoreFetcher, StoreLiveData, FetchContext, SearchContext } from "./types";
 
 const TIMEOUT_MS = 5000;
 
@@ -244,9 +244,57 @@ function parseString(v: unknown): string | null {
   return null;
 }
 
+// ────────────────────────────────────────────────────────────────────────
+// Search-by-title (discover flow)
+// ────────────────────────────────────────────────────────────────────────
+async function searchTrendyol(ctx: SearchContext): Promise<StoreLiveData | null> {
+  const query = [ctx.brand, ctx.title].filter(Boolean).join(" ").trim();
+  if (!query) return null;
+  const searchUrl = `https://www.trendyol.com/sr?q=${encodeURIComponent(query)}`;
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), TIMEOUT_MS);
+  let searchHtml: string;
+  try {
+    const res = await fetch(searchUrl, {
+      signal: controller.signal,
+      headers: {
+        "User-Agent": pickUA(),
+        Accept: "text/html,application/xhtml+xml",
+        "Accept-Language": "tr-TR,tr;q=0.9",
+        Referer: "https://www.trendyol.com/",
+      },
+      redirect: "follow",
+    });
+    if (!res.ok) return null;
+    searchHtml = await res.text();
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  // Trendyol search result anchors: /<slug>-p-<numericId> or full URL
+  const hrefMatch =
+    searchHtml.match(/href=["'](https?:\/\/(?:www\.)?trendyol\.com\/[^"']*-p-\d+[^"']*)["']/i) ??
+    searchHtml.match(/href=["'](\/[^"']*-p-\d+[^"']*)["']/i);
+  if (!hrefMatch) return null;
+
+  let productUrl = hrefMatch[1];
+  if (productUrl.startsWith("/")) productUrl = `https://www.trendyol.com${productUrl}`;
+
+  try {
+    const data = await fetchTrendyolHtml(productUrl);
+    return { ...data, affiliate_url: productUrl };
+  } catch {
+    return null;
+  }
+}
+
 export const trendyolFetcher: StoreFetcher = {
   source: "trendyol",
   fetch: fetchTrendyol,
+  searchByTitle: searchTrendyol,
   timeoutMs: TIMEOUT_MS,
   rpmLimit: 30,
 };

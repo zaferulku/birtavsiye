@@ -27,6 +27,7 @@ import { mediamarktFetcher } from "./mediamarkt";
 import { trendyolFetcher } from "./trendyol";
 import { hepsiburadaFetcher } from "./hepsiburada";
 import { amazonTrFetcher } from "./amazon-tr";
+import { n11Fetcher } from "./n11";
 
 const FETCHERS: Record<string, StoreFetcher> = {
   pttavm: pttavmFetcher,
@@ -34,6 +35,7 @@ const FETCHERS: Record<string, StoreFetcher> = {
   trendyol: trendyolFetcher,
   hepsiburada: hepsiburadaFetcher,
   "amazon-tr": amazonTrFetcher,
+  n11: n11Fetcher,
 };
 
 export function isSourceSupported(source: string): boolean {
