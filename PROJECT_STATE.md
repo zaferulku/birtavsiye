@@ -735,6 +735,13 @@ e0b318d   fix(ui): liste kart başlığı = brand + model_family + storage + col
     Frontend `categorizeFromTitle.ts` ve `scrapeClassifier.ts` yeni slug kullanır.
     Yeni kategori eklerken: `parent_id` chain ZORUNLU + hierarchik slug ZORUNLU.
     Eski kategoriler `backup_20260430_categories`'te (gerekirse restore).
+16. **NAMING**: Yeni kod, dosya, commit message, comment'lerde "akakce" veya
+    "cimri" isimleri KULLANMA. Generic terim kullan:
+    - "spec scraper", "external spec source"
+    - "Turkish price aggregator", "rakip analizi"
+    - Yeni `enrichment_source` değeri: `external_spec_source`
+    Eski kod/commit/DB değerlerinde kalanlara DOKUNMA (legacy, OK).
+    Sadece YENİ commit'ler için kural geçerli.
 
 ### Kullanıcı için
 
