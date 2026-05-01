@@ -433,11 +433,12 @@ function getProductSearchScore(
     }
   }
 
-  // HARD FILTER: aksesuar kategori + accessoryIntent yoksa, score -100 ile en alta düşer
-  // (loop disinda, tek seferlik)
+  // HARD FILTER: aksesuar kategori + accessoryIntent yoksa, ürün tamamen el.
+  // Önceden -100 skor uygulardı ama base score 108+ olunca pozitif kalıp
+  // filter'dan geçiyordu (kılıflar telefon araması sonuçlarında görünüyordu).
+  // Şimdi -1 dön → applyRankingSignals filter'ı tamamen eler.
   if (ACCESSORY_CATEGORY_PATTERN.test(categorySlug) && !accessoryIntent) {
-    score -= 100;
-    reasons.add("aksesuar-hard-filter");
+    return { score: -1, reasons: [] };
   }
 
   if (matchedTerms === 0) {
