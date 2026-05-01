@@ -3,12 +3,11 @@ import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import Link from "next/link";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { fetchDescendantIds, modelFamilyToSlug } from "../../lib/categoryTree";
 import type { Metadata } from "next";
-import KategoriSayfasi from "../kategori/[slug]/page";
+import KategoriSayfasi from "../components/kategori/KategoriSayfasi";
 import ModelPageView from "../components/marka/ModelPageView";
-import { resolveCategorySlug } from "../../lib/categoryAliases";
 import { mergeClusteredProducts } from "../../lib/productCluster";
 import { getActiveOfferCount, getLowestActivePrice } from "../../lib/listingSignals";
 import {
@@ -34,40 +33,40 @@ async function resolveSegments(segments: string[]) {
     .from("categories")
     .select("id, slug, name, parent_id, icon");
   const allCats = (allCatsData ?? []) as CategoryNode[];
-  const bySlug = new Map(allCats.map(c => [c.slug, c]));
-  const byId = new Map(allCats.map(c => [c.id, c]));
+  const bySlug = new Map(allCats.map((c) => [c.slug, c]));
+  const byId = new Map(allCats.map((c) => [c.id, c]));
 
+  // Hierarchik full-path slug greedy match (en uzundan en kısaya).
+  // segments=[elektronik, telefon, akilli-telefon, apple] →
+  //   "elektronik/telefon/akilli-telefon/apple" miss
+  //   "elektronik/telefon/akilli-telefon" hit → leaf cat
+  //   kalan: ["apple"] → brandSlug="apple"
+  let consumedCount = 0;
+  let leafCategory: CategoryNode | null = null;
+  for (let n = segments.length; n >= 1; n--) {
+    const candidate = segments.slice(0, n).join("/");
+    const cat = bySlug.get(candidate);
+    if (cat) {
+      consumedCount = n;
+      leafCategory = cat;
+      break;
+    }
+  }
+
+  // Leaf'ten root'a parent_id chain ile categories listesi
   const categories: CategoryNode[] = [];
-  let idx = 0;
-
-  while (idx < segments.length) {
-    const seg = resolveCategorySlug(segments[idx]);
-    const cat = bySlug.get(seg);
-    if (!cat) break;
-    if (categories.length > 0) {
-      const prev = categories[categories.length - 1];
-      if (cat.parent_id !== prev.id) break;
+  if (leafCategory) {
+    let currentId: string | null = leafCategory.id;
+    while (currentId) {
+      const node = byId.get(currentId);
+      if (!node) break;
+      categories.unshift(node);
+      currentId = node.parent_id;
     }
-    categories.push(cat);
-    idx++;
   }
 
-  if (categories.length > 0 && categories[0].parent_id) {
-    const expanded: CategoryNode[] = [];
-    let currentParentId: string | null = categories[0].parent_id;
-
-    while (currentParentId) {
-      const parent = byId.get(currentParentId);
-      if (!parent) break;
-      expanded.unshift(parent);
-      currentParentId = parent.parent_id;
-    }
-
-    categories.unshift(...expanded);
-  }
-
-  const brandSlug = segments[idx] ?? null;
-  const modelSlug = segments[idx + 1] ?? null;
+  const brandSlug = segments[consumedCount] ?? null;
+  const modelSlug = segments[consumedCount + 1] ?? null;
 
   return { categories, brandSlug, modelSlug };
 }
@@ -85,15 +84,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function Page({ params, searchParams }: PageProps) {
   const { segments } = await params;
   const sp = await searchParams;
+
+  // /anasayfa tek başına → / redirect (boş segments veya sadece "anasayfa")
+  const stripped = segments[0] === "anasayfa" ? segments.slice(1) : segments;
+  if (stripped.length === 0) redirect("/");
+
   const { categories, brandSlug, modelSlug } = await resolveSegments(segments);
 
-  if (categories.length === 0 && !brandSlug) notFound();
+  // Kategori match yok ise 404 (eski "brand-only URL" desteği kaldırıldı)
+  if (categories.length === 0) notFound();
 
+  // Breadcrumb: c.slug zaten tam hierarşik path; her node'un href'i direkt
   const breadcrumbLinks: { href: string; label: string }[] = [{ href: "/", label: "Anasayfa" }];
-  let acc: string[] = [];
   for (const c of categories) {
-    acc = [...acc, c.slug];
-    breadcrumbLinks.push({ href: "/anasayfa/" + acc.join("/"), label: c.name });
+    breadcrumbLinks.push({ href: "/anasayfa/" + c.slug, label: c.name });
   }
 
   const leafCategory = categories[categories.length - 1] ?? null;
@@ -214,7 +218,7 @@ export default async function Page({ params, searchParams }: PageProps) {
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {models.map(([mf, info]) => (
-              <Link key={mf} href={`/anasayfa/${[...acc, brandSlug, modelFamilyToSlug(mf)].join("/")}`} className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition flex flex-col">
+              <Link key={mf} href={`/anasayfa/${leafCategory!.slug}/${brandSlug}/${modelFamilyToSlug(mf)}`} className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition flex flex-col">
                 <div className="relative w-full h-40 flex items-center justify-center">
                   {info.rep.image_url
                     ? <Image src={info.rep.image_url} alt={mf} fill className="object-contain" sizes="(max-width: 768px) 50vw, 25vw" />

@@ -3,25 +3,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "../../../lib/supabase";
-import { resolveSlug } from "../../../lib/categorySlugMap";
 
-// Slug → hiyerarşik path (root'tan leaf'e)
-function buildCategoryChain(slug: string, catMap: Map<string, { id: string; slug: string; parent_id: string | null }>, byId: Map<string, { id: string; slug: string; parent_id: string | null }>): string[] {
-  const chain: string[] = [];
-  let current = catMap.get(slug);
-  while (current) {
-    chain.unshift(current.slug);
-    current = current.parent_id ? byId.get(current.parent_id) : undefined;
-  }
-  return chain;
-}
-
-function hierUrl(slug: string, catMap: Map<string, { id: string; slug: string; parent_id: string | null }>, byId: Map<string, { id: string; slug: string; parent_id: string | null }>, q?: string): string {
-  // Eski Header slug'ları DB'deki güncel slug'lara map'le (68 kırık fix)
-  const resolvedSlug = resolveSlug(slug);
-  const chain = buildCategoryChain(resolvedSlug, catMap, byId);
-  if (chain.length === 0) return "/kategori/" + resolvedSlug + (q ? "?q=" + encodeURIComponent(q) : "");
-  const base = "/anasayfa/" + chain.join("/");
+// categories.slug artık DB'de full hierarchik path. Slug → URL map basitleşti:
+// catMap.get(slug).slug = full path → /anasayfa/<full-path>.
+function hierUrl(slug: string, catMap: Map<string, { id: string; slug: string; parent_id: string | null }>, _byId: Map<string, { id: string; slug: string; parent_id: string | null }>, q?: string): string {
+  const cat = catMap.get(slug);
+  // Match yoksa anasayfaya fallback (eski /kategori/<slug> URL'leri kaldırıldı)
+  if (!cat) return "/" + (q ? "?q=" + encodeURIComponent(q) : "");
+  const base = "/anasayfa/" + cat.slug;
   return q ? `${base}?q=${encodeURIComponent(q)}` : base;
 }
 
@@ -805,7 +794,7 @@ export default function Header() {
                         <button
                           key={cat.slug + cat.label}
                           onMouseEnter={() => setActiveCat(cat.label)}
-                          onClick={() => { router.push("/kategori/" + resolveSlug(cat.slug)); setActiveGroup(null); }}
+                          onClick={() => { router.push(linkFor(cat.slug)); setActiveGroup(null); }}
                           className={`w-full flex items-center justify-between gap-2 px-4 py-2.5 text-sm text-left transition-colors ${
                             displayCat.label === cat.label
                               ? "bg-white text-[#E8460A] font-semibold border-r-2 border-[#E8460A]"
