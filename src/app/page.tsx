@@ -4,12 +4,14 @@ import FeaturedProducts from "./components/home/FeaturedProducts";
 import TopicFeed from "./components/home/TopicFeed";
 import HomeBanner from "./components/home/HomeBanner";
 import ToggleBar from "./components/home/ToggleBar";
+import { fetchCategoriesServer } from "@/lib/fetchCategoriesServer";
 export const revalidate = 300;
 
-export default function Home() {
+export default async function Home() {
+  const initialCats = await fetchCategoriesServer();
   return (
     <main className="min-h-screen bg-white">
-      <Header />
+      <Header initialCats={initialCats} />
       <ToggleBar />
 
       <div className="flex" style={{ minHeight: "calc(100vh - 132px)" }}>

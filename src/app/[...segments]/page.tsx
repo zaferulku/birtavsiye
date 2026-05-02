@@ -1,4 +1,5 @@
 import { supabaseAdmin } from "../../lib/supabaseServer";
+import { fetchCategoriesServer } from "@/lib/fetchCategoriesServer";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import Link from "next/link";
@@ -89,6 +90,9 @@ export default async function Page({ params, searchParams }: PageProps) {
   const stripped = segments[0] === "anasayfa" ? segments.slice(1) : segments;
   if (stripped.length === 0) redirect("/");
 
+  // P6.20-A: SSR-side categories prefetch — Header'da catMap initial dolu olur.
+  const initialCats = await fetchCategoriesServer();
+
   const { categories, brandSlug, modelSlug } = await resolveSegments(segments);
 
   // Kategori match yok ise 404 (eski "brand-only URL" desteği kaldırıldı)
@@ -168,7 +172,7 @@ export default async function Page({ params, searchParams }: PageProps) {
     if (visibleRows.length === 0) {
       return (
         <main className="bg-white min-h-screen">
-          <Header />
+          <Header initialCats={initialCats} />
           <div className="max-w-6xl mx-auto px-6 py-20 text-center">
             <h1 className="font-bold text-2xl mb-4">Ürün bulunamadı</h1>
             <Link href="/" className="text-[#E8460A]">Anasayfaya dön</Link>

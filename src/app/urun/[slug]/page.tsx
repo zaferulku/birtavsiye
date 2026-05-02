@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import Header from "../../components/layout/Header";
 import Footer from "../../components/layout/Footer";
 import ProductDetailShell from "../../components/urun/ProductDetailShell";
+import { fetchCategoriesServer } from "@/lib/fetchCategoriesServer";
 import type {
   PriceInsightsPayload,
   SimilarProduct,
@@ -500,6 +501,9 @@ export default async function ProductPage({
     notFound();
   }
 
+  // P6.20-A: SSR Header initialCats prefetch
+  const initialCats = await fetchCategoriesServer();
+
   const [similarProducts, recommendations] = await Promise.all([
     loadSimilarProducts(
       product.brand,
@@ -601,7 +605,7 @@ export default async function ProductPage({
         dangerouslySetInnerHTML={{ __html: safeJsonLd(breadcrumbJsonLd) }}
       />
 
-      <Header />
+      <Header initialCats={initialCats} />
 
       <ProductDetailShell
         product={{

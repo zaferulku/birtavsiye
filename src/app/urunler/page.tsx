@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import FeaturedProducts from "../components/home/FeaturedProducts";
+import { fetchCategoriesServer } from "@/lib/fetchCategoriesServer";
 
 export const revalidate = 300;
 
@@ -32,10 +33,11 @@ function NavIcon({
   );
 }
 
-export default function UrunlerSayfasi() {
+export default async function UrunlerSayfasi() {
+  const initialCats = await fetchCategoriesServer();
   return (
     <main className="min-h-screen bg-white">
-      <Header />
+      <Header initialCats={initialCats} />
 
       <div className="bg-white border-b border-gray-200">
         <div className="flex items-center justify-center gap-1.5 py-2">

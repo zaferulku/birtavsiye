@@ -8,6 +8,7 @@ import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import type { Metadata } from "next";
 import Header from "../components/layout/Header";
+import { fetchCategoriesServer } from "@/lib/fetchCategoriesServer";
 import Footer from "../components/layout/Footer";
 
 type ComparisonProduct = {
@@ -244,10 +245,13 @@ export default async function ComparisonPage({
   const { ids } = await searchParams;
   const productIds = (ids ?? "").split(",").map((s) => s.trim()).filter(Boolean);
 
+  // P6.20-A: SSR Header initialCats prefetch
+  const initialCats = await fetchCategoriesServer();
+
   if (productIds.length < 2) {
     return (
       <>
-        <Header />
+        <Header initialCats={initialCats} />
         <div className="comparison-error">
           <h1>En az 2 ürün seçin</h1>
           <p>Karşılaştırma sayfasına ürün seçmeden gelinmiş. Bir kategori sayfasından 2-4 ürün seçerek karşılaştırabilirsiniz.</p>
@@ -268,7 +272,7 @@ export default async function ComparisonPage({
   if (!categoryMatch) {
     return (
       <>
-        <Header />
+        <Header initialCats={initialCats} />
         <div className="comparison-error">
           <h1>Bu ürünler karşılaştırılamaz</h1>
           <p>Seçtiğiniz ürünler farklı kategorilerde. Adil bir karşılaştırma için aynı kategorideki ürünleri seçin.</p>

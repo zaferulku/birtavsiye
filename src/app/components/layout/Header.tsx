@@ -624,7 +624,18 @@ const NAV: NavGroup[] = [
   },
 ];
 
-export default function Header() {
+type HeaderCat = { id: string; slug: string; parent_id: string | null };
+
+interface HeaderProps {
+  // P6.20-A: Server-component sayfaları SSR'da prefetch edilmiş categories
+  // listesini geçirir → catMap initial render'da dolu, linkFor exact match
+  // tutuyor, /?q= fallback'e düşmez. Client sayfaları prop geçmezse eski
+  // CSR useEffect fetch davranışı korunur (P6.20-B hotfix fallback yeterince
+  // koruyor).
+  initialCats?: HeaderCat[];
+}
+
+export default function Header({ initialCats }: HeaderProps = {}) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [user, setUser] = useState<User | null>(null);
@@ -645,14 +656,17 @@ export default function Header() {
     return () => listener.subscription.unsubscribe();
   }, []);
 
-  // Kategori hiyerarşisini fetch et — /api/public/categories proxy üzerinden
-  const [cats, setCats] = useState<{ id: string; slug: string; parent_id: string | null }[]>([]);
+  // P6.20-A: SSR initialCats prop varsa onunla başla (server pages),
+  // yoksa eski CSR fetch davranışı (client pages, fallback).
+  const [cats, setCats] = useState<HeaderCat[]>(initialCats ?? []);
   useEffect(() => {
+    // initialCats varsa fetch atla (zaten SSR'da geldi). Yoksa client-side fetch.
+    if (initialCats && initialCats.length > 0) return;
     fetch("/api/public/categories")
       .then(r => r.json())
       .then(j => { if (Array.isArray(j.categories)) setCats(j.categories); })
       .catch(() => {});
-  }, []);
+  }, [initialCats]);
   const catMap = useMemo(() => new Map(cats.map(c => [c.slug, c])), [cats]);
   const catById = useMemo(() => new Map(cats.map(c => [c.id, c])), [cats]);
   const linkFor = (slug: string, q?: string) => hierUrl(slug, catMap, catById, q);
