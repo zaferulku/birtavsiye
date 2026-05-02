@@ -2,13 +2,18 @@
   "exactMatch": [
     "anne-bebek/bebek-bakim",
     "anne-bebek/bebek-bakim/bebek-bezi",
+    "anne-bebek/bebek-bakim/bebek-kozmetik",
+    "anne-bebek/bebek-bakim/bebek-sagligi",
     "anne-bebek/bebek-beslenme/biberon-emzik",
     "anne-bebek/bebek-tasima",
     "anne-bebek/bebek-tasima/araba-puset",
     "anne-bebek/bebek-tasima/besik",
     "anne-bebek/bebek-tasima/oto-koltugu",
+    "anne-bebek/bebek-tasima/yurutec-salincak",
     "anne-bebek/cocuk-odasi",
+    "anne-bebek/cocuk-odasi/oyun-mati-parki",
     "anne-bebek/oyuncak",
+    "anne-bebek/oyuncak/acik-hava-spor",
     "anne-bebek/oyuncak/diger",
     "anne-bebek/oyuncak/egitici",
     "anne-bebek/oyuncak/figur",
@@ -33,20 +38,27 @@
     "elektronik/bilgisayar-tablet/bilesenler/veri-depolama",
     "elektronik/bilgisayar-tablet/klavye-mouse",
     "elektronik/bilgisayar-tablet/laptop",
+    "elektronik/bilgisayar-tablet/laptop/laptop",
     "elektronik/bilgisayar-tablet/masaustu",
     "elektronik/bilgisayar-tablet/monitor",
     "elektronik/bilgisayar-tablet/tablet",
     "elektronik/bilgisayar-tablet/yazici",
+    "elektronik/bilgisayar-tablet/yazici/cok-fonksiyonlu-yazici",
+    "elektronik/bilgisayar-tablet/yazici/murekkep-toner",
+    "elektronik/bilgisayar-tablet/yazici/yazici",
     "elektronik/giyilebilir/akilli-saat",
     "elektronik/kamera",
     "elektronik/kamera/aksiyon-kamera",
     "elektronik/kamera/drone",
     "elektronik/kamera/fotograf-makinesi",
+    "elektronik/kamera/kamera-aksesuar",
     "elektronik/oyun/konsol",
     "elektronik/oyun/konsol/aksesuar",
+    "elektronik/oyun/konsol/oyun-konsolu",
     "elektronik/oyun/konsol/pc-oyun",
     "elektronik/oyun/konsol/vr-sim",
     "elektronik/telefon/akilli-telefon",
+    "elektronik/telefon/akilli-telefon/akilli-telefon",
     "elektronik/telefon/aksesuar",
     "elektronik/telefon/ekran-koruyucu",
     "elektronik/telefon/kilif",
@@ -62,43 +74,97 @@
     "elektronik/tv-ses-goruntu/tv-aksesuar",
     "ev-yasam/aydinlatma",
     "ev-yasam/bahce-balkon",
+    "ev-yasam/bahce-balkon/bahce-aletleri",
+    "ev-yasam/bahce-balkon/bitki-saksi",
+    "ev-yasam/bahce-balkon/sulama-sistemi",
     "ev-yasam/ev-tekstili",
+    "ev-yasam/ev-tekstili/hali-perde",
+    "ev-yasam/ev-tekstili/havlu-bornoz",
+    "ev-yasam/ev-tekstili/koltuk-ortusu-kirlent",
+    "ev-yasam/ev-tekstili/nevresim-yatak",
     "ev-yasam/mobilya",
+    "ev-yasam/mobilya/dekorasyon",
     "ev-yasam/mobilya/ofis",
+    "ev-yasam/mobilya/yemek-calisma",
     "ev-yasam/mutfak-sofra",
+    "ev-yasam/mutfak-sofra/pisirme-grubu",
+    "ev-yasam/mutfak-sofra/saklama-depolama",
+    "ev-yasam/mutfak-sofra/temizlik-aksesuar",
+    "ev-yasam/mutfak-sofra/yemek-kahvalti-takimi",
     "ev-yasam/temizlik",
+    "ev-yasam/temizlik/bulasik",
+    "ev-yasam/temizlik/camasir",
+    "ev-yasam/temizlik/cop-torbasi-temizlik-araclari",
+    "ev-yasam/temizlik/kagit-urunleri",
+    "ev-yasam/temizlik/yuzey-temizleyici",
     "hobi-eglence",
     "hobi-eglence/kitap-kirtasiye/cocuk-kitap",
     "hobi-eglence/kitap-kirtasiye/film-dizi",
+    "hobi-eglence/kitap-kirtasiye/film-dizi/blu-ray-dvd",
+    "hobi-eglence/kitap-kirtasiye/film-dizi/dijital-film-dizi",
     "hobi-eglence/kitap-kirtasiye/kirtasiye",
+    "hobi-eglence/kitap-kirtasiye/kirtasiye/defter-ajanda",
+    "hobi-eglence/kitap-kirtasiye/kirtasiye/kalem-yazi-gerecleri",
+    "hobi-eglence/kitap-kirtasiye/kirtasiye/ofis-malzemeleri",
+    "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-cantasi",
+    "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-malzemeleri",
     "hobi-eglence/kitap-kirtasiye/kitap",
+    "hobi-eglence/kitap-kirtasiye/kitap/bilim-akademik",
+    "hobi-eglence/kitap-kirtasiye/kitap/kisisel-gelisim",
+    "hobi-eglence/kitap-kirtasiye/kitap/roman-edebiyat",
+    "hobi-eglence/kitap-kirtasiye/kitap/sinav-hazirlik",
     "hobi-eglence/koleksiyon",
+    "hobi-eglence/parti-malzemeleri",
     "hobi-eglence/sanat-muzik/el-sanatlari",
     "hobi-eglence/sanat-muzik/muzik-aleti",
+    "hobi-eglence/sanat-muzik/muzik-aleti/davul-perkusyon",
+    "hobi-eglence/sanat-muzik/muzik-aleti/gitar",
+    "hobi-eglence/sanat-muzik/muzik-aleti/klavye-piyano",
+    "hobi-eglence/sanat-muzik/muzik-aleti/nefesli-yayli",
+    "hobi-eglence/sanat-muzik/muzik-aleti/studyo-kayit",
     "hobi-eglence/sanat-muzik/resim",
     "kozmetik/cilt-bakim",
     "kozmetik/cilt-bakim/gunes-koruyucu",
     "kozmetik/cilt-bakim/maske",
     "kozmetik/cilt-bakim/nemlendirici",
     "kozmetik/cilt-bakim/serum",
+    "kozmetik/cilt-bakim/vucut-bakimi",
+    "kozmetik/cilt-bakim/yuz-temizleme",
     "kozmetik/kisisel-bakim/agiz-dis",
+    "kozmetik/kisisel-bakim/agiz-dis/agiz-dusu-dis-ipi",
+    "kozmetik/kisisel-bakim/agiz-dis/dis-fircasi",
+    "kozmetik/kisisel-bakim/agiz-dis/dis-macunu-gargara",
     "kozmetik/kisisel-bakim/erkek",
+    "kozmetik/kisisel-bakim/erkek/erkek-cilt-bakimi",
+    "kozmetik/kisisel-bakim/erkek/sac-sakal-makinesi",
+    "kozmetik/kisisel-bakim/erkek/tiras-makinesi",
+    "kozmetik/kisisel-bakim/erkek/tiras-urunleri",
     "kozmetik/kisisel-bakim/hijyen",
+    "kozmetik/kisisel-bakim/hijyen/dus-banyo",
+    "kozmetik/kisisel-bakim/hijyen/kadin-hijyen",
+    "kozmetik/kisisel-bakim/hijyen/kil-giderme-epilasyon",
     "kozmetik/makyaj",
     "kozmetik/makyaj/dudak",
     "kozmetik/makyaj/goz",
+    "kozmetik/makyaj/makyaj-aksesuari",
+    "kozmetik/makyaj/tirnak",
     "kozmetik/makyaj/yuz",
     "kozmetik/parfum",
+    "kozmetik/parfum/deodorant",
     "kozmetik/parfum/erkek",
     "kozmetik/parfum/kadin",
+    "kozmetik/parfum/kolonya",
     "kozmetik/parfum/unisex",
     "kozmetik/sac-bakim",
     "kozmetik/sac-bakim/boya",
+    "kozmetik/sac-bakim/sac-maskesi-serum",
+    "kozmetik/sac-bakim/sac-sekillendirici",
     "kozmetik/sac-bakim/sampuan",
     "kucuk-ev-aletleri",
     "kucuk-ev-aletleri/ev-cihazlari/hava-temizleyici",
     "kucuk-ev-aletleri/ev-cihazlari/tarti",
     "kucuk-ev-aletleri/ev-cihazlari/utu",
+    "kucuk-ev-aletleri/kisisel-bakim-aleti",
     "kucuk-ev-aletleri/kisisel-bakim/sac-kurutma",
     "kucuk-ev-aletleri/mutfak",
     "kucuk-ev-aletleri/mutfak/airfryer",
@@ -111,20 +177,37 @@
     "kucuk-ev-aletleri/temizlik/robot-supurge",
     "kucuk-ev-aletleri/temizlik/supurge",
     "moda/aksesuar/canta-cuzdan",
+    "moda/aksesuar/canta-cuzdan/cuzdan-kartlik",
+    "moda/aksesuar/canta-cuzdan/erkek-canta",
+    "moda/aksesuar/canta-cuzdan/kadin-canta",
+    "moda/aksesuar/canta-cuzdan/valiz-bavul",
     "moda/aksesuar/gozluk",
     "moda/aksesuar/saat-taki",
+    "moda/aksesuar/saat-taki/erkek-saati",
+    "moda/aksesuar/saat-taki/kadin-saati",
+    "moda/aksesuar/saat-taki/kemer-aksesuar",
+    "moda/aksesuar/saat-taki/taki",
     "moda/cocuk-moda",
     "moda/cocuk-moda/ayakkabi",
     "moda/cocuk-moda/giyim",
+    "moda/cocuk-moda/giyim/bebek-giyim",
+    "moda/cocuk-moda/giyim/erkek-cocuk",
+    "moda/cocuk-moda/giyim/kiz-cocuk",
     "moda/erkek-ayakkabi",
     "moda/erkek-ayakkabi/bot",
     "moda/erkek-ayakkabi/klasik",
+    "moda/erkek-ayakkabi/sandalet-terlik",
     "moda/erkek-ayakkabi/sneaker",
+    "moda/erkek-ayakkabi/spor-kosu",
     "moda/erkek-giyim",
     "moda/erkek-giyim/alt",
+    "moda/erkek-giyim/ceket-mont",
     "moda/erkek-giyim/dis-giyim",
     "moda/erkek-giyim/esofman",
+    "moda/erkek-giyim/gomlek",
+    "moda/erkek-giyim/pantolon-jean",
     "moda/erkek-giyim/takim-elbise",
+    "moda/erkek-giyim/tisort",
     "moda/erkek-giyim/ust",
     "moda/kadin-ayakkabi",
     "moda/kadin-ayakkabi/babet",
@@ -134,20 +217,41 @@
     "moda/kadin-ayakkabi/topuklu",
     "moda/kadin-giyim",
     "moda/kadin-giyim/alt",
+    "moda/kadin-giyim/buyuk-beden",
+    "moda/kadin-giyim/ceket-mont",
     "moda/kadin-giyim/dis-giyim",
     "moda/kadin-giyim/elbise",
     "moda/kadin-giyim/etek",
     "moda/kadin-giyim/ic-giyim",
+    "moda/kadin-giyim/kazak-hirka",
+    "moda/kadin-giyim/pantolon-jean",
+    "moda/kadin-giyim/tesettur",
+    "moda/kadin-giyim/tisort-bluz",
     "moda/kadin-giyim/ust",
     "otomotiv",
     "otomotiv/arac-aksesuar",
+    "otomotiv/arac-aksesuar/aku-elektrik",
+    "otomotiv/arac-aksesuar/bakim-temizlik",
+    "otomotiv/arac-aksesuar/dis-aksesuar",
+    "otomotiv/arac-aksesuar/ic-aksesuar",
     "otomotiv/arac-elektronigi",
+    "otomotiv/arac-elektronigi/arac-guvenligi",
+    "otomotiv/arac-elektronigi/arac-ses-sistemi",
+    "otomotiv/arac-elektronigi/dashcam-geri-gorus",
     "otomotiv/lastik-jant",
+    "otomotiv/lastik-jant/jant",
+    "otomotiv/lastik-jant/kis-4-mevsim-lastigi",
+    "otomotiv/lastik-jant/lastik-aksesuar",
+    "otomotiv/lastik-jant/yaz-lastigi",
     "otomotiv/motor-scooter",
+    "otomotiv/motor-scooter/motosiklet-aksesuar",
+    "otomotiv/motor-scooter/motosiklet-ekipmani",
     "otomotiv/motor-yagi-bakim",
     "otomotiv/navigasyon",
     "otomotiv/oto-aku",
     "otomotiv/oto-yedek-parca",
+    "otomotiv/oto-yedek-parca/fren-suspansiyon",
+    "otomotiv/oto-yedek-parca/silecek-ampul",
     "pet-shop",
     "pet-shop/aksesuar",
     "pet-shop/akvaryum",
@@ -159,14 +263,49 @@
     "pet-shop/kopek/mama",
     "pet-shop/kus",
     "saglik-vitamin/bitkisel",
+    "saglik-vitamin/bitkisel/bagisiklik-destek",
+    "saglik-vitamin/bitkisel/bitkisel-cay",
+    "saglik-vitamin/bitkisel/bitkisel-takviye",
+    "saglik-vitamin/bitkisel/sut-kardeleni-karaciger",
     "saglik-vitamin/spor-besin",
+    "saglik-vitamin/spor-besin/bcaa-aminoasit",
+    "saglik-vitamin/spor-besin/kreatin",
+    "saglik-vitamin/spor-besin/mass-gainer",
+    "saglik-vitamin/spor-besin/pre-workout",
+    "saglik-vitamin/spor-besin/protein-tozu",
+    "saglik-vitamin/spor-besin/yag-yakici",
     "saglik-vitamin/vitamin-mineral",
+    "saglik-vitamin/vitamin-mineral/b-vitamini",
+    "saglik-vitamin/vitamin-mineral/c-vitamini",
+    "saglik-vitamin/vitamin-mineral/d-vitamini",
+    "saglik-vitamin/vitamin-mineral/magnezyum-cinko",
+    "saglik-vitamin/vitamin-mineral/multivitamin",
+    "saglik-vitamin/vitamin-mineral/omega-3-balik-yagi",
     "spor-outdoor",
     "spor-outdoor/bisiklet",
+    "spor-outdoor/bisiklet/bisiklet",
+    "spor-outdoor/bisiklet/bisiklet-aksesuar",
+    "spor-outdoor/bisiklet/elektrikli-scooter",
+    "spor-outdoor/bisiklet/paten-kaykay",
+    "spor-outdoor/erkek-spor-giyim",
     "spor-outdoor/fitness",
+    "spor-outdoor/fitness/agirlik-guc",
+    "spor-outdoor/fitness/fonksiyonel-ekipman",
+    "spor-outdoor/fitness/kondisyon-aleti",
+    "spor-outdoor/fitness/sporcu-beslenmesi",
+    "spor-outdoor/kadin-spor-giyim",
     "spor-outdoor/kamp",
+    "spor-outdoor/kamp/av-balikcilik",
+    "spor-outdoor/kamp/bas-lambasi-pusula",
+    "spor-outdoor/kamp/kamp-ekipmanlari",
+    "spor-outdoor/kamp/tirmanma-dagcilik",
+    "spor-outdoor/kosu-ayakkabisi",
     "spor-outdoor/su-sporlari",
     "spor-outdoor/takim-sporlari",
+    "spor-outdoor/takim-sporlari/basketbol-voleybol",
+    "spor-outdoor/takim-sporlari/boks-dovus",
+    "spor-outdoor/takim-sporlari/futbol",
+    "spor-outdoor/takim-sporlari/tenis-badminton",
     "spor-outdoor/yoga-pilates",
     "supermarket",
     "supermarket/atistirmalik",
@@ -178,9 +317,11 @@
     "supermarket/konserve-sos",
     "yapi-market",
     "yapi-market/boya",
+    "yapi-market/boya-yapistirici",
     "yapi-market/el-aletleri",
     "yapi-market/elektrik",
     "yapi-market/elektrikli-aletler",
+    "yapi-market/elektrikli-el-aletleri",
     "yapi-market/hirdavat",
     "yapi-market/su-tesisati"
   ],
@@ -231,525 +372,8 @@
     "spor-outdoor/spor-cantasi",
     "yapi-market/olcum"
   ],
-  "weakLinks": [
-    {
-      "cat": "Yazıcı & Tarayıcı",
-      "slug": "elektronik/bilgisayar-tablet/yazici",
-      "subs": [
-        {
-          "label": "Yazıcı",
-          "slug": "elektronik/bilgisayar-tablet/yazici"
-        },
-        {
-          "label": "Çok Fonksiyonlu Yazıcı",
-          "slug": "elektronik/bilgisayar-tablet/yazici"
-        },
-        {
-          "label": "Mürekkep & Toner",
-          "slug": "elektronik/bilgisayar-tablet/yazici"
-        }
-      ]
-    },
-    {
-      "cat": "Çanta & Cüzdan",
-      "slug": "moda/aksesuar/canta-cuzdan",
-      "subs": [
-        {
-          "label": "Kadın Çanta",
-          "slug": "moda/aksesuar/canta-cuzdan"
-        },
-        {
-          "label": "Erkek Çanta",
-          "slug": "moda/aksesuar/canta-cuzdan"
-        },
-        {
-          "label": "Valiz & Bavul",
-          "slug": "moda/aksesuar/canta-cuzdan"
-        },
-        {
-          "label": "Cüzdan & Kartlık",
-          "slug": "moda/aksesuar/canta-cuzdan"
-        }
-      ]
-    },
-    {
-      "cat": "Mutfak & Sofra",
-      "slug": "ev-yasam/mutfak-sofra",
-      "subs": [
-        {
-          "label": "Pişirme Grubu",
-          "slug": "ev-yasam/mutfak-sofra"
-        },
-        {
-          "label": "Yemek & Kahvaltı Takımı",
-          "slug": "ev-yasam/mutfak-sofra"
-        },
-        {
-          "label": "Saklama & Depolama",
-          "slug": "ev-yasam/mutfak-sofra"
-        },
-        {
-          "label": "Temizlik & Aksesuar",
-          "slug": "ev-yasam/mutfak-sofra"
-        }
-      ]
-    },
-    {
-      "cat": "Ev Tekstili",
-      "slug": "ev-yasam/ev-tekstili",
-      "subs": [
-        {
-          "label": "Nevresim & Yatak",
-          "slug": "ev-yasam/ev-tekstili"
-        },
-        {
-          "label": "Havlu & Bornoz",
-          "slug": "ev-yasam/ev-tekstili"
-        },
-        {
-          "label": "Halı & Perde",
-          "slug": "ev-yasam/ev-tekstili"
-        },
-        {
-          "label": "Koltuk Örtüsü & Kırlent",
-          "slug": "ev-yasam/ev-tekstili"
-        }
-      ]
-    },
-    {
-      "cat": "Lastik & Jant",
-      "slug": "otomotiv/lastik-jant",
-      "subs": [
-        {
-          "label": "Yaz Lastiği",
-          "slug": "otomotiv/lastik-jant"
-        },
-        {
-          "label": "Kış & 4 Mevsim Lastiği",
-          "slug": "otomotiv/lastik-jant"
-        },
-        {
-          "label": "Jant",
-          "slug": "otomotiv/lastik-jant"
-        },
-        {
-          "label": "Lastik Aksesuar",
-          "slug": "otomotiv/lastik-jant"
-        }
-      ]
-    },
-    {
-      "cat": "Araç Bakım & Aksesuar",
-      "slug": "otomotiv/arac-aksesuar",
-      "subs": [
-        {
-          "label": "Dış Aksesuar",
-          "slug": "otomotiv/arac-aksesuar"
-        },
-        {
-          "label": "İç Aksesuar",
-          "slug": "otomotiv/arac-aksesuar"
-        },
-        {
-          "label": "Bakım & Temizlik",
-          "slug": "otomotiv/arac-aksesuar"
-        },
-        {
-          "label": "Akü & Elektrik",
-          "slug": "otomotiv/arac-aksesuar"
-        }
-      ]
-    },
-    {
-      "cat": "Outdoor & Kamp",
-      "slug": "spor-outdoor/kamp",
-      "subs": [
-        {
-          "label": "Kamp Ekipmanları",
-          "slug": "spor-outdoor/kamp"
-        },
-        {
-          "label": "Tırmanma & Dağcılık",
-          "slug": "spor-outdoor/kamp"
-        },
-        {
-          "label": "Av & Balıkçılık",
-          "slug": "spor-outdoor/kamp"
-        },
-        {
-          "label": "Baş Lambası & Pusula",
-          "slug": "spor-outdoor/kamp"
-        }
-      ]
-    },
-    {
-      "cat": "Bisiklet & Scooter",
-      "slug": "spor-outdoor/bisiklet",
-      "subs": [
-        {
-          "label": "Bisiklet",
-          "slug": "spor-outdoor/bisiklet"
-        },
-        {
-          "label": "Elektrikli Scooter",
-          "slug": "spor-outdoor/bisiklet"
-        },
-        {
-          "label": "Bisiklet Aksesuar",
-          "slug": "spor-outdoor/bisiklet"
-        },
-        {
-          "label": "Paten & Kaykay",
-          "slug": "spor-outdoor/bisiklet"
-        }
-      ]
-    },
-    {
-      "cat": "Ağız & Diş Sağlığı",
-      "slug": "kozmetik/kisisel-bakim/agiz-dis",
-      "subs": [
-        {
-          "label": "Diş Fırçası",
-          "slug": "kozmetik/kisisel-bakim/agiz-dis"
-        },
-        {
-          "label": "Diş Macunu & Gargara",
-          "slug": "kozmetik/kisisel-bakim/agiz-dis"
-        },
-        {
-          "label": "Ağız Duşu & Diş İpi",
-          "slug": "kozmetik/kisisel-bakim/agiz-dis"
-        }
-      ]
-    },
-    {
-      "cat": "Erkek Bakımı",
-      "slug": "kozmetik/kisisel-bakim/erkek",
-      "subs": [
-        {
-          "label": "Tıraş Makinesi",
-          "slug": "kozmetik/kisisel-bakim/erkek"
-        },
-        {
-          "label": "Tıraş Ürünleri",
-          "slug": "kozmetik/kisisel-bakim/erkek"
-        },
-        {
-          "label": "Saç & Sakal Makinesi",
-          "slug": "kozmetik/kisisel-bakim/erkek"
-        },
-        {
-          "label": "Erkek Cilt Bakımı",
-          "slug": "kozmetik/kisisel-bakim/erkek"
-        }
-      ]
-    },
-    {
-      "cat": "Ev Temizliği",
-      "slug": "ev-yasam/temizlik",
-      "subs": [
-        {
-          "label": "Çamaşır",
-          "slug": "ev-yasam/temizlik"
-        },
-        {
-          "label": "Bulaşık",
-          "slug": "ev-yasam/temizlik"
-        },
-        {
-          "label": "Yüzey Temizleyici",
-          "slug": "ev-yasam/temizlik"
-        },
-        {
-          "label": "Kağıt Ürünleri",
-          "slug": "ev-yasam/temizlik"
-        },
-        {
-          "label": "Çöp Torbası & Temizlik Araçları",
-          "slug": "ev-yasam/temizlik"
-        }
-      ]
-    },
-    {
-      "cat": "Müzik Aleti",
-      "slug": "hobi-eglence/sanat-muzik/muzik-aleti",
-      "subs": [
-        {
-          "label": "Gitar",
-          "slug": "hobi-eglence/sanat-muzik/muzik-aleti"
-        },
-        {
-          "label": "Klavye & Piyano",
-          "slug": "hobi-eglence/sanat-muzik/muzik-aleti"
-        },
-        {
-          "label": "Davul & Perküsyon",
-          "slug": "hobi-eglence/sanat-muzik/muzik-aleti"
-        },
-        {
-          "label": "Stüdyo & Kayıt",
-          "slug": "hobi-eglence/sanat-muzik/muzik-aleti"
-        },
-        {
-          "label": "Nefesli & Yaylı",
-          "slug": "hobi-eglence/sanat-muzik/muzik-aleti"
-        }
-      ]
-    },
-    {
-      "cat": "Film & Dizi",
-      "slug": "hobi-eglence/kitap-kirtasiye/film-dizi",
-      "subs": [
-        {
-          "label": "Blu-ray & DVD",
-          "slug": "hobi-eglence/kitap-kirtasiye/film-dizi"
-        },
-        {
-          "label": "Dijital Film & Dizi",
-          "slug": "hobi-eglence/kitap-kirtasiye/film-dizi"
-        }
-      ]
-    },
-    {
-      "cat": "Vitamin & Mineral",
-      "slug": "saglik-vitamin/vitamin-mineral",
-      "subs": [
-        {
-          "label": "Multivitamin",
-          "slug": "saglik-vitamin/vitamin-mineral"
-        },
-        {
-          "label": "C Vitamini",
-          "slug": "saglik-vitamin/vitamin-mineral"
-        },
-        {
-          "label": "D Vitamini",
-          "slug": "saglik-vitamin/vitamin-mineral"
-        },
-        {
-          "label": "B Vitamini",
-          "slug": "saglik-vitamin/vitamin-mineral"
-        },
-        {
-          "label": "Magnezyum & Çinko",
-          "slug": "saglik-vitamin/vitamin-mineral"
-        },
-        {
-          "label": "Omega 3 & Balık Yağı",
-          "slug": "saglik-vitamin/vitamin-mineral"
-        }
-      ]
-    },
-    {
-      "cat": "Bitkisel Sağlık",
-      "slug": "saglik-vitamin/bitkisel",
-      "subs": [
-        {
-          "label": "Bitkisel Çay",
-          "slug": "saglik-vitamin/bitkisel"
-        },
-        {
-          "label": "Bitkisel Takviye",
-          "slug": "saglik-vitamin/bitkisel"
-        },
-        {
-          "label": "Süt Kardeleni & Karaciğer",
-          "slug": "saglik-vitamin/bitkisel"
-        },
-        {
-          "label": "Bağışıklık Destek",
-          "slug": "saglik-vitamin/bitkisel"
-        }
-      ]
-    },
-    {
-      "cat": "Spor Besin Takviyesi",
-      "slug": "saglik-vitamin/spor-besin",
-      "subs": [
-        {
-          "label": "Protein Tozu",
-          "slug": "saglik-vitamin/spor-besin"
-        },
-        {
-          "label": "Kreatin",
-          "slug": "saglik-vitamin/spor-besin"
-        },
-        {
-          "label": "BCAA & Aminoasit",
-          "slug": "saglik-vitamin/spor-besin"
-        },
-        {
-          "label": "Pre-Workout",
-          "slug": "saglik-vitamin/spor-besin"
-        },
-        {
-          "label": "Mass Gainer",
-          "slug": "saglik-vitamin/spor-besin"
-        },
-        {
-          "label": "Yağ Yakıcı",
-          "slug": "saglik-vitamin/spor-besin"
-        }
-      ]
-    }
-  ],
+  "weakLinks": [],
   "partialWeak": [
-    {
-      "cat": "Bilgisayar & Tablet",
-      "slug": "elektronik/bilgisayar-tablet/laptop",
-      "weakSubs": [
-        {
-          "label": "Laptop",
-          "slug": "elektronik/bilgisayar-tablet/laptop"
-        }
-      ]
-    },
-    {
-      "cat": "Telefon & Aksesuar",
-      "slug": "elektronik/telefon/akilli-telefon",
-      "weakSubs": [
-        {
-          "label": "Akıllı Telefon",
-          "slug": "elektronik/telefon/akilli-telefon"
-        }
-      ]
-    },
-    {
-      "cat": "Foto & Kamera",
-      "slug": "elektronik/kamera",
-      "weakSubs": [
-        {
-          "label": "Kamera Aksesuar",
-          "slug": "elektronik/kamera"
-        }
-      ]
-    },
-    {
-      "cat": "Oyun & Konsol",
-      "slug": "elektronik/oyun/konsol",
-      "weakSubs": [
-        {
-          "label": "Oyun Konsolu",
-          "slug": "elektronik/oyun/konsol"
-        }
-      ]
-    },
-    {
-      "cat": "Kadın Giyim",
-      "slug": "moda/kadin-giyim",
-      "weakSubs": [
-        {
-          "label": "Tişört & Bluz",
-          "slug": "moda/kadin-giyim"
-        },
-        {
-          "label": "Pantolon & Jean",
-          "slug": "moda/kadin-giyim"
-        },
-        {
-          "label": "Ceket & Mont",
-          "slug": "moda/kadin-giyim"
-        },
-        {
-          "label": "Kazak & Hırka",
-          "slug": "moda/kadin-giyim"
-        },
-        {
-          "label": "Büyük Beden",
-          "slug": "moda/kadin-giyim"
-        },
-        {
-          "label": "Tesettür",
-          "slug": "moda/kadin-giyim"
-        }
-      ]
-    },
-    {
-      "cat": "Erkek Giyim",
-      "slug": "moda/erkek-giyim",
-      "weakSubs": [
-        {
-          "label": "Tişört",
-          "slug": "moda/erkek-giyim"
-        },
-        {
-          "label": "Gömlek",
-          "slug": "moda/erkek-giyim"
-        },
-        {
-          "label": "Pantolon & Jean",
-          "slug": "moda/erkek-giyim"
-        },
-        {
-          "label": "Ceket & Mont",
-          "slug": "moda/erkek-giyim"
-        }
-      ]
-    },
-    {
-      "cat": "Erkek Ayakkabı",
-      "slug": "moda/erkek-ayakkabi",
-      "weakSubs": [
-        {
-          "label": "Spor & Koşu",
-          "slug": "moda/erkek-ayakkabi"
-        },
-        {
-          "label": "Sandalet & Terlik",
-          "slug": "moda/erkek-ayakkabi"
-        }
-      ]
-    },
-    {
-      "cat": "Saat & Takı",
-      "slug": "moda/aksesuar/saat-taki",
-      "weakSubs": [
-        {
-          "label": "Kadın Saati",
-          "slug": "moda/aksesuar/saat-taki"
-        },
-        {
-          "label": "Erkek Saati",
-          "slug": "moda/aksesuar/saat-taki"
-        },
-        {
-          "label": "Takı",
-          "slug": "moda/aksesuar/saat-taki"
-        },
-        {
-          "label": "Kemer & Aksesuar",
-          "slug": "moda/aksesuar/saat-taki"
-        }
-      ]
-    },
-    {
-      "cat": "Çocuk Giyim",
-      "slug": "moda/cocuk-moda/giyim",
-      "weakSubs": [
-        {
-          "label": "Kız Çocuk",
-          "slug": "moda/cocuk-moda/giyim"
-        },
-        {
-          "label": "Erkek Çocuk",
-          "slug": "moda/cocuk-moda/giyim"
-        },
-        {
-          "label": "Bebek Giyim",
-          "slug": "moda/cocuk-moda/giyim"
-        }
-      ]
-    },
-    {
-      "cat": "Küçük Ev Aletleri",
-      "slug": "kucuk-ev-aletleri",
-      "weakSubs": [
-        {
-          "label": "Kişisel Bakım Aleti",
-          "slug": "kucuk-ev-aletleri"
-        }
-      ]
-    },
     {
       "cat": "Mobilya & Dekorasyon",
       "slug": "ev-yasam/mobilya",
@@ -761,14 +385,6 @@
         {
           "label": "Yatak Odası",
           "slug": "ev-yasam/mobilya"
-        },
-        {
-          "label": "Yemek & Çalışma",
-          "slug": "ev-yasam/mobilya"
-        },
-        {
-          "label": "Dekorasyon",
-          "slug": "ev-yasam/mobilya"
         }
       ]
     },
@@ -777,324 +393,8 @@
       "slug": "yapi-market",
       "weakSubs": [
         {
-          "label": "Elektrikli El Aletleri",
-          "slug": "yapi-market"
-        },
-        {
           "label": "El Aletleri",
           "slug": "yapi-market"
-        },
-        {
-          "label": "Boya & Yapıştırıcı",
-          "slug": "yapi-market"
-        }
-      ]
-    },
-    {
-      "cat": "Kırtasiye & Ofis",
-      "slug": "hobi-eglence/kitap-kirtasiye/kirtasiye",
-      "weakSubs": [
-        {
-          "label": "Okul Malzemeleri",
-          "slug": "hobi-eglence/kitap-kirtasiye/kirtasiye"
-        },
-        {
-          "label": "Ofis Malzemeleri",
-          "slug": "hobi-eglence/kitap-kirtasiye/kirtasiye"
-        }
-      ]
-    },
-    {
-      "cat": "Araç Elektroniği",
-      "slug": "otomotiv/arac-elektronigi",
-      "weakSubs": [
-        {
-          "label": "Dashcam & Geri Görüş",
-          "slug": "otomotiv/arac-elektronigi"
-        },
-        {
-          "label": "Araç Ses Sistemi",
-          "slug": "otomotiv/arac-elektronigi"
-        },
-        {
-          "label": "Araç Güvenliği",
-          "slug": "otomotiv/arac-elektronigi"
-        }
-      ]
-    },
-    {
-      "cat": "Motor & Scooter",
-      "slug": "otomotiv/motor-scooter",
-      "weakSubs": [
-        {
-          "label": "Motosiklet Ekipmanı",
-          "slug": "otomotiv/motor-scooter"
-        },
-        {
-          "label": "Motosiklet Aksesuar",
-          "slug": "otomotiv/motor-scooter"
-        }
-      ]
-    },
-    {
-      "cat": "Bahçe & Dış Mekan",
-      "slug": "ev-yasam/bahce-balkon",
-      "weakSubs": [
-        {
-          "label": "Bahçe Aletleri",
-          "slug": "ev-yasam/bahce-balkon"
-        },
-        {
-          "label": "Sulama Sistemi",
-          "slug": "ev-yasam/bahce-balkon"
-        },
-        {
-          "label": "Bitki & Saksı",
-          "slug": "ev-yasam/bahce-balkon"
-        }
-      ]
-    },
-    {
-      "cat": "Oto Yedek Parça & Bakım",
-      "slug": "otomotiv/oto-yedek-parca",
-      "weakSubs": [
-        {
-          "label": "Fren & Süspansiyon",
-          "slug": "otomotiv/oto-yedek-parca"
-        },
-        {
-          "label": "Silecek & Ampul",
-          "slug": "otomotiv/oto-yedek-parca"
-        }
-      ]
-    },
-    {
-      "cat": "Bebek Bakım",
-      "slug": "anne-bebek/bebek-bakim",
-      "weakSubs": [
-        {
-          "label": "Bebek Kozmetik",
-          "slug": "anne-bebek/bebek-bakim"
-        },
-        {
-          "label": "Bebek Sağlığı",
-          "slug": "anne-bebek/bebek-bakim"
-        }
-      ]
-    },
-    {
-      "cat": "Bebek Arabası & Güvenlik",
-      "slug": "anne-bebek/bebek-tasima",
-      "weakSubs": [
-        {
-          "label": "Yürüteç & Salıncak",
-          "slug": "anne-bebek/bebek-tasima"
-        }
-      ]
-    },
-    {
-      "cat": "Bebek Odası",
-      "slug": "anne-bebek/cocuk-odasi",
-      "weakSubs": [
-        {
-          "label": "Oyun Matı & Parkı",
-          "slug": "anne-bebek/cocuk-odasi"
-        }
-      ]
-    },
-    {
-      "cat": "Oyuncak",
-      "slug": "anne-bebek/oyuncak",
-      "weakSubs": [
-        {
-          "label": "Açık Hava & Spor",
-          "slug": "anne-bebek/oyuncak"
-        }
-      ]
-    },
-    {
-      "cat": "Spor Giyim & Ayakkabı",
-      "slug": "spor-outdoor",
-      "weakSubs": [
-        {
-          "label": "Kadın Spor Giyim",
-          "slug": "spor-outdoor"
-        },
-        {
-          "label": "Erkek Spor Giyim",
-          "slug": "spor-outdoor"
-        },
-        {
-          "label": "Koşu Ayakkabısı",
-          "slug": "spor-outdoor"
-        }
-      ]
-    },
-    {
-      "cat": "Fitness & Kondisyon",
-      "slug": "spor-outdoor/fitness",
-      "weakSubs": [
-        {
-          "label": "Kondisyon Aleti",
-          "slug": "spor-outdoor/fitness"
-        },
-        {
-          "label": "Ağırlık & Güç",
-          "slug": "spor-outdoor/fitness"
-        },
-        {
-          "label": "Fonksiyonel Ekipman",
-          "slug": "spor-outdoor/fitness"
-        },
-        {
-          "label": "Sporcu Beslenmesi",
-          "slug": "spor-outdoor/fitness"
-        }
-      ]
-    },
-    {
-      "cat": "Takım & Su Sporları",
-      "slug": "spor-outdoor/takim-sporlari",
-      "weakSubs": [
-        {
-          "label": "Futbol",
-          "slug": "spor-outdoor/takim-sporlari"
-        },
-        {
-          "label": "Basketbol & Voleybol",
-          "slug": "spor-outdoor/takim-sporlari"
-        },
-        {
-          "label": "Tenis & Badminton",
-          "slug": "spor-outdoor/takim-sporlari"
-        },
-        {
-          "label": "Boks & Dövüş",
-          "slug": "spor-outdoor/takim-sporlari"
-        }
-      ]
-    },
-    {
-      "cat": "Cilt Bakımı",
-      "slug": "kozmetik/cilt-bakim",
-      "weakSubs": [
-        {
-          "label": "Yüz Temizleme",
-          "slug": "kozmetik/cilt-bakim"
-        },
-        {
-          "label": "Vücut Bakımı",
-          "slug": "kozmetik/cilt-bakim"
-        }
-      ]
-    },
-    {
-      "cat": "Makyaj",
-      "slug": "kozmetik/makyaj",
-      "weakSubs": [
-        {
-          "label": "Makyaj Aksesuarı",
-          "slug": "kozmetik/makyaj"
-        },
-        {
-          "label": "Tırnak",
-          "slug": "kozmetik/makyaj"
-        }
-      ]
-    },
-    {
-      "cat": "Saç Bakımı",
-      "slug": "kozmetik/sac-bakim",
-      "weakSubs": [
-        {
-          "label": "Saç Maskesi & Serum",
-          "slug": "kozmetik/sac-bakim"
-        },
-        {
-          "label": "Saç Şekillendirici",
-          "slug": "kozmetik/sac-bakim"
-        }
-      ]
-    },
-    {
-      "cat": "Parfüm & Deodorant",
-      "slug": "kozmetik/parfum",
-      "weakSubs": [
-        {
-          "label": "Deodorant",
-          "slug": "kozmetik/parfum"
-        },
-        {
-          "label": "Kolonya",
-          "slug": "kozmetik/parfum"
-        }
-      ]
-    },
-    {
-      "cat": "Kişisel Bakım (Market)",
-      "slug": "kozmetik/kisisel-bakim/hijyen",
-      "weakSubs": [
-        {
-          "label": "Duş & Banyo",
-          "slug": "kozmetik/kisisel-bakim/hijyen"
-        },
-        {
-          "label": "Kadın Hijyen",
-          "slug": "kozmetik/kisisel-bakim/hijyen"
-        },
-        {
-          "label": "Kıl Giderme & Epilasyon",
-          "slug": "kozmetik/kisisel-bakim/hijyen"
-        }
-      ]
-    },
-    {
-      "cat": "Kitap",
-      "slug": "hobi-eglence/kitap-kirtasiye/kitap",
-      "weakSubs": [
-        {
-          "label": "Roman & Edebiyat",
-          "slug": "hobi-eglence/kitap-kirtasiye/kitap"
-        },
-        {
-          "label": "Kişisel Gelişim",
-          "slug": "hobi-eglence/kitap-kirtasiye/kitap"
-        },
-        {
-          "label": "Sınav Hazırlık",
-          "slug": "hobi-eglence/kitap-kirtasiye/kitap"
-        },
-        {
-          "label": "Bilim & Akademik",
-          "slug": "hobi-eglence/kitap-kirtasiye/kitap"
-        }
-      ]
-    },
-    {
-      "cat": "Hobi & Sanat",
-      "slug": "hobi-eglence",
-      "weakSubs": [
-        {
-          "label": "Parti Malzemeleri",
-          "slug": "hobi-eglence"
-        }
-      ]
-    },
-    {
-      "cat": "Kırtasiye & Ofis",
-      "slug": "hobi-eglence/kitap-kirtasiye/kirtasiye",
-      "weakSubs": [
-        {
-          "label": "Kalem & Yazı Gereçleri",
-          "slug": "hobi-eglence/kitap-kirtasiye/kirtasiye"
-        },
-        {
-          "label": "Defter & Ajanda",
-          "slug": "hobi-eglence/kitap-kirtasiye/kirtasiye"
-        },
-        {
-          "label": "Okul Çantası",
-          "slug": "hobi-eglence/kitap-kirtasiye/kirtasiye"
         }
       ]
     }
