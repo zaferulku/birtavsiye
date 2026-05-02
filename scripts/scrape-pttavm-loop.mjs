@@ -142,6 +142,25 @@ const QUERIES = [
   // === SUPERMARKET ===
   { query: "filtre kahve",          category_slug: "supermarket/kahve" },
   { query: "espresso",              category_slug: "supermarket/kahve" },
+
+  // === MODA — sadece buyuk markalar (kullanici karari 2026-05-02) ===
+  // PTT moda kategorisinde generic/kucuk marka query'leri orphan uretme riski
+  // tasiyor (kirli urun). Whitelist: nike, adidas, converse, puma, vans,
+  // new balance, reebok, asics. Diger markalar bu sprint'te scrape edilmez.
+  { query: "nike sneaker",          category_slug: "moda/erkek-ayakkabi/sneaker" },
+  { query: "nike kadin sneaker",    category_slug: "moda/kadin-ayakkabi/sneaker" },
+  { query: "nike esofman",          category_slug: "moda/erkek-giyim/esofman" },
+  { query: "adidas sneaker",        category_slug: "moda/erkek-ayakkabi/sneaker" },
+  { query: "adidas kadin sneaker",  category_slug: "moda/kadin-ayakkabi/sneaker" },
+  { query: "adidas esofman",        category_slug: "moda/erkek-giyim/esofman" },
+  { query: "converse",              category_slug: "moda/erkek-ayakkabi/sneaker" },
+  { query: "converse kadin",        category_slug: "moda/kadin-ayakkabi/sneaker" },
+  { query: "puma sneaker",          category_slug: "moda/erkek-ayakkabi/sneaker" },
+  { query: "puma kadin",            category_slug: "moda/kadin-ayakkabi/sneaker" },
+  { query: "vans",                  category_slug: "moda/erkek-ayakkabi/sneaker" },
+  { query: "new balance",           category_slug: "moda/erkek-ayakkabi/sneaker" },
+  { query: "reebok",                category_slug: "moda/erkek-ayakkabi/sneaker" },
+  { query: "asics",                 category_slug: "moda/erkek-ayakkabi/sneaker" },
 ];
 
 const SLEEP_MS = 30_000; // 30 sn rate-limit koruma
