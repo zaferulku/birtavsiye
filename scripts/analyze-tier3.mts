@@ -6,9 +6,9 @@ text.split(/\r?\n/).forEach(l=>{const m=l.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);if(
 const sb = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
 
 const { data: catUn } = await sb.from('categories').select('id').eq('slug','siniflandirilmamis').single();
-const unId = (catUn as any)?.id;
+const unId = (catUn as { id: string } | null)?.id;
 
-let all: any[] = [];
+const all: { id: string; title: string; brand: string }[] = [];
 let lastId: string | null = null;
 while (true) {
   let q = sb.from('products').select('id, title, brand').eq('category_id', unId).order('id', {ascending: true}).limit(1000);

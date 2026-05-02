@@ -21,20 +21,22 @@ const TH = parseFloat(args.find(a=>a.startsWith('--threshold='))?.split('=')[1] 
 const MIN = parseInt(args.find(a=>a.startsWith('--min-count='))?.split('=')[1] ?? '10', 10);
 
 const { data: cats } = await sb.from('categories').select('id, slug');
-const catBySlug = new Map<string, string>(((cats ?? []) as any[]).map(c=>[c.slug, c.id]));
-const slugById = new Map<string, string>(((cats ?? []) as any[]).map(c=>[c.id, c.slug]));
+type CatRow = { id: string; slug: string };
+const catBySlug = new Map<string, string>(((cats ?? []) as CatRow[]).map((c) => [c.slug, c.id]));
+const slugById = new Map<string, string>(((cats ?? []) as CatRow[]).map((c) => [c.id, c.slug]));
 const unId = catBySlug.get('siniflandirilmamis');
 if (!unId) { console.error("siniflandirilmamis yok"); process.exit(1); }
 
 // 1. Tüm products: brand+category dağılımı (range pagination)
-const all: any[] = [];
+type ProductRow = { brand: string | null; category_id: string };
+const all: ProductRow[] = [];
 const PAGE = 1000;
 let fromIdx = 0;
 while (true) {
   const { data, error } = await sb.from('products').select('brand, category_id').range(fromIdx, fromIdx+PAGE-1);
   if (error) { console.error("read err:", error); process.exit(1); }
   if (!data || data.length === 0) break;
-  all.push(...data);
+  all.push(...(data as ProductRow[]));
   process.stdout.write(`.`);
   if (data.length < PAGE) break;
   fromIdx += PAGE;
@@ -44,7 +46,7 @@ console.log(`Toplam product: ${all.length}`);
 
 // brand → {catId: count}
 const brandStats = new Map<string, Map<string, number>>();
-all.forEach((p: any) => {
+all.forEach((p) => {
   const b = (p.brand ?? '').trim();
   if (!b) return;
   if (!brandStats.has(b)) brandStats.set(b, new Map());
@@ -78,7 +80,7 @@ let unclFrom = 0;
 while (true) {
   const { data } = await sb.from('products').select('id, brand').eq('category_id', unId).range(unclFrom, unclFrom+PAGE-1);
   if (!data || data.length === 0) break;
-  data.forEach((p: any) => {
+  (data as { id: string; brand: string | null }[]).forEach((p) => {
     const b = (p.brand ?? '').trim();
     if (!b || !brandDominant.has(b)) return;
     if (!unclByBrand.has(b)) unclByBrand.set(b, []);

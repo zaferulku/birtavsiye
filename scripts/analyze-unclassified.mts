@@ -7,11 +7,11 @@ const sb = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_
 
 // siniflandirilmamis cat id
 const { data: cats } = await sb.from('categories').select('id, slug').eq('slug', 'siniflandirilmamis').single();
-const unId = (cats as any)?.id;
+const unId = (cats as { id: string; slug: string } | null)?.id;
 console.log("siniflandirilmamis_id:", unId);
 
 // 12,918 unclassified ürün → pagination ile çek
-let all: any[] = [];
+const all: { id: string; title: string; brand: string }[] = [];
 let from = 0;
 while (true) {
   const { data, error } = await sb.from('products').select('id, title, brand').eq('category_id', unId).eq('classified_by', 'inhouse-faz1').range(from, from+999);
