@@ -81,10 +81,15 @@ Backup'taki 4 forum/profil dosya hâlâ uncommitted (Codex sprint kapsamında).
 - **P6.3-C** — flat slug shortcut'lar full-path'e çevrilmesi (Codex sprint sonrası, ~30dk)
 - **P6.12g-product-narrow** (1 any) — JSON-LD `let product: any` extractor function refactor (cheerio.each → reduce/map immutable)
 - **P6.12f-codex** — Codex 4 backup reapply sonrası TopicFeed/profil/tavsiyeler/tavsiye/[id]'de 18 any + 8 hooks
-- **🆕 P6.14** — `stores` tablosu 100% dead tup (9 dead, 0 live). VACUUM FULL veya audit:
-  - Migration 026 öncesi shadow tablo mu?
-  - TRUNCATE artığı mı?
-  - Aktif `stores` data başka tablolarda mı (örn. Migration 026 ile yeniden yapı)?
+- ~~**P6.14**~~ — `stores` tablosu 100% dead tup ✅ KAPATILDI (Migration 035, 2 May gece geç).
+  Gerçek 9 aktif store, autovacuum hiç çalışmamış → pg_stat anomalisi.
+  VACUUM (FULL, ANALYZE) Studio apply, istatistikler yenilendi.
+- ~~**P6.15**~~ — `auth.users` 0 live + 9 dead anomali ✅ KAPATILDI (audit-only, 2 May gece geç).
+  Gerçek 3 aktif user (test@/test1@/test1@test1), 0 silinmiş, 0 banlı.
+  9 dead tup MVCC HOT update artıkları + dev test signup token'ları (~2 KB negligible).
+  `auth.*` schema Supabase managed → VACUUM/ANALYZE/GRANT yapma yetkimiz YOK.
+  pg_stat reporting anomali, production etkisi sıfır (auth flow RLS + service_role
+  doğrudan SELECT, istatistik kullanmıyor). Kapatma kararı: kod/Migration gerekmez.
 
 **🟡 DİĞER (öncelik düşük):**
 - Eval2 full re-run (LLM quota reset sonrası, baseline ölçüm)
