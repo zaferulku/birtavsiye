@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { supabase } from "../../lib/supabase";
 import { useRouter } from "next/navigation";
 import Header from "../components/layout/Header";
@@ -554,7 +555,7 @@ export default function AdminPanel() {
               {/* Görsel önizleme */}
               {imageUrl && (
                 <div className="mt-3 flex items-center gap-3 bg-white border border-blue-200 rounded-xl p-3">
-                  <img src={imageUrl} alt="" className="w-16 h-16 object-contain rounded-lg border border-gray-100" />
+                  <Image src={imageUrl} alt="" width={64} height={64} className="w-16 h-16 object-contain rounded-lg border border-gray-100" />
                   <div>
                     <div className="text-xs font-semibold text-gray-800">{title}</div>
                     <div className="text-xs text-gray-500">{brand}</div>
@@ -689,7 +690,7 @@ export default function AdminPanel() {
                     {csvParsed.slice(0, 20).map((row, i) => (
                       <div key={i} className={`flex items-center gap-3 px-4 py-2.5 border-b border-gray-50 last:border-0 ${i % 2 === 0 ? "bg-white" : "bg-gray-50/40"}`}>
                         {row.image_url && (
-                          <img src={row.image_url} alt="" className="w-10 h-10 object-contain rounded-lg border border-gray-100 flex-shrink-0" />
+                          <Image src={row.image_url} alt="" width={40} height={40} className="w-10 h-10 object-contain rounded-lg border border-gray-100 flex-shrink-0" />
                         )}
                         <div className="flex-1 min-w-0">
                           <div className="text-sm font-medium truncate">{row.title}</div>

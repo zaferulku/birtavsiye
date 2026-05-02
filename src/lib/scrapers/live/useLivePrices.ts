@@ -66,9 +66,15 @@ export function useLivePrices(productId: string | null): UseLivePricesResult {
       eventSourceRef.current.close();
     }
 
+    // P6.12: productId değişince stale fiyat/stat'ı temizle ve yeni SSE'yi
+    // subscribe et — "subscribe-on-key-change" deseni. ESLint
+    // set-state-in-effect bunu cascading render olarak işaretliyor; 3 sync
+    // setState batch'lenir, refactor (useReducer / parent key prop) scope dışı.
+    /* eslint-disable react-hooks/set-state-in-effect */
     setListings({});
     setIsDone(false);
     setStats({ totalStores: 0, successful: 0, failed: 0, durationMs: 0 });
+    /* eslint-enable react-hooks/set-state-in-effect */
 
     // discover=1 → mevcut listing'i olmayan mağazalarda title+brand araması yap.
     // Orphan ürünlerde (tek-mağaza) diğer pazaryeri fiyatları gösterir.

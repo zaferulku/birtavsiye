@@ -4,6 +4,7 @@
  */
 
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
 import type { Metadata } from "next";
 import Header from "../components/layout/Header";
@@ -234,7 +235,7 @@ export default async function ComparisonPage({
         <div className="comparison-error">
           <h1>En az 2 ürün seçin</h1>
           <p>Karşılaştırma sayfasına ürün seçmeden gelinmiş. Bir kategori sayfasından 2-4 ürün seçerek karşılaştırabilirsiniz.</p>
-          <a href="/" className="btn">Anasayfaya dön</a>
+          <Link href="/" className="btn">Anasayfaya dön</Link>
           <style>{COMPARISON_STYLES}</style>
         </div>
         <Footer />
@@ -262,7 +263,7 @@ export default async function ComparisonPage({
               </li>
             ))}
           </ul>
-          <a href="/" className="btn">Anasayfaya dön</a>
+          <Link href="/" className="btn">Anasayfaya dön</Link>
           <style>{COMPARISON_STYLES}</style>
         </div>
         <Footer />
@@ -284,9 +285,9 @@ export default async function ComparisonPage({
       <article className="comparison-page">
         <header className="comparison-header">
         <nav className="breadcrumb" aria-label="Navigasyon">
-          <a href="/">Anasayfa</a>
+          <Link href="/">Anasayfa</Link>
           <span aria-hidden="true"> › </span>
-          <a href={`/anasayfa/${products[0].category_slug}`}>{categoryName}</a>
+          <Link href={`/anasayfa/${products[0].category_slug}`}>{categoryName}</Link>
           <span aria-hidden="true"> › </span>
           <span>Karşılaştırma</span>
         </nav>

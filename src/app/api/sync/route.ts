@@ -161,7 +161,7 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
       },
       unclassParentId,
     );
-    let effectiveCategoryId = classified.categoryId ?? categoryId;
+    const effectiveCategoryId = classified.categoryId ?? categoryId;
 
     let productId: string | null = null;
     let queueAgentValidation = false;
