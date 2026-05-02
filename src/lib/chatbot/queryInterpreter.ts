@@ -186,6 +186,7 @@ const FILLER_TOKENS = new Set([
 ]);
 
 const CATEGORY_ANCHORS: Record<string, string> = {
+  "telefon": "akilli telefon",
   "akilli-telefon": "akilli telefon",
   "akilli-saat": "akilli saat",
   "laptop": "laptop",
@@ -193,6 +194,13 @@ const CATEGORY_ANCHORS: Record<string, string> = {
   "kulaklik": "kulaklik",
   "televizyon": "televizyon",
   "monitor": "monitor",
+  "kahve-makinesi": "kahve makinesi",
+  "kedi-mamasi": "kedi mamasi",
+  "kopek-mamasi": "kopek mamasi",
+  "kedi-kumu": "kedi kumu",
+  "robot-supurge": "robot supurge",
+  "supurge": "supurge",
+  "klima": "klima",
   "parfum": "parfum",
   "deodorant": "deodorant",
   "serum-ampul": "serum",
@@ -205,6 +213,30 @@ const CATEGORY_ANCHORS: Record<string, string> = {
   "kadin-giyim-alt": "kadin giyim",
   "kadin-elbise": "elbise",
 };
+
+const FALLBACK_CATEGORY_MENTIONS = [
+  "akilli telefon",
+  "cep telefonu",
+  "telefon",
+  "laptop",
+  "notebook",
+  "tablet",
+  "akilli saat",
+  "kulaklik",
+  "televizyon",
+  "tv",
+  "monitor",
+  "kahve makinesi",
+  "parfum",
+  "deodorant",
+  "serum",
+  "robot supurge",
+  "supurge",
+  "klima",
+  "kedi mamasi",
+  "kopek mamasi",
+  "kedi kumu",
+] as const;
 
 function normalizeText(value: string): string {
   return value
@@ -357,7 +389,9 @@ function resolveCategoryAnchor(
   if (CATEGORY_ANCHORS[categorySlug]) return CATEGORY_ANCHORS[categorySlug];
 
   const category = categories.find((entry) => entry.slug === categorySlug);
-  if (!category) return null;
+  if (!category) {
+    return normalizeText(categorySlug.replace(/[/_-]+/g, " "));
+  }
   return normalizeText(category.name);
 }
 
@@ -365,11 +399,14 @@ function detectCategoryMention(message: string, categories: CategoryRef[]): bool
   const normalized = normalizeText(message);
   if (!normalized) return false;
 
-  return categories.some((category) => {
-    const name = normalizeText(category.name);
-    const slugText = normalizeText(category.slug.replace(/-/g, " "));
-    return normalized.includes(name) || normalized.includes(slugText);
-  });
+  return (
+    FALLBACK_CATEGORY_MENTIONS.some((phrase) => normalized.includes(phrase)) ||
+    categories.some((category) => {
+      const name = normalizeText(category.name);
+      const slugText = normalizeText(category.slug.replace(/-/g, " "));
+      return normalized.includes(name) || normalized.includes(slugText);
+    })
+  );
 }
 
 function detectBrandMention(message: string): boolean {

@@ -193,6 +193,100 @@ const STATIC_CATEGORY_KEYWORDS: Record<string, string[]> = {
   "kadin-elbise": ["kadin elbise", "kadın elbise", "abiye"],
 };
 
+const CHATBOT_FALLBACK_CATEGORY_PHRASES: Array<{
+  slug: string;
+  phrases: string[];
+}> = [
+  {
+    slug: "telefon",
+    phrases: [
+      "akilli telefon",
+      "cep telefonu",
+      "telefon",
+      "iphone",
+      "galaxy",
+      "redmi",
+      "xiaomi",
+      "vivo",
+      "oppo",
+      "honor",
+      "poco",
+      "realme",
+    ],
+  },
+  {
+    slug: "laptop",
+    phrases: ["dizustu bilgisayar", "notebook", "laptop", "macbook"],
+  },
+  {
+    slug: "tablet",
+    phrases: ["ipad", "tablet"],
+  },
+  {
+    slug: "akilli-saat",
+    phrases: ["akilli saat", "smartwatch", "watch"],
+  },
+  {
+    slug: "kulaklik",
+    phrases: ["airpods", "kulak ici", "kulak ustu", "kulaklik"],
+  },
+  {
+    slug: "televizyon",
+    phrases: ["smart tv", "televizyon", "tv"],
+  },
+  {
+    slug: "monitor",
+    phrases: ["oyuncu monitoru", "monitör", "monitor"],
+  },
+  {
+    slug: "kahve-makinesi",
+    phrases: [
+      "kahve makinasi",
+      "kahve makinesi",
+      "espresso makinesi",
+      "filtre kahve makinesi",
+      "kapsullu kahve makinesi",
+      "kapsullu kahve makinasi",
+    ],
+  },
+  {
+    slug: "parfum",
+    phrases: ["parfum", "parfüm"],
+  },
+  {
+    slug: "deodorant",
+    phrases: ["deodorant"],
+  },
+  {
+    slug: "serum-ampul",
+    phrases: ["serum", "ampul serum", "cilt serumu"],
+  },
+  {
+    slug: "robot-supurge",
+    phrases: ["robot supurge", "robot süpürge"],
+  },
+  {
+    slug: "supurge",
+    phrases: ["dikey supurge", "torbasiz supurge", "supurge", "süpürge"],
+  },
+  {
+    slug: "klima",
+    phrases: ["klima"],
+  },
+  {
+    slug: "kedi-mamasi",
+    phrases: ["kedi mamasi", "kedi maması"],
+  },
+  {
+    slug: "kopek-mamasi",
+    phrases: ["kopek mamasi", "köpek maması"],
+  },
+  {
+    slug: "kedi-kumu",
+    phrases: ["kedi kumu"],
+  },
+];
+
 function extractCategories(
   query: string,
   categories: CategoryRef[]
@@ -215,6 +309,24 @@ function extractCategories(
     }
     if (score > 0) {
       matchedSlugs.push({ slug, score });
+    }
+  }
+
+  for (const entry of CHATBOT_FALLBACK_CATEGORY_PHRASES) {
+    let score = 0;
+    for (const phrase of entry.phrases) {
+      const normPhrase = normalize(phrase);
+      const re = new RegExp(`\\b${escapeRegExp(normPhrase)}\\b`, "i");
+      if (re.test(normalizedQuery)) {
+        score += normPhrase.length + 10;
+        matchedWords.add(normPhrase);
+        for (const token of normPhrase.split(/\s+/)) {
+          if (token) matchedWords.add(token);
+        }
+      }
+    }
+    if (score > 0) {
+      matchedSlugs.push({ slug: entry.slug, score });
     }
   }
 

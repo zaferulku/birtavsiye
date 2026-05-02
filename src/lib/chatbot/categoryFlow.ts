@@ -72,6 +72,16 @@ const HOME_LIVING_PREFIX = "ev-yasam/";
 const AUTOMOTIVE_PREFIX = "otomotiv/";
 const SUPERMARKET_PREFIX = "supermarket/";
 
+const CHAT_CATEGORY_LEAF_ALIASES: Record<string, string> = {
+  telefon: "akilli-telefon",
+  "cep-telefonu": "akilli-telefon",
+  "kahve-makinesi": "kahve-makinesi",
+  "kedi-mamasi": "mama",
+  "kopek-mamasi": "mama",
+  "kedi-kumu": "kum",
+  tv: "televizyon",
+};
+
 export function normalizeCategoryFlowText(value: string): string {
   return value
     .toLowerCase()
@@ -90,7 +100,11 @@ export function resolveCategoryLabel(
   userMessage: string
 ): string {
   const path = normalizeCategoryFlowText(categorySlug ?? "");
-  const leaf = getLeafCategorySlug(categorySlug);
+  const rawLeaf = getLeafCategorySlug(categorySlug);
+  if (rawLeaf === "kedi-mamasi") return "kedi mamasi";
+  if (rawLeaf === "kopek-mamasi") return "kopek mamasi";
+  if (rawLeaf === "kedi-kumu") return "kedi kumu";
+  const leaf = canonicalizeCategoryLeaf(rawLeaf);
 
   if (path.includes("pet-shop/kedi/mama")) return "kedi mamasi";
   if (path.includes("pet-shop/kopek/mama")) return "kopek mamasi";
@@ -170,7 +184,8 @@ export function getNextCategoryFlowStep(options: {
   const { categorySlug, userMessage, hasBrand, hasPricePreference } = options;
   const normalized = normalizeCategoryFlowText(userMessage);
   const path = normalizeCategoryFlowText(categorySlug ?? "");
-  const leaf = getLeafCategorySlug(categorySlug);
+  const leafRaw = getLeafCategorySlug(categorySlug);
+  const leaf = canonicalizeCategoryLeaf(leafRaw);
 
   if (!leaf && !path) return null;
 
@@ -428,7 +443,7 @@ export function getNextCategoryFlowStep(options: {
     return null;
   }
 
-  if (isPetCategory(path)) {
+  if (isPetCategory(path, leafRaw)) {
     if (!hasPetNeedPreference(normalized, leaf)) {
       return {
         key: "pet_need",
@@ -442,7 +457,7 @@ export function getNextCategoryFlowStep(options: {
     return null;
   }
 
-  if (isSupermarketCoffeeCategory(path, leaf)) {
+  if (isSupermarketCoffeeCategory(path, leafRaw)) {
     if (!hasCoffeeTypePreference(normalized)) {
       return {
         key: "coffee_type",
@@ -502,7 +517,7 @@ export function getNextCategoryFlowStep(options: {
     return null;
   }
 
-  if (isGeneralSupermarketCategory(path, leaf)) {
+  if (isGeneralSupermarketCategory(path, leafRaw)) {
     const options = supermarketOptionsFor(path, leaf);
     if (!hasOptionPreference(normalized, options)) {
       return makeUsageStep(supermarketQuestionFor(path, leaf), options);
@@ -563,6 +578,10 @@ function getLeafCategorySlug(categorySlug: string | null | undefined): string {
   const normalized = normalizeCategoryFlowText(categorySlug);
   const parts = normalized.split("/").filter(Boolean);
   return parts[parts.length - 1] ?? normalized;
+}
+
+function canonicalizeCategoryLeaf(leaf: string): string {
+  return CHAT_CATEGORY_LEAF_ALIASES[leaf] ?? leaf;
 }
 
 function makeBrandStep(): FlowStepDefinition {
@@ -775,8 +794,8 @@ function needsBabyBrand(path: string, leaf: string): boolean {
   return path.includes("bebek-arabasi") || path.includes("oto-koltugu") || leaf.includes("bebek");
 }
 
-function isPetCategory(path: string): boolean {
-  return path.startsWith("pet-shop/");
+function isPetCategory(path: string, leaf: string): boolean {
+  return path.startsWith("pet-shop/") || leaf === "kedi-mamasi" || leaf === "kopek-mamasi" || leaf === "kedi-kumu";
 }
 
 function petQuestionFor(path: string): string {

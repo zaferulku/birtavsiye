@@ -275,7 +275,8 @@ function summarizeRankedCandidates(
 
 async function buildVectorCandidates(
   userQuery: string,
-  parsed: ReturnType<typeof parseQuery>
+  parsed: ReturnType<typeof parseQuery>,
+  resolvedCategorySlugs: string[] | null
 ): Promise<VectorCandidate[]> {
   const embed = await aiEmbed({ input: userQuery });
   if (embed.dimensions !== 768) {
@@ -284,7 +285,7 @@ async function buildVectorCandidates(
 
   const { data, error } = await sb.rpc("match_products", {
     query_embedding: embed.embedding,
-    category_slugs: parsed.category_slugs,
+    category_slugs: resolvedCategorySlugs,
     brand_filter: parsed.brand,
     price_min: parsed.price_min,
     price_max: parsed.price_max,
@@ -309,9 +310,16 @@ async function searchProducts(userQuery: string): Promise<SearchResult> {
   const startTime = Date.now();
   const categories = await loadCategories();
   const parsed = parseQuery(userQuery, categories);
+  const resolvedCategorySlugs = parsed.category_slugs?.length
+    ? (
+        await Promise.all(
+          parsed.category_slugs.map((slug) => validateOrFuzzyMatchSlug(slug, 1))
+        )
+      ).filter((slug): slug is string => Boolean(slug))
+    : null;
 
   const filters = {
-    category_slugs: parsed.category_slugs,
+    category_slugs: resolvedCategorySlugs,
     brand: parsed.brand,
     color: parsed.color,
     price_min: parsed.price_min,
@@ -320,7 +328,11 @@ async function searchProducts(userQuery: string): Promise<SearchResult> {
 
   let vectorCandidates: VectorCandidate[] = [];
   try {
-    vectorCandidates = await buildVectorCandidates(userQuery, parsed);
+    vectorCandidates = await buildVectorCandidates(
+      userQuery,
+      parsed,
+      resolvedCategorySlugs
+    );
   } catch (error) {
     console.warn(
       `[searchProducts] Vector search failed: ${
@@ -334,7 +346,7 @@ async function searchProducts(userQuery: string): Promise<SearchResult> {
       await retrieveRankedProducts({
       sb,
       query: userQuery,
-      categorySlug: parsed.category_slugs?.[0] ?? null,
+      categorySlug: resolvedCategorySlugs?.[0] ?? null,
       brand: parsed.brand,
       limit: 6,
       offset: 0,
@@ -516,6 +528,7 @@ export async function POST(req: Request) {
     // LLM intent ile state enrich orchestrator sonrası yapılıyor (aşağıda).
     const parsedCategoryRaw = parsed.category_slugs?.[0] ?? null;
     const validParsedCategory = await validateOrFuzzyMatchSlug(parsedCategoryRaw, 1);
+    const resilientParsedCategory = validParsedCategory ?? parsedCategoryRaw;
 
     // Feature dimension extraction (basit regex-based)
     const features: string[] = [];
@@ -548,7 +561,7 @@ export async function POST(req: Request) {
 
     const rawIntent: RawIntent = {
       intent_type: heuristicClassify(message) ?? "product_search",
-      category_slug: validParsedCategory,
+      category_slug: resilientParsedCategory,
       brand_filter: parsed.brand ? [parsed.brand] : [],
       // State holds raw colors (e.g. "Beyaz"); the RPC layer adds %…% wildcards
       // when calling smart_search. Avoids leaking SQL LIKE syntax into state.
@@ -647,6 +660,10 @@ export async function POST(req: Request) {
         }
       | null
       | undefined;
+    const suppressBroadeningEnrichment =
+      mergeAction === "shortcut_keep_category" ||
+      mergeAction === "single_word_widen" ||
+      mergeAction === "category_changed_reset";
     if (llmIntent) {
       const enrichedDims: string[] = [];
       const llmCategoryRaw = llmIntent.category_slug ?? null;
@@ -658,17 +675,31 @@ export async function POST(req: Request) {
       const llmBrands = Array.isArray(llmIntent.brand_filter)
         ? llmIntent.brand_filter.filter((b): b is string => typeof b === "string" && b.length > 0)
         : [];
-      if (llmBrands.length > 0 && conversationState.brand_filter.length === 0) {
+      if (
+        !suppressBroadeningEnrichment &&
+        llmBrands.length > 0 &&
+        conversationState.brand_filter.length === 0
+      ) {
         conversationState.brand_filter = llmBrands;
         enrichedDims.push("brand");
       }
       // LLM bazen kullanıcı sadece "max 400" dediğinde min: 0 hallüsünasyonu yapar.
       // 0 anlamlı bir fiyat filtresi değil (negatif fiyat yok); sadece > 0 değerleri kabul et.
-      if (conversationState.price_min == null && typeof llmIntent.price_range?.min === "number" && llmIntent.price_range.min > 0) {
+      if (
+        !suppressBroadeningEnrichment &&
+        conversationState.price_min == null &&
+        typeof llmIntent.price_range?.min === "number" &&
+        llmIntent.price_range.min > 0
+      ) {
         conversationState.price_min = llmIntent.price_range.min;
         enrichedDims.push("price_min");
       }
-      if (conversationState.price_max == null && typeof llmIntent.price_range?.max === "number" && llmIntent.price_range.max > 0) {
+      if (
+        !suppressBroadeningEnrichment &&
+        conversationState.price_max == null &&
+        typeof llmIntent.price_range?.max === "number" &&
+        llmIntent.price_range.max > 0
+      ) {
         conversationState.price_max = llmIntent.price_range.max;
         enrichedDims.push("price_max");
       }

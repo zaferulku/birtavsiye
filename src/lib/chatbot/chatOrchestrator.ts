@@ -672,7 +672,11 @@ async function runSlowPath(
     products: mapProductsForResponse(finalProducts),
     conversationHistory: input.conversationHistory || [],
     sb: input.sb,
-    categorySlug: intent?.category_slug ?? null,
+    categorySlug:
+      intent?.category_slug ??
+      input.conversationState?.category_slug ??
+      input.parsed.category ??
+      null,
   });
 
   // DEBUG: suggestions empty trace (suggestions her zaman bos donuyorsa neden?)

@@ -128,6 +128,17 @@ function normalize(value: string): string {
     .trim();
 }
 
+function isUsableBrand(value: string | null | undefined): value is string {
+  if (!value) return false;
+  const normalized = normalize(value);
+  if (!normalized) return false;
+  if (["null", "best", "undefined", "unknown", "yok"].includes(normalized)) {
+    return false;
+  }
+  if (/^\d+$/.test(normalized)) return false;
+  return /[a-z]/i.test(value);
+}
+
 function getLeafCategorySlug(slug: string | null | undefined): string {
   if (!slug) return "";
   const normalized = normalize(slug);
@@ -196,7 +207,7 @@ async function buildBrandSuggestions(
         const counts: Record<string, number> = {};
         for (const row of data) {
           const brand = (row as { brand?: string | null }).brand;
-          if (brand && brand !== "null") {
+          if (isUsableBrand(brand)) {
             counts[brand] = (counts[brand] || 0) + 1;
           }
         }
@@ -213,7 +224,7 @@ async function buildBrandSuggestions(
   if (topBrands.length === 0) {
     const counts: Record<string, number> = {};
     for (const product of ctx.products) {
-      if (product.brand && product.brand !== "null") {
+      if (isUsableBrand(product.brand)) {
         counts[product.brand] = (counts[product.brand] || 0) + 1;
       }
     }
@@ -527,7 +538,7 @@ function buildPopularFollowUpSuggestions(
 ): Suggestion[] {
   const counts: Record<string, number> = {};
   for (const product of products) {
-    if (product.brand && product.brand !== "null") {
+    if (isUsableBrand(product.brand)) {
       counts[product.brand] = (counts[product.brand] || 0) + 1;
     }
   }
