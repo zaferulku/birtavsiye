@@ -258,6 +258,9 @@ function buildFollowUpQuestion(
   categoryLabel: string
 ): string {
   if (step.key === "brand") {
+    if (isCompactBrandPromptCategory(categoryLabel)) {
+      return "Marka secelim mi?";
+    }
     if (categoryLabel !== "urun") {
       return `Hangi marka ${categoryLabel} olsun?`;
     }
@@ -265,6 +268,9 @@ function buildFollowUpQuestion(
   }
 
   if (step.key === "budget") {
+    if (isCompactBudgetPromptCategory(categoryLabel)) {
+      return "Butce belirleyelim mi?";
+    }
     if (categoryLabel !== "urun") {
       return `${categoryLabel} icin butce araligin ne olsun?`;
     }
@@ -277,6 +283,139 @@ function buildFollowUpQuestion(
 
   if (step.key === "storage") {
     return "Hafiza kac GB olsun?";
+  }
+
+  if (step.key === "usage") {
+    return buildUsageQuestion(categoryLabel, step);
+  }
+
+  if (step.key === "screen_size") {
+    if (categoryLabel === "televizyon" || categoryLabel === "monitor") {
+      return "Kac inc olsun?";
+    }
+    return "Boyut tercihin ne olsun?";
+  }
+
+  if (step.key === "panel_type" && categoryLabel === "televizyon") {
+    return "LED, QLED ya da OLED mi?";
+  }
+
+  if (step.key === "refresh_rate" && categoryLabel === "monitor") {
+    return "Kac Hz olsun?";
+  }
+
+  if (step.key === "coffee_type" && categoryLabel === "kahve makinesi") {
+    return "Espresso mu filtre mi?";
+  }
+
+  if (step.key === "vacuum_type" && categoryLabel === "supurge") {
+    return "Dikey mi torbasiz mi?";
+  }
+
+  if (step.key === "pet_need") {
+    if (categoryLabel === "robot supurge") {
+      return "Paspas ya da haritalama ister misin?";
+    }
+    if (categoryLabel === "kedi mamasi" || categoryLabel === "kopek mamasi") {
+      return "Yavru mu yetiskin mi?";
+    }
+    if (categoryLabel === "kedi kumu") {
+      return "Topaklanan mi tozsuz mu?";
+    }
+  }
+
+  if (step.key === "age_range") {
+    return "Kullanim araligi ne olsun?";
+  }
+
+  if (step.key === "bag_type" && categoryLabel === "canta") {
+    return "Sirt mi omuz mu capraz mi?";
+  }
+
+  if (step.key === "shoe_size") {
+    return "Numara kac olsun?";
+  }
+
+  if (step.key === "size") {
+    return "Beden ne olsun?";
+  }
+
+  if (step.key === "color") {
+    if (categoryLabel === "elbise" || categoryLabel === "ayakkabi" || categoryLabel === "canta") {
+      return "Renk secelim mi?";
+    }
+    return "Renk tercihin var mi?";
+  }
+
+  return step.question;
+}
+
+function isCompactBrandPromptCategory(categoryLabel: string): boolean {
+  return [
+    "telefon",
+    "tablet",
+    "laptop",
+    "kulaklik",
+    "televizyon",
+    "monitor",
+    "kahve makinesi",
+    "parfum",
+    "robot supurge",
+  ].includes(categoryLabel);
+}
+
+function isCompactBudgetPromptCategory(categoryLabel: string): boolean {
+  return [
+    "telefon",
+    "tablet",
+    "laptop",
+    "kulaklik",
+    "televizyon",
+    "monitor",
+    "kahve makinesi",
+    "robot supurge",
+    "parfum",
+    "elbise",
+    "ayakkabi",
+  ].includes(categoryLabel);
+}
+
+function buildUsageQuestion(
+  categoryLabel: string,
+  step: FlowStepDefinition
+): string {
+  if (categoryLabel === "kulaklik") {
+    return "Kulak ici mi kulak ustu mu?";
+  }
+  if (categoryLabel === "tablet") {
+    return "Not alma mi oyun mu?";
+  }
+  if (categoryLabel === "laptop") {
+    return "Ofis mi oyun mu?";
+  }
+  if (categoryLabel === "akilli saat") {
+    return "Spor mu gunluk kullanim mi?";
+  }
+  if (categoryLabel === "hoparlor") {
+    return "Tasinabilir mi ev tipi mi?";
+  }
+  if (categoryLabel === "soundbar") {
+    return "Film icin mi muzik icin mi?";
+  }
+  if (categoryLabel === "bisiklet") {
+    return "Sehir ici mi dag tipi mi?";
+  }
+  if (categoryLabel === "kamp urunu") {
+    return "Kamp mi trekking mi?";
+  }
+  if (categoryLabel === "kitap") {
+    return "Roman mi cocuk kitabi mi?";
+  }
+  if (categoryLabel === "otomotiv urunu") {
+    return "Bakim mi aksesuar mi?";
+  }
+  if (categoryLabel === "kahve") {
+    return "Filtre mi Turk kahvesi mi?";
   }
 
   return step.question;
