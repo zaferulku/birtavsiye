@@ -64,6 +64,8 @@ P6.16 audit'inde **veri kayıp tuzağı** ortaya çıktı:
 ### Bekleyen İşler (v15.6 sonrası):
 
 **🟠 ORTA — Kalan Phase 6:**
+- **🆕 P6.20-A** — SSR-side cats prefetch (KALICI ÇÖZÜM, P6.20-B hotfix
+  yerine geçer). Detay aşağıda.
 - **P6.3-A** — 45 NAV dup dedup (Codex sprint sonrası, ~2.5h)
 - **P6.3-C** — flat slug full-path (Codex sonrası, ~30dk)
 - **P6.5e** — `supermarket/kahve` content gap (DB scrape entegrasyon)
@@ -72,6 +74,75 @@ P6.16 audit'inde **veri kayıp tuzağı** ortaya çıktı:
 - **P6.19b** — mergeIntent price dimension detection (Codex pipeline)
 - **🆕 P6.16-v2** — `backup_20260430_categories` DROP (~6 ay sonra,
   Phase 5 stable + Phase 6 kapanış sonrası safety net'e gerek kalmaz)
+
+#### P6.20-A Detaylı Plan (Codex Header sprint sonrası)
+
+**ÖN KOŞUL:** Codex Header sprint tamamen kapanmalı (HeaderSearchBar +
+search filter + autocomplete commit'leri stable, working dir clean).
+
+**KAPSAM:**
+1. `src/app/layout.tsx` (veya yeni server component katmanı):
+   - `export default async function Layout({ children })`
+   - `const cats = await supabaseAdmin.from('categories').select('id, slug, parent_id')`
+   - `<Header initialCats={cats} />`
+2. `src/app/components/layout/Header.tsx`:
+   - `'use client'` direktifi korunur (interaktif)
+   - Yeni props: `{ initialCats?: Cat[] }`
+   - `useState<Cat[]>(initialCats ?? [])` ile başlat → SSR'da catMap dolu
+   - useEffect fetch revalidate için kalabilir veya kaldırılabilir
+   - hierUrl helper aynı (catMap her zaman dolu olduğu için exact match)
+3. PROJECT_STATE.md update (P6.20-A KAPATILDI işaretle)
+
+**ETKİLER:**
+- SSR HTML build edildiğinde catMap dolu → exact match her NAV slug'ı
+  doğru `/anasayfa/<full-path>`'e çevirir
+- Phase 5C helper runtime resolve baskısı azalır (hâlâ fallback olarak durur)
+- Google bot SSR HTML'i alır → SEO doğru
+- Hidrasyon yarışı kapanır (kullanıcı erken tıklama sorunu yok)
+- Çoklu match yanlış kategori riski azalır (NAV doğrudan full-path)
+
+**CASCADE KONTROL:**
+- layout.tsx'e dokunmak: tüm sayfalar etkilenir, smoke test KESİN
+- 'use client' boundary: Header.tsx hâlâ client (interaktif), data SSR'dan gelir
+- Supabase service_role layout context'te kullanılabilir mi: EVET
+  (server component, supabaseAdmin import OK)
+
+**CODEX ÇAKIŞMA YÖNETİMİ:**
+- Codex Header.tsx'e dokunuyor (HeaderSearchBar entegrasyon, autocomplete)
+- Bu plan SADECE props ekliyor + useState init değiştiriyor
+- Diff <30 satır Header.tsx'te, çakışma riski düşük
+- Kritik: Codex sprint commit'i sonrası bu plan SAĞLIKLI uyumlu mu manuel
+  review edilmeli
+
+**TEST PAKETİ (apply sonrası):**
+1. SSR HTML view-source: NAV linkler `/anasayfa/<full-path>` ✓
+2. JavaScript-disabled browser test: NAV linkleri çalışıyor mu
+3. Lighthouse SEO score: önce vs sonra delta
+4. Hidrasyon hızı (Chrome DevTools): TTI öncesi tıklama testi
+5. Console: `[Header] Unknown NAV slug` warning artık olmamalı
+
+**RİSK PROFİLİ:**
+- Düşük-Orta: layout.tsx server component dönüşü gerekirse
+- Sıfır: Eğer layout.tsx zaten server (Next 16 default) ise
+- Çakışma: Codex sprint'inde Header.tsx aktif, koordinasyon gerek
+
+**SÜRE:** ~1.5h (audit + implementation + smoke test)
+
+**ÖN KOŞUL CHECKPOINT:**
+- Codex 4 forum/profil backup commit'lendi mi
+- Codex search filter modularization stable
+- HeaderSearchBar + autocomplete son durumu
+- Header.tsx working dir clean (Codex'in son commit'i)
+
+**İŞ AKIŞI (Codex sprint kapanması sonrası):**
+1. `git pull origin main` (Codex commit'lerini al)
+2. Header.tsx şu anki yapıyı oku
+3. Server component prefetch katmanı tasarla
+4. Layout.tsx + Header.tsx + tip tanımları edit
+5. TSC + lint + build
+6. Smoke test 5 NAV link
+7. Commit + push: `feat(routing): P6.20-A — SSR categories prefetch`
+8. Production deploy + Lighthouse delta
 
 **🟡 DİĞER:**
 - Eval2 full re-run (LLM quota varsa, baseline 200 dialog)
@@ -1958,6 +2029,32 @@ e0b318d   fix(ui): liste kart başlığı = brand + model_family + storage + col
     SELECT/COUNT(*) ile doğrulanmadan DESTRUCTIVE işlem YASAK.
 
     Bu kural **kritik** — gelecekte yeni audit'te aynı tuzağa düşme.
+27. **SSR/CSR fetch race tehlikesi (global UI component'lerde):**
+    Header gibi global render'larda useEffect ile API fetch yapan
+    component'ler SSR'da empty data ile render olur, browser hidrasyondan
+    SONRA fetch tetiklenir. Sonuç: ilk paint'te kullanıcı boş data ile
+    etkileşir.
+
+    **Canlı örnek (P6.20):** Header.tsx `useEffect(() => fetch('/api/public/categories'))`
+    SSR'da çalışmıyordu → catMap empty → linkFor `/?q=<slug>` ana sayfa
+    redirect fallback'e düşüyordu → kullanıcı 3 semptom raporladı
+    (linkler ana sayfa, tıklanamayan, yanlış kategori) + Google bot SSR HTML'de
+    yanlış URL'ler indeksledi (SEO felaketi).
+
+    **DOĞRU PATTERN:**
+    - Server component'te prefetch (`supabaseAdmin` server-side)
+    - `initialCats` prop ile client component'e geçir
+    - `useState<T>(initialCats ?? [])` → SSR'da dolu, hidrasyondan sonra
+      useEffect refresh (opsiyonel)
+
+    **KURAL:** Global UI component'lerde (Header, Footer, Sidebar) data
+    fetch **DAİMA SSR-side prefetch + client hydration**. useEffect fetch
+    sadece interaktif/lazy data için (search results, autocomplete
+    suggestions, user-specific data vb.).
+
+    **GEÇİCİ HOTFIX KABUL EDİLEBİLİR:** P6.20-B fallback URL
+    `/?q=<slug>` → `/anasayfa/<slug>` patch (segment route resolver
+    server-side resolve). Kalıcı çözüm P6.20-A (SSR prefetch).
 
 ### Kullanıcı için
 
