@@ -26,9 +26,8 @@ const PTT_LOG = './logs/ptt-scrape.log';
 const MM_LOG = './logs/mm-scrape.log';
 
 const FOUR_HOURS_MS = 4 * 60 * 60 * 1000;
-const TWENTYFOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 const FAST_INTERVAL_MS = 10 * 60 * 1000;   // ilk 4 saat
-const SLOW_INTERVAL_MS = 30 * 60 * 1000;   // sonraki 20 saat
+const SLOW_INTERVAL_MS = 30 * 60 * 1000;   // 4 saatten sonra surekli
 
 function loadState() {
   if (!existsSync(STATE_FILE)) {
@@ -130,13 +129,10 @@ async function main() {
   const startMs = new Date(state.startedAt).getTime();
   log(`startedAt=${state.startedAt} (${state.restarts.ptt} ptt restart, ${state.restarts.mm} mm restart so far)`);
 
+  // Sonsuz dongu — Windows Task Scheduler logon trigger'i bu surece restart
+  // veriyor (computer shutdown/logout sonrasi), kendi 24h cikisi yok.
   while (true) {
     const elapsed = Date.now() - startMs;
-    if (elapsed >= TWENTYFOUR_HOURS_MS) {
-      log(`24 saat tamamlandi, watchdog exit. Recovery icin tekrar baslat veya cron ile zincirle.`);
-      break;
-    }
-
     const interval = elapsed < FOUR_HOURS_MS ? FAST_INTERVAL_MS : SLOW_INTERVAL_MS;
     const phase = elapsed < FOUR_HOURS_MS ? 'fast (10dk)' : 'slow (30dk)';
     log(`tick interval=${phase} elapsed=${(elapsed/3600000).toFixed(1)}h`);
