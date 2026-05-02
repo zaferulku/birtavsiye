@@ -1,0 +1,32 @@
+-- 035_stores_vacuum_analyze.sql
+-- P6.14: stores tablosu istatistik yenileme + dead tup temizliği.
+--
+-- Cron baseline 24h audit'inde (2 May 2026 gece geç) tespit:
+-- pg_stat_user_tables raporu: stores n_dead_tup=9, n_live_tup=0, dead_pct=100%
+--
+-- Detaylı audit sonucu (P6.14 ADIM 1):
+-- - Gerçek satır sayısı: 9 (hepsi is_active=true)
+-- - 9 mağaza aktif (n11, Vatan, PttAVM, Amazon TR, Trendyol, Hepsiburada,
+--   MediaMarkt, GittiGidiyor, Teknosa)
+-- - 2 mağaza listings'te referans: MediaMarkt (6422), PttAVM (2876)
+-- - Diğer 7: listings 0 (scrape henüz aktif değil, beklenen)
+-- - last_vacuum / last_autovacuum: NULL (hiç ANALYZE çalışmamış)
+--
+-- Kök neden: tablo yaratıldığından beri autovacuum threshold'una hiç
+-- ulaşmamış (9 satır, 80kB minimal), istatistikler stale kalmış.
+-- Gerçek dead tup yok — sadece pg_stat raporlama anomalisi.
+--
+-- Çözüm: VACUUM (FULL, ANALYZE) ile istatistikleri yenile.
+--
+-- NOT: VACUUM transaction-safe değil; bu dosya BEGIN/COMMIT İÇERMEZ.
+-- Studio'da SQL editor'a yapıştır + RUN (autocommit mode).
+--
+-- Lock süresi: <100ms (tablo 80kB).
+-- Apply: 2026-05-02 gece geç (Studio "VACUUM (FULL, ANALYZE) success").
+
+VACUUM (FULL, ANALYZE) public.stores;
+
+-- Doğrulama query (apply sonrası ayrı çalıştırılır):
+-- SELECT n_live_tup, n_dead_tup, last_vacuum, last_autovacuum
+-- FROM pg_stat_user_tables WHERE relname = 'stores';
+-- Beklenen: n_live_tup=9, n_dead_tup=0, last_vacuum dolu.
