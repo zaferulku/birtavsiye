@@ -123,8 +123,9 @@ export async function fetchAllProductsFromCategory(
 
       page++;
       await new Promise(r => setTimeout(r, delayMs));
-    } catch (e: any) {
-      console.warn(`Kategori sayfa fail: ${categorySlug} p${page} -> ${e.message}`);
+    } catch (e: unknown) {
+      const errMsg = e instanceof Error ? e.message : String(e);
+      console.warn(`Kategori sayfa fail: ${categorySlug} p${page} -> ${errMsg}`);
       break;
     }
   }

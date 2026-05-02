@@ -6,6 +6,16 @@
 
 import * as cheerio from 'cheerio';
 import { findDbSlugForMmBreadcrumb } from './mediamarkt-category-map.mjs';
+import type {
+  JsonLdEnvelope,
+  JsonLdProductLike,
+  JsonLdOffer,
+  JsonLdBreadcrumbItem,
+  PreloadedState,
+  ApolloCacheEntry,
+  ApolloCache,
+} from './mediamarkt-types.mjs';
+import { isApolloRef, hasFeatureName } from './mediamarkt-types.mjs';
 
 const MM_BASE = 'https://www.mediamarkt.com.tr';
 const SITEMAP_INDEX = `${MM_BASE}/sitemaps/sitemap-index.xml`;
@@ -78,14 +88,14 @@ function extractSpecsFromHtml(html: string, sku: string): Record<string, string>
   let raw = m[1];
   raw = raw.replace(/:\s*undefined([,}\]])/g, ':null$1');
 
-  let state: any;
+  let state: PreloadedState;
   try {
-    state = JSON.parse(raw);
+    state = JSON.parse(raw) as PreloadedState;
   } catch {
     return null;
   }
 
-  const cache = state.apolloState;
+  const cache: ApolloCache | undefined = state.apolloState;
   if (!cache || typeof cache !== 'object') return null;
 
   const prodKey = Object.keys(cache).find(k =>
@@ -101,8 +111,8 @@ function extractSpecsFromHtml(html: string, sku: string): Record<string, string>
   const product = cache[prodKey];
   if (!product) return null;
 
-  const containerRef = product.featureGroupsWithProductId?.__ref;
-  if (!containerRef) return null;
+  if (!isApolloRef(product.featureGroupsWithProductId)) return null;
+  const containerRef = product.featureGroupsWithProductId.__ref;
 
   const container = cache[containerRef];
   if (!container || !Array.isArray(container.featureGroups)) return null;
@@ -113,11 +123,11 @@ function extractSpecsFromHtml(html: string, sku: string): Record<string, string>
     if (!Array.isArray(group.features)) continue;
 
     for (const featRef of group.features) {
-      const refKey = featRef?.__ref;
-      if (!refKey) continue;
+      if (!isApolloRef(featRef)) continue;
+      const refKey = featRef.__ref;
 
       const feat = cache[refKey];
-      if (!feat?.name || feat.value == null) continue;
+      if (!hasFeatureName(feat) || feat.value == null) continue;
 
       const name = String(feat.name).trim();
       const value = String(feat.value).trim();
@@ -181,6 +191,13 @@ export async function scrapePdpDetailed(pdpUrl: string): Promise<ScrapeResult> {
   const html = await fetchText(pdpUrl);
   const $ = cheerio.load(html);
 
+  // P6.12g: 'product' birden çok JSON-LD schema variant'ından (Product /
+  // ProductGroup / nested object/mainEntity wrapper) cheerio.each callback
+  // içinde dinamik atanır. JsonLdProductLike narrowing TS control flow analizini
+  // each() içindeki assignment'larla taşıyamayıp 17 TS2339 cascade üretti.
+  // Opt-out: bu satırda 'any' kabul edilir (sub-borç P6.12g-product-narrow,
+  // generic JSON-LD union narrowing veya extractor function refactor gerek).
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let product: any = null;
   let breadcrumb: { name: string; position: number }[] = [];
   let jsonldFound = false;
@@ -191,13 +208,15 @@ export async function scrapePdpDetailed(pdpUrl: string): Promise<ScrapeResult> {
       const txt = $(el).html()?.trim() ?? '';
       if (!txt) return;
       jsonldFound = true;
-      const data = JSON.parse(txt);
-      const items = Array.isArray(data) ? data : [data];
+      const data: unknown = JSON.parse(txt);
+      const items: JsonLdEnvelope[] = Array.isArray(data)
+        ? (data as JsonLdEnvelope[])
+        : [data as JsonLdEnvelope];
 
       for (const item of items) {
         // MM JSON-LD yapisi: Product/ProductGroup BuyAction.object icinde gomulu
         // Apple iPhone PDP'leri ProductGroup tipinde geliyor — onlari da kabul et
-        const p = item.object || item.mainEntity || item;
+        const p: JsonLdProductLike = item.object ?? item.mainEntity ?? (item as JsonLdProductLike);
         const t = p['@type'];
         if (t === 'Product' || t === 'ProductGroup') {
           productTypeFound = true;
@@ -205,16 +224,20 @@ export async function scrapePdpDetailed(pdpUrl: string): Promise<ScrapeResult> {
             product = p;
           } else if (p['@type'] === 'ProductGroup' && Array.isArray(p.hasVariant) && p.hasVariant.length > 0) {
             // ProductGroup variant fallback: ilk variant'in offers'ini kullan
-            const firstVariant = p.hasVariant.find((v: any) => v?.offers);
+            const firstVariant = p.hasVariant.find((v) => v?.offers);
             if (firstVariant) {
               product = { ...p, offers: firstVariant.offers, sku: firstVariant.sku ?? p.sku };
             }
           }
-        } else if (p['@type'] === 'BreadcrumbList' && Array.isArray(p.itemListElement)) {
-          breadcrumb = p.itemListElement.map((b: any) => ({
-            position: b.position,
-            name: b.name || b.item?.name || '',
-          }));
+        } else if (p['@type'] === 'BreadcrumbList' && Array.isArray((p as JsonLdEnvelope).itemListElement)) {
+          const itemList = (p as JsonLdEnvelope).itemListElement ?? [];
+          breadcrumb = itemList.map((b: JsonLdBreadcrumbItem) => {
+            const itemName = typeof b.item === 'object' ? b.item?.name : undefined;
+            return {
+              position: b.position ?? 0,
+              name: b.name || itemName || '',
+            };
+          });
         }
       }
     } catch { /* parse fail, atla */ }
@@ -245,15 +268,16 @@ export async function scrapePdpDetailed(pdpUrl: string): Promise<ScrapeResult> {
 
   const sourceCategory: string | null = matchedSegment;
 
-  const images: string[] = Array.isArray(product.image)
-    ? product.image.filter((u: any) => typeof u === 'string')
-    : (typeof product.image === 'string' ? [product.image] : []);
+  const productImage = product.image;
+  const images: string[] = Array.isArray(productImage)
+    ? productImage.filter((u: unknown): u is string => typeof u === 'string')
+    : (typeof productImage === 'string' ? [productImage] : []);
 
   // MM offers JSON-LD array da olabiliyor: [{price, availability}, ...]. Tek obje
   // beklemek (.offers?.price) varyantlarda undefined döndürüp price=0/in_stock=false
   // hatasına yol açıyordu (Panasonic KX-TU155 vakası). İlk geçerli offer'ı seç.
-  const offer = Array.isArray(product.offers)
-    ? (product.offers.find((o: any) => o && (o.price ?? o.lowPrice)) ?? product.offers[0])
+  const offer: JsonLdOffer | undefined = Array.isArray(product.offers)
+    ? ((product.offers as JsonLdOffer[]).find((o: JsonLdOffer) => o && (o.price ?? o.lowPrice)) ?? product.offers[0])
     : product.offers;
   const rawPrice = Number(offer?.price ?? offer?.lowPrice ?? 0);
   const price = isFinite(rawPrice) && rawPrice > 0 ? rawPrice : 0;
