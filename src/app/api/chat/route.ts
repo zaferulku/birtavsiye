@@ -57,6 +57,7 @@ type MatchedProduct = {
     image: number;
     freshness: number;
     source_trust: number;
+    knowledge: number;
     price_penalty: number;
     total: number;
   } | null;

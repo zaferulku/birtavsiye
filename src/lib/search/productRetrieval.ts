@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { buildCategoryRankingContext } from "../chatbot/categoryKnowledge";
 import {
   dedupeClusterListingsBySource,
   getExactProductClusterKey,
@@ -29,6 +30,7 @@ type SearchProductRow = {
   slug: string;
   brand: string | null;
   image_url: string | null;
+  specs: Record<string, unknown> | null;
   category_id: string | null;
   model_code: string | null;
   model_family: string | null;
@@ -71,6 +73,7 @@ export type RankingScoreBreakdown = {
   image: number;
   freshness: number;
   source_trust: number;
+  knowledge: number;
   price_penalty: number;
   total: number;
 };
@@ -86,6 +89,9 @@ export type RetrievalRankingDiagnostics = {
   term_count: number;
   strict_term_count: number;
   candidate_pool_size: number;
+  knowledge_category_slug?: string | null;
+  knowledge_profile_id?: string | null;
+  knowledge_signal_terms?: string[];
 };
 
 export type RetrieveRankedProductsOptions = {
@@ -139,7 +145,7 @@ export class CategoryNotFoundError extends Error {
 }
 
 const SELECT_FIELDS =
-  "id, title, slug, brand, image_url, category_id, model_code, model_family, variant_storage, variant_color, created_at, prices:listings(id, price, source, last_seen, is_active, in_stock)";
+  "id, title, slug, brand, image_url, specs, category_id, model_code, model_family, variant_storage, variant_color, created_at, prices:listings(id, price, source, last_seen, is_active, in_stock)";
 
 const ACCESSORY_CATEGORY_PATTERN =
   /telefon-kilifi|telefon-aksesuar|telefon-yedek-parca|ekran-koruyucu|sarj-kablo|sarj-cihazi|telefon-tutacagi|tablet-kilif|laptop-kilif|kulaklik-aksesuar/i;
@@ -243,6 +249,33 @@ export function splitSearchTerms(query: string | null | undefined): string[] {
   ).slice(0, 8);
 }
 
+function collectSpecText(value: unknown, fragments: string[]): void {
+  if (value == null) return;
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
+    fragments.push(String(value));
+    return;
+  }
+  if (Array.isArray(value)) {
+    for (const item of value) {
+      collectSpecText(item, fragments);
+    }
+    return;
+  }
+  if (typeof value === "object") {
+    for (const [key, nestedValue] of Object.entries(value as Record<string, unknown>)) {
+      fragments.push(key);
+      collectSpecText(nestedValue, fragments);
+    }
+  }
+}
+
+function flattenSpecsText(specs: Record<string, unknown> | null | undefined): string {
+  if (!specs || typeof specs !== "object") return "";
+  const fragments: string[] = [];
+  collectSpecText(specs, fragments);
+  return normalizeSearchText(fragments.join(" "));
+}
+
 function escapeIlikeTerm(term: string): string {
   return term.replace(/[%_]/g, "\\$&").slice(0, 100);
 }
@@ -342,6 +375,7 @@ function normalizeProductRows(
         image: 0,
         freshness: 0,
         source_trust: 0,
+        knowledge: 0,
         price_penalty: 0,
         total: 0,
       },
@@ -365,6 +399,7 @@ function getProductSearchScore(
   const modelCode = normalizeSearchText(product.model_code);
   const storage = normalizeSearchText(product.variant_storage);
   const color = normalizeSearchText(product.variant_color);
+  const specsText = flattenSpecsText(product.specs);
   const categoryName = normalizeSearchText(category?.name);
   const categorySlug = normalizeSearchText(category?.slug);
   const accessoryIntent = hasAccessoryIntent(terms);
@@ -403,6 +438,11 @@ function getProductSearchScore(
     if (storage.includes(term) || color.includes(term)) {
       score += 6;
       reasons.add(`varyant:${term}`);
+      matched = true;
+    }
+    if (specsText.includes(term)) {
+      score += 7;
+      reasons.add(`ozellik:${term}`);
       matched = true;
     }
     if (categoryName.includes(term) || categorySlug.includes(term)) {
@@ -644,9 +684,70 @@ function getRelativePriceAdjustment(
   return Math.round(normalized * maxBonus);
 }
 
+function getKnowledgeBoost(
+  product: RankedProduct,
+  usageProfileId: string | null,
+  signalTerms: string[],
+  profile: QueryRankingProfile
+): { boost: number; reasons: string[] } {
+  if (!usageProfileId || signalTerms.length === 0) {
+    return { boost: 0, reasons: [] };
+  }
+
+  const titleText = normalizeSearchText(
+    [product.title, product.brand, product.model_family, product.model_code]
+      .filter(Boolean)
+      .join(" ")
+  );
+  const specsText = flattenSpecsText(product.specs);
+  const matchedSignals = new Set<string>();
+  let boost = 0;
+
+  for (const signal of signalTerms.slice(0, 16)) {
+    const normalizedSignal = normalizeSearchText(signal);
+    if (normalizedSignal.length < 2) continue;
+
+    if (titleText.includes(normalizedSignal)) {
+      matchedSignals.add(normalizedSignal);
+      boost += normalizedSignal.includes(" ") ? 4 : 3;
+      continue;
+    }
+
+    if (specsText.includes(normalizedSignal)) {
+      matchedSignals.add(normalizedSignal);
+      boost += normalizedSignal.includes(" ") ? 5 : 4;
+    }
+  }
+
+  if (matchedSignals.size === 0) {
+    return { boost: 0, reasons: [] };
+  }
+
+  if (matchedSignals.size >= 2) {
+    boost += 3;
+  }
+
+  const maxBoost =
+    profile.mode === "specific" ? 18 : profile.mode === "balanced" ? 16 : 14;
+  const limitedBoost = Math.min(boost, maxBoost);
+
+  return {
+    boost: limitedBoost,
+    reasons: [
+      `kullanim:${usageProfileId}`,
+      `bilgi-eslesme:${matchedSignals.size}`,
+      ...Array.from(matchedSignals)
+        .slice(0, 2)
+        .map((signal) => `bilgi:${signal}`),
+    ],
+  };
+}
+
 function applyRankingSignals(
   products: RankedProduct[],
   categories: SearchCategoryRow[],
+  query: string,
+  queryCategorySlug: string | null,
   terms: string[],
   vectorMap: Map<string, number>,
   priceMin: number | null | undefined,
@@ -654,6 +755,10 @@ function applyRankingSignals(
 ): RankedProduct[] {
   const categoryMap = new Map(categories.map((category) => [category.id, category]));
   const profile = getQueryRankingProfile(terms);
+  const knowledgeContext = buildCategoryRankingContext({
+    categorySlug: queryCategorySlug,
+    userMessage: query,
+  });
 
   return products
     .map((product) => {
@@ -669,6 +774,12 @@ function applyRankingSignals(
       const imageBoost = product.image_url ? 2 : 0;
       const freshnessBoost = getFreshnessBoost(product.freshest_seen_at, profile);
       const sourceTrustBoost = getSourceTrustBoost(product, profile);
+      const knowledgeBoost = getKnowledgeBoost(
+        product,
+        knowledgeContext?.usageProfileId ?? null,
+        knowledgeContext?.signalTerms ?? [],
+        profile
+      );
 
       let score = lexical.score;
       const reasons = [...lexical.reasons];
@@ -705,11 +816,18 @@ function applyRankingSignals(
         );
       }
 
-      score += offerBoost + imageBoost + freshnessBoost + sourceTrustBoost + pricePenalty;
+      score +=
+        offerBoost +
+        imageBoost +
+        freshnessBoost +
+        sourceTrustBoost +
+        knowledgeBoost.boost +
+        pricePenalty;
       if (offerBoost > 0 && !reasons.includes("aktif-teklif")) reasons.push("aktif-teklif");
       if (imageBoost > 0 && !reasons.includes("gorsel")) reasons.push("gorsel");
       if (freshnessBoost > 0) reasons.push(`tazelik:${freshnessBoost}`);
       if (sourceTrustBoost > 0) reasons.push(`guven:${sourceTrustBoost}`);
+      if (knowledgeBoost.boost > 0) reasons.push(...knowledgeBoost.reasons);
       if (profile.mode !== "balanced") reasons.push(`profil:${profile.mode}`);
 
       return {
@@ -724,6 +842,7 @@ function applyRankingSignals(
           image: imageBoost,
           freshness: freshnessBoost,
           source_trust: sourceTrustBoost,
+          knowledge: knowledgeBoost.boost,
           price_penalty: pricePenalty,
           total: score,
         },
@@ -889,6 +1008,10 @@ export async function retrieveRankedProducts(
   const normalizedQuery = query?.trim() ?? "";
   const queryTerms = splitSearchTerms(normalizedQuery);
   const queryProfile = getQueryRankingProfile(queryTerms);
+  const knowledgeContext = buildCategoryRankingContext({
+    categorySlug: categorySlug ?? null,
+    userMessage: normalizedQuery,
+  });
   const shouldLoadCategories = Boolean(categorySlug || normalizedQuery);
   const categories = await loadSearchCategories(sb, shouldLoadCategories);
 
@@ -1026,6 +1149,8 @@ export async function retrieveRankedProducts(
     const ranked = applyRankingSignals(
       normalizeProductRows(Array.from(uniqueRows.values()), categoryMap),
       categories,
+      normalizedQuery,
+      categorySlug ?? null,
       searchTerms,
       vectorMap,
       priceMin,
@@ -1041,6 +1166,8 @@ export async function retrieveRankedProducts(
         const relaxedRanked = applyRankingSignals(
           normalizeProductRows(Array.from(uniqueRows.values()), categoryMap),
           categories,
+          normalizedQuery,
+          categorySlug ?? null,
           relaxedTerms,
           vectorMap,
           priceMin,
@@ -1064,6 +1191,9 @@ export async function retrieveRankedProducts(
         term_count: searchTerms.length,
         strict_term_count: searchTerms.filter(isStrictIntentTerm).length,
         candidate_pool_size: ranked.length,
+        knowledge_category_slug: knowledgeContext?.categorySlug ?? null,
+        knowledge_profile_id: knowledgeContext?.usageProfileId ?? null,
+        knowledge_signal_terms: knowledgeContext?.signalTerms ?? [],
       },
     };
   }
@@ -1099,6 +1229,9 @@ export async function retrieveRankedProducts(
       term_count: queryTerms.length,
       strict_term_count: queryTerms.filter(isStrictIntentTerm).length,
       candidate_pool_size: listedProducts.length,
+      knowledge_category_slug: knowledgeContext?.categorySlug ?? null,
+      knowledge_profile_id: knowledgeContext?.usageProfileId ?? null,
+      knowledge_signal_terms: knowledgeContext?.signalTerms ?? [],
     },
   };
 }
@@ -1124,6 +1257,10 @@ export async function rerankKnownProducts(
   ).slice(0, 64);
   const queryTerms = splitSearchTerms(query);
   const queryProfile = getQueryRankingProfile(queryTerms);
+  const knowledgeContext = buildCategoryRankingContext({
+    categorySlug: categorySlug ?? null,
+    userMessage: query,
+  });
 
   if (uniqueProductIds.length === 0) {
     return {
@@ -1133,6 +1270,9 @@ export async function rerankKnownProducts(
         term_count: queryTerms.length,
         strict_term_count: queryTerms.filter(isStrictIntentTerm).length,
         candidate_pool_size: 0,
+        knowledge_category_slug: knowledgeContext?.categorySlug ?? null,
+        knowledge_profile_id: knowledgeContext?.usageProfileId ?? null,
+        knowledge_signal_terms: knowledgeContext?.signalTerms ?? [],
       },
     };
   }
@@ -1174,6 +1314,8 @@ export async function rerankKnownProducts(
   const ranked = applyRankingSignals(
     normalizeProductRows((result.data ?? []) as SearchProductRow[], categoryMap),
     categories,
+    query,
+    categorySlug ?? null,
     queryTerms,
     vectorMap,
     priceMin,
@@ -1191,6 +1333,9 @@ export async function rerankKnownProducts(
       term_count: queryTerms.length,
       strict_term_count: queryTerms.filter(isStrictIntentTerm).length,
       candidate_pool_size: ranked.length,
+      knowledge_category_slug: knowledgeContext?.categorySlug ?? null,
+      knowledge_profile_id: knowledgeContext?.usageProfileId ?? null,
+      knowledge_signal_terms: knowledgeContext?.signalTerms ?? [],
     },
   };
 }

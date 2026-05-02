@@ -27,6 +27,7 @@ import { aiEmbed } from "../ai/aiClient";
 import { generateResponse, type ProductForResponse } from "./generateResponse";
 import type { StructuredIntent } from "./intentParser";
 import { buildSuggestions, type Suggestion } from "./suggestionBuilder";
+import { buildCategoryRankingContext } from "./categoryKnowledge";
 import {
   getQueryRankingProfile,
   isStrictIntentTerm,
@@ -34,6 +35,7 @@ import {
   splitSearchTerms,
   type QueryRankingProfile,
   type RankingScoreBreakdown,
+  type RetrievalRankingDiagnostics,
 } from "../search/productRetrieval";
 
 // ============================================================================
@@ -144,6 +146,9 @@ export type RetrievalDiagnostics = {
   path: "fast" | "slow";
   retrieval_stage: string;
   query_profile?: QueryRankingProfile | null;
+  knowledge_category_slug?: string | null;
+  knowledge_profile_id?: string | null;
+  knowledge_signal_terms?: string[];
   rerank_applied: boolean;
   kb_chunk_count: number;
   candidate_count: number;
@@ -167,12 +172,7 @@ export type LegacySearchResult = {
   diagnostics?: {
     vector_candidate_count: number;
     top_candidates: CandidateTrace[];
-    ranking?: {
-      query_profile: QueryRankingProfile;
-      term_count: number;
-      strict_term_count: number;
-      candidate_pool_size: number;
-    };
+    ranking?: RetrievalRankingDiagnostics;
   };
 };
 
@@ -429,6 +429,11 @@ async function runFastPath(
 ): Promise<OrchestratorOutput> {
   // Mevcut searchProducts() ş vector + keyword fallback zaten içinde
   const searchResult = await input.legacySearch(searchMessage);
+  const rankingDiagnostics = searchResult.diagnostics?.ranking ?? null;
+  const fallbackKnowledgeContext = buildCategoryRankingContext({
+    categorySlug: getResponseCategorySlug(input, null),
+    userMessage: searchMessage,
+  });
 
   // Migration 013 fix: fast path 0 sonuç döndü ve state'te kategori varsa
   // (multi-turn carry-over) slow path'e düş — smart_search RPC'nin
@@ -485,14 +490,26 @@ async function runFastPath(
           : searchResult.method === "keyword"
             ? "shared_retrieval_keyword"
             : "shared_retrieval_failed",
-      query_profile: searchResult.diagnostics?.ranking?.query_profile ?? null,
+      query_profile: rankingDiagnostics?.query_profile ?? null,
+      knowledge_category_slug:
+        rankingDiagnostics?.knowledge_category_slug ??
+        fallbackKnowledgeContext?.categorySlug ??
+        null,
+      knowledge_profile_id:
+        rankingDiagnostics?.knowledge_profile_id ??
+        fallbackKnowledgeContext?.usageProfileId ??
+        null,
+      knowledge_signal_terms:
+        rankingDiagnostics?.knowledge_signal_terms ??
+        fallbackKnowledgeContext?.signalTerms ??
+        [],
       rerank_applied: searchResult.method !== "failed",
       kb_chunk_count: 0,
       candidate_count: searchResult.products.length,
       top_candidates:
         searchResult.diagnostics?.top_candidates ??
         summarizeCandidateTraces(searchResult.products),
-      strict_term_count: searchResult.diagnostics?.ranking?.strict_term_count ?? 0,
+      strict_term_count: rankingDiagnostics?.strict_term_count ?? 0,
       vector_candidate_count: searchResult.diagnostics?.vector_candidate_count ?? 0,
       filters: searchResult.filters,
     },
@@ -561,6 +578,10 @@ async function runSlowPath(
   const queryTerms = splitSearchTerms(searchMessage);
   const queryProfile = getQueryRankingProfile(queryTerms);
   const strictTermCount = queryTerms.filter(isStrictIntentTerm).length;
+  const fallbackKnowledgeContext = buildCategoryRankingContext({
+    categorySlug: getResponseCategorySlug(input, intent.category_slug),
+    userMessage: searchMessage,
+  });
 
   // 3. Off-topic veya çok genel ş search yapma, direkt yanıt üret
   // Override: LLM kategori/brand çıkardıysa veya conversationState/parsed kategori
@@ -627,6 +648,8 @@ async function runSlowPath(
   let rerankApplied = false;
   let supplementedByLegacy = false;
   let supplementalCandidateCount = 0;
+  let rerankDiagnostics: RetrievalRankingDiagnostics | null = null;
+  let legacyFallbackResult: LegacySearchResult | null = null;
 
   try {
     smartResults = await runSmartSearch(input.sb, searchMessage, intent);
@@ -639,9 +662,9 @@ async function runSlowPath(
   // 5. Smart search 0 sonuç ş mevcut searchProducts'a fallback
   let finalProducts: ChatProductResult[] = smartResults;
   if (smartResults.length === 0) {
-    const fallback = await input.legacySearch(searchMessage);
-    finalProducts = fallback.products;
-    method = `slow_fallback_${fallback.method}`;
+    legacyFallbackResult = await input.legacySearch(searchMessage);
+    finalProducts = legacyFallbackResult.products;
+    method = `slow_fallback_${legacyFallbackResult.method}`;
   } else {
     try {
       const rerankProductIds = smartResults.map((product) => product.id);
@@ -701,6 +724,7 @@ async function runSlowPath(
 
       if (reranked.products.length > 0) {
         finalProducts = reranked.products;
+        rerankDiagnostics = reranked.diagnostics;
         method = supplementedByLegacy
           ? "slow_hybrid_ranked_augmented"
           : "slow_hybrid_ranked";
@@ -772,6 +796,21 @@ async function runSlowPath(
             : "smart_search_raw"
           : "legacy_fallback",
       query_profile: queryProfile,
+      knowledge_category_slug:
+        rerankDiagnostics?.knowledge_category_slug ??
+        legacyFallbackResult?.diagnostics?.ranking?.knowledge_category_slug ??
+        fallbackKnowledgeContext?.categorySlug ??
+        null,
+      knowledge_profile_id:
+        rerankDiagnostics?.knowledge_profile_id ??
+        legacyFallbackResult?.diagnostics?.ranking?.knowledge_profile_id ??
+        fallbackKnowledgeContext?.usageProfileId ??
+        null,
+      knowledge_signal_terms:
+        rerankDiagnostics?.knowledge_signal_terms ??
+        legacyFallbackResult?.diagnostics?.ranking?.knowledge_signal_terms ??
+        fallbackKnowledgeContext?.signalTerms ??
+        [],
       rerank_applied: rerankApplied,
       kb_chunk_count: knowledgeChunks.length,
       candidate_count: finalProducts.length,

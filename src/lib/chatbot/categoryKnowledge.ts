@@ -1,14 +1,21 @@
-type UsageProfile = {
+export type UsageProfile = {
   id: string;
   triggers: string[];
   retrievalTerms: string[];
   tip: string;
+  rankingSignals?: string[];
 };
 
 type CategoryKnowledgeEntry = {
   keys: string[];
   baseTip: string;
   profiles: UsageProfile[];
+};
+
+export type CategoryRankingContext = {
+  categorySlug: string | null;
+  usageProfileId: string | null;
+  signalTerms: string[];
 };
 
 const CATEGORY_KNOWLEDGE: CategoryKnowledgeEntry[] = [
@@ -21,18 +28,44 @@ const CATEGORY_KNOWLEDGE: CategoryKnowledgeEntry[] = [
         triggers: ["oyun", "gaming", "fps"],
         retrievalTerms: ["oyun telefonu", "guclu islemci", "yuksek yenileme"],
         tip: "Oyun telefonlarinda guclu islemci, sogutma ve yuksek yenileme hizi one cikar.",
+        rankingSignals: [
+          "snapdragon 8",
+          "dimensity 9",
+          "a17",
+          "a18",
+          "120 hz",
+          "144 hz",
+          "oyuncu telefonu",
+        ],
       },
       {
         id: "kamera",
         triggers: ["kamera", "fotograf", "video", "cekim"],
         retrievalTerms: ["kamera telefonu", "gece cekimi", "optik sabitleme"],
         tip: "Kamera odakli telefonlarda gece cekimi, sabitleme ve sensor kalitesi daha onemlidir.",
+        rankingSignals: [
+          "kamera",
+          "50 mp",
+          "108 mp",
+          "200 mp",
+          "ois",
+          "optik sabitleme",
+          "4k",
+        ],
       },
       {
         id: "pil",
         triggers: ["pil", "sarj", "batarya"],
         retrievalTerms: ["uzun pil omru", "hizli sarj", "buyuk batarya"],
         tip: "Pil odakli telefonlarda batarya kapasitesi ve hizli sarj destegi kritik olur.",
+        rankingSignals: [
+          "5000 mah",
+          "6000 mah",
+          "67 w",
+          "80 w",
+          "100 w",
+          "hizli sarj",
+        ],
       },
     ],
   },
@@ -45,18 +78,37 @@ const CATEGORY_KNOWLEDGE: CategoryKnowledgeEntry[] = [
         triggers: ["oyun", "gaming", "fps"],
         retrievalTerms: ["oyun laptopu", "ekran karti", "yuksek hz"],
         tip: "Oyun laptoplarinda ekran karti, sogutma ve yuksek yenileme hizi daha belirleyicidir.",
+        rankingSignals: [
+          "rtx",
+          "gtx",
+          "geforce",
+          "radeon",
+          "ekran karti",
+          "144 hz",
+          "165 hz",
+          "240 hz",
+        ],
       },
       {
         id: "ofis",
         triggers: ["ofis", "is", "is icin", "gunluk"],
         retrievalTerms: ["hafif laptop", "uzun pil", "sessiz"],
         tip: "Ofis laptoplarinda hafiflik, pil omru ve sessiz calisma daha on plandadir.",
+        rankingSignals: ["hafif", "uzun pil", "sessiz", "ince", "tasinabilir"],
       },
       {
         id: "tasarim",
         triggers: ["tasarim", "render", "mimarlik", "video edit", "kurgu"],
         retrievalTerms: ["renk dogrulugu", "guclu ram", "yaratici laptop"],
         tip: "Tasarim laptoplarinda ekran dogrulugu, ram ve islemci gucu daha onemlidir.",
+        rankingSignals: [
+          "oled",
+          "ips",
+          "100 srgb",
+          "32 gb",
+          "yaratici",
+          "render",
+        ],
       },
     ],
   },
@@ -81,6 +133,7 @@ const CATEGORY_KNOWLEDGE: CategoryKnowledgeEntry[] = [
         triggers: ["oyun", "gaming"],
         retrievalTerms: ["oyun tableti", "guclu cip", "120 hz"],
         tip: "Oyun tabletlerinde guclu cip ve yuksek yenileme hizi daha belirleyicidir.",
+        rankingSignals: ["120 hz", "144 hz", "m2", "m4", "snapdragon 8"],
       },
     ],
   },
@@ -111,6 +164,7 @@ const CATEGORY_KNOWLEDGE: CategoryKnowledgeEntry[] = [
         triggers: ["oyun", "gaming", "mikrofon"],
         retrievalTerms: ["oyuncu kulakligi", "dusuk gecikme", "mikrofon"],
         tip: "Oyuncu kulakliklarinda dusuk gecikme ve mikrofon kalitesi daha belirleyicidir.",
+        rankingSignals: ["dusuk gecikme", "mikrofon", "kablosuz", "oyuncu"],
       },
       {
         id: "spor",
@@ -135,6 +189,7 @@ const CATEGORY_KNOWLEDGE: CategoryKnowledgeEntry[] = [
         triggers: ["oyun", "ps5", "xbox"],
         retrievalTerms: ["120 hz tv", "hdmi 2.1", "dusuk gecikme"],
         tip: "Oyun icin televizyonlarda 120 Hz, HDMI 2.1 ve dusuk gecikme daha onemlidir.",
+        rankingSignals: ["120 hz", "144 hz", "hdmi 2.1", "vrr", "dusuk gecikme"],
       },
       {
         id: "film",
@@ -159,6 +214,7 @@ const CATEGORY_KNOWLEDGE: CategoryKnowledgeEntry[] = [
         triggers: ["oyun", "gaming", "fps"],
         retrievalTerms: ["oyuncu monitoru", "144 hz", "1 ms"],
         tip: "Oyuncu monitorlerinde yenileme hizi ve gecikme suresi daha onemlidir.",
+        rankingSignals: ["144 hz", "165 hz", "240 hz", "1 ms", "adaptive sync"],
       },
       {
         id: "ofis",
@@ -183,6 +239,7 @@ const CATEGORY_KNOWLEDGE: CategoryKnowledgeEntry[] = [
         triggers: ["espresso"],
         retrievalTerms: ["espresso makinesi", "basinc", "sut kopurtme"],
         tip: "Espresso makinelerinde basinc ve sut kopurtme kabiliyeti daha on plandadir.",
+        rankingSignals: ["15 bar", "19 bar", "sut kopurtme", "steam wand"],
       },
       {
         id: "filtre",
@@ -207,12 +264,14 @@ const CATEGORY_KNOWLEDGE: CategoryKnowledgeEntry[] = [
         triggers: ["evcil hayvan", "kedi", "kopek", "tuylu"],
         retrievalTerms: ["evcil hayvan robot supurge", "guclu cekis", "firca"],
         tip: "Evcil hayvan icin robot supurgelerde cekis ve firca tasarimi daha onemlidir.",
+        rankingSignals: ["evcil hayvan", "kedi", "kopek", "guclu cekis", "firca"],
       },
       {
         id: "paspas",
         triggers: ["paspas", "silme"],
         retrievalTerms: ["paspasli robot supurge", "su haznesi", "haritalama"],
         tip: "Paspas isteyenlerde su haznesi ve rota yonetimi daha belirleyici olur.",
+        rankingSignals: ["paspas", "mop", "su haznesi", "haritalama", "lidar"],
       },
     ],
   },
@@ -497,6 +556,7 @@ const CATEGORY_KNOWLEDGE: CategoryKnowledgeEntry[] = [
 function normalize(value: string): string {
   return value
     .toLowerCase()
+    .replace(/[-_/]+/g, " ")
     .replace(/ı/g, "i")
     .replace(/ğ/g, "g")
     .replace(/ü/g, "u")
@@ -505,6 +565,12 @@ function normalize(value: string): string {
     .replace(/ç/g, "c")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function uniqueTerms(values: string[]): string[] {
+  return Array.from(
+    new Set(values.map((value) => normalize(value)).filter((value) => value.length >= 2))
+  );
 }
 
 function getCategoryTokens(categorySlug: string | null | undefined): string[] {
@@ -524,6 +590,17 @@ function resolveKnowledgeEntry(
   return (
     CATEGORY_KNOWLEDGE.find((entry) =>
       entry.keys.some((key) => tokens.some((token) => token.includes(normalize(key))))
+    ) ?? null
+  );
+}
+
+function inferKnowledgeEntryFromMessage(message: string): CategoryKnowledgeEntry | null {
+  const normalizedMessage = normalize(message);
+  if (!normalizedMessage) return null;
+
+  return (
+    CATEGORY_KNOWLEDGE.find((entry) =>
+      entry.keys.some((key) => normalizedMessage.includes(normalize(key)))
     ) ?? null
   );
 }
@@ -577,4 +654,29 @@ export function buildCategoryKnowledgeSnippet(options: {
   }
 
   return entry.baseTip;
+}
+
+export function buildCategoryRankingContext(options: {
+  categorySlug: string | null | undefined;
+  userMessage: string;
+}): CategoryRankingContext | null {
+  const entry =
+    resolveKnowledgeEntry(options.categorySlug) ??
+    inferKnowledgeEntryFromMessage(options.userMessage);
+  if (!entry) return null;
+
+  const resolvedCategorySlug = options.categorySlug ?? entry.keys[0] ?? null;
+  const profile = findUsageProfile(resolvedCategorySlug, options.userMessage);
+
+  return {
+    categorySlug: entry.keys[0] ?? resolvedCategorySlug,
+    usageProfileId: profile?.id ?? null,
+    signalTerms: profile
+      ? uniqueTerms([
+          ...profile.triggers,
+          ...profile.retrievalTerms,
+          ...(profile.rankingSignals ?? []),
+        ])
+      : [],
+  };
 }

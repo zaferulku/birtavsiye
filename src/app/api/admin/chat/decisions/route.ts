@@ -11,6 +11,7 @@ type ScoreBreakdown = {
   image?: number | null;
   freshness?: number | null;
   source_trust?: number | null;
+  knowledge?: number | null;
   price_penalty?: number | null;
   total?: number | null;
 };
@@ -30,6 +31,9 @@ type DiagnosticsPayload = {
     priceSensitive?: boolean | null;
     accessoryIntent?: boolean | null;
   } | null;
+  knowledge_category_slug?: string | null;
+  knowledge_profile_id?: string | null;
+  knowledge_signal_terms?: string[] | null;
   rerank_applied?: boolean | null;
   strict_term_count?: number | null;
   supplemented_by_legacy?: boolean | null;
@@ -112,6 +116,7 @@ type ScoreAccumulator = {
   image: number;
   freshness: number;
   source_trust: number;
+  knowledge: number;
   price_penalty: number;
   total: number;
   sample_count: number;
@@ -154,6 +159,15 @@ function readDiagnostics(value: unknown): DiagnosticsPayload | null {
               : null,
         }
       : null,
+    knowledge_category_slug:
+      typeof value.knowledge_category_slug === "string"
+        ? value.knowledge_category_slug
+        : null,
+    knowledge_profile_id:
+      typeof value.knowledge_profile_id === "string"
+        ? value.knowledge_profile_id
+        : null,
+    knowledge_signal_terms: safeArrayOfStrings(value.knowledge_signal_terms),
     rerank_applied:
       typeof value.rerank_applied === "boolean" ? value.rerank_applied : null,
     strict_term_count:
@@ -200,6 +214,7 @@ function finalizeScoreAccumulator(accumulator: ScoreAccumulator) {
       image: 0,
       freshness: 0,
       source_trust: 0,
+      knowledge: 0,
       price_penalty: 0,
       total: 0,
       sample_count: 0,
@@ -214,6 +229,7 @@ function finalizeScoreAccumulator(accumulator: ScoreAccumulator) {
     image: Number((accumulator.image / divisor).toFixed(2)),
     freshness: Number((accumulator.freshness / divisor).toFixed(2)),
     source_trust: Number((accumulator.source_trust / divisor).toFixed(2)),
+    knowledge: Number((accumulator.knowledge / divisor).toFixed(2)),
     price_penalty: Number((accumulator.price_penalty / divisor).toFixed(2)),
     total: Number((accumulator.total / divisor).toFixed(2)),
     sample_count: divisor,
@@ -244,6 +260,7 @@ function buildDecisionSummary(
     image: 0,
     freshness: 0,
     source_trust: 0,
+    knowledge: 0,
     price_penalty: 0,
     total: 0,
     sample_count: 0,
@@ -349,6 +366,7 @@ function buildDecisionSummary(
       topCandidateScore.source_trust += Number(
         topCandidate.score_breakdown.source_trust ?? 0
       );
+      topCandidateScore.knowledge += Number(topCandidate.score_breakdown.knowledge ?? 0);
       topCandidateScore.price_penalty += Number(
         topCandidate.score_breakdown.price_penalty ?? 0
       );
