@@ -94,7 +94,7 @@ function buildPromptMessages(input: ResponseInput): ChatMessage[] {
     const historyText = input.conversationHistory
       .map((entry) => `${entry.role === "user" ? "Kullanici" : "Bot"}: ${entry.content}`)
       .join("\n");
-    parts.push(`ONCEKI KONUŞMA:\n${historyText}`);
+    parts.push(`ONCEKI KONUSMA:\n${historyText}`);
   }
 
   parts.push(`YENI MESAJ: "${input.userMessage}"`);

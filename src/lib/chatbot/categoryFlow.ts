@@ -66,6 +66,11 @@ const CLEANING_CATEGORIES = new Set([
   "supurge",
 ]);
 const CLIMATE_CATEGORIES = new Set(["klima"]);
+const SPORTS_OUTDOOR_PREFIX = "spor-outdoor/";
+const BOOK_HOBBY_PREFIX = "kitap-hobi/";
+const HOME_LIVING_PREFIX = "ev-yasam/";
+const AUTOMOTIVE_PREFIX = "otomotiv/";
+const SUPERMARKET_PREFIX = "supermarket/";
 
 export function normalizeCategoryFlowText(value: string): string {
   return value
@@ -149,6 +154,10 @@ export function resolveCategoryLabel(
   if (normalized.includes("serum")) return "serum";
   if (normalized.includes("robot supurge")) return "robot supurge";
   if (normalized.includes("elbise")) return "elbise";
+  if (normalized.includes("bisiklet")) return "bisiklet";
+  if (normalized.includes("kitap")) return "kitap";
+  if (normalized.includes("kamp")) return "kamp urunu";
+  if (normalized.includes("arac") || normalized.includes("oto")) return "otomotiv urunu";
   return "urun";
 }
 
@@ -447,6 +456,62 @@ export function getNextCategoryFlowStep(options: {
     return null;
   }
 
+  if (isSportsCategory(path, leaf)) {
+    const options = sportsOptionsFor(path, leaf);
+    if (!hasOptionPreference(normalized, options)) {
+      return makeUsageStep(sportsQuestionFor(path, leaf), options);
+    }
+    if (!hasBrand) return makeBrandStep();
+    if (!hasPricePreference) return makeBudgetStep();
+    return null;
+  }
+
+  if (isBookHobbyCategory(path)) {
+    const options = ["Roman", "Cocuk", "Bilim", "Sanat"];
+    if (!hasOptionPreference(normalized, options)) {
+      return makeUsageStep("Ne tur ariyorsun?", options);
+    }
+    if (!hasPricePreference) return makeBudgetStep();
+    return null;
+  }
+
+  if (isHomeLivingCategory(path)) {
+    const options = homeLivingOptionsFor(path, leaf);
+    if (!hasOptionPreference(normalized, options)) {
+      return makeUsageStep(homeLivingQuestionFor(path, leaf), options);
+    }
+    if (!hasColorPreference(normalized)) {
+      return {
+        key: "color",
+        question: "Renk veya stil tercihin var mi?",
+        options: ["Beyaz", "Siyah", "Gri", "Ahsap"],
+        icon: "🎨",
+      };
+    }
+    if (!hasPricePreference) return makeBudgetStep();
+    return null;
+  }
+
+  if (isAutomotiveCategory(path)) {
+    const options = automotiveOptionsFor(path, leaf);
+    if (!hasOptionPreference(normalized, options)) {
+      return makeUsageStep(automotiveQuestionFor(path, leaf), options);
+    }
+    if (!hasBrand) return makeBrandStep();
+    if (!hasPricePreference) return makeBudgetStep();
+    return null;
+  }
+
+  if (isGeneralSupermarketCategory(path, leaf)) {
+    const options = supermarketOptionsFor(path, leaf);
+    if (!hasOptionPreference(normalized, options)) {
+      return makeUsageStep(supermarketQuestionFor(path, leaf), options);
+    }
+    if (!hasBrand) return makeBrandStep();
+    if (!hasPricePreference) return makeBudgetStep();
+    return null;
+  }
+
   if (isFashionCategory(path, leaf)) {
     if (isBagCategory(path, leaf)) {
       if (!hasBagTypePreference(normalized)) {
@@ -631,6 +696,13 @@ function hasBagTypePreference(normalized: string): boolean {
   return /\b(sirt|omuz|capraz|laptop)\b/i.test(normalized);
 }
 
+function hasOptionPreference(normalized: string, options: string[]): boolean {
+  return options.some((option) => {
+    const normalizedOption = normalizeCategoryFlowText(option);
+    return normalized.includes(normalizedOption);
+  });
+}
+
 function isFashionCategory(path: string, leaf: string): boolean {
   return (
     path.startsWith("moda/") ||
@@ -723,4 +795,83 @@ function petOptionsFor(path: string): string[] {
 
 function isSupermarketCoffeeCategory(path: string, leaf: string): boolean {
   return path.includes("supermarket/kahve") || path.includes("supermarket/kahvalti-kahve") || leaf === "kahve";
+}
+
+function isSportsCategory(path: string, leaf: string): boolean {
+  return path.startsWith(SPORTS_OUTDOOR_PREFIX) || ["bisiklet", "scooter", "kamp", "yoga-pilates"].includes(leaf);
+}
+
+function sportsQuestionFor(path: string, leaf: string): string {
+  if (leaf === "bisiklet") return "Bisikleti daha cok ne icin istiyorsun?";
+  if (leaf === "scooter") return "Scooter nasil kullanilacak?";
+  if (path.includes("kamp")) return "Kamp urununde oncelik ne olsun?";
+  return "Daha cok hangi kullanim icin bakiyorsun?";
+}
+
+function sportsOptionsFor(path: string, leaf: string): string[] {
+  if (leaf === "bisiklet") return ["Sehir ici", "Dag", "Cocuk", "Elektrikli"];
+  if (leaf === "scooter") return ["Elektrikli", "Sehir ici", "Cocuk", "Performans"];
+  if (path.includes("kamp")) return ["Kamp", "Trekking", "Gunluk", "Plaj"];
+  return ["Spor", "Gunluk", "Outdoor", "Performans"];
+}
+
+function isBookHobbyCategory(path: string): boolean {
+  return path.startsWith(BOOK_HOBBY_PREFIX);
+}
+
+function isHomeLivingCategory(path: string): boolean {
+  return path.startsWith(HOME_LIVING_PREFIX);
+}
+
+function homeLivingQuestionFor(path: string, leaf: string): string {
+  if (leaf.includes("aydinlatma")) return "Aydinlatmayi daha cok nerede kullanacaksin?";
+  if (path.includes("ev-tekstili")) return "Hangi alan icin bakiyorsun?";
+  if (path.includes("mutfak")) return "Mutfakta ne tip urun bakiyorsun?";
+  if (path.includes("mobilya")) return "Hangi alan icin bakiyorsun?";
+  return "Bu urunu daha cok hangi alanda kullanacaksin?";
+}
+
+function homeLivingOptionsFor(path: string, leaf: string): string[] {
+  if (leaf.includes("aydinlatma")) return ["Masa", "Salon", "Yatak odasi", "Dekoratif"];
+  if (path.includes("ev-tekstili")) return ["Yatak odasi", "Banyo", "Salon", "Cocuk odasi"];
+  if (path.includes("mutfak")) return ["Gunluk", "Sunum", "Saklama", "Pisirme"];
+  if (path.includes("ofis")) return ["Calisma", "Depolama", "Ergonomi", "Dekoratif"];
+  return ["Salon", "Yatak odasi", "Mutfak", "Ofis"];
+}
+
+function isAutomotiveCategory(path: string): boolean {
+  return path.startsWith(AUTOMOTIVE_PREFIX);
+}
+
+function automotiveQuestionFor(path: string, leaf: string): string {
+  if (leaf.includes("lastik")) return "Lastikte oncelik ne olsun?";
+  if (leaf.includes("elektron")) return "Arac elektroniğinde ne ariyorsun?";
+  if (leaf.includes("multimedya")) return "Multimedyada ne onemli olsun?";
+  return "Otomotiv urununde oncelik ne olsun?";
+}
+
+function automotiveOptionsFor(path: string, leaf: string): string[] {
+  if (leaf.includes("lastik")) return ["Yaz", "Kis", "Dort mevsim", "Jant"];
+  if (leaf.includes("elektron")) return ["Telefon tutucu", "Kamera", "Sarj", "Guvenlik"];
+  if (leaf.includes("multimedya")) return ["Ekran", "Ses", "Navigasyon", "Geri gorus"];
+  if (path.includes("motor-yagi")) return ["5W30", "5W40", "10W40", "Bakim"];
+  return ["Aksesuar", "Bakim", "Elektronik", "Performans"];
+}
+
+function isGeneralSupermarketCategory(path: string, leaf: string): boolean {
+  return path.startsWith(SUPERMARKET_PREFIX) && !isSupermarketCoffeeCategory(path, leaf);
+}
+
+function supermarketQuestionFor(path: string, leaf: string): string {
+  if (leaf.includes("icecek")) return "Icecekte ne tercih edersin?";
+  if (leaf.includes("atistirmalik")) return "Atistirmalikta ne olsun?";
+  if (leaf.includes("bakliyat")) return "Bakliyatta hangi tip urun ariyorsun?";
+  return "Ne tip urun ariyorsun?";
+}
+
+function supermarketOptionsFor(path: string, leaf: string): string[] {
+  if (leaf.includes("icecek")) return ["Sekersiz", "Gazli", "Kahve", "Enerji"];
+  if (leaf.includes("atistirmalik")) return ["Cikolata", "Kraker", "Sekersiz", "Protein"];
+  if (leaf.includes("bakliyat")) return ["Pirinç", "Makarna", "Bakliyat", "Glutensiz"];
+  return ["Gunluk", "Ekonomik", "Sekersiz", "Premium"];
 }

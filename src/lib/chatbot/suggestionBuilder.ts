@@ -66,6 +66,11 @@ const PROMPT_PHRASES = [
   "hangi tip olsun",
   "supurge tipi nasil olsun",
   "kum tipi nasil olsun",
+  "ne tur ariyorsun",
+  "hangi alan icin bakiyorsun",
+  "otomotiv urununde oncelik ne olsun",
+  "bu urunu daha cok hangi alanda kullanacaksin",
+  "daha cok hangi kullanim icin bakiyorsun",
 ];
 
 export async function buildSuggestions(
