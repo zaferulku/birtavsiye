@@ -58,7 +58,7 @@ const NAV: NavGroup[] = [
           { label: "Bilgisayar Parçaları", slug: "elektronik/bilgisayar-tablet/bilesenler", tags: ["Anakart", "Ekran Kartı", "RAM", "SSD", "İşlemci", "Kasa", "Nvidia", "AMD", "Intel"] },
           { label: "Çevre Birimleri", slug: "elektronik/bilgisayar-tablet/bilesenler", tags: ["Klavye & Mouse Set", "Mouse", "Klavye", "Webcam", "Yazıcı", "Tarayıcı", "VR Gözlük"] },
           { label: "Veri Depolama", slug: "elektronik/bilgisayar-tablet/bilesenler", tags: ["USB Bellek", "SSD", "Hard Disk", "Hafıza Kartı", "Taşınabilir SSD", "NAS"] },
-          { label: "Ağ & Modem & Akıllı Ev", slug: "elektronik", tags: ["Router", "Modem", "Access Point", "Switch", "Powerline", "Akıllı Priz", "Akıllı Ampul"] },
+          { label: "Ağ & Modem & Akıllı Ev", slug: "elektronik/ag-guvenlik/modem", tags: ["Router", "Modem", "Access Point", "Switch", "Powerline", "Akıllı Priz", "Akıllı Ampul"] },
           { label: "Bilgisayar Aksesuarları", slug: "elektronik/telefon/aksesuar", tags: ["Laptop Çantası", "Tablet Çantası", "Kablo & Hub", "Soğutucu", "Mouse Pad"] },
         ]
       },
@@ -81,7 +81,7 @@ const NAV: NavGroup[] = [
           { label: "Soundbar & Ev Sinema", slug: "soundbar", tags: ["Soundbar", "2.1 Ses Sistemi", "5.1 Ev Sinema", "Dolby Atmos", "Samsung", "Sony", "Bose", "JBL"] },
           { label: "Bluetooth Hoparlör", slug: "bluetooth-hoparlor", tags: ["Taşınabilir", "Su Geçirmez", "JBL", "Bose", "Sony", "Marshall", "Harman Kardon"] },
           { label: "Projeksiyon", slug: "projeksiyon", tags: ["Full HD", "4K", "Mini LED", "Taşınabilir", "Epson", "BenQ", "Optoma", "ViewSonic"] },
-          { label: "Akıllı Ev", slug: "elektronik", tags: ["Google Nest", "Amazon Echo", "Akıllı Priz", "Akıllı Ampul", "Philips Hue", "Xiaomi"] },
+          { label: "Akıllı Ev", slug: "elektronik/ag-guvenlik", tags: ["Google Nest", "Amazon Echo", "Akıllı Priz", "Akıllı Ampul", "Philips Hue", "Xiaomi"] },
         ]
       },
       {
