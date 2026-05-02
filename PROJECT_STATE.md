@@ -1,13 +1,125 @@
-# birtavsiye.net — Project State v15.6
+# birtavsiye.net — Project State v15.7
 
 > **Bu dosya tek kaynak gerçek.** Yeni sohbet/oturum başlattığınızda
 > bu dosyayı Claude veya Claude Code'a verin — tüm bağlamı 30 saniyede alır.
 
-**Son güncelleme:** 2026-05-03 v15.6 (erken hızlı combo — P6.15b + P6.16 kapanış (Migration 037, 70 MB recovery) + pg_stat anomali 4. örneği (blind DROP veri kaybı riski tuzağı) + kural 26 genişletme)
+**Son güncelleme:** 2026-05-03 v15.7 (öğleden sonra — P6.20 KAPATILDI (B hotfix + A kalıcı SSR prefetch, 5 server page + helper) + davranış kuralı 28 (VS Code mount cache yanlış pozitif))
 
 ---
 
-## 🔴 GÜNCEL DURUM (3 May 2026 erken — v15.6 paket, hızlı combo)
+## 🔴 GÜNCEL DURUM (3 May 2026 öğleden sonra — v15.7 paket)
+
+v15.6 sonrası ek 2-3h sprint. Kullanıcı raporu (3 NAV semptom: linkler
+ana sayfaya / tıklanamayan / yanlış kategori) audit edildi, kök neden
+SSR/CSR fetch race olarak tespit edildi, B hotfix + A kalıcı zinciri ile
+tamamen kapatıldı.
+
+### Bu oturumda kapatılan ek borçlar (1 büyük):
+
+✅ **P6.20** — Header NAV broken (B + A birlikte):
+
+**P6.20 audit bulgu (semptomlar):**
+- Kullanıcı raporu: NAV linkleri ana sayfaya dönüyor, bazıları
+  tıklanamayan, bazıları yanlış kategoriye gidiyor
+- Production HTTP test: 10/10 NAV link 200 OK (route sağlıklı)
+- API /api/public/categories: 225 kategori dönüyor (DB sağlıklı)
+- Header.tsx: 155 unique NAV slug, karışık (full-path + flat shortcut)
+
+**KÖK NEDEN:** Header.tsx `'use client'` `useState([])` + `useEffect →
+fetch /api/public/categories` async client-side. SSR'da useEffect
+çalışmıyor → cats=[] → catMap empty → linkFor 3-katmanlı resolve fail:
+1. `catMap.get(slug)` exact → miss (empty)
+2. `findCanonicalSlugSync(empty)` → null
+3. **Fallback: `/?q=<slug>` ANA SAYFAYA REDIRECT** ⚠️
+
+Sonuç:
+- SSR HTML'de tüm NAV linkleri `/?q=akilli-telefon` formatında
+- **Google bot SSR HTML'i alır → SEO felaketi** (yanlış URL'ler index)
+- Hidrasyon yarışında kullanıcı erken tıklarsa ana sayfaya gider
+- Tüm 3 semptom bunun direkt/yan etkisi
+
+**Çözüm zinciri:**
+
+✅ **P6.20-B hotfix** (`908b7cd`, sıfır risk, ~10dk):
+- `hierUrl` fallback URL: `/?q=<slug>` → `/anasayfa/<slug>` raw passthrough
+- Segment route resolver full-path/leaf-suffix lookup yapar (server-side)
+- DB'de hiç match yoksa 404 (ana sayfa redirect'ten net UX)
+
+✅ **P6.20-A kalıcı çözüm** (`b36edfb`, ~1.5h):
+- Yeni helper: `src/lib/fetchCategoriesServer.ts` (supabaseAdmin
+  read-only, ~225 categories)
+- Header.tsx `initialCats?: HeaderCat[]` optional prop
+- `useState<HeaderCat[]>(initialCats ?? [])` — SSR'da prefetched data
+  ile başla
+- `useEffect` fetch skip (initialCats varsa CSR refresh yok)
+- 5 server page entegrasyonu:
+  - `src/app/page.tsx` (root) — sync → async, prefetch + prop
+  - `src/app/[...segments]/page.tsx` (kategori sayfası, 2 Header)
+  - `src/app/urunler/page.tsx` — sync → async
+  - `src/app/urun/[slug]/page.tsx`
+  - `src/app/karsilastir/page.tsx` (3 Header occurrence)
+
+**Codex EXCLUSION korundu (4 dosya):**
+- `profil/page.tsx`, `tavsiyeler/page.tsx`, `tavsiye/[id]/page.tsx`,
+  `TopicFeed.tsx` — zaten `'use client'` veya backup'ta
+- CSR Header behavior P6.20-B fallback ile koruma altında
+- Codex backup reapply sonrası P6.12f-codex kapsamında P6.20-A bu 4
+  sayfaya genişletilir
+
+✅ **Plan dökümantasyon** (`7dbb5ff`):
+- v15.6 sonrası P6.20-A apply planı önceden dokümante edilmişti
+- Davranış kuralı 27 (SSR/CSR fetch race) o zaman eklenmişti
+
+### VS Code Mount Cache Yanlış Pozitif Olayı
+
+P6.20-A apply öncesi kullanıcı 45 M dosya truncate raporu paylaştı.
+**Yanlış pozitif çıktı:**
+- Linux sandbox'tan `git status` 0 M
+- `git diff --stat HEAD` empty
+- 3 sample dosya tail (PROJECT_STATE / Migration 029 / chatOrchestrator)
+  hepsi düzgün kapanış
+- VS Code Source Control panel mount cache stale göstermiş
+
+Recovery (`git checkout HEAD -- .`) **gereksiz** — gerçek değişiklik yok.
+**Davranış kuralı 28 eklendi:** truncate alarmında önce git CLI
+authoritative kontrol, panik aksiyon yok.
+
+### Production durumu:
+- Working dir CLEAN
+- TSC + build clean
+- Lint baseline 148 (değişmedi — sadece prop+helper additive)
+- 7 Migration apply (031-037)
+- Local SSR HTML test: `/anasayfa/<full-path>` linkler ✓
+- Production deploy + Lighthouse SEO delta ölçümü kullanıcı tarafında
+
+### Bekleyen İşler (v15.7 sonrası):
+
+**🟠 ORTA — Kalan Phase 6:**
+- **P6.3-A** — 45 NAV dup dedup (Codex sprint sonrası, ~2.5h)
+- **P6.3-C** — flat slug full-path (Codex sonrası, ~30dk)
+- **P6.5e** — `supermarket/kahve` content gap (DB scrape entegrasyon)
+- **P6.12f-codex** — Codex 4 backup reapply sonrası 18 any + 8 hooks
+  + P6.20-A 4 forum/profil sayfasına genişletme
+- **P6.18b runtime** — token-set leaf compound gap (async path)
+- **P6.19b** — mergeIntent price dimension detection (Codex pipeline)
+- **P6.16-v2** — `backup_20260430_categories` DROP (~6 ay sonra)
+
+**🟡 DİĞER:**
+- Eval2 full re-run (LLM quota varsa, baseline 200 dialog)
+- Codex 4 backup reapply takip (P6.12f-codex + P6.20-A genişletme'yi unlock eder)
+- P6.15b auth user manuel delete (Studio Auth panel, ~1dk)
+- Lighthouse SEO delta ölçümü (P6.20 sonrası kazanım dökümantasyonu)
+
+**🟢 OPSIYONEL (MVP sonrası):**
+- listings.in_stock BOOLEAN DROP (6 ay sonra)
+- raw_offers ingestion (Migration 028 staging)
+- H16 Google AI dedup, H19 next-auth v5
+- Pro plan iptal kararı (29 May 2026)
+- Hosting değerlendirme (3-6 ay)
+
+---
+
+## 🔵 ÖNCEKİ DURUM (3 May 2026 erken — v15.6 paket, hızlı combo)
 
 v15.5 sonrası ~45dk hızlı combo. P6.15b + P6.16 ardışık kapanış. Kritik
 öğreti: pg_stat anomalisinin 4. örneği gerçek veri kayıp riskine yakın
@@ -1762,6 +1874,10 @@ anne_bebek (11) = **141**
 ## ✅ COMMIT GEÇMİŞİ (son 30)
 
 ```
+b36edfb   feat(routing): P6.20-A — SSR categories prefetch (kalici)
+7dbb5ff   docs(state): P6.20-A plan + behavior rule 27 (SSR/CSR fetch race)
+908b7cd   fix(routing): P6.20-B — Header NAV fallback URL hotfix
+176454d   docs(state): v15.6 — P6.15b + P6.16 closure + rule 26 expansion
 ef29602   feat(db): Migration 037 — P6.16 eski backup tablo DROP (~70 MB)
 e821e31   fix(lint): P6.12g-product-narrow — JSON-LD extractor function refactor
 781f0e6   docs(state): v15.5 — Phase 6 ek borç temizliği (7 done + 3 yeni)
@@ -2055,6 +2171,33 @@ e0b318d   fix(ui): liste kart başlığı = brand + model_family + storage + col
     **GEÇİCİ HOTFIX KABUL EDİLEBİLİR:** P6.20-B fallback URL
     `/?q=<slug>` → `/anasayfa/<slug>` patch (segment route resolver
     server-side resolve). Kalıcı çözüm P6.20-A (SSR prefetch).
+28. **VS Code Source Control yanlış-pozitif (mount cache stale):**
+    Linux sandbox bash ile `git status` çalıştırılınca Windows VS Code
+    file mount cache stale olabilir. Yüksek M dosya sayısı + büyük
+    "deletion" rapor + sample dosya tail kesik görünmesi truncate yanılgısı
+    yaratabilir.
+
+    **DOĞRULAMA PROCEDURE (panik öncesi):**
+    1. **Önce git CLI authoritative kontrol:** `git status --short | wc -l`
+    2. `git diff --stat HEAD` empty mi (gerçek diff)
+    3. Sample 3 dosya tail kontrolü (anlamlı kapanış var mı)
+    4. Eğer hepsi temiz: **YANLİŞ POZİTİF**, recovery (git checkout
+       HEAD -- .) **GEREKMEZ**
+    5. Mount cache refresh için bir sonraki bash komutu otomatik
+       senkronize eder
+
+    **KURAL:** Truncate/data-loss alarmında ÖNCE git CLI
+    authoritative doğrula, panik aksiyon yok. P6.20-A apply öncesi
+    45 M dosya yanlış pozitif olayı bu kural'ın canlı örneği —
+    gerçek değişiklik 0 M idi, recovery atılırsa tüm staged work
+    kaybedilirdi.
+
+    **Pattern referansı (P6.20 senaryosu):**
+    - VS Code panel: "45 M dosya, 3099 deletion"
+    - Linux bash `git status`: 0 M
+    - PowerShell `git status`: 0 M
+    - Sample tail: PROJECT_STATE düzgün kapanış, Migration 029 COMMIT, vs.
+    - Sonuç: panel cache stale, gerçek state temiz
 
 ### Kullanıcı için
 
@@ -2196,6 +2339,7 @@ yeni kategoriler ekler. Tur 2 fixture taxonomy gereği.
 | 2026-05-02 | v15.4 — Gece geç. Ek 4-5h sprint. P6.12 sprint final 3 ek commit (49 fix): P6.12g mediamarkt JSON-LD interface (mediamarkt-types.mts yeni 118 satır + 6 fix, 1 sub-borç P6.12g-product-narrow), P6.12 mekanik combo (14 unescaped + 7 unused), P6.12c permanent defer (86 any × 42 dosya scripts/, audit revize). P6.3-B Migration 034 9 yeni sub-leaf (bilesenler/parca-cevre-veri, parfum/kadin-erkek-unisex, konsol/aksesuar-vr-pc) + Header.tsx 9 entry slug update minimal scope. Cron baseline 24h sağlık check ✓ (cache %100, conn 24, dead tup düşük; bonus stores 100% dead → P6.14 yeni borç). Codex paralel sprint 2 commit (search filter modularize + header autocomplete) + ara/page.tsx commit. Yeni davranış kuralı 24 (paralel Codex sprint minimal Header diff). DEFERRED: P6.3-A 45 dup dedup, P6.3-C flat slug (Codex sprint sonrası), P6.12g-product-narrow, P6.12f-codex (backup reapply sonrası), P6.14 stores dead tup. Total: ~9-10 commit gece, lint baseline 174→148 (-26 ek). | Claude |
 | 2026-05-03 | v15.5 — Erken (gece geç devamı). v15.4 sonrası 4-5h ek sprint. KAPATILAN (7): P6.14 stores VACUUM (Migration 035), P6.15 auth.users audit doc-only (Senaryo B, Supabase managed), P6.17 knowledge_chunks VACUUM (Migration 036), P6.18 state.category_slug raw flat fallback kaldırıldı, P6.18b compound flat resolve (compound-path match katmanı), P6.19 parseQuery price extraction (5 yeni regex), pre-existing eslint sync/route.ts strikethrough (zaten kapalıydı). YENİ BORÇLAR (3): P6.15b orphan auth users (test1@/test1@test1 profiles yok), P6.18b runtime token-set leaf compound gap (async path), P6.19b mergeIntent price dimension detection (Codex pipeline). Eval2 ilerleme: 3/5 PASS aynı (kompozit fail tipi degradation: corrupt → null → mergeIntent drop), Dialog 4 turn 0 katmanları düzeldi. Yeni davranış kuralları 25 (eval-driven katmanlı debug) + 26 (pg_stat anomalisi pattern, 3 örnek). 5 yeni Migration toplam (031-036). | Claude |
 | 2026-05-03 | v15.6 — Erken hızlı combo (~45dk). KAPATILAN (2): P6.15b orphan auth users (manuel Studio Auth panel intervention path, bağlı kayıt 0/0/0/0 doğrulandı), P6.16 backup_2026* DROP (Migration 037, 5 tablo, ~70 MB recovery, backup_20260430_categories KORUNDU Phase 5 safety net). KRİTİK ÖĞRETİ: pg_stat anomalisi 4. örneği (backup_20260422_*) — n_live=0 yanıltıcı, gerçek 184k+ row vardı. Blind DROP veri+audit kaybı riskliydi. Davranış kuralı 26 GENİŞLETİLDİ: blind DROP/TRUNCATE yasağı + 5-adımlı doğrulama prosedürü + 4 pattern referans. P6.12g-product-narrow JSON-LD extractor function refactor (e821e31, sub-borç KAPATILDI). Yeni borç: P6.16-v2 (backup_20260430_categories ~6 ay sonra DROP). 7 Migration apply tek günde (031-037). | Claude |
+| 2026-05-03 | v15.7 — Öğleden sonra (~2-3h sprint). KAPATILAN (1 büyük): P6.20 NAV broken — kullanıcı 3 semptom raporu (linkler ana sayfa / tıklanamayan / yanlış kategori). Kök neden: SSR/CSR fetch race (Header.tsx 'use client' useEffect API fetch SSR'da çalışmıyor → catMap empty → linkFor /?q= ana sayfa fallback → SEO felaketi + UX bozulma). Çözüm zinciri: P6.20-B hotfix (908b7cd, /?q= → /anasayfa/ raw passthrough) + P6.20-A kalıcı (b36edfb, src/lib/fetchCategoriesServer.ts yeni helper + Header initialCats prop + 5 server page entegrasyonu: page/[...segments]/urunler/urun/[slug]/karsilastir). Codex EXCLUSION 4 dosya (profil/tavsiyeler/tavsiye[id]/TopicFeed) — backup reapply sonrası P6.12f-codex'e dahil edilecek. VS CODE MOUNT CACHE YANLIŞ POZİTİF olayı: 45 M dosya truncate alarmı git CLI'da 0 M çıktı, recovery gereksiz olduğu doğrulandı. Yeni davranış kuralı 28 (panik öncesi git CLI authoritative kontrol). Phase 6 toplam: 24 borç DONE bu oturum (rekor). Local SSR test: NAV linkler /anasayfa/<full-path>. Production deploy + Lighthouse SEO delta ölçümü kullanıcı tarafında. | Claude |
 
 ---
 
