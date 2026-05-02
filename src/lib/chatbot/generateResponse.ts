@@ -2,6 +2,7 @@ import { aiChat, type ChatMessage } from "../ai/aiClient";
 import {
   getNextCategoryFlowStep,
   resolveCategoryLabel,
+  type FlowStepDefinition,
 } from "./categoryFlow";
 import type { KnowledgeChunk, StructuredIntent } from "./intentParser";
 import {
@@ -178,26 +179,37 @@ function formatProducts(products: ProductForResponse[]): string {
 function buildGuidedProductResponse(input: ResponseInput): string {
   const categoryLabel = resolveCategoryLabel(
     input.intent?.category_slug,
-    input.userMessage
+    input.styleMessage ?? input.userMessage
   );
-  const countLine = `Aramana uygun ${input.products.length} ${categoryLabel} listelendi.`;
+  const countLine = buildCountLine(input.products.length, categoryLabel);
   const nextStep = getNextCategoryFlowStep({
     categorySlug: input.intent?.category_slug,
-    userMessage: input.userMessage,
+    userMessage: input.styleMessage ?? input.userMessage,
     hasBrand: (input.intent?.brand_filter?.length ?? 0) > 0,
     hasPricePreference:
       input.intent?.price_range.min != null || input.intent?.price_range.max != null,
   });
 
   if (!nextStep) return countLine;
-  return `${countLine} ${nextStep.question}`;
+  return `${countLine} ${buildFollowUpQuestion(nextStep, categoryLabel)}`;
 }
 
 function buildVagueResponse(input: ResponseInput): string {
   const categoryLabel = resolveCategoryLabel(
     input.intent?.category_slug,
-    input.userMessage
+    input.styleMessage ?? input.userMessage
   );
+  const nextStep = getNextCategoryFlowStep({
+    categorySlug: input.intent?.category_slug,
+    userMessage: input.styleMessage ?? input.userMessage,
+    hasBrand: (input.intent?.brand_filter?.length ?? 0) > 0,
+    hasPricePreference:
+      input.intent?.price_range.min != null || input.intent?.price_range.max != null,
+  });
+
+  if (nextStep) {
+    return buildFollowUpQuestion(nextStep, categoryLabel);
+  }
 
   if (categoryLabel !== "urun") {
     return `${categoryLabel} icin biraz daha detay verir misin?`;
@@ -207,13 +219,65 @@ function buildVagueResponse(input: ResponseInput): string {
 }
 
 function buildNoResultsResponse(input: ResponseInput): string {
+  const categoryLabel = resolveCategoryLabel(
+    input.intent?.category_slug,
+    input.styleMessage ?? input.userMessage
+  );
+  const nextStep = getNextCategoryFlowStep({
+    categorySlug: input.intent?.category_slug,
+    userMessage: input.styleMessage ?? input.userMessage,
+    hasBrand: (input.intent?.brand_filter?.length ?? 0) > 0,
+    hasPricePreference:
+      input.intent?.price_range.min != null || input.intent?.price_range.max != null,
+  });
+
+  if (nextStep) {
+    return `Bu aramada uygun ${categoryLabel} bulamadim. ${buildFollowUpQuestion(
+      nextStep,
+      categoryLabel
+    )}`;
+  }
+
   return `"${input.userMessage}" icin uygun urun bulamadim. Markayi ya da ozelligi biraz degistirelim mi?`;
 }
 
 function buildFallbackProductResponse(input: ResponseInput): string {
   const categoryLabel = resolveCategoryLabel(
     input.intent?.category_slug,
-    input.userMessage
+    input.styleMessage ?? input.userMessage
   );
-  return `Aramana uygun ${input.products.length} ${categoryLabel} listelendi.`;
+  return buildCountLine(input.products.length, categoryLabel);
+}
+
+function buildCountLine(count: number, categoryLabel: string): string {
+  return `Aramana uygun ${count} ${categoryLabel} listelendi.`;
+}
+
+function buildFollowUpQuestion(
+  step: FlowStepDefinition,
+  categoryLabel: string
+): string {
+  if (step.key === "brand") {
+    if (categoryLabel !== "urun") {
+      return `Hangi marka ${categoryLabel} olsun?`;
+    }
+    return "Hangi marka olsun?";
+  }
+
+  if (step.key === "budget") {
+    if (categoryLabel !== "urun") {
+      return `${categoryLabel} icin butce araligin ne olsun?`;
+    }
+    return "Butce araligin ne olsun?";
+  }
+
+  if (step.key === "storage" && categoryLabel === "laptop") {
+    return "Depolama kac GB olsun?";
+  }
+
+  if (step.key === "storage") {
+    return "Hafiza kac GB olsun?";
+  }
+
+  return step.question;
 }
