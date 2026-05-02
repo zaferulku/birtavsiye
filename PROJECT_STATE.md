@@ -79,7 +79,18 @@ KALAN P6.12 SUB-BORÇLAR:
   cascade üretti → REVERT, ayrı sprint (JsonLdProduct + ApolloState interface tasarım gerek)
 - **P6.12f-codex**: TopicFeed + profil + tavsiyeler + tavsiye/[id] (10 any + 8 hooks).
   Codex backup'tan reapply sonrası ele alınır
-- **P6.12c**: scripts/ 78 any (fix-kb-mojibake-db.ts içinde 72) — one-shot, ayrı sprint
+- **P6.12c**: scripts/ — **PERMANENT DEFER** (2026-05-02 gece audit revizesı)
+  - Beklenen: fix-kb-mojibake-db.ts 72 any (tek dosya). Gerçek: **86 any × 42 dosyaya yayılmış**
+    (fix-kb-mojibake-db.ts gerçekte 1 any; top dosyalar probe-live-prices 6, probe-cft-debug 5,
+    probe-canon-quality 5, vs. tüm probe-/find-/insert-/print-/migration scripts'ler)
+  - Yapılırsa: 8-14 saat iş + her dosya 4-fact Fact-Forcing Gate sürtünmesi (kural 20)
+  - **Karar: KAPATILMADI**. Gerekçe:
+    - scripts/ one-shot probe'lar — production runtime YOK (manuel `npx tsx` ile çağırılır)
+    - CI `continue-on-error` ile fail-soft (P6.12 sprint başında ayarlandı)
+    - Fırsat maliyeti yüksek: 8-14h yerine eval2 full re-run / P6.12g-mediamarkt /
+      Codex review daha değerli iş
+    - Yeni script disiplini (kural 23) ile organik düşecek
+  - Lint baseline 174'te dondurulur (scripts/ scope dışı sayılır)
 - src/ kalan ~50 any (chatbot strict, Codex pipeline güvenliği — dokunulmaz)
 - no-unescaped-entities (14) + no-unused-vars (33) — mekanik fix, ayrı sprint
 
@@ -1551,6 +1562,15 @@ e0b318d   fix(ui): liste kart başlığı = brand + model_family + storage + col
     >5 → revert. 1-5 → düzelt + commit. 0 → ideal. Cascade fix'leri kategori
     olarak: undefined fallback (`?? ""`), conditional render (`p.field ? ... : ""`),
     Supabase nested select bypass (`as unknown as RowType[]`).
+23. **Yeni scripts/ disiplini:** Yeni one-shot script yazılırken:
+    - `import { Database } from "@/lib/database.types"` (typed Supabase client)
+    - `createClient<Database>(URL, KEY)`
+    - Genel `any` kullanma — typed Supabase response otomatik field type sağlar
+    - forEach/map callback'lerde `(p: Database['public']['Tables']['products']['Row'])`
+      gibi kullan veya `Pick<...>` ile minimal tip
+    - Bu organik scripts/ baseline azaltma stratejisi (P6.12c permanent defer
+      gerekçesi). Eski scripts'ler yeniden çalıştırılırken fırsat bulunca
+      typed'a refactor.
 
 ### Kullanıcı için
 
