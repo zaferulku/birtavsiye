@@ -79,6 +79,33 @@ function getResponseCategorySlug(
   );
 }
 
+function getEffectiveHasBrand(input: OrchestratorInput, intent: StructuredIntent | null): boolean {
+  return (
+    (intent?.brand_filter?.length ?? 0) > 0 ||
+    (input.conversationState?.brand_filter?.length ?? 0) > 0
+  );
+}
+
+function getEffectiveHasPricePreference(
+  input: OrchestratorInput,
+  intent: StructuredIntent | null
+): boolean {
+  const state = input.conversationState as
+    | {
+        price_min?: number | null;
+        price_max?: number | null;
+      }
+    | null
+    | undefined;
+
+  return Boolean(
+    intent?.price_range.min != null ||
+      intent?.price_range.max != null ||
+      state?.price_min != null ||
+      state?.price_max != null
+  );
+}
+
 export type ChatProductResult = {
   id: string;
   title: string;
@@ -214,6 +241,8 @@ async function runKnowledgeQuery(
   const response = await generateResponse({
     userMessage: input.userMessage,
     categorySlugOverride: getResponseCategorySlug(input, null),
+    hasBrandOverride: getEffectiveHasBrand(input, null),
+    hasPricePreferenceOverride: getEffectiveHasPricePreference(input, null),
     intent: null,
     knowledgeChunks,
     products: [],
@@ -312,6 +341,8 @@ async function runStoreHelp(
   const response = await generateResponse({
     userMessage: input.userMessage,
     categorySlugOverride: getResponseCategorySlug(input, null),
+    hasBrandOverride: getEffectiveHasBrand(input, null),
+    hasPricePreferenceOverride: getEffectiveHasPricePreference(input, null),
     intent: null,
     knowledgeChunks: combined,
     products: [],
@@ -417,6 +448,8 @@ async function runFastPath(
   const response = await generateResponse({
     userMessage: input.userMessage,
     categorySlugOverride: getResponseCategorySlug(input, null),
+    hasBrandOverride: getEffectiveHasBrand(input, null),
+    hasPricePreferenceOverride: getEffectiveHasPricePreference(input, null),
     intent: null,
     knowledgeChunks: [],
     products: mapProductsForResponse(searchResult.products),
@@ -431,6 +464,8 @@ async function runFastPath(
     conversationHistory: input.conversationHistory || [],
     sb: input.sb,
     categorySlug: input.parsed?.category ?? null,
+    hasBrand: getEffectiveHasBrand(input, null),
+    hasPricePreference: getEffectiveHasPricePreference(input, null),
   });
 
   return {
@@ -542,6 +577,8 @@ async function runSlowPath(
     userMessage: input.userMessage,
     styleMessage: searchMessage,
     categorySlugOverride: getResponseCategorySlug(input, intent.category_slug),
+    hasBrandOverride: getEffectiveHasBrand(input, intent),
+    hasPricePreferenceOverride: getEffectiveHasPricePreference(input, intent),
     intent,
     knowledgeChunks,
     products: [],
@@ -555,6 +592,9 @@ async function runSlowPath(
       products: [],
       conversationHistory: input.conversationHistory || [],
       sb: input.sb,
+      categorySlug: getResponseCategorySlug(input, intent.category_slug),
+      hasBrand: getEffectiveHasBrand(input, intent),
+      hasPricePreference: getEffectiveHasPricePreference(input, intent),
     });
 
     return {
@@ -677,6 +717,8 @@ async function runSlowPath(
     userMessage: input.userMessage,
     styleMessage: searchMessage,
     categorySlugOverride: getResponseCategorySlug(input, intent.category_slug),
+    hasBrandOverride: getEffectiveHasBrand(input, intent),
+    hasPricePreferenceOverride: getEffectiveHasPricePreference(input, intent),
     intent,
     knowledgeChunks,
     products: mapProductsForResponse(finalProducts),
@@ -695,6 +737,8 @@ async function runSlowPath(
       input.conversationState?.category_slug ??
       input.parsed.category ??
       null,
+    hasBrand: getEffectiveHasBrand(input, intent),
+    hasPricePreference: getEffectiveHasPricePreference(input, intent),
   });
 
   // DEBUG: suggestions empty trace (suggestions her zaman bos donuyorsa neden?)

@@ -14,6 +14,8 @@ export type ResponseInput = {
   userMessage: string;
   styleMessage?: string | null;
   categorySlugOverride?: string | null;
+  hasBrandOverride?: boolean;
+  hasPricePreferenceOverride?: boolean;
   intent: StructuredIntent | null;
   knowledgeChunks: KnowledgeChunk[];
   products: ProductForResponse[];
@@ -186,9 +188,8 @@ function buildGuidedProductResponse(input: ResponseInput): string {
   const nextStep = getNextCategoryFlowStep({
     categorySlug: getEffectiveCategorySlug(input),
     userMessage: input.styleMessage ?? input.userMessage,
-    hasBrand: (input.intent?.brand_filter?.length ?? 0) > 0,
-    hasPricePreference:
-      input.intent?.price_range.min != null || input.intent?.price_range.max != null,
+    hasBrand: getEffectiveHasBrand(input),
+    hasPricePreference: getEffectiveHasPricePreference(input),
   });
 
   if (!nextStep) return countLine;
@@ -203,9 +204,8 @@ function buildVagueResponse(input: ResponseInput): string {
   const nextStep = getNextCategoryFlowStep({
     categorySlug: getEffectiveCategorySlug(input),
     userMessage: input.styleMessage ?? input.userMessage,
-    hasBrand: (input.intent?.brand_filter?.length ?? 0) > 0,
-    hasPricePreference:
-      input.intent?.price_range.min != null || input.intent?.price_range.max != null,
+    hasBrand: getEffectiveHasBrand(input),
+    hasPricePreference: getEffectiveHasPricePreference(input),
   });
 
   if (nextStep) {
@@ -227,9 +227,8 @@ function buildNoResultsResponse(input: ResponseInput): string {
   const nextStep = getNextCategoryFlowStep({
     categorySlug: getEffectiveCategorySlug(input),
     userMessage: input.styleMessage ?? input.userMessage,
-    hasBrand: (input.intent?.brand_filter?.length ?? 0) > 0,
-    hasPricePreference:
-      input.intent?.price_range.min != null || input.intent?.price_range.max != null,
+    hasBrand: getEffectiveHasBrand(input),
+    hasPricePreference: getEffectiveHasPricePreference(input),
   });
 
   if (nextStep) {
@@ -252,6 +251,22 @@ function buildFallbackProductResponse(input: ResponseInput): string {
 
 function getEffectiveCategorySlug(input: ResponseInput): string | null {
   return input.categorySlugOverride ?? input.intent?.category_slug ?? null;
+}
+
+function getEffectiveHasBrand(input: ResponseInput): boolean {
+  if (typeof input.hasBrandOverride === "boolean") {
+    return input.hasBrandOverride;
+  }
+  return (input.intent?.brand_filter?.length ?? 0) > 0;
+}
+
+function getEffectiveHasPricePreference(input: ResponseInput): boolean {
+  if (typeof input.hasPricePreferenceOverride === "boolean") {
+    return input.hasPricePreferenceOverride;
+  }
+  return (
+    input.intent?.price_range.min != null || input.intent?.price_range.max != null
+  );
 }
 
 function buildCountLine(count: number, categoryLabel: string): string {

@@ -38,6 +38,8 @@ export type SuggestionContext = {
   sb?: SupabaseClient | null;
   categoryId?: string | null;
   categorySlug?: string | null;
+  hasBrand?: boolean;
+  hasPricePreference?: boolean;
 };
 
 const TERMINATOR_PHRASES = [
@@ -98,9 +100,14 @@ export async function buildSuggestions(
   const nextStep = getNextCategoryFlowStep({
     categorySlug: intent?.category_slug ?? ctx.categorySlug ?? null,
     userMessage,
-    hasBrand: (intent?.brand_filter?.length ?? 0) > 0,
+    hasBrand:
+      typeof ctx.hasBrand === "boolean"
+        ? ctx.hasBrand
+        : (intent?.brand_filter?.length ?? 0) > 0,
     hasPricePreference:
-      intent?.price_range.min != null || intent?.price_range.max != null,
+      typeof ctx.hasPricePreference === "boolean"
+        ? ctx.hasPricePreference
+        : intent?.price_range.min != null || intent?.price_range.max != null,
   });
 
   if (!nextStep) return null;
