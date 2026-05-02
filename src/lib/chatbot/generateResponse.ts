@@ -136,7 +136,14 @@ function buildPromptMessages(input: ResponseInput): ChatMessage[] {
 function formatIntentContext(intent: StructuredIntent): string {
   const lines: string[] = ["NIYET:"];
 
-  if (intent.category_slug) lines.push(`- kategori: ${intent.category_slug}`);
+  if (intent.category_slug) {
+    // P6.7: LLM prompt'una full-path slug yerine display label geçir.
+    // resolveCategoryLabel leaf map + heuristic ile insan-okunur ad döner
+    // ("elektronik/telefon/akilli-telefon" → "telefon"). LLM response'da
+    // slug echo riski kaldırılır.
+    const categoryLabel = resolveCategoryLabel(intent.category_slug, "");
+    lines.push(`- kategori: ${categoryLabel}`);
+  }
   if (intent.semantic_keywords.length > 0) {
     lines.push(`- anahtar: ${intent.semantic_keywords.join(", ")}`);
   }
