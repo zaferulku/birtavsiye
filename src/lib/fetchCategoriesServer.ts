@@ -24,15 +24,28 @@ export type ServerCat = {
 };
 
 export async function fetchCategoriesServer(): Promise<ServerCat[]> {
-  const { data, error } = await supabaseAdmin
-    .from("categories")
-    .select("id, slug, parent_id")
-    .eq("is_active", true)
-    .order("slug");
-
-  if (error) {
-    console.warn("[fetchCategoriesServer] DB fetch fail:", error.message);
-    return [];
+  // P6.27: Supabase default 1000 row limit -> Header SSR catMap eksik dolup
+  // smart tag-resolve fail oluyordu (Pioneer/iPhone parent sayfaya dusuyordu).
+  // Pagination loop ile tum satirlari topla.
+  const all: ServerCat[] = [];
+  let page = 0;
+  const PAGE_SIZE = 1000;
+  while (true) {
+    const { data, error } = await supabaseAdmin
+      .from("categories")
+      .select("id, slug, parent_id")
+      .eq("is_active", true)
+      .order("slug")
+      .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
+    if (error) {
+      console.warn(`[fetchCategoriesServer] page ${page} fail:`, error.message);
+      return all;
+    }
+    if (!data || data.length === 0) break;
+    all.push(...(data as ServerCat[]));
+    if (data.length < PAGE_SIZE) break;
+    page++;
+    if (page > 50) break; // safety
   }
-  return (data ?? []) as ServerCat[];
+  return all;
 }

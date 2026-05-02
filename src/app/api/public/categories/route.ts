@@ -30,30 +30,47 @@ async function withTimeout<T>(thenable: PromiseLike<T>, label: string): Promise<
   ]);
 }
 
-export async function GET() {
-  const res = await withTimeout(
-    supabaseAdmin
+async function fetchAllCategories(): Promise<CategoryRow[] | null> {
+  // P6.27: Supabase default 1000 row limit — DB 1683+ kategori (Migration 040+041
+  // sonrasi). Pagination loop ile tum satirlari topla. Bu duzeltme yapilmadan
+  // Header smart tag-resolve eski catMap (1000 satir) ile calisamiyor; yeni
+  // leaf'ler catMap'te yok -> Pioneer/iPhone gibi tag'ler parent sayfaya
+  // dusuyordu (kullanici raporu).
+  const all: CategoryRow[] = [];
+  let page = 0;
+  const PAGE_SIZE = 1000;
+  while (true) {
+    const { data, error } = await supabaseAdmin
       .from("categories")
       .select("id, slug, parent_id, name, icon")
       .neq("slug", "siniflandirilmamis")
-      .order("name") as PromiseLike<{ data: CategoryRow[] | null; error: { message: string } | null }>,
-    "categories",
-  );
+      .order("name")
+      .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
+    if (error) {
+      console.warn(`[api/public/categories] page ${page} err:`, error.message);
+      return null;
+    }
+    if (!data || data.length === 0) break;
+    all.push(...data);
+    if (data.length < PAGE_SIZE) break;
+    page++;
+    if (page > 50) break; // safety: 50k limit
+  }
+  return all;
+}
 
-  if (!res) {
-    // Timeout — boş liste döndür ki build düşmesin; client retry yapar.
+export async function GET() {
+  const data = await withTimeout(fetchAllCategories(), "categories");
+
+  if (!data) {
     return NextResponse.json(
       { categories: [] },
       { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" } },
     );
   }
 
-  if (res.error) {
-    return NextResponse.json({ error: res.error.message }, { status: 500 });
-  }
-
   return NextResponse.json(
-    { categories: res.data ?? [] },
+    { categories: data },
     { headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200" } },
   );
 }
