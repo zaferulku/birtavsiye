@@ -1,13 +1,124 @@
-# birtavsiye.net — Project State v15.4
+# birtavsiye.net — Project State v15.5
 
 > **Bu dosya tek kaynak gerçek.** Yeni sohbet/oturum başlattığınızda
 > bu dosyayı Claude veya Claude Code'a verin — tüm bağlamı 30 saniyede alır.
 
-**Son güncelleme:** 2026-05-02 v15.4 (gece geç — P6.3-B Migration 034 (9 sub-leaf) + P6.12 sprint final 74 fix toplam + Cron baseline ✓ + Codex paralel koordinasyon)
+**Son güncelleme:** 2026-05-03 v15.5 (erken — Phase 6 ek borç temizliği: 7 borç DONE (P6.14/15/17/18/18b/19 + pre-existing eslint) + Migration 035-036 (VACUUM serisi) + 3 yeni borç (P6.15b/P6.18b-rt/P6.19b))
 
 ---
 
-## 🔴 GÜNCEL DURUM (2 May 2026 gece geç — v15.4 paket)
+## 🔴 GÜNCEL DURUM (3 May 2026 erken — v15.5 paket)
+
+v15.4 sonrası ek 4-5 saatlik sprint. Cron baseline 24h sağlık check'inde
+3 pg_stat anomalisi tespit edildi (stores/auth.users/knowledge_chunks),
+hepsi audit edildi + 2'si VACUUM ile düzeltildi. Eval2 ile chatbot
+katmanlarında 3 ek fix uygulandı.
+
+### Bu oturumda kapatılan ek borçlar (7):
+
+**Cron baseline 24h pg_stat anomali serisi:**
+- ✅ **P6.14** `stores` VACUUM (Migration 035, `e949390`):
+  - n_live_tup=0 (yanlış) → 9 (gerçek 9 mağaza, 2 aktif: MediaMarkt 6422 + PttAVM 2876)
+  - VACUUM (FULL, ANALYZE) Studio apply, lock <100ms
+- ✅ **P6.15** `auth.users` audit (doc-only, `cd2866d`, Senaryo B):
+  - n_live_tup=0 (yanlış) → 3 gerçek aktif user (test@/test1@/test1@test1)
+  - 0 silinmiş, 0 banlı; public.profiles cross-check 1 match (test@)
+  - **auth.\* Supabase managed** → VACUUM/ANALYZE/GRANT yapma yetkimiz YOK
+  - pg_stat reporting anomali, production etkisi sıfır (auth flow RLS + service_role)
+- ✅ **P6.17** `knowledge_chunks` VACUUM (Migration 036, `703f1cf`):
+  - n_live_tup=0 (yanlış) → 121 chunk (PROJECT_STATE belgelenen ~141'e yakın)
+  - chatbot RAG aktif (4 call site: chatOrchestrator + retrieveKnowledge)
+  - HNSW 768-dim vector index ~1.8 MB rebuild, lock <500ms
+  - DROP YASAK — kritik production veri sağlıklı
+
+**Chatbot pipeline iyileştirmeleri (eval2 dryrun yoluyla):**
+- ✅ **P6.18** `state.category_slug` raw flat slug fallback kaldırıldı (`92ab818`):
+  - chat/route.ts:755 `resilientParsedCategory` fallback chain genişletildi
+  - State'e `erkek-giyim-ust` (corrupt flat) yerine null veya previous yazılır
+- ✅ **P6.18b** compound flat slug resolve (`626b570`):
+  - `findCanonicalSlugSync` chain'ine 5. katman: compound-path match
+  - Input `-` token'ları DB segments'inde full coverage arar
+  - Çoklu match: P6.11 sticky tie-break OR en kısa slug fallback
+  - `erkek-giyim-ust` → `moda/erkek-giyim/ust` ✓
+- ✅ **P6.19** parseQuery price extraction (`930f946`):
+  - 5 yeni regex katmanı: "X bine kadar", "max X TL", "min X TL", vs.
+  - 'bin' çarpanı handling (X bin → X×1000)
+  - Curl single-turn 6/6 PASS, eval2 multi-turn'de mergeIntent katmanı bug'ı (P6.19b)
+
+**Pre-existing eslint** (önceden kapatılmıştı, doc strikethrough `e993d46`):
+- sync/route.ts:9 (categorizeFromTitle import) ve :164 (effectiveCategoryId const) zaten P6.12 sprint döneminde kapatılmıştı
+
+### YENİ BORÇLAR (audit'lerden ortaya çıkan, 3):
+
+- **🆕 P6.15b** — Orphan auth users (audit P6.15 sonucu):
+  - test1@test.com + test1@test1.com `auth.users`'ta var ama `public.profiles`'ta YOK
+  - Signup-profile create flow yarım kalmış (test signup'lar muhtemelen)
+  - Karar gerek: cleanup (auth.users delete) vs flow audit (signup hook fix)
+- **🆕 P6.18b runtime** — token-set leaf compound gap:
+  - findCanonicalSlugSync compound-path katmanı eklendi (sync resolve OK)
+  - Ama `validateOrFuzzyMatchSlug` async path runtime'da Token-set katmanı hâlâ leaf-only
+  - Compound input + leaf-only fail kombinasyonu nadir ama gerçek
+- **🆕 P6.19b** — mergeIntent price dimension detection (Codex pipeline):
+  - chat/route.ts parseQuery doğru extract ediyor (curl 6/6 PASS)
+  - Ama mergeIntent (conversationState.ts) `no_new_dims_keep` action ile
+    rawIntent.price_max=400'i drop ediyor → state'e yazılmıyor
+  - Lokasyon: src/lib/chatbot/conversationState.ts (Codex pipeline)
+  - Süre tahmin: ~30dk
+
+### Eval2 ilerleme:
+
+| Aşama | PASS | Detay |
+|-------|------|-------|
+| P6.1 baseline | 0/5 | is_leaf bug (Migration 030 öncesi) |
+| P6.1+8 sonra | 3/5 | is_leaf fix + fixture migrate |
+| P6.18 sonra | 3/5 | Dialog 4 fail tipi: corrupt flat → null |
+| P6.18b sonra | 3/5 | Dialog 4 turn 0 düzeldi (state.category_slug ✓), fail turn 6'ya kaydı |
+| P6.19 sonra | 3/5 | parseQuery layer doğru, mergeIntent katmanı drop ediyor (P6.19b) |
+
+**Kalan FAIL:**
+- Dialog 3 turn 0 — `supermarket/kahve` 0 ürün (DB content gap, P6.5e — DB scrape gerek)
+- Dialog 4 turn 6 — price_max state null (P6.19b — mergeIntent fix)
+
+### Cron baseline 24h sonuç (önceden v15.4'te):
+- price_history 24h: 525 satır ✓
+- Cache hit %100, connections 24, dead tup düşük ✓
+- 29 Apr outage tekrar riski YOK
+- Bonus: 3 pg_stat anomalisi (stores/auth/knowledge — yukarıda işlendi)
+
+### Production durumu:
+- Working dir CLEAN
+- TSC + build clean (tüm commit'lerde)
+- CI yeşil (lint fail-soft, baseline 148 — değişmedi)
+- 5 yeni Migration (031, 032, 033, 034, 035, 036) production'da
+- Site trafik almıyor
+
+### Bekleyen İşler (v15.5 sonrası):
+
+**🟠 ORTA — Kalan Phase 6:**
+- **P6.3-A** — 45 NAV dup dedup (Codex sprint sonrası, ~2.5h)
+- **P6.3-C** — flat slug shortcut'lar full-path'e (Codex sprint sonrası, ~30dk)
+- **P6.5e** — `supermarket/kahve` content gap (DB scrape entegrasyon gerek)
+- **P6.12g-product-narrow** — mediamarkt.mts cheerio extractor refactor (~1h)
+- **P6.12f-codex** — Codex 4 backup reapply sonrası 18 any + 8 hooks
+- **P6.15b** — orphan auth users (test1@/test1@test1, profiles yok)
+- **P6.18b runtime** — token-set leaf compound gap (async path)
+- **P6.19b** — mergeIntent price dimension detection (Codex pipeline)
+- **P6.16** — backup_20260430_categories + backup_20260422_products silme
+
+**🟡 DİĞER:**
+- Eval2 full re-run (LLM quota varsa, baseline 200 dialog)
+- Codex 4 backup reapply takip (P6.12f-codex'i unlock eder)
+
+**🟢 OPSIYONEL (MVP sonrası):**
+- listings.in_stock BOOLEAN DROP (6 ay sonra)
+- raw_offers ingestion (Migration 028 staging)
+- H16 Google AI dedup, H19 next-auth v5
+- Pro plan iptal kararı (29 May 2026)
+- Hosting değerlendirme (3-6 ay)
+
+---
+
+## 🔵 ÖNCEKİ DURUM (2 May 2026 gece geç — v15.4 paket)
 
 v15.3 commit'inden sonra ek 4-5 saatlik sprint. Phase 6 fonksiyonel
 borç havuzu büyük ölçüde kapatıldı; kalan iş Codex sprint koordinasyonuna
@@ -1392,6 +1503,14 @@ ProductDetailShell.tsx ortak nokta — uyumlu.
   is_leaf=false oldu. Header.tsx 9 entry slug update minimal scope (Codex
   paralel sprint çakışması sıfır).
 
+**v15.5'te tamamlandı (VACUUM serisi):**
+- Migration **035** ✅ (2026-05-02 gece geç): `stores` VACUUM (P6.14).
+  pg_stat anomalisi (n_live_tup=0, gerçek 9 mağaza). VACUUM (FULL,
+  ANALYZE) Studio apply. NOT: VACUUM transaction-safe değil, BEGIN/COMMIT YOK.
+- Migration **036** ✅ (2026-05-02 gece geç): `knowledge_chunks` VACUUM
+  (P6.17). pg_stat anomalisi (n_live_tup=0, gerçek 121 chunk). HNSW
+  768-dim vector index (~1.8 MB) rebuild, lock <500ms. Studio apply.
+
 ### Knowledge Base
 12 doküman / 141 chunk (`docs/knowledge/`):
 parfum_notalari (10), cilt_bakimi (11), makyaj (12), moda_ust_giyim (13),
@@ -1483,6 +1602,14 @@ anne_bebek (11) = **141**
 ## ✅ COMMIT GEÇMİŞİ (son 30)
 
 ```
+703f1cf   feat(db): Migration 036 — P6.17 knowledge_chunks VACUUM (121 chunk)
+cd2866d   docs(state): P6.15 auth.users audit kapatıldı + P6.14 done strikethrough
+930f946   fix(chatbot): P6.19 — parseQuery price extraction pattern genişletme
+626b570   fix(chatbot): P6.18b — compound flat slug resolve (validateOrFuzzyMatchSlug)
+92ab818   fix(chatbot): P6.18 — state.category_slug raw flat slug fallback kaldırıldı
+e949390   feat(db): Migration 035 — P6.14 stores VACUUM FULL ANALYZE
+e993d46   docs(state): pre-existing eslint sync/route.ts entry strikethrough
+d7f7774   docs(state): v15.4 — P6.3-B + P6.12 sprint final + Cron sağlık
 a809558   feat(db): P6.3-B — Migration 034 + 3 grup sub-leaf (9 yeni leaf)
 ab5444e   (Codex) feat: add modular search plans and header autocomplete
 df44449   (Codex) refactor: modularize search filters sidebar
@@ -1699,6 +1826,30 @@ e0b318d   fix(ui): liste kart başlığı = brand + model_family + storage + col
     - Canlı örnek (P6.3-B): Header'da 9 entry × 2 satır slug update,
       Codex 2 commit (search filter modularize + header autocomplete) ile
       paralel push edildi, çakışma SIFIR.
+25. **Eval-driven katmanlı debug:** Bir eval2 fail mesajı kompozit olabilir
+    (corrupt state vs missing resolve vs merge logic). Fix yapınca
+    fail TURN'i veya MESSAGE'ı değişebilir — bu ilerleme göstergesi:
+    - Önce: Dialog 4 turn 0 fail (state.category_slug=null)
+    - Düzeltme sonra: Dialog 4 turn 6 fail (price_max=null)
+    - Aynı dialog farklı turn'a kayma = önceki katman düzeldi, yeni katman
+      ortaya çıktı. PASS rate aynı kalsa da fix legitimate.
+    Strateji: P6.18 (state) → P6.18b (resolve) → P6.19 (parse) → P6.19b
+    (merge) zinciri. Her katman ayrı borç + ayrı commit.
+26. **pg_stat anomalisi pattern (3 örnek):**
+    Küçük tablolar autovacuum threshold'a ulaşmaz (default n_dead_tup>50
+    + %20 dead). Cron baseline'da `n_live_tup=0` görüldüğünde:
+    1. **Önce gerçek `COUNT(*)` ile doğrula** — eğer veri var, raporlama
+       anomali (autovacuum hiç çalışmamış)
+    2. **Eğer veri var + public schema** → VACUUM (FULL, ANALYZE) Migration
+       olarak ekle (Studio'da manuel apply, BEGIN/COMMIT YOK)
+    3. **Eğer auth.\* schema** → Supabase managed, VACUUM/ANALYZE/GRANT
+       yapma yetkisi YOK, doc-only kapatma
+    Pattern referans:
+    - Migration 035 (`stores` VACUUM, P6.14)
+    - Migration 036 (`knowledge_chunks` VACUUM, P6.17)
+    - P6.15 (`auth.users` doc-only)
+    Production etkisi genelde sıfır — pg_stat raporlama hatası, RPC/SELECT
+    direkt tabloya bakar; ama vector similarity için ANALYZE faydalı.
 
 ### Kullanıcı için
 
@@ -1838,6 +1989,7 @@ yeni kategoriler ekler. Tur 2 fixture taxonomy gereği.
 | 2026-05-02 | v15.3 — Akşam oturumu, Phase 6 13 borç kapatıldı: P6.4 (tavsiye/[id]/layout anon→admin), P6.6 (Migration 032 is_leaf trigger), P6.7 (LLM response leaf-only display), P6.8 (120 fixture unmatched → 0 + 564/564 resolved + Türkçe ascii-norm + 110+ MANUAL_OVERRIDE), P6.13b (Migration 033 — 30 IoT ürün re-categorization 24+6). P6.5 KAPATMA (audit only, dokunulmadı, Codex pipeline riski). P6.12 partial (8/254 lint fix; html-link 3 + set-state 1 + img 2 + prefer-const auto-fix). DEFERRED: P6.3 NAV dup converge (53 dup, scope mega paket dışı, Phase 7). NOT: 4 Codex UI dosyası uncommitted (TopicFeed/profil/tavsiye/tavsiyeler — gradient/badge UI iyileştirme), v15.4'te işlenir. Yeni davranış kuralı 20 (Bulk lint fix gate sürtünmesi). | Claude |
 | 2026-05-02 | v15.3 (gece extension) — P6.12 lint hijyen tam sprint: 5 commit, 47 fix. Aşama 1+2 partial (8) + Aşama 3 admin hooks (4) + Aşama 4 G1 scrapers/live any (11) + Aşama 4 G3 partial Header+live-prices (2) + Aşama 4 G2 admin+karsilastir any (22). Lint 223→174 (%22 azalma), no-explicit-any 138→107 (%22 azalma). DEFERRED sub-borçlar: P6.12g-mediamarkt (TS2339 cascade revert, JSON-LD interface tasarım gerek), P6.12f-codex (Codex reapply sonrası), P6.12c scripts/ (one-shot). Codex backup'ta 4 forum/profil dosya + ara/page.tsx (store-source labels) yeni değişiklik uncommitted. Yeni davranış kuralları 21 (TS2339 cascade threshold >5 → revert) + 22 (cascade kontrol her edit sonrası). | Claude |
 | 2026-05-02 | v15.4 — Gece geç. Ek 4-5h sprint. P6.12 sprint final 3 ek commit (49 fix): P6.12g mediamarkt JSON-LD interface (mediamarkt-types.mts yeni 118 satır + 6 fix, 1 sub-borç P6.12g-product-narrow), P6.12 mekanik combo (14 unescaped + 7 unused), P6.12c permanent defer (86 any × 42 dosya scripts/, audit revize). P6.3-B Migration 034 9 yeni sub-leaf (bilesenler/parca-cevre-veri, parfum/kadin-erkek-unisex, konsol/aksesuar-vr-pc) + Header.tsx 9 entry slug update minimal scope. Cron baseline 24h sağlık check ✓ (cache %100, conn 24, dead tup düşük; bonus stores 100% dead → P6.14 yeni borç). Codex paralel sprint 2 commit (search filter modularize + header autocomplete) + ara/page.tsx commit. Yeni davranış kuralı 24 (paralel Codex sprint minimal Header diff). DEFERRED: P6.3-A 45 dup dedup, P6.3-C flat slug (Codex sprint sonrası), P6.12g-product-narrow, P6.12f-codex (backup reapply sonrası), P6.14 stores dead tup. Total: ~9-10 commit gece, lint baseline 174→148 (-26 ek). | Claude |
+| 2026-05-03 | v15.5 — Erken (gece geç devamı). v15.4 sonrası 4-5h ek sprint. KAPATILAN (7): P6.14 stores VACUUM (Migration 035), P6.15 auth.users audit doc-only (Senaryo B, Supabase managed), P6.17 knowledge_chunks VACUUM (Migration 036), P6.18 state.category_slug raw flat fallback kaldırıldı, P6.18b compound flat resolve (compound-path match katmanı), P6.19 parseQuery price extraction (5 yeni regex), pre-existing eslint sync/route.ts strikethrough (zaten kapalıydı). YENİ BORÇLAR (3): P6.15b orphan auth users (test1@/test1@test1 profiles yok), P6.18b runtime token-set leaf compound gap (async path), P6.19b mergeIntent price dimension detection (Codex pipeline). Eval2 ilerleme: 3/5 PASS aynı (kompozit fail tipi degradation: corrupt → null → mergeIntent drop), Dialog 4 turn 0 katmanları düzeldi. Yeni davranış kuralları 25 (eval-driven katmanlı debug) + 26 (pg_stat anomalisi pattern, 3 örnek). 5 yeni Migration toplam (031-036). | Claude |
 
 ---
 
