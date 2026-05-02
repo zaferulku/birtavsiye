@@ -88,6 +88,49 @@ if (byDepth[3].length > 50) console.log('   ...', byDepth[3].length - 50, 'daha'
 console.log('\n  Deep (depth 4+):', byDepth[4].length);
 byDepth[4].slice(0, 20).forEach(s => console.log('   ', s));
 
+// === WEAK-LINK AUDIT: bir cat'in tüm sub'ları cat slug'una mı gidiyor? ===
+// "Erkek Spor Giyim" gibi sub'lar parent slug'ına işaret ediyorsa kullanıcı
+// sub'a tıklayınca parent sayfası açılıyor (UX bug).
+//
+// NAV yapısını parse et: cat slug + sub slug listesi
+const navStructure = [];
+const catBlockRe = /label:\s*"([^"]+)",\s*slug:\s*"([^"]+)",\s*icon:[^,]+,\s*subs:\s*\[([\s\S]*?)\n\s*\]/g;
+let m;
+while ((m = catBlockRe.exec(header)) !== null) {
+  const [, catLabel, catSlug, subsBlock] = m;
+  const subRe = /\{\s*label:\s*"([^"]+)",\s*slug:\s*"([^"]+)"/g;
+  const subs = [];
+  let sm;
+  while ((sm = subRe.exec(subsBlock)) !== null) {
+    subs.push({ label: sm[1], slug: sm[2] });
+  }
+  navStructure.push({ catLabel, catSlug, subs });
+}
+
+const weakLinks = [];
+const partialWeak = [];
+for (const cat of navStructure) {
+  const allSame = cat.subs.length > 0 && cat.subs.every(s => s.slug === cat.catSlug);
+  const someSame = cat.subs.filter(s => s.slug === cat.catSlug);
+  if (allSame) {
+    weakLinks.push(cat);
+  } else if (someSame.length > 0) {
+    partialWeak.push({ ...cat, weakSubs: someSame });
+  }
+}
+
+console.log('\n=== WEAK LINKS (cat.slug == sub.slug, tüm sub\'lar parent\'a gidiyor) ===');
+weakLinks.forEach(c => {
+  console.log(`\n  cat: "${c.catLabel}" -> ${c.catSlug}`);
+  c.subs.forEach(s => console.log(`    sub: "${s.label}" -> ${s.slug}`));
+});
+
+console.log('\n=== PARTIAL WEAK (bazı sub\'lar parent\'a, bazıları değil) ===');
+partialWeak.forEach(c => {
+  console.log(`\n  cat: "${c.catLabel}" -> ${c.catSlug}`);
+  c.weakSubs.forEach(s => console.log(`    weak sub: "${s.label}" -> ${s.slug}`));
+});
+
 // JSON çıktı dosyası — fix script kullanabilir
 import('node:fs').then(({ writeFileSync }) => {
   const report = {
@@ -95,6 +138,8 @@ import('node:fs').then(({ writeFileSync }) => {
     leafMatch: leafMatch.map(e => ({ flat: e.nav, full: e.db })),
     broken,
     orphanDb,
+    weakLinks: weakLinks.map(c => ({ cat: c.catLabel, slug: c.catSlug, subs: c.subs })),
+    partialWeak: partialWeak.map(c => ({ cat: c.catLabel, slug: c.catSlug, weakSubs: c.weakSubs })),
   };
   writeFileSync('./scripts/.nav-audit.json', JSON.stringify(report, null, 2));
   console.log('\nAudit JSON: scripts/.nav-audit.json');
