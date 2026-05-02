@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import SearchFiltersSidebar, {
   type SearchSidebarSection,
 } from "../components/arama/SearchFiltersSidebar";
+import { orderSearchFilterSections } from "../components/arama/searchFilterPlans";
 import Footer from "../components/layout/Footer";
 import Header from "../components/layout/Header";
 import StoreLogo from "../components/ui/StoreLogo";
@@ -298,10 +299,10 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
         .filter((value): value is string => Boolean(value))
     ),
   ];
-  const sidebarSections: SearchSidebarSection[] = [];
+  const sectionsByKey: Partial<Record<"storage" | "related" | "active-filters" | "brands", SearchSidebarSection>> = {};
 
   if (storages.length > 1) {
-    sidebarSections.push({
+    sectionsByKey.storage = {
       id: "storage",
       kind: "pills",
       title: "Kapasite",
@@ -320,11 +321,11 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
           onToggle: () => setSelectedStorage(storage),
         })),
       ],
-    });
+    };
   }
 
   if (relatedSuggestions.length > 0) {
-    sidebarSections.push({
+    sectionsByKey.related = {
       id: "related",
       kind: "checkbox",
       title: "Ilgili Alt Kategoriler",
@@ -353,7 +354,7 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
           },
         };
       }),
-    });
+    };
   }
 
   const activeFilterItems = [
@@ -385,16 +386,16 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
   ];
 
   if (activeFilterItems.length > 0) {
-    sidebarSections.push({
+    sectionsByKey["active-filters"] = {
       id: "active-filters",
       kind: "chips",
       title: "Aktif filtreler",
       items: activeFilterItems,
-    });
+    };
   }
 
   if (brands.length > 1) {
-    sidebarSections.push({
+    sectionsByKey.brands = {
       id: "brands",
       kind: "checkbox",
       title: "Marka",
@@ -418,8 +419,10 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
               : [...current, brand ?? ""]
           ),
       })),
-    });
+    };
   }
+
+  const sidebarSections = orderSearchFilterSections(initialQuery, sectionsByKey);
 
   const filteredResults = results
     .filter((product) => selectedBrands.length === 0 || selectedBrands.includes(product.brand?.trim() ?? ""))

@@ -5,6 +5,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../../../lib/supabase";
 import { findCanonicalSlugSync } from "@/lib/chatbot/categoryValidation";
+import HeaderSearchBar from "./HeaderSearchBar";
 
 // NAV constant'ı eski flat slug'lar barındırıyor; DB hierarchik path'e geçti.
 // Tekrarlı warn'ı önlemek için per-session bir kez log'la.
@@ -649,9 +650,8 @@ export default function Header() {
   const catById = useMemo(() => new Map(cats.map(c => [c.id, c])), [cats]);
   const linkFor = (slug: string, q?: string) => hierUrl(slug, catMap, catById, q);
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (query.trim()) router.push("/ara?q=" + encodeURIComponent(query));
+  const submitSearchQuery = (value: string) => {
+    if (value.trim()) router.push("/ara?q=" + encodeURIComponent(value.trim()));
   };
 
   const displayName =
@@ -711,17 +711,7 @@ export default function Header() {
             </div>
           </Link>
 
-          <form onSubmit={handleSearch} className="flex-1 flex items-center bg-gray-100 rounded-xl px-3 md:px-4 gap-2 md:gap-3 h-11 focus-within:bg-white transition-all border border-transparent focus-within:border-[#E8460A]/40 focus-within:ring-2 focus-within:ring-[#E8460A]/10 min-w-0">
-            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-[#E8460A] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-            </svg>
-            <input type="text" value={query} onChange={e => setQuery(e.target.value)}
-              placeholder="Ürün, marka veya kategori ara"
-              className="flex-1 bg-transparent text-sm outline-none text-gray-800 placeholder:text-gray-400 min-w-0" />
-            {query && (
-              <button type="button" onClick={() => setQuery("")} className="text-gray-400 hover:text-gray-600 text-xl leading-none flex-shrink-0 min-w-11 min-h-11 flex items-center justify-center">×</button>
-            )}
-          </form>
+          <HeaderSearchBar query={query} onQueryChange={setQuery} onSubmitQuery={submitSearchQuery} />
 
           <div className="flex items-center gap-3 md:gap-5">
             <div className="relative" onMouseEnter={openProfile} onMouseLeave={closeProfile}>
