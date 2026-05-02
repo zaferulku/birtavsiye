@@ -60,21 +60,59 @@ type PriceHealthResponse = {
   };
 };
 
+// P6.12: Admin internal panel için minimal Supabase row shape'leri.
+// Strict tipi yerine erişilen field'ları opsiyonel/unknown bırakmak admin'in
+// tablodan tabloya değişen JSON-LD spec yapısına uyumlu olur.
+type AdminProductRow = {
+  id: string;
+  title?: string;
+  brand?: string | null;
+  slug?: string;
+  created_at?: string;
+};
+type AdminCategoryRow = {
+  id: string;
+  slug: string;
+  name: string;
+};
+type AdminStoreRow = {
+  id: string;
+  name: string;
+  url?: string | null;
+};
+type AdminPriceRow = {
+  id: string;
+  product_id?: string;
+  price: number | string;
+  stores?: { name?: string; url?: string };
+  products?: { title?: string };
+};
+type AdminCsvRow = Record<string, string | undefined> & { category?: string };
+type IcecatSpecGroup = {
+  Name?: string;
+  LocalName?: string;
+  Features?: Array<{
+    Feature?: { Name?: { Value?: string } };
+    LocalValue?: string;
+    Value?: string;
+  }>;
+};
+
 export default function AdminPanel() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [products, setProducts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [products, setProducts] = useState<AdminProductRow[]>([]);
+  const [categories, setCategories] = useState<AdminCategoryRow[]>([]);
   const [activeTab, setActiveTab] = useState("urunler");
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
   // Fiyat yönetimi
-  const [stores, setStores] = useState<any[]>([]);
-  const [allPrices, setAllPrices] = useState<any[]>([]);
+  const [stores, setStores] = useState<AdminStoreRow[]>([]);
+  const [allPrices, setAllPrices] = useState<AdminPriceRow[]>([]);
   const [priceProductId, setPriceProductId] = useState("");
-  const [priceProductPrices, setPriceProductPrices] = useState<any[]>([]);
+  const [priceProductPrices, setPriceProductPrices] = useState<AdminPriceRow[]>([]);
   const [storeName, setStoreName] = useState("");
   const [storeUrl, setStoreUrl] = useState("");
   const [priceValue, setPriceValue] = useState("");
@@ -88,7 +126,7 @@ export default function AdminPanel() {
 
   // CSV import
   const [csvText, setCsvText] = useState("");
-  const [csvParsed, setCsvParsed] = useState<any[]>([]);
+  const [csvParsed, setCsvParsed] = useState<AdminCsvRow[]>([]);
   const [csvError, setCsvError] = useState("");
   const [csvImporting, setCsvImporting] = useState(false);
   const [csvResult, setCsvResult] = useState("");
@@ -105,7 +143,7 @@ export default function AdminPanel() {
   const [brand, setBrand] = useState("");
   const [description, setDescription] = useState("");
   const [imageUrl, setImageUrl] = useState("");
-  const [specs, setSpecs] = useState<any[]>([]);
+  const [specs, setSpecs] = useState<IcecatSpecGroup[]>([]);
   const [categorySlug, setCategorySlug] = useState("telefon");
   const [icecatProductId, setIcecatProductId] = useState("");
 
@@ -423,12 +461,13 @@ export default function AdminPanel() {
     const auth = await getAuth();
     if (!auth) { setCsvError("Oturum yok"); setCsvImporting(false); return; }
     for (const row of csvParsed) {
-      const cat = categories.find(c => c.slug === row.category || c.name.toLowerCase() === row.category.toLowerCase());
+      const rowCategory = row.category ?? "";
+      const cat = categories.find(c => c.slug === rowCategory || c.name.toLowerCase() === rowCategory.toLowerCase());
       const res = await fetch("/api/admin/products", {
         method: "POST", headers: auth,
         body: JSON.stringify({
           title: row.title,
-          slug: makeSlug(row.title),
+          slug: makeSlug(row.title ?? ""),
           brand: row.brand,
           description: row.description || null,
           image_url: row.image_url || null,
@@ -500,7 +539,7 @@ export default function AdminPanel() {
                   <div className="text-sm font-medium">{p.title}</div>
                   <div className="text-xs text-gray-400">{p.brand} — {p.slug}</div>
                 </div>
-                <div className="text-xs text-gray-400">{new Date(p.created_at).toLocaleDateString("tr-TR")}</div>
+                <div className="text-xs text-gray-400">{p.created_at ? new Date(p.created_at).toLocaleDateString("tr-TR") : ""}</div>
                 <div className="flex gap-2">
                   <a href={"/urun/" + p.slug} target="_blank"
                     className="text-xs text-[#E8460A] border border-[#E8460A] rounded-lg px-2 py-1 hover:bg-orange-50 transition-all">
@@ -621,10 +660,10 @@ export default function AdminPanel() {
                   <div className="col-span-2">
                     <label className="text-xs text-gray-500 mb-2 block">Teknik Özellikler ({specs.length} grup)</label>
                     <div className="bg-gray-50 rounded-xl p-3 max-h-48 overflow-y-auto text-xs text-gray-600 space-y-2">
-                      {specs.slice(0, 3).map((group: any, i: number) => (
+                      {specs.slice(0, 3).map((group: IcecatSpecGroup, i: number) => (
                         <div key={i}>
                           <div className="font-semibold text-gray-700 mb-1">{group.LocalName || group.Name}</div>
-                          {group.Features?.slice(0, 4).map((f: any, j: number) => (
+                          {group.Features?.slice(0, 4).map((f, j: number) => (
                             <div key={j} className="flex gap-2 pl-2">
                               <span className="text-gray-400">{f.Feature?.Name?.Value}:</span>
                               <span>{f.LocalValue || f.Value}</span>
@@ -899,7 +938,7 @@ export default function AdminPanel() {
                     </div>
                   ) : (
                     <div className="border border-gray-100 rounded-xl overflow-hidden">
-                      {priceProductPrices.map((p: any, i: number) => (
+                      {priceProductPrices.map((p, i: number) => (
                         <div key={p.id} className={`flex items-center gap-3 px-4 py-3 border-b border-gray-50 last:border-0 ${i % 2 === 0 ? "bg-white" : "bg-gray-50/40"}`}>
                           <div className="flex-1">
                             <div className="text-sm font-medium">{p.stores?.name}</div>
@@ -973,10 +1012,10 @@ export default function AdminPanel() {
                 <div className="text-sm text-gray-400 text-center py-8">Henüz fiyat eklenmemiş</div>
               ) : (
                 <div className="border border-gray-100 rounded-xl overflow-hidden max-h-96 overflow-y-auto">
-                  {allPrices.map((p: any, i: number) => (
+                  {allPrices.map((p, i: number) => (
                     <div key={p.id} className={`flex items-center gap-3 px-4 py-3 border-b border-gray-50 last:border-0 ${i % 2 === 0 ? "bg-white" : "bg-gray-50/40"}`}>
                       <div className="flex-1">
-                        <div className="text-xs font-medium text-gray-700">{(p.products as any)?.title}</div>
+                        <div className="text-xs font-medium text-gray-700">{p.products?.title}</div>
                         <div className="text-xs text-gray-400">{p.stores?.name}</div>
                       </div>
                       <div className="font-bold text-sm">{Number(p.price).toLocaleString("tr-TR")} TL</div>

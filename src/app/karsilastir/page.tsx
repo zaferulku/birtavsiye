@@ -19,7 +19,7 @@ type ComparisonProduct = {
   variant_storage: string | null;
   variant_color: string | null;
   image_url: string | null;
-  specs: Record<string, any> | null;
+  specs: Record<string, unknown> | null;
   category_id: string;
   category_name: string;
   category_slug: string;
@@ -53,10 +53,26 @@ async function loadComparison(productIds: string[]): Promise<{
 
   if (error || !data) return { products: [], categoryMatch: false };
 
-  const products: ComparisonProduct[] = (data as any[]).map((p) => {
+  type RawJoinRow = {
+    id: string;
+    slug: string;
+    title: string;
+    brand: string | null;
+    model_family: string | null;
+    variant_storage: string | null;
+    variant_color: string | null;
+    image_url: string | null;
+    specs: Record<string, unknown> | null;
+    category_id: string;
+    category: { id: string; slug: string; name: string };
+    listings: Array<{ price: number | string; is_active: boolean }>;
+  };
+  // Supabase nested select tipi inferensi iki ucu (array vs single) yanlış
+  // çıkarıyor; runtime'da !inner ile single row döner. Bypass için unknown cast.
+  const products: ComparisonProduct[] = (data as unknown as RawJoinRow[]).map((p) => {
     const activePrices = p.listings
-      .filter((l: any) => l.is_active)
-      .map((l: any) => Number(l.price));
+      .filter((l) => l.is_active)
+      .map((l) => Number(l.price));
     return {
       id: p.id,
       slug: p.slug,
@@ -86,7 +102,7 @@ async function loadComparison(productIds: string[]): Promise<{
 type ComparisonAttribute = {
   key: string;
   label: string;
-  values: Array<{ productId: string; display: string; raw: any }>;
+  values: Array<{ productId: string; display: string; raw: unknown }>;
   winnerIds: string[];
   comparisonType: "higher" | "lower" | "boolean" | "categorical";
 };
@@ -155,7 +171,7 @@ function buildComparisonAttributes(products: ComparisonProduct[]): ComparisonAtt
 }
 
 function determineWinners(
-  values: Array<{ productId: string; raw: any }>,
+  values: Array<{ productId: string; raw: unknown }>,
   type: ComparisonAttribute["comparisonType"]
 ): string[] {
   const valid = values.filter((v) => v.raw !== null && v.raw !== undefined);
@@ -393,13 +409,13 @@ export default async function ComparisonPage({
   );
 }
 
-function flattenObject(obj: Record<string, any>, prefix = ""): Record<string, any> {
-  const out: Record<string, any> = {};
+function flattenObject(obj: Record<string, unknown>, prefix = ""): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
   for (const [k, v] of Object.entries(obj)) {
     if (v === null || v === undefined) continue;
     const key = prefix ? `${prefix}.${k}` : k;
     if (typeof v === "object" && !Array.isArray(v)) {
-      Object.assign(out, flattenObject(v, key));
+      Object.assign(out, flattenObject(v as Record<string, unknown>, key));
     } else {
       out[key] = v;
     }
@@ -407,7 +423,7 @@ function flattenObject(obj: Record<string, any>, prefix = ""): Record<string, an
   return out;
 }
 
-function formatValue(v: any, type: ComparisonAttribute["comparisonType"]): string {
+function formatValue(v: unknown, type: ComparisonAttribute["comparisonType"]): string {
   if (v === null || v === undefined) return "";
   if (type === "boolean") return v ? "Var" : "Yok";
   if (Array.isArray(v)) return v.join(", ");
