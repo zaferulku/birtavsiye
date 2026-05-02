@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useMemo } from "react";
+import type { User } from "@supabase/supabase-js";
 import { supabase } from "../../../lib/supabase";
 import { findCanonicalSlugSync } from "@/lib/chatbot/categoryValidation";
 
@@ -618,7 +619,7 @@ const NAV: NavGroup[] = [
 export default function Header() {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [activeGroup, setActiveGroup] = useState<string | null>(null);
   const [activeCat, setActiveCat] = useState<string | null>(null);

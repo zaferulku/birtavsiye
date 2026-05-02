@@ -64,7 +64,7 @@ export async function GET(request: Request): Promise<Response> {
           discover,
           globalTimeoutMs: 5000,
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("[sse] fetch error:", err);
         emit({
           type: "done",
