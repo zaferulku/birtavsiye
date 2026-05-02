@@ -3,15 +3,39 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "../../../lib/supabase";
+import { findCanonicalSlugSync } from "@/lib/chatbot/categoryValidation";
 
-// categories.slug artık DB'de full hierarchik path. Slug → URL map basitleşti:
-// catMap.get(slug).slug = full path → /anasayfa/<full-path>.
-function hierUrl(slug: string, catMap: Map<string, { id: string; slug: string; parent_id: string | null }>, _byId: Map<string, { id: string; slug: string; parent_id: string | null }>, q?: string): string {
+// NAV constant'ı eski flat slug'lar barındırıyor; DB hierarchik path'e geçti.
+// Tekrarlı warn'ı önlemek için per-session bir kez log'la.
+const warnedSlugs = new Set<string>();
+
+// categories.slug artık DB'de full hierarchik path. URL üretimi iki katmanlı:
+// 1) catMap.get(slug) — exact lookup, hızlı yol
+// 2) findCanonicalSlugSync — eski flat slug'ı leaf-suffix/token-set ile tam
+//    path'e çevir (Türkçe normalize dahil). Hâlâ yoksa console.warn + /?q= fallback.
+function hierUrl(
+  slug: string,
+  catMap: Map<string, { id: string; slug: string; parent_id: string | null }>,
+  _byId: Map<string, { id: string; slug: string; parent_id: string | null }>,
+  q?: string,
+): string {
   const cat = catMap.get(slug);
-  // Match yoksa anasayfaya fallback (eski /kategori/<slug> URL'leri kaldırıldı)
-  if (!cat) return "/" + (q ? "?q=" + encodeURIComponent(q) : "");
-  const base = "/anasayfa/" + cat.slug;
-  return q ? `${base}?q=${encodeURIComponent(q)}` : base;
+  if (cat) {
+    const base = "/anasayfa/" + cat.slug;
+    return q ? `${base}?q=${encodeURIComponent(q)}` : base;
+  }
+
+  const resolved = findCanonicalSlugSync(slug, catMap.keys());
+  if (resolved) {
+    const base = "/anasayfa/" + resolved;
+    return q ? `${base}?q=${encodeURIComponent(q)}` : base;
+  }
+
+  if (!warnedSlugs.has(slug)) {
+    warnedSlugs.add(slug);
+    console.warn(`[Header] Unknown NAV slug: "${slug}" — DB taxonomy'de eşleşme yok`);
+  }
+  return "/" + (q ? "?q=" + encodeURIComponent(q) : "");
 }
 
 type NavTag = string;

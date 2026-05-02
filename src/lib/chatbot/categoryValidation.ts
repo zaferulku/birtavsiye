@@ -89,66 +89,89 @@ function normalizeSlugCandidate(input: string): string[] {
   return [...variants];
 }
 
+/**
+ * Caller-provided taxonomy üzerinden in-memory eşleme. Header gibi DB hit
+ * yapmadan, kendi cats array'ini iterable olarak geçen client'lar için.
+ *
+ * Katmanlar (sırayla): exact → leaf-suffix (tek match) → token-set (leaf scope).
+ * Fuzzy YOK — async tarafa özel (Levenshtein cost'u + DB hit imkânı orada).
+ *
+ * @param inputSlug Türkçe karakter / dotted / underscore varyantı tolere eder
+ * @param taxonomy DB slug'larının iterable'ı (full hierarchik path beklenir)
+ * @returns matched orijinal DB slug veya null
+ */
+export function findCanonicalSlugSync(
+  inputSlug: string | null | undefined,
+  taxonomy: Iterable<string>,
+): string | null {
+  if (!inputSlug) return null;
+
+  // Lazy normalize index oluştur (caller her seferinde re-build etmemeli;
+  // Header useMemo ile cache'liyor)
+  const candidates = normalizeSlugCandidate(inputSlug);
+  const normalizedCandidates = Array.from(
+    new Set(candidates.map((c) => trNormalize(c)).filter(Boolean)),
+  );
+  if (normalizedCandidates.length === 0) return null;
+
+  // Exact match
+  for (const original of taxonomy) {
+    const norm = trNormalize(original);
+    if (normalizedCandidates.includes(norm)) return original;
+  }
+
+  // Leaf-suffix match (tek match varsa)
+  for (const c of normalizedCandidates) {
+    if (c.includes("/")) continue;
+    const matches: string[] = [];
+    for (const original of taxonomy) {
+      const norm = trNormalize(original);
+      if (norm === c || norm.endsWith("/" + c)) matches.push(original);
+    }
+    if (matches.length === 1) return matches[0];
+  }
+
+  // Token-set match (leaf segment scope)
+  for (const c of normalizedCandidates) {
+    if (c.includes("/")) continue;
+    const inputTokens = new Set(c.split("-").filter(Boolean));
+    if (inputTokens.size < 2) continue;
+    for (const original of taxonomy) {
+      const norm = trNormalize(original);
+      const leafSegment = norm.split("/").pop() ?? "";
+      const candTokens = new Set(leafSegment.split("-").filter(Boolean));
+      if (inputTokens.size === candTokens.size) {
+        const allMatch = [...inputTokens].every((t) => candTokens.has(t));
+        if (allMatch) return original;
+      }
+    }
+  }
+
+  return null;
+}
+
 export async function validateOrFuzzyMatchSlug(
   inputSlug: string | null,
   maxDistance: number = 2,
 ): Promise<string | null> {
   if (!inputSlug) return null;
 
+  const taxonomy = await getCategoryTaxonomy();
   const normalizedIndex = await getNormalizedIndex();
-  const candidates = normalizeSlugCandidate(inputSlug);
-  // Türkçe normalize her variant için (ı→i, ş→s, ğ→g, ü→u, ö→o, ç→c).
-  // DB slug'ları zaten ASCII; input "kılıf" → "kilif" → match.
-  const normalizedCandidates = Array.from(
-    new Set(candidates.map((c) => trNormalize(c)).filter(Boolean)),
-  );
 
-  // Exact match (Türkçe-normalize edilmiş)
-  for (const c of normalizedCandidates) {
-    const original = normalizedIndex.get(c);
-    if (original) return original;
-  }
-
-  // Leaf-suffix match: DB slug'ları full hierarchik path
-  // (örn "elektronik/telefon/akilli-telefon"); LLM/queryParser leaf-only
-  // ("akilli-telefon") üretirse "/leaf" suffix ile match'le. Tek match varsa
-  // onu kullan; çoklu match → fuzzy'ye bırak (tie-break belirsiz).
-  for (const c of normalizedCandidates) {
-    if (c.includes("/")) continue; // zaten path-li, leaf değil
-    const matches: string[] = [];
-    for (const [normSlug, origSlug] of normalizedIndex) {
-      if (normSlug === c || normSlug.endsWith("/" + c)) {
-        matches.push(origSlug);
-      }
-    }
-    if (matches.length === 1) {
-      console.log(`[categoryValidation] leaf-suffix match: "${inputSlug}" → "${matches[0]}"`);
-      return matches[0];
-    }
-    // Çoklu match: ambiguity, fuzzy aşamasına bırak
-  }
-
-  // Token-set match: aynı kelimeler farklı sırada (erkek-ust-giyim ↔ erkek-giyim-ust)
-  // DB slug'ları hierarchik path olduğu için sadece leaf segment üzerinde
-  // çalışır (split("/").pop()). Input zaten leaf olmalı.
-  for (const c of normalizedCandidates) {
-    if (c.includes("/")) continue;
-    const inputTokens = new Set(c.split("-").filter(Boolean));
-    if (inputTokens.size < 2) continue;
-    for (const [normSlug, origSlug] of normalizedIndex) {
-      const leafSegment = normSlug.split("/").pop() ?? "";
-      const candTokens = new Set(leafSegment.split("-").filter(Boolean));
-      if (inputTokens.size === candTokens.size) {
-        const allMatch = [...inputTokens].every((t) => candTokens.has(t));
-        if (allMatch) {
-          console.log(`[categoryValidation] token-set match: "${inputSlug}" → "${origSlug}"`);
-          return origSlug;
-        }
-      }
-    }
+  // Önce sync helper (exact + leaf-suffix + token-set)
+  const syncMatch = findCanonicalSlugSync(inputSlug, taxonomy);
+  if (syncMatch) {
+    // İsteğe bağlı log: hangi katmandan match'lendi (sync helper sessiz)
+    console.log(`[categoryValidation] sync match: "${inputSlug}" → "${syncMatch}"`);
+    return syncMatch;
   }
 
   // Fuzzy match (Levenshtein, normalize edilmiş string'ler üzerinde)
+  const candidates = normalizeSlugCandidate(inputSlug);
+  const normalizedCandidates = Array.from(
+    new Set(candidates.map((c) => trNormalize(c)).filter(Boolean)),
+  );
   let best: { slug: string; dist: number } | null = null;
   for (const c of normalizedCandidates) {
     for (const [normSlug, origSlug] of normalizedIndex) {

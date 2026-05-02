@@ -14,7 +14,7 @@ env.split(/\r?\n/).forEach((l) => {
 });
 
 const mod = await import("../src/lib/chatbot/categoryValidation");
-const { validateOrFuzzyMatchSlug, getCategoryTaxonomy } = mod;
+const { validateOrFuzzyMatchSlug, getCategoryTaxonomy, findCanonicalSlugSync } = mod;
 
 const taxonomy = await getCategoryTaxonomy();
 console.log(`\n========== PHASE 5 VALIDATION ==========`);
@@ -67,7 +67,8 @@ for (const slug of testSlugs) {
 console.log(`\n========== TEST 2: Header NAV ↔ DB ==========`);
 
 const headerText = readFileSync("src/app/components/layout/Header.tsx", "utf8");
-const slugRegex = /slug:\s*"([^"]+)"/g;
+// ASCII kebab-case slug'lar; template literal/${...} yakalamaz
+const slugRegex = /slug:\s*"([a-z0-9][a-z0-9/-]*)"/g;
 const navSlugs = new Set<string>();
 let match: RegExpExecArray | null;
 while ((match = slugRegex.exec(headerText)) !== null) {
@@ -76,31 +77,48 @@ while ((match = slugRegex.exec(headerText)) !== null) {
 
 console.log(`NAV unique slug count: ${navSlugs.size}\n`);
 
+const exact: { slug: string; full: string }[] = [];
+const rescued: { slug: string; full: string }[] = []; // Sync helper kurtardı
 const broken: string[] = [];
 const ambiguous: { slug: string; matches: string[] }[] = [];
-const ok: { slug: string; full: string }[] = [];
 
 for (const slug of [...navSlugs].sort()) {
-  const matches: string[] = [];
+  const directMatches: string[] = [];
   for (const t of taxonomy) {
-    if (t === slug || t.endsWith("/" + slug)) matches.push(t);
+    if (t === slug || t.endsWith("/" + slug)) directMatches.push(t);
   }
 
-  if (matches.length === 0) {
-    broken.push(slug);
-  } else if (matches.length === 1) {
-    ok.push({ slug, full: matches[0] });
+  if (directMatches.length === 1) {
+    exact.push({ slug, full: directMatches[0] });
+    continue;
+  }
+  if (directMatches.length > 1) {
+    ambiguous.push({ slug, matches: directMatches });
+    continue;
+  }
+
+  // 0 direct match → sync helper kurtarabilir mi?
+  const resolved = findCanonicalSlugSync(slug, taxonomy);
+  if (resolved) {
+    rescued.push({ slug, full: resolved });
   } else {
-    ambiguous.push({ slug, matches });
+    broken.push(slug);
   }
 }
 
-console.log(`✓ OK (tek match)  : ${ok.length}`);
+console.log(`✓ EXACT match     : ${exact.length}`);
+console.log(`✓ RESCUED (helper): ${rescued.length}`);
 console.log(`⚠ AMBIGUOUS       : ${ambiguous.length}`);
-console.log(`✗ BROKEN (0 match): ${broken.length}\n`);
+console.log(`✗ BROKEN (gerçek) : ${broken.length}\n`);
+
+if (rescued.length > 0) {
+  console.log(`--- HELPER KURTARDI ---`);
+  for (const r of rescued) console.log(`  ✓ "${r.slug}" → "${r.full}"`);
+  console.log();
+}
 
 if (broken.length > 0) {
-  console.log(`--- KIRIK NAV SLUG'LARI ---`);
+  console.log(`--- HÂLÂ KIRIK NAV SLUG'LARI ---`);
   for (const s of broken) console.log(`  ✗ "${s}"`);
   console.log();
 }
@@ -115,5 +133,11 @@ if (ambiguous.length > 0) {
 
 console.log(`========== ÖZET ==========`);
 console.log(
-  `NAV: ${navSlugs.size} slug | OK: ${ok.length} | Ambiguous: ${ambiguous.length} | Broken: ${broken.length}`,
+  `NAV: ${navSlugs.size} | Exact: ${exact.length} | Rescued: ${rescued.length} | Ambiguous: ${ambiguous.length} | Broken: ${broken.length}`,
+);
+console.log(
+  `Önce: ${navSlugs.size - exact.length - ambiguous.length} broken (helper'dan önce)`,
+);
+console.log(
+  `Sonra: ${broken.length} broken (helper sonrası, kurtarılan: ${rescued.length})`,
 );
