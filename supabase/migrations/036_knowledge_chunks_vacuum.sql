@@ -1,0 +1,41 @@
+-- 036_knowledge_chunks_vacuum.sql
+-- P6.17: knowledge_chunks tablosu istatistik yenileme.
+--
+-- Cron baseline 24h audit'inde tespit (2 May 2026 gece geç):
+-- pg_stat_user_tables raporu: n_live_tup=0, n_dead_tup=0,
+-- last_vacuum/last_autovacuum NULL.
+--
+-- Detaylı audit (P6.17):
+-- - Gerçek COUNT(*): 121 chunk (PROJECT_STATE'te belgelenmiş 141'e yakın)
+-- - chatbot RAG AKTİF kullanımda: retrieveKnowledge 4 call site
+--   (chatOrchestrator.ts: line 279, 379, 581 ve retrieveKnowledge.ts itself)
+-- - RPC retrieve_knowledge (Migration 001) FROM knowledge_chunks JOIN
+-- - Tablo boyutu 1968 kB:
+--   * table 248 kB (121 row × ~2 kB)
+--   * indexes 1816 kB (HNSW 768-dim vector index ~1.5 MB + 5 btree/GIN)
+--   * toast 784 kB (uzun content TOAST overflow)
+-- - Schema: 12 kolon (id, source, source_hash, chunk_index, category_slug,
+--   topic, language, title, content, keywords[], embedding vector(768),
+--   created_at, updated_at)
+--
+-- Pattern: P6.14 (stores) + P6.15 (auth.users) ile aynı pg_stat anomalisi.
+-- Küçük tablolar autovacuum threshold'a hiç ulaşmamış → istatistikler stale.
+-- Production etkisi sıfır (RAG retrieveKnowledge RPC pg_stat kullanmıyor),
+-- ama vector similarity query planner için ANALYZE faydalı.
+--
+-- NOT: VACUUM transaction-safe değil; bu dosya BEGIN/COMMIT İÇERMEZ.
+-- Studio'da SQL editor'a yapıştır + RUN (autocommit mode).
+--
+-- Lock süresi: <500ms (1.8 MB HNSW index rebuild).
+-- Apply: 2026-05-02 gece geç (Studio "VACUUM" success).
+--
+-- Pattern referansı:
+-- - Migration 035: stores VACUUM (P6.14 KAPATILDI)
+-- - P6.15: auth.users (Supabase managed schema, VACUUM yapamadık, doc-only)
+
+VACUUM (FULL, ANALYZE) public.knowledge_chunks;
+
+-- Doğrulama (apply sonrası ayrı çalıştırılır):
+-- SELECT n_live_tup, n_dead_tup, last_vacuum, last_autovacuum
+-- FROM pg_stat_user_tables WHERE relname = 'knowledge_chunks';
+-- Beklenen: n_live_tup=121, n_dead_tup=0, last_vacuum dolu.
