@@ -1,13 +1,121 @@
-# birtavsiye.net — Project State v14
+# birtavsiye.net — Project State v15
 
 > **Bu dosya tek kaynak gerçek.** Yeni sohbet/oturum başlattığınızda
 > bu dosyayı Claude veya Claude Code'a verin — tüm bağlamı 30 saniyede alır.
 
-**Son güncelleme:** 2026-05-02 v14 (Phase 5 frontend refactor done: 5A→5F hierarchik slug full-path routing + sitemap RLS fix + turkishNormalize chatbot entegrasyon + Header NAV 73→0 broken)
+**Son güncelleme:** 2026-05-02 v15 (Yol A tamamlandı: Migration 025b log_price_change trigger bind + Migration 029 categories.keywords backfill 216/216 + GIN index)
 
 ---
 
-## 🟢 GÜNCEL DURUM (2 May 2026 — Phase 5 done, v14 paket)
+## 🟢 GÜNCEL DURUM (2 May 2026 gece — Yol A done, v15 paket)
+
+**YAPILAN İŞLER (v14 sonrası akşam):**
+
+**Migration 025b — log_price_change trigger bind:**
+- PR-1 (`08d355a`): 4 dosyada 5 manuel `price_history.insert()` kaldırıldı
+  (scrape-mediamarkt-by-category 2 INSERT, sync/route 1, live/index 1,
+   admin/prices 1). scrape-pttavm-loop proxy + backfill-price-history
+   intentional bypass. 4 dosya, -51/+9 satır.
+- PR-2 (`ead3d19`): `supabase/migrations/025b_log_price_change_trigger_bind.sql`
+  — `AFTER INSERT OR UPDATE OF price ON listings FOR EACH ROW
+  EXECUTE FUNCTION log_price_change()`. Studio apply OK.
+- Smoke test 3/3 PASS (transaction + ROLLBACK ile production data etkisiz):
+  * Test 1 — UPDATE +0.01 → history+1 ✓ (trigger fired)
+  * Test 2 — UPDATE same price → history+0 ✓ (IS DISTINCT FROM bloke)
+  * Test 3 — UPDATE last_seen → history+0 ✓ (OF price filter bloke)
+- Bonus: live/index.ts'teki `listing.price` ↔ `data.price` karışıklığı
+  trigger devraldığında otomatik düzeldi (NEW.price = data.price).
+
+**Migration 029 — categories.keywords backfill (216 kategori):**
+- 216/216 kategori için keywords array yazıldı (Migration 021'de NULL kalmıştı).
+  - 25 slug: `queryParser.ts` STATIC_CATEGORY_KEYWORDS +
+    CHATBOT_FALLBACK_CATEGORY_PHRASES'ten curated; leaf-only → DB
+    full-path resolve (Phase 5C helper + 9 manuel mapping)
+  - 191 slug: LLM batch generation (multi-provider resilience)
+    - Gemini 2.5-flash: 80 slug → quota=20 RPD doldu
+    - Gemini 2.0-flash: 0 slug (quota=0)
+    - Groq llama-3.3-70b-versatile: 16 slug → TPD=100K doldu
+    - **NVIDIA meta/llama-3.3-70b-instruct: 95 slug** (kalanı temiz)
+  - Avg 7.46 keyword/slug, 1612 toplam keyword, 0 hata
+- Manuel review:
+  - Generic kelime kaçağı: 0
+  - Marka kaçağı: 0 (script substring false positive 18 — Türkçe kelimeler içinde "lg" substring; manuel inspeksiyonda gerçek marka yok)
+  - Türkçe karakter pair coverage: ✓ (örn. `parfüm`+`parfum`)
+  - Ambiguous slug parent context: ✓ 5/5 doğru ayrıştı
+    * moda/aksesuar: şapka, atkı, eldiven (moda)
+    * pet-shop/aksesuar: tasma, mama kabı, kedi tuvaleti (pet)
+    * elektronik/telefon/aksesuar: kılıf, şarj kablosu, kulaklık (elektronik)
+    * kucuk-ev-aletleri/temizlik: süpürge, robot süpürge (cihaz)
+    * ev-yasam/temizlik: deterjan, çamaşır suyu, paspas (sarf)
+- SQL dosyası: 274 satır, 36 KB, BEGIN/COMMIT transaction wrap, idempotent UPDATE
+- GIN index: `idx_categories_keywords_gin USING GIN (keywords)`
+- Studio apply OK.
+
+**KOD ETKİSİ: SIFIR**:
+- `src/lib/chatbot/categoryKnowledge.ts` (kullanıcının yeni sistemi) DOKUNULMADI
+- `src/lib/search/queryParser.ts` STATIC_CATEGORY_KEYWORDS + CHATBOT_FALLBACK
+  korundu (DB keywords paralel kaynak)
+- Hiçbir TS/JS dosya değişmedi — sadece 1 SQL migration + 1 audit script
+
+**Audit izleri (gitignored, local):**
+- `scripts/category-keywords-static-mapped.json` (25 entry)
+- `scripts/category-keywords-llm-v1.json` (191 entry)
+- `scripts/build-category-keywords-static.mjs`
+- `scripts/generate-category-keywords.mjs` (multi-provider LLM)
+
+**Repo'ya eklendi:**
+- `supabase/migrations/029_categories_keywords_backfill.sql`
+- `scripts/build-migration-029-sql.mjs` (regenerator)
+
+**Yol A commit'leri:**
+- `08d355a` refactor(scrapers): price_history manuel INSERT'ler kaldırıldı (PR-1)
+- `ead3d19` feat(db): Migration 025b — log_price_change trigger bind (PR-2)
+- `8d6c529` feat(db): Migration 029 — categories.keywords backfill (216 kategori)
+
+**YARIN PLAN (2026-05-03):**
+
+🔴 KRİTİK:
+1. **Cron baseline takibi** — kullanıcı 2026-05-02'de cron-job.org'da 7 cron yeniden açtı.
+   24 saat baseline ölçüm gerekli: CPU, Disk IO, Connections, query latency.
+   NANO compute bütçesi tükenirse Pro plan upgrade veya cron rotation gerek.
+2. **Eval2 re-run** — Migration 029 sonrası DB keywords parent-aware
+   ayrıştığı için chatbot tie-break davranışı değişmiş olabilir.
+   `npx tsx scripts/eval-chatbot-dialogs.mjs --input
+   tests/chatbot/fixtures/chatbot_dialogs_eval2_200.jsonl` (LLM quota reset sonrası).
+3. **Pre-existing eslint** — `src/app/api/sync/route.ts:9` `categorizeFromTitle`
+   unused import (warning) + `:164` `effectiveCategoryId` prefer-const (error).
+   Yol A dışı bug, scope discipline için ayrı commit.
+
+🟡 ORTA — Phase 6 borçları:
+- **P6.1 — chatbot context-aware tie-break** (Migration 029 sonrası kısmen çözüldü):
+  Çoklu match slug'lar için DB keywords artık parent-aware. Ama
+  `validateOrFuzzyMatchSlug` hâlâ çoklu match'te null dönüyor —
+  test edilip karar verilmeli.
+- **P6.2 — `networking` kategorisi DB'de eksik**: NAV "Ağ & Modem & Akıllı Ev"
+  → şu an `elektronik` parent fallback (geçici). DB'ye yeni leaf eklenmeli.
+- **P6.3 — NAV constant 14 dup converge consolidation**: 159→145 unique
+  sonra 14 NAV item aynı parent'a dönüştü. Header UX iyileştirme.
+- **P6.4 — Migration 016 yan etki SSR audit**: sitemap.ts dışında anon RLS
+  sızıntısı kalan SSR sayfa var mı? supabaseAdmin geçişi audit gerek.
+- **P6.5 — categoryKnowledge.ts keys field full-path uyumu**:
+  kullanıcının yeni chatbot sistemi (~580 satır) — slug key'leri
+  full-path mı leaf mı uyumlu, kontrol gerek.
+
+🟢 OPSIYONEL:
+- listings.in_stock BOOLEAN DROP (6 ay sonra)
+- raw_offers ingestion (Migration 028 staging)
+- backup_20260430_categories + backup_20260422_products silme
+
+**Kullanıcı uncommitted çalışması (4 M dosya, Yol A kapsamı dışı):**
+- src/app/api/chat/route.ts, src/lib/chatbot/chatOrchestrator.ts,
+  src/lib/chatbot/queryInterpreter.ts, src/lib/chatbot/suggestionBuilder.ts
+- Yol A bu dosyalara DOKUNMADI (selective `git commit --only` kullanıldı).
+  İlk commit attempt'inde pre-commit hook bunları otomatik staged etti
+  → soft reset + `--only` flag ile temizlendi.
+
+---
+
+## 🔵 ÖNCEKİ DURUM (2 May 2026 — Phase 5 done, v14 paket)
 
 **YAPILAN İŞLER:**
 
@@ -794,11 +902,13 @@ ProductDetailShell.tsx ortak nokta — uyumlu.
 | **028_raw_offers_staging.sql** | ✅ (staging tablosu, boş) |
 
 **Bekleyen (ÖNEMLI):**
-- Migration **025b** (KRİTİK, 2026-05-03): scraper'lardaki manuel `price_history INSERT`'leri
-  kaldır + `log_price_change` trigger bağla (5 yer). Çift kayıt önleme.
-- Migration **029** (yeni borç, 2026-05-03): `categories.keywords` backfill —
-  hierarchik keyword index, kategori arama kalitesi için.
 - Migration **listings.in_stock DROP** (6 ay sonra, frontend/scraper migrate sonrası).
+
+**v15'te tamamlandı:**
+- Migration **025b** ✅ (2026-05-02): `log_price_change` trigger bind +
+  scraper manuel INSERT'leri kaldırıldı. Smoke test 3/3 PASS.
+- Migration **029** ✅ (2026-05-02): `categories.keywords` backfill 216/216,
+  GIN index aktif. Multi-provider LLM (Gemini + Groq + NVIDIA fallback).
 
 ### Knowledge Base
 12 doküman / 141 chunk (`docs/knowledge/`):
@@ -891,6 +1001,10 @@ anne_bebek (11) = **141**
 ## ✅ COMMIT GEÇMİŞİ (son 30)
 
 ```
+8d6c529   feat(db): Migration 029 — categories.keywords backfill (216 kategori)
+ead3d19   feat(db): Migration 025b — log_price_change trigger bind
+08d355a   refactor(scrapers): price_history manuel INSERT'ler kaldırıldı (PR-1)
+42c7086   docs(state): v14 — Phase 5 frontend refactor done
 1edbec9   docs(probe): 5D-3 Test 3 — broken slug öneri tablosu generator (2 May)
 4282c55   redesign(routing): 5D-3.3 — NAV constant DB sync (73 → 0 broken)
 ff52e53   fix(routing): 5D-3.2 — Header linkFor 5C helper entegrasyonu
@@ -1138,6 +1252,7 @@ yeni kategoriler ekler. Tur 2 fixture taxonomy gereği.
 | 2026-04-29 | v12 — Mega gün (16+ saat): Migration 013-023, eval %80, güvenlik krizi, kategori refactor v2 | Claude |
 | 2026-05-01 | v13 — Tonight paketi: Migrations 024-028 + 027b BLOCKER, turn-type detection (MergeAction + 7 TurnType + classifyTurn pure func), eval2 specialized actions (installment_filter_added/rating_filter_added/best_value_sort_applied), Phase 5 frontend smoke test (TEST 1 KIRIK — yarın refactor), naming kuralı 16 | Claude |
 | 2026-05-02 | v14 — Phase 5 frontend refactor done (5A→5F, 8 commit): hierarchik slug full-path routing + sitemap RLS fix (Migration 016 yan etkisi) + turkishNormalize chatbot entegrasyon + Header NAV 73→0 broken (74 slug DB sync, 159→145 unique) + production smoke test 7/7 PASS. Phase 6 borçları: P6.1 chatbot tie-break, P6.2 networking DB eksik, P6.3 NAV dup converge, P6.4 anon RLS audit | Claude |
+| 2026-05-02 | v15 — Yol A done: Migration 025b (log_price_change trigger bind, 5 manuel INSERT kaldırıldı, smoke 3/3 PASS) + Migration 029 (categories.keywords backfill 216/216, multi-provider LLM Gemini/Groq/NVIDIA fallback, 7.46 avg kw/slug, GIN index, ambiguous parent context 5/5 doğru). KOD ETKİSİ SIFIR (categoryKnowledge.ts + queryParser.ts dokunulmadı). Yeni Phase 6 borcu P6.5 (categoryKnowledge.ts keys full-path uyumu). | Claude |
 
 ---
 
