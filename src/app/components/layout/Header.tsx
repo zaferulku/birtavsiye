@@ -57,9 +57,9 @@ const NAV: NavGroup[] = [
           { label: "Masaüstü Bilgisayar", slug: "elektronik/bilgisayar-tablet/masaustu", tags: ["All-in-One", "MacBook Mini", "Mini PC", "Gaming PC", "İş İstasyonu"] },
           { label: "Oyuncu Donanımları", slug: "elektronik/oyun/konsol", tags: ["Oyuncu Klavyesi", "Gaming Laptop", "Oyuncu Mouse", "Oyuncu Kulaklığı", "Oyuncu Monitörü", "Mekanik Klavye", "Oyuncu Koltuk"] },
           { label: "Monitör", slug: "monitor", tags: ["OLED", "Kavisli", "27 inç", "32 inç", "4K", "Asus", "Dell", "MSI", "LG", "Samsung"] },
-          { label: "Bilgisayar Parçaları", slug: "elektronik/bilgisayar-tablet/bilesenler", tags: ["Anakart", "Ekran Kartı", "RAM", "SSD", "İşlemci", "Kasa", "Nvidia", "AMD", "Intel"] },
-          { label: "Çevre Birimleri", slug: "elektronik/bilgisayar-tablet/bilesenler", tags: ["Klavye & Mouse Set", "Mouse", "Klavye", "Webcam", "Yazıcı", "Tarayıcı", "VR Gözlük"] },
-          { label: "Veri Depolama", slug: "elektronik/bilgisayar-tablet/bilesenler", tags: ["USB Bellek", "SSD", "Hard Disk", "Hafıza Kartı", "Taşınabilir SSD", "NAS"] },
+          { label: "Bilgisayar Parçaları", slug: "elektronik/bilgisayar-tablet/bilesenler/parca", tags: ["Anakart", "Ekran Kartı", "RAM", "SSD", "İşlemci", "Kasa", "Nvidia", "AMD", "Intel"] },
+          { label: "Çevre Birimleri", slug: "elektronik/bilgisayar-tablet/bilesenler/cevre-birim", tags: ["Klavye & Mouse Set", "Mouse", "Klavye", "Webcam", "Yazıcı", "Tarayıcı", "VR Gözlük"] },
+          { label: "Veri Depolama", slug: "elektronik/bilgisayar-tablet/bilesenler/veri-depolama", tags: ["USB Bellek", "SSD", "Hard Disk", "Hafıza Kartı", "Taşınabilir SSD", "NAS"] },
           { label: "Ağ & Modem & Akıllı Ev", slug: "elektronik/ag-guvenlik/modem", tags: ["Router", "Modem", "Access Point", "Switch", "Powerline", "Akıllı Priz", "Akıllı Ampul"] },
           { label: "Bilgisayar Aksesuarları", slug: "elektronik/telefon/aksesuar", tags: ["Laptop Çantası", "Tablet Çantası", "Kablo & Hub", "Soğutucu", "Mouse Pad"] },
         ]
@@ -108,9 +108,9 @@ const NAV: NavGroup[] = [
         label: "Oyun & Konsol", slug: "elektronik/oyun/konsol", icon: "🎮",
         subs: [
           { label: "Oyun Konsolu", slug: "elektronik/oyun/konsol", tags: ["PlayStation 5", "Xbox Series X", "Nintendo Switch", "PS4", "Xbox One", "Retro Konsol"] },
-          { label: "Oyun & Aksesuar", slug: "elektronik/oyun/konsol", tags: ["PS5 Oyun", "Xbox Oyun", "Nintendo Oyun", "DualSense Kol", "Xbox Kol", "Şarj İstasyonu"] },
-          { label: "PC Oyun Ekipmanları", slug: "elektronik/oyun/konsol", tags: ["Oyuncu Kulaklığı", "Gaming Mouse", "Mekanik Klavye", "Mousepad", "Headset Stand"] },
-          { label: "VR & Simülasyon", slug: "elektronik/oyun/konsol", tags: ["Meta Quest", "PlayStation VR", "Sim Racing", "Joystick", "HOTAS"] },
+          { label: "Oyun & Aksesuar", slug: "elektronik/oyun/konsol/aksesuar", tags: ["PS5 Oyun", "Xbox Oyun", "Nintendo Oyun", "DualSense Kol", "Xbox Kol", "Şarj İstasyonu"] },
+          { label: "PC Oyun Ekipmanları", slug: "elektronik/oyun/konsol/pc-oyun", tags: ["Oyuncu Kulaklığı", "Gaming Mouse", "Mekanik Klavye", "Mousepad", "Headset Stand"] },
+          { label: "VR & Simülasyon", slug: "elektronik/oyun/konsol/vr-sim", tags: ["Meta Quest", "PlayStation VR", "Sim Racing", "Joystick", "HOTAS"] },
         ]
       },
     ]
@@ -477,9 +477,9 @@ const NAV: NavGroup[] = [
       {
         label: "Parfüm & Deodorant", slug: "parfum", icon: "🌸",
         subs: [
-          { label: "Kadın Parfümü", slug: "parfum", tags: ["Chanel No 5", "Dior Miss Dior", "Versace Bright Crystal", "YSL Black Opium", "Lancôme", "Gucci"] },
-          { label: "Erkek Parfümü", slug: "parfum", tags: ["Dior Sauvage", "Armani Acqua di Gio", "Hugo Boss Bottled", "Paco Rabanne 1 Million", "Bleu de Chanel"] },
-          { label: "Unisex Parfüm", slug: "parfum", tags: ["Maison Margiela", "Jo Malone", "Acqua di Parma", "Tom Ford", "Byredo"] },
+          { label: "Kadın Parfümü", slug: "kozmetik/parfum/kadin", tags: ["Chanel No 5", "Dior Miss Dior", "Versace Bright Crystal", "YSL Black Opium", "Lancôme", "Gucci"] },
+          { label: "Erkek Parfümü", slug: "kozmetik/parfum/erkek", tags: ["Dior Sauvage", "Armani Acqua di Gio", "Hugo Boss Bottled", "Paco Rabanne 1 Million", "Bleu de Chanel"] },
+          { label: "Unisex Parfüm", slug: "kozmetik/parfum/unisex", tags: ["Maison Margiela", "Jo Malone", "Acqua di Parma", "Tom Ford", "Byredo"] },
           { label: "Deodorant", slug: "parfum", tags: ["Dove", "Rexona", "Nivea", "Axe", "Old Spice", "Roll-on", "Sprey Deodorant"] },
           { label: "Kolonya", slug: "parfum", tags: ["Limon Kolonyası", "Çiçek Kolonyası", "Eyüp Sabri Tuncer", "Rebul", "Arko"] },
         ]
