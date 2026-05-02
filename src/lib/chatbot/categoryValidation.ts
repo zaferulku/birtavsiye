@@ -1,26 +1,47 @@
 import { supabaseAdmin } from "@/lib/supabaseServer";
+import { trNormalize } from "@/lib/turkishNormalize";
 
 // 5 dk LRU cache (taxonomy nadiren değişir)
-let cache: { slugs: Set<string>; expiresAt: number } | null = null;
+// normalizedIndex: trNormalize(slug) → orijinal DB slug.
+// "kılıf" gibi Türkçe karakter içeren input'ları ASCII DB slug'larına eşler.
+let cache: {
+  slugs: Set<string>;
+  normalizedIndex: Map<string, string>;
+  expiresAt: number;
+} | null = null;
 const TTL_MS = 5 * 60 * 1000;
 
-export async function getCategoryTaxonomy(): Promise<Set<string>> {
-  if (cache && Date.now() < cache.expiresAt) return cache.slugs;
-
+async function refreshCache(): Promise<void> {
   const { data, error } = await supabaseAdmin
     .from("categories")
     .select("slug");
 
   if (error) {
     console.error("[categoryValidation] taxonomy fetch FAIL:", error.message);
-    return cache?.slugs ?? new Set();
+    if (!cache) {
+      cache = { slugs: new Set(), normalizedIndex: new Map(), expiresAt: 0 };
+    }
+    return;
   }
 
-  cache = {
-    slugs: new Set((data ?? []).map((r: { slug: string }) => r.slug)),
-    expiresAt: Date.now() + TTL_MS,
-  };
-  return cache.slugs;
+  const slugs = new Set<string>();
+  const normalizedIndex = new Map<string, string>();
+  for (const row of (data ?? []) as { slug: string }[]) {
+    slugs.add(row.slug);
+    normalizedIndex.set(trNormalize(row.slug), row.slug);
+  }
+
+  cache = { slugs, normalizedIndex, expiresAt: Date.now() + TTL_MS };
+}
+
+export async function getCategoryTaxonomy(): Promise<Set<string>> {
+  if (!cache || Date.now() >= cache.expiresAt) await refreshCache();
+  return cache!.slugs;
+}
+
+async function getNormalizedIndex(): Promise<Map<string, string>> {
+  if (!cache || Date.now() >= cache.expiresAt) await refreshCache();
+  return cache!.normalizedIndex;
 }
 
 // Test/migration sonrası cache temizleme
@@ -74,24 +95,30 @@ export async function validateOrFuzzyMatchSlug(
 ): Promise<string | null> {
   if (!inputSlug) return null;
 
-  const taxonomy = await getCategoryTaxonomy();
+  const normalizedIndex = await getNormalizedIndex();
   const candidates = normalizeSlugCandidate(inputSlug);
+  // Türkçe normalize her variant için (ı→i, ş→s, ğ→g, ü→u, ö→o, ç→c).
+  // DB slug'ları zaten ASCII; input "kılıf" → "kilif" → match.
+  const normalizedCandidates = Array.from(
+    new Set(candidates.map((c) => trNormalize(c)).filter(Boolean)),
+  );
 
-  // Exact match (any normalized variant)
-  for (const c of candidates) {
-    if (taxonomy.has(c)) return c;
+  // Exact match (Türkçe-normalize edilmiş)
+  for (const c of normalizedCandidates) {
+    const original = normalizedIndex.get(c);
+    if (original) return original;
   }
 
   // Leaf-suffix match: DB slug'ları full hierarchik path
   // (örn "elektronik/telefon/akilli-telefon"); LLM/queryParser leaf-only
   // ("akilli-telefon") üretirse "/leaf" suffix ile match'le. Tek match varsa
   // onu kullan; çoklu match → fuzzy'ye bırak (tie-break belirsiz).
-  for (const c of candidates) {
+  for (const c of normalizedCandidates) {
     if (c.includes("/")) continue; // zaten path-li, leaf değil
     const matches: string[] = [];
-    for (const candidate of taxonomy) {
-      if (candidate === c || candidate.endsWith("/" + c)) {
-        matches.push(candidate);
+    for (const [normSlug, origSlug] of normalizedIndex) {
+      if (normSlug === c || normSlug.endsWith("/" + c)) {
+        matches.push(origSlug);
       }
     }
     if (matches.length === 1) {
@@ -102,27 +129,32 @@ export async function validateOrFuzzyMatchSlug(
   }
 
   // Token-set match: aynı kelimeler farklı sırada (erkek-ust-giyim ↔ erkek-giyim-ust)
-  for (const c of candidates) {
+  // DB slug'ları hierarchik path olduğu için sadece leaf segment üzerinde
+  // çalışır (split("/").pop()). Input zaten leaf olmalı.
+  for (const c of normalizedCandidates) {
+    if (c.includes("/")) continue;
     const inputTokens = new Set(c.split("-").filter(Boolean));
-    for (const candidate of taxonomy) {
-      const candTokens = new Set(candidate.toLowerCase().split("-").filter(Boolean));
-      if (inputTokens.size === candTokens.size && inputTokens.size >= 2) {
+    if (inputTokens.size < 2) continue;
+    for (const [normSlug, origSlug] of normalizedIndex) {
+      const leafSegment = normSlug.split("/").pop() ?? "";
+      const candTokens = new Set(leafSegment.split("-").filter(Boolean));
+      if (inputTokens.size === candTokens.size) {
         const allMatch = [...inputTokens].every((t) => candTokens.has(t));
         if (allMatch) {
-          console.log(`[categoryValidation] token-set match: "${inputSlug}" → "${candidate}"`);
-          return candidate;
+          console.log(`[categoryValidation] token-set match: "${inputSlug}" → "${origSlug}"`);
+          return origSlug;
         }
       }
     }
   }
 
-  // Fuzzy match (try all variants, pick best)
+  // Fuzzy match (Levenshtein, normalize edilmiş string'ler üzerinde)
   let best: { slug: string; dist: number } | null = null;
-  for (const c of candidates) {
-    for (const candidate of taxonomy) {
-      const d = levenshtein(c, candidate.toLowerCase());
+  for (const c of normalizedCandidates) {
+    for (const [normSlug, origSlug] of normalizedIndex) {
+      const d = levenshtein(c, normSlug);
       if (d <= maxDistance && (!best || d < best.dist)) {
-        best = { slug: candidate, dist: d };
+        best = { slug: origSlug, dist: d };
       }
     }
   }
