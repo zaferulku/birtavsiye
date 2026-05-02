@@ -319,13 +319,9 @@ async function persistListing(
       return;
     }
 
-    if (priceChanged) {
-      await supabase.from("price_history").insert({
-        listing_id: listing.id,
-        price: listing.price,
-        recorded_at: nowIso,
-      });
-    }
+    // price_history Migration 025b log_price_change trigger ile yazılır
+    // (Bonus: trigger devraldığında NEW.price = data.price olur — buradaki
+    // listing.price ↔ data.price karışıklığı otomatik düzelir.)
 
     await supabase.from("agent_decisions").insert({
       agent_name: "live-price-fetcher",

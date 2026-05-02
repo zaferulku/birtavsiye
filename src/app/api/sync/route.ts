@@ -327,23 +327,7 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
       continue;
     }
 
-    if (!existingListing || previousPrice !== product.price) {
-      const { error: historyError } = await sb.from("price_history").insert({
-        listing_id: listing.id,
-        price: product.price,
-        recorded_at: nowIso,
-      });
-
-      if (historyError) {
-        if (firstError.length < 3) {
-          firstError.push(
-            `history:${historyError.code}:${historyError.message}:listing=${listing.id}`
-          );
-        }
-        errors++;
-        continue;
-      }
-    }
+    // price_history Migration 025b log_price_change trigger ile yazılır
 
     const { data: alerts } = await sb
       .from("price_alerts")

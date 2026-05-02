@@ -115,14 +115,7 @@ export async function POST(req: Request) {
     .single();
   if (error || !listing) return NextResponse.json({ error: error?.message ?? "listing save failed" }, { status: 500 });
 
-  if (!existingListing || Number(existingListing.price) !== price) {
-    const { error: historyError } = await supabaseAdmin.from("price_history").insert({
-      listing_id: listing.id,
-      price,
-      recorded_at: nowIso,
-    });
-    if (historyError) return NextResponse.json({ error: historyError.message }, { status: 500 });
-  }
+  // price_history Migration 025b log_price_change trigger ile yazılır
 
   return NextResponse.json({ ok: true });
 }
