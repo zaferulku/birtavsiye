@@ -13,6 +13,7 @@ import {
 export type ResponseInput = {
   userMessage: string;
   styleMessage?: string | null;
+  categorySlugOverride?: string | null;
   intent: StructuredIntent | null;
   knowledgeChunks: KnowledgeChunk[];
   products: ProductForResponse[];
@@ -178,12 +179,12 @@ function formatProducts(products: ProductForResponse[]): string {
 
 function buildGuidedProductResponse(input: ResponseInput): string {
   const categoryLabel = resolveCategoryLabel(
-    input.intent?.category_slug,
+    getEffectiveCategorySlug(input),
     input.styleMessage ?? input.userMessage
   );
   const countLine = buildCountLine(input.products.length, categoryLabel);
   const nextStep = getNextCategoryFlowStep({
-    categorySlug: input.intent?.category_slug,
+    categorySlug: getEffectiveCategorySlug(input),
     userMessage: input.styleMessage ?? input.userMessage,
     hasBrand: (input.intent?.brand_filter?.length ?? 0) > 0,
     hasPricePreference:
@@ -196,11 +197,11 @@ function buildGuidedProductResponse(input: ResponseInput): string {
 
 function buildVagueResponse(input: ResponseInput): string {
   const categoryLabel = resolveCategoryLabel(
-    input.intent?.category_slug,
+    getEffectiveCategorySlug(input),
     input.styleMessage ?? input.userMessage
   );
   const nextStep = getNextCategoryFlowStep({
-    categorySlug: input.intent?.category_slug,
+    categorySlug: getEffectiveCategorySlug(input),
     userMessage: input.styleMessage ?? input.userMessage,
     hasBrand: (input.intent?.brand_filter?.length ?? 0) > 0,
     hasPricePreference:
@@ -220,11 +221,11 @@ function buildVagueResponse(input: ResponseInput): string {
 
 function buildNoResultsResponse(input: ResponseInput): string {
   const categoryLabel = resolveCategoryLabel(
-    input.intent?.category_slug,
+    getEffectiveCategorySlug(input),
     input.styleMessage ?? input.userMessage
   );
   const nextStep = getNextCategoryFlowStep({
-    categorySlug: input.intent?.category_slug,
+    categorySlug: getEffectiveCategorySlug(input),
     userMessage: input.styleMessage ?? input.userMessage,
     hasBrand: (input.intent?.brand_filter?.length ?? 0) > 0,
     hasPricePreference:
@@ -243,10 +244,14 @@ function buildNoResultsResponse(input: ResponseInput): string {
 
 function buildFallbackProductResponse(input: ResponseInput): string {
   const categoryLabel = resolveCategoryLabel(
-    input.intent?.category_slug,
+    getEffectiveCategorySlug(input),
     input.styleMessage ?? input.userMessage
   );
   return buildCountLine(input.products.length, categoryLabel);
+}
+
+function getEffectiveCategorySlug(input: ResponseInput): string | null {
+  return input.categorySlugOverride ?? input.intent?.category_slug ?? null;
 }
 
 function buildCountLine(count: number, categoryLabel: string): string {

@@ -66,6 +66,19 @@ export type OrchestratorInput = {
   intentType?: IntentType | null;
 };
 
+function getResponseCategorySlug(
+  input: OrchestratorInput,
+  intentCategorySlug?: string | null
+): string | null {
+  return (
+    intentCategorySlug ??
+    input.lockCategorySlug ??
+    input.conversationState?.category_slug ??
+    input.parsed.category ??
+    null
+  );
+}
+
 export type ChatProductResult = {
   id: string;
   title: string;
@@ -200,6 +213,7 @@ async function runKnowledgeQuery(
   });
   const response = await generateResponse({
     userMessage: input.userMessage,
+    categorySlugOverride: getResponseCategorySlug(input, null),
     intent: null,
     knowledgeChunks,
     products: [],
@@ -297,6 +311,7 @@ async function runStoreHelp(
   const combined = [...knowledgeChunks, ...forumChunks];
   const response = await generateResponse({
     userMessage: input.userMessage,
+    categorySlugOverride: getResponseCategorySlug(input, null),
     intent: null,
     knowledgeChunks: combined,
     products: [],
@@ -401,6 +416,7 @@ async function runFastPath(
   // Response oluşturma: KB ve intent yok, ürünler var (umarız)
   const response = await generateResponse({
     userMessage: input.userMessage,
+    categorySlugOverride: getResponseCategorySlug(input, null),
     intent: null,
     knowledgeChunks: [],
     products: mapProductsForResponse(searchResult.products),
@@ -522,12 +538,13 @@ async function runSlowPath(
     (Array.isArray(input.conversationState?.brand_filter) &&
       (input.conversationState?.brand_filter?.length ?? 0) > 0);
   if (intent.is_off_topic || (intent.is_too_vague && intent.confidence < 0.3 && !hasResolvedDimension)) {
-    const response = await generateResponse({
-      userMessage: input.userMessage,
-      styleMessage: searchMessage,
-      intent,
-      knowledgeChunks,
-      products: [],
+  const response = await generateResponse({
+    userMessage: input.userMessage,
+    styleMessage: searchMessage,
+    categorySlugOverride: getResponseCategorySlug(input, intent.category_slug),
+    intent,
+    knowledgeChunks,
+    products: [],
       searchMethod: "failed",
       conversationHistory: input.conversationHistory || [],
     });
@@ -659,6 +676,7 @@ async function runSlowPath(
   const response = await generateResponse({
     userMessage: input.userMessage,
     styleMessage: searchMessage,
+    categorySlugOverride: getResponseCategorySlug(input, intent.category_slug),
     intent,
     knowledgeChunks,
     products: mapProductsForResponse(finalProducts),

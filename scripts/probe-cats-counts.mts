@@ -1,0 +1,16 @@
+import { readFileSync } from 'node:fs';
+import { createClient } from '@supabase/supabase-js';
+const text = readFileSync('.env.local', 'utf8');
+const env: Record<string,string> = {};
+text.split(/\r?\n/).forEach(l => {
+  const m = l.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
+  if (m) env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+});
+const sb = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+const slugs = ['kahve','erkek-giyim-ust','camasir-makinesi','spor-cantasi','vitamin-takviye','fitness-aksesuar','fondoten','klavye','kalem'];
+for (const slug of slugs) {
+  const { data: cat } = await sb.from('categories').select('id').eq('slug', slug).maybeSingle();
+  if (!cat) { console.log(`${slug}: NO CATEGORY`); continue; }
+  const { count } = await sb.from('products').select('*', { count: 'exact', head: true }).eq('category_id', cat.id).eq('is_active', true);
+  console.log(`${slug}: ${count} active products`);
+}

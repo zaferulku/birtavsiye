@@ -1,0 +1,12 @@
+import { readFileSync } from 'node:fs';
+import { createClient } from '@supabase/supabase-js';
+const text = readFileSync('.env.local','utf8');
+const env: Record<string,string> = {};
+text.split(/\r?\n/).forEach(l=>{const m=l.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);if(m)env[m[1]]=m[2].replace(/^["']|["']$/g,'');});
+const sb = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+const { data: cats } = await sb.from('categories').select('slug');
+const inDb = new Set((cats ?? []).map((c:any)=>c.slug));
+console.log("Categories tablosunda slug sayısı:", inDb.size);
+const cftSlugs = ["makyaj", "cilt-bakim", "kamp-outdoor", "telefon-kilifi", "networking", "bilgisayar-bilesenleri", "kahvalti-kahve", "sac-bakim", "ekran-koruyucu", "akilli-saat", "akilli-telefon", "laptop", "buzdolabi"];
+console.log("\nCategorizeFromTitle slug'larından DB'de olmayan:");
+cftSlugs.forEach(s => { if (!inDb.has(s)) console.log(`  MISSING: ${s}`); else console.log(`  OK: ${s}`); });

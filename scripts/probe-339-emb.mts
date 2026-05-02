@@ -1,0 +1,20 @@
+import { readFileSync } from 'node:fs';
+import { createClient } from '@supabase/supabase-js';
+const text = readFileSync('.env.local', 'utf8');
+const env: Record<string,string> = {};
+text.split(/\r?\n/).forEach(l => {
+  const m = l.match(/^([A-Z_][A-Z0-9_]*)=(.*)$/);
+  if (m) env[m[1]] = m[2].replace(/^["']|["']$/g, '');
+});
+const sb = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY);
+const { data } = await sb.from('products').select('category_id').not('embedding', 'is', null).limit(2000);
+const counts: Record<string,number> = {};
+data?.forEach(p => { counts[p.category_id || 'null'] = (counts[p.category_id || 'null'] || 0) + 1; });
+const top = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0, 20);
+const ids = top.map(([id])=>id);
+const { data: cats } = await sb.from('categories').select('id, slug').in('id', ids);
+const slugMap = new Map(cats?.map(c=>[c.id, c.slug]));
+const { count: totalEmb } = await sb.from('products').select('*', { count: 'exact', head: true }).not('embedding', 'is', null);
+console.log(`Total products with embedding: ${totalEmb}`);
+console.log("Top 20 categories with embeddings:");
+top.forEach(([id, n]) => console.log(`  ${slugMap.get(id) ?? id}: ${n}`));

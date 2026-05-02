@@ -388,11 +388,31 @@ function resolveCategoryAnchor(
   if (!categorySlug) return null;
   if (CATEGORY_ANCHORS[categorySlug]) return CATEGORY_ANCHORS[categorySlug];
 
+  const normalizedSlug = normalizeText(categorySlug);
+  if (normalizedSlug.includes("pet shop kedi mama")) return "kedi mamasi";
+  if (normalizedSlug.includes("pet shop kopek mama")) return "kopek mamasi";
+  if (normalizedSlug.includes("pet shop kedi kum")) return "kedi kumu";
+
+  const slugLeaf = categorySlug.split("/").filter(Boolean).pop() ?? categorySlug;
+  if (CATEGORY_ANCHORS[slugLeaf]) return CATEGORY_ANCHORS[slugLeaf];
+
   const category = categories.find((entry) => entry.slug === categorySlug);
   if (!category) {
-    return normalizeText(categorySlug.replace(/[/_-]+/g, " "));
+    return normalizeText(slugLeaf.replace(/[/_-]+/g, " "));
   }
-  return normalizeText(category.name);
+
+  const normalizedName = normalizeText(category.name);
+  const normalizedLeaf = normalizeText(slugLeaf.replace(/-/g, " "));
+
+  if (!normalizedName || normalizedName === "siniflandirilmamis") {
+    return normalizedLeaf;
+  }
+
+  if (normalizedLeaf && !normalizedName.includes(normalizedLeaf)) {
+    return normalizedLeaf;
+  }
+
+  return normalizedName;
 }
 
 function detectCategoryMention(message: string, categories: CategoryRef[]): boolean {
