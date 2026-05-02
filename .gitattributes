@@ -1,0 +1,22 @@
+# Tek satır kuralı:
+# Tüm metin dosyaları repository'de LF (Unix) line ending tutar.
+# Windows üzerinde Git auto-conversion (core.autocrlf) tarafından
+# CRLF'ye dönüştürülmesin.
+#
+# Repo'da working dir ve repo aynı line ending'i kullanır → 70+ M
+# dosya gibi sahte değişiklikler artık görünmez.
+
+* text=auto eol=lf
+
+# Açık metin dosyaları LF zorla:
+*.{ts,tsx,js,jsx,mjs,mts,cjs,cts} text eol=lf
+*.{json,md,sql,css,scss,yaml,yml,html,xml} text eol=lf
+*.{sh,bash} text eol=lf
+*.gitignore text eol=lf
+
+# Windows-specific dosyalar CRLF kalsın (varsa):
+*.{ps1,cmd,bat} text eol=crlf
+
+# Binary dosyalar (line ending dönüşümü uygulanmaz):
+*.{png,jpg,jpeg,gif,ico,svg,pdf} binary
+*.{woff,woff2,ttf,otf,eot} binary
