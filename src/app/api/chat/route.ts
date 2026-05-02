@@ -16,6 +16,7 @@ import {
 import { heuristicClassify } from "../../../lib/chatbot/intentTypes";
 import { classifyTurn, type TurnType } from "../../../lib/chatbot/turnClassifier";
 import { validateOrFuzzyMatchSlug } from "../../../lib/chatbot/categoryValidation";
+import { enhanceCategorySearchMessage } from "../../../lib/chatbot/categoryKnowledge";
 import {
   getQueryRankingProfile,
   isStrictIntentTerm,
@@ -591,6 +592,11 @@ export async function POST(req: Request) {
     });
 
     const effectiveCategory = conversationState.category_slug || intentHintCategory || parsed.category_slugs?.[0] || null;
+    const categoryAwareSearchMessage = enhanceCategorySearchMessage({
+      categorySlug: effectiveCategory,
+      searchMessage: queryInterpretation.searchMessage,
+      originalMessage: message,
+    });
     const shouldLockCategoryToState =
       Boolean(previousState.category_slug) &&
       Boolean(conversationState.category_slug) &&
@@ -625,7 +631,7 @@ export async function POST(req: Request) {
 
     const orchResult = await orchestrateChat({
       userMessage: message,
-      interpretedMessage: queryInterpretation.searchMessage,
+      interpretedMessage: categoryAwareSearchMessage,
       lockCategorySlug,
       legacySearch: searchProducts,
       parsed: {
@@ -753,7 +759,7 @@ export async function POST(req: Request) {
             diagnostics: orchResult.diagnostics,
             query_interpretation: {
               corrected_message: queryInterpretation.correctedMessage,
-              search_message: queryInterpretation.searchMessage,
+              search_message: categoryAwareSearchMessage,
               corrections: queryInterpretation.corrections,
               short_query_kind: queryInterpretation.shortQueryKind,
               used_context_category: queryInterpretation.usedContextCategory,
@@ -807,7 +813,7 @@ export async function POST(req: Request) {
         productLimit,
         queryInterpretation: {
           corrected_message: queryInterpretation.correctedMessage,
-          search_message: queryInterpretation.searchMessage,
+          search_message: categoryAwareSearchMessage,
           corrections: queryInterpretation.corrections,
           short_query_kind: queryInterpretation.shortQueryKind,
           used_context_category: queryInterpretation.usedContextCategory,

@@ -4,6 +4,7 @@ import {
   resolveCategoryLabel,
   type FlowStepDefinition,
 } from "./categoryFlow";
+import { buildCategoryKnowledgeSnippet } from "./categoryKnowledge";
 import type { KnowledgeChunk, StructuredIntent } from "./intentParser";
 import {
   formatResponseStyleExamples,
@@ -104,6 +105,14 @@ function buildPromptMessages(input: ResponseInput): ChatMessage[] {
   parts.push(
     `BENZER KISA CEVAP ORNEKLERI:\n${formatResponseStyleExamples(styleExamples)}`
   );
+
+  const knowledgeSnippet = buildCategoryKnowledgeSnippet({
+    categorySlug: getEffectiveCategorySlug(input),
+    userMessage: input.styleMessage ?? input.userMessage,
+  });
+  if (knowledgeSnippet) {
+    parts.push(`KATEGORI NOTU:\n${knowledgeSnippet}`);
+  }
 
   if (input.intent && input.intent.confidence > 0.4) {
     parts.push(formatIntentContext(input.intent));
