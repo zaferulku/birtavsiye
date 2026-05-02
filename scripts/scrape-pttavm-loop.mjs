@@ -67,6 +67,15 @@ const QUERIES = [
 const SLEEP_MS = 30_000; // 30 sn rate-limit koruma
 const PAGES = [1, 2];
 
+// SKIP_PHONE=1 ile telefon kategorisini atla (boş kategorilere odaklanmak için)
+const SKIP_PHONE = process.env.SKIP_PHONE === "1";
+const FILTERED_QUERIES = SKIP_PHONE
+  ? QUERIES.filter((q) => q.category_id !== PHONE_CAT)
+  : QUERIES;
+if (SKIP_PHONE) {
+  console.log(`[SKIP_PHONE=1] ${QUERIES.length - FILTERED_QUERIES.length} telefon query atlandı, ${FILTERED_QUERIES.length} kalan`);
+}
+
 function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
 }
@@ -94,7 +103,7 @@ async function main() {
     round++;
     console.log(`\n━━━ Round ${round} | ${new Date().toISOString()} ━━━`);
     let totalFetched = 0, totalInserted = 0, totalNew = 0;
-    for (const task of QUERIES) {
+    for (const task of FILTERED_QUERIES) {
       for (const page of PAGES) {
         const r = await syncOne(task, page);
         if (!r.ok) {

@@ -41,3 +41,12 @@ backups/
 .claude/settings.local.json
 .claude/settings.json
 scripts/.reclassify-plan.json
+
+# Scrape runtime artefakt
+.*.pid
+.dev-server.pid
+.mm-scrape.*
+.ptt-scrape.*
+
+# Scraper state backup'ları
+scripts/scraper-state.bak.*
