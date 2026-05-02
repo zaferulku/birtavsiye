@@ -47,7 +47,10 @@ export type OrchestratorInput = {
   interpretedMessage?: string | null;
   lockCategorySlug?: string | null;
   // searchProducts (mevcut fonksiyon) ş bu modül oraya bşmlı olmasın
-  legacySearch: (query: string) => Promise<LegacySearchResult>;
+  legacySearch: (
+    query: string,
+    options?: { categorySlug?: string | null }
+  ) => Promise<LegacySearchResult>;
   // queryParser sonucu (mevcut chat route'tan geliyor)
   parsed: QueryParserResult;
   // Categories (loadCategories sonucu)
@@ -62,6 +65,7 @@ export type OrchestratorInput = {
     brand_filter?: string[];
     variant_color_patterns?: string[];
     variant_storage_patterns?: string[];
+    features?: string[];
   } | null;
   // Heuristic-resolved intent type (greeting/smalltalk/off_topic short-circuit
   // KB retrieval + smart_search). Defaults to product_search when absent.
@@ -249,6 +253,18 @@ function shouldSkipKnowledgeRetrieval(
 
   const wordCount = normalized.split(/\s+/).filter(Boolean).length;
   return wordCount > 0 && wordCount <= 4;
+}
+
+function buildFlowMessage(
+  input: OrchestratorInput,
+  searchMessage: string
+): string {
+  const rememberedFeatures = (input.conversationState?.features ?? []).slice(0, 4);
+  const parts = [searchMessage, ...rememberedFeatures]
+    .map((value) => value?.trim())
+    .filter((value): value is string => Boolean(value));
+
+  return Array.from(new Set(parts)).join(" ").trim() || searchMessage;
 }
 
 // ============================================================================
@@ -453,8 +469,11 @@ async function runFastPath(
   startTime: number,
   searchMessage: string
 ): Promise<OrchestratorOutput> {
+  const flowMessage = buildFlowMessage(input, searchMessage);
   // Mevcut searchProducts() ş vector + keyword fallback zaten içinde
-  const searchResult = await input.legacySearch(searchMessage);
+  const searchResult = await input.legacySearch(searchMessage, {
+    categorySlug: getResponseCategorySlug(input, null),
+  });
   const rankingDiagnostics = searchResult.diagnostics?.ranking ?? null;
   const fallbackKnowledgeContext = buildCategoryRankingContext({
     categorySlug: getResponseCategorySlug(input, null),
@@ -478,6 +497,7 @@ async function runFastPath(
   // Response oluşturma: KB ve intent yok, ürünler var (umarız)
   const response = await generateResponse({
     userMessage: input.userMessage,
+    styleMessage: flowMessage,
     categorySlugOverride: getResponseCategorySlug(input, null),
     hasBrandOverride: getEffectiveHasBrand(input, null),
     hasPricePreferenceOverride: getEffectiveHasPricePreference(input, null),
@@ -490,6 +510,7 @@ async function runFastPath(
 
   const suggestions = await buildSuggestions({
     userMessage: input.userMessage,
+    flowMessage: flowMessage,
     intent: null,
     products: mapProductsForResponse(searchResult.products),
     conversationHistory: input.conversationHistory || [],
@@ -552,6 +573,7 @@ async function runSlowPath(
   startTime: number,
   searchMessage: string
 ): Promise<OrchestratorOutput> {
+  const flowMessage = buildFlowMessage(input, searchMessage);
   // KB retrieval — query embedding zaten retrieveKnowledge içinde yapılıyor.
   // Eskiden Promise.all single-item idi (ölü paralelleştirme); kaldırıldı.
   const knowledgeChunks = shouldSkipKnowledgeRetrieval(input, searchMessage)
@@ -625,7 +647,7 @@ async function runSlowPath(
   if (intent.is_off_topic || (intent.is_too_vague && intent.confidence < 0.3 && !hasResolvedDimension)) {
   const response = await generateResponse({
     userMessage: input.userMessage,
-    styleMessage: searchMessage,
+    styleMessage: flowMessage,
     categorySlugOverride: getResponseCategorySlug(input, intent.category_slug),
     hasBrandOverride: getEffectiveHasBrand(input, intent),
     hasPricePreferenceOverride: getEffectiveHasPricePreference(input, intent),
@@ -638,6 +660,7 @@ async function runSlowPath(
 
     const suggestions = await buildSuggestions({
       userMessage: input.userMessage,
+      flowMessage: flowMessage,
       intent,
       products: [],
       conversationHistory: input.conversationHistory || [],
@@ -690,7 +713,9 @@ async function runSlowPath(
   // 5. Smart search 0 sonuç ş mevcut searchProducts'a fallback
   let finalProducts: ChatProductResult[] = smartResults;
   if (smartResults.length === 0) {
-    legacyFallbackResult = await input.legacySearch(searchMessage);
+    legacyFallbackResult = await input.legacySearch(searchMessage, {
+      categorySlug: getResponseCategorySlug(input, intent.category_slug),
+    });
     finalProducts = legacyFallbackResult.products;
     method = `slow_fallback_${legacyFallbackResult.method}`;
   } else {
@@ -705,7 +730,9 @@ async function runSlowPath(
         queryProfile.mode === "specific" || strictTermCount > 0;
 
       if (shouldSupplementWithLegacy) {
-        const supplemental = await input.legacySearch(searchMessage);
+        const supplemental = await input.legacySearch(searchMessage, {
+          categorySlug: getResponseCategorySlug(input, intent.category_slug),
+        });
         supplementalCandidateCount = supplemental.products.length;
 
         if (supplemental.products.length > 0) {
@@ -768,7 +795,7 @@ async function runSlowPath(
   // 6. Response generation (KB context + intent + ürünler)
   const response = await generateResponse({
     userMessage: input.userMessage,
-    styleMessage: searchMessage,
+    styleMessage: flowMessage,
     categorySlugOverride: getResponseCategorySlug(input, intent.category_slug),
     hasBrandOverride: getEffectiveHasBrand(input, intent),
     hasPricePreferenceOverride: getEffectiveHasPricePreference(input, intent),
@@ -781,6 +808,7 @@ async function runSlowPath(
 
   const suggestions = await buildSuggestions({
     userMessage: input.userMessage,
+    flowMessage: flowMessage,
     intent,
     products: mapProductsForResponse(finalProducts),
     conversationHistory: input.conversationHistory || [],
@@ -917,6 +945,64 @@ const COLOR_WORDS = [
 // Storage pattern hem standalone hem inline (regex global ile matchAll).
 const STORAGE_PATTERN = /^(\d+(?:[.,]\d+)?)\s*(GB|TB|MB)$/i;
 const STORAGE_INLINE_PATTERN = /\b(\d+)\s*(GB|TB|MB)\b/gi;
+
+function normalizeSmartSearchText(value: string | null | undefined): string {
+  return (value ?? "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\u0131/g, "i")
+    .replace(/\u0130/g, "i")
+    .replace(/[^a-z0-9\s/-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizePatternValue(pattern: string): string {
+  return normalizeSmartSearchText(pattern.replace(/%/g, " ").replace(/\s+/g, " "));
+}
+
+function isSmartSearchCategoryMatch(
+  actualCategorySlug: string | null | undefined,
+  expectedCategorySlug: string | null | undefined
+): boolean {
+  if (!expectedCategorySlug) return true;
+  if (!actualCategorySlug) return false;
+
+  const actual = normalizeSmartSearchText(actualCategorySlug);
+  const expected = normalizeSmartSearchText(expectedCategorySlug);
+  if (!actual || !expected) return false;
+
+  return actual === expected || actual.startsWith(`${expected}/`);
+}
+
+function matchesSmartSearchVariants(
+  row: SmartSearchRow,
+  variantColorPatterns: string[] | null,
+  variantStoragePatterns: string[] | null
+): boolean {
+  const title = normalizeSmartSearchText(row.title);
+  if (!title) return false;
+
+  if (variantColorPatterns?.length) {
+    const colorMatched = variantColorPatterns.some((pattern) => {
+      const normalized = normalizePatternValue(pattern);
+      return normalized.length > 0 && title.includes(normalized);
+    });
+    if (!colorMatched) return false;
+  }
+
+  if (variantStoragePatterns?.length) {
+    const compactTitle = title.replace(/\s+/g, "");
+    const storageMatched = variantStoragePatterns.some((pattern) => {
+      const normalized = normalizePatternValue(pattern).replace(/\s+/g, "");
+      return normalized.length > 0 && compactTitle.includes(normalized);
+    });
+    if (!storageMatched) return false;
+  }
+
+  return true;
+}
 
 function buildStoragePatterns(value: string, into: string[]): void {
   const s = value.trim();
@@ -1066,7 +1152,15 @@ async function runSmartSearch(
     throw new Error(`smart_search RPC: ${error.message}`);
   }
 
-  return (data ?? []) as SmartSearchRow[];
+  return ((data ?? []) as SmartSearchRow[]).filter(
+    (row) =>
+      isSmartSearchCategoryMatch(row.category_slug, intent.category_slug) &&
+      matchesSmartSearchVariants(
+        row,
+        variant_color_patterns,
+        variant_storage_patterns
+      )
+  );
 }
 
 // ============================================================================

@@ -21,6 +21,7 @@ export type ChatQueryInterpretation = {
   searchMessage: string;
   queryTokens: string[];
   corrections: QueryCorrection[];
+  fallbackCategorySlug: string | null;
   shortQueryKind:
     | "none"
     | "single_word"
@@ -238,6 +239,26 @@ const FALLBACK_CATEGORY_MENTIONS = [
   "kedi kumu",
 ] as const;
 
+const FALLBACK_CATEGORY_SLUG_MAP: Array<{ phrases: readonly string[]; slug: string }> = [
+  { phrases: ["akilli telefon", "cep telefonu", "telefon"], slug: "akilli-telefon" },
+  { phrases: ["laptop", "notebook"], slug: "laptop" },
+  { phrases: ["tablet", "ipad"], slug: "tablet" },
+  { phrases: ["akilli saat", "smart watch", "watch"], slug: "akilli-saat" },
+  { phrases: ["kulaklik", "headset"], slug: "kulaklik" },
+  { phrases: ["televizyon", "tv"], slug: "televizyon" },
+  { phrases: ["monitor"], slug: "monitor" },
+  { phrases: ["kahve makinesi"], slug: "kahve-makinesi" },
+  { phrases: ["robot supurge"], slug: "robot-supurge" },
+  { phrases: ["supurge"], slug: "supurge" },
+  { phrases: ["klima"], slug: "klima" },
+  { phrases: ["parfum"], slug: "parfum" },
+  { phrases: ["deodorant"], slug: "deodorant" },
+  { phrases: ["serum"], slug: "serum-ampul" },
+  { phrases: ["kedi mamasi"], slug: "kedi-mamasi" },
+  { phrases: ["kopek mamasi"], slug: "kopek-mamasi" },
+  { phrases: ["kedi kumu"], slug: "kedi-kumu" },
+];
+
 function normalizeText(value: string): string {
   return value
     .toLowerCase()
@@ -341,11 +362,11 @@ function correctToken(
   token: string,
   lexicon: LexiconEntry[]
 ): QueryCorrection | null {
+  const normalized = normalizeText(token);
   if (token.length < 4) return null;
   if (/^\d+$/.test(token)) return null;
-
-  const normalized = normalizeText(token);
   if (!normalized) return null;
+  if (FILLER_TOKENS.has(normalized)) return null;
   if (lexicon.some((entry) => entry.normalized === normalized)) {
     return null;
   }
@@ -459,6 +480,21 @@ function isCategoryResetQuery(tokens: string[], message: string, categories: Cat
   return tokens.length <= 2 && detectCategoryMention(message, categories) && !detectBrandMention(message);
 }
 
+export function resolveFallbackCategorySlugFromMessage(
+  message: string
+): string | null {
+  const normalized = normalizeText(message);
+  if (!normalized) return null;
+
+  for (const entry of FALLBACK_CATEGORY_SLUG_MAP) {
+    if (entry.phrases.some((phrase) => normalized.includes(normalizeText(phrase)))) {
+      return entry.slug;
+    }
+  }
+
+  return null;
+}
+
 export function interpretChatQuery(options: {
   message: string;
   categories: CategoryRef[];
@@ -481,6 +517,7 @@ export function interpretChatQuery(options: {
   const shortTokenCount = correctedWordList.length;
   const sortOnly = detectSortOnly(correctedMessage);
   const categoryMentioned = detectCategoryMention(correctedMessage, categories);
+  const fallbackCategorySlug = resolveFallbackCategorySlugFromMessage(correctedMessage);
   const brandMentioned = detectBrandMention(correctedMessage);
   const colorMentioned = detectColorMention(correctedWordList);
   const storageMentioned = detectStorageMention(correctedMessage);
@@ -540,6 +577,7 @@ export function interpretChatQuery(options: {
     searchMessage: searchParts.join(" ").trim() || correctedMessage || message,
     queryTokens: correctedWordList,
     corrections,
+    fallbackCategorySlug,
     shortQueryKind,
     usedContextCategory,
     usedContextBrand,

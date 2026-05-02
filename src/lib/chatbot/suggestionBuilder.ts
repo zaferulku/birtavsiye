@@ -32,6 +32,7 @@ export type Suggestion = {
 
 export type SuggestionContext = {
   userMessage: string;
+  flowMessage?: string | null;
   intent: StructuredIntent | null;
   products: ProductForResponse[];
   conversationHistory: Array<{ role: string; content: string }>;
@@ -79,6 +80,7 @@ export async function buildSuggestions(
   ctx: SuggestionContext
 ): Promise<Suggestion[] | null> {
   const { intent, products, conversationHistory, userMessage } = ctx;
+  const flowMessage = ctx.flowMessage?.trim() || userMessage;
 
   if (countChipTurns(conversationHistory) >= 3) return null;
   if (isTerminator(userMessage)) return null;
@@ -99,7 +101,7 @@ export async function buildSuggestions(
 
   const nextStep = getNextCategoryFlowStep({
     categorySlug: intent?.category_slug ?? ctx.categorySlug ?? null,
-    userMessage,
+    userMessage: flowMessage,
     hasBrand:
       typeof ctx.hasBrand === "boolean"
         ? ctx.hasBrand

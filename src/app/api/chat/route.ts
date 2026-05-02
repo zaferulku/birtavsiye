@@ -26,7 +26,10 @@ import {
   type RetrievalRankingDiagnostics,
   type VectorCandidate,
 } from "../../../lib/search/productRetrieval";
-import { interpretChatQuery } from "../../../lib/chatbot/queryInterpreter";
+import {
+  interpretChatQuery,
+  resolveFallbackCategorySlugFromMessage,
+} from "../../../lib/chatbot/queryInterpreter";
 
 export const runtime = "nodejs";
 
@@ -97,6 +100,7 @@ type SearchResult = {
     category_slugs: string[] | null;
     brand: string | null;
     color: string | null;
+    storage: string | null;
     price_min: number | null;
     price_max: number | null;
   };
@@ -107,6 +111,88 @@ type SearchResult = {
     ranking?: RetrievalRankingDiagnostics;
   };
 };
+
+const ACCESSORY_QUERY_PATTERN =
+  /\b(kilif|kılıf|kapak|aksesuar|sarj|şarj|kablo|ekran koruyucu|boyun askisi|aski)\b/i;
+
+function shouldPreferLeafFallbackCategory(
+  rawCategorySlug: string | null | undefined,
+  fallbackCategorySlug: string | null | undefined,
+  query: string
+): boolean {
+  if (!rawCategorySlug || !fallbackCategorySlug) return false;
+  if (ACCESSORY_QUERY_PATTERN.test(query)) return false;
+
+  if (
+    fallbackCategorySlug === "akilli-telefon" &&
+    /(^|\/)telefon$/i.test(rawCategorySlug) &&
+    !/akilli-telefon/i.test(rawCategorySlug)
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
+function resolvePreferredCategoryCandidate(
+  rawCategorySlug: string | null | undefined,
+  fallbackCategorySlug: string | null | undefined,
+  query: string
+): string | null {
+  if (shouldPreferLeafFallbackCategory(rawCategorySlug, fallbackCategorySlug, query)) {
+    return fallbackCategorySlug ?? null;
+  }
+
+  return rawCategorySlug ?? fallbackCategorySlug ?? null;
+}
+
+function normalizeVariantToken(value: string | null | undefined): string {
+  return (value ?? "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\u0131/g, "i")
+    .replace(/\u0130/g, "i")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function matchesVariantFilters(
+  product: RankedProduct,
+  filters: { color: string | null; storage: string | null }
+): boolean {
+  const fragments = [
+    product.title,
+    product.brand,
+    product.model_family,
+    product.model_code,
+    product.variant_color,
+    product.variant_storage,
+    JSON.stringify(product.specs ?? {}),
+  ]
+    .filter(Boolean)
+    .map((value) => normalizeVariantToken(String(value)));
+
+  const haystack = fragments.join(" ");
+  const haystackCompact = haystack.replace(/\s+/g, "");
+
+  if (filters.color) {
+    const colorNeedle = normalizeVariantToken(filters.color);
+    if (colorNeedle && !haystack.includes(colorNeedle)) {
+      return false;
+    }
+  }
+
+  if (filters.storage) {
+    const storageNeedle = normalizeVariantToken(filters.storage).replace(/\s+/g, "");
+    if (storageNeedle && !haystackCompact.includes(storageNeedle)) {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 let categoriesCache: { data: CategoryRef[]; timestamp: number } | null = null;
 let categoriesPromise: Promise<CategoryRef[]> | null = null; // in-flight dedup
@@ -308,14 +394,32 @@ async function buildVectorCandidates(
     }));
 }
 
-async function searchProducts(userQuery: string): Promise<SearchResult> {
+async function searchProducts(
+  userQuery: string,
+  options?: { categorySlug?: string | null }
+): Promise<SearchResult> {
   const startTime = Date.now();
   const categories = await loadCategories();
   const parsed = parseQuery(userQuery, categories);
-  const resolvedCategorySlugs = parsed.category_slugs?.length
+  const fallbackCategorySlug = resolveFallbackCategorySlugFromMessage(userQuery);
+  const overrideCategorySlug = options?.categorySlug ?? null;
+  const categoryCandidates = overrideCategorySlug
+    ? [overrideCategorySlug]
+    : parsed.category_slugs?.length
+    ? [
+        resolvePreferredCategoryCandidate(
+          parsed.category_slugs[0],
+          fallbackCategorySlug,
+          userQuery
+        ),
+      ].filter((slug): slug is string => Boolean(slug))
+    : fallbackCategorySlug
+      ? [fallbackCategorySlug]
+      : [];
+  const resolvedCategorySlugs = categoryCandidates.length
     ? (
         await Promise.all(
-          parsed.category_slugs.map((slug) => validateOrFuzzyMatchSlug(slug, 1))
+          categoryCandidates.map((slug) => validateOrFuzzyMatchSlug(slug, 1))
         )
       ).filter((slug): slug is string => Boolean(slug))
     : null;
@@ -324,6 +428,7 @@ async function searchProducts(userQuery: string): Promise<SearchResult> {
     category_slugs: resolvedCategorySlugs,
     brand: parsed.brand,
     color: parsed.color,
+    storage: parsed.storage ?? null,
     price_min: parsed.price_min,
     price_max: parsed.price_max,
   };
@@ -357,7 +462,16 @@ async function searchProducts(userQuery: string): Promise<SearchResult> {
       vectorCandidates,
     });
 
-    const products = rankedProducts.map(toMatchedProduct);
+    const variantFilteredProducts =
+      parsed.color || parsed.storage
+        ? rankedProducts.filter((product) =>
+            matchesVariantFilters(product, {
+              color: parsed.color,
+              storage: parsed.storage ?? null,
+            })
+          )
+        : rankedProducts;
+    const products = variantFilteredProducts.map(toMatchedProduct);
 
     return {
       products,
@@ -371,7 +485,7 @@ async function searchProducts(userQuery: string): Promise<SearchResult> {
       latencyMs: Date.now() - startTime,
       diagnostics: {
         vector_candidate_count: vectorCandidates.length,
-        top_candidates: summarizeRankedCandidates(rankedProducts),
+        top_candidates: summarizeRankedCandidates(variantFilteredProducts),
         ranking: rankingDiagnostics,
       },
     };
@@ -528,7 +642,16 @@ export async function POST(req: Request) {
 
     // İlk pass: parseQuery (heuristic) — orchResult henüz yok.
     // LLM intent ile state enrich orchestrator sonrası yapılıyor (aşağıda).
-    const parsedCategoryRaw = parsed.category_slugs?.[0] ?? null;
+    const fallbackCategorySlug =
+      queryInterpretation.fallbackCategorySlug ??
+      resolveFallbackCategorySlugFromMessage(message);
+    const parsedCategoryRaw = queryInterpretation.usedContextCategory
+      ? previousState.category_slug ?? null
+      : resolvePreferredCategoryCandidate(
+      parsed.category_slugs?.[0] ?? null,
+      fallbackCategorySlug,
+      queryInterpretation.searchMessage || message
+    );
     const validParsedCategory = await validateOrFuzzyMatchSlug(parsedCategoryRaw, 1);
     const resilientParsedCategory = validParsedCategory ?? parsedCategoryRaw;
 
@@ -543,6 +666,13 @@ export async function POST(req: Request) {
     if (/(kablosuz|wireless)/i.test(msgLower)) features.push("kablosuz");
     if (/(spor(luk|ty)?|aktivewear|active ?wear)/i.test(msgLower)) features.push("spor");
     if (/(slim fit|skinny|regular fit)/i.test(msgLower)) features.push("slim_fit");
+    if (/\boyun|gaming|fps\b/i.test(msgLower)) features.push("oyun");
+    if (/\bofis|is icin|iş için\b/i.test(msgLower)) features.push("ofis");
+    if (/\byazilim|yazılım|gelistirme|geliştirme|kodlama\b/i.test(msgLower)) features.push("yazilim");
+    if (/\bgunluk|günlük|casual\b/i.test(msgLower)) features.push("gunluk");
+    if (/\bespresso\b/i.test(msgLower)) features.push("espresso");
+    if (/\bfiltre\b/i.test(msgLower)) features.push("filtre");
+    if (/\bkapsul|kapsül|kapsullu|kapsüllü\b/i.test(msgLower)) features.push("kapsul");
 
     // Installment (taksit) ay sayısı extraction
     let installmentMin: number | null = null;
@@ -592,7 +722,12 @@ export async function POST(req: Request) {
       next: { category: conversationState.category_slug, brand: conversationState.brand_filter, color: conversationState.variant_color_patterns },
     });
 
-    const effectiveCategory = conversationState.category_slug || intentHintCategory || parsed.category_slugs?.[0] || null;
+    const effectiveCategory =
+      conversationState.category_slug ||
+      intentHintCategory ||
+      parsed.category_slugs?.[0] ||
+      fallbackCategorySlug ||
+      null;
     const categoryAwareSearchMessage = enhanceCategorySearchMessage({
       categorySlug: effectiveCategory,
       searchMessage: queryInterpretation.searchMessage,
