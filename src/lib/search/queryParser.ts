@@ -114,20 +114,56 @@ function extractPrice(query: string): { min: number | null; max: number | null; 
   let min: number | null = null;
   let max: number | null = null;
 
-  // "X TL altı" / "X TL'nin altında" / "X lira altı"
-  const maxRe = /(\d+(?:\.\d{3})*)\s*(?:tl|lira|₺)(?:'?nin?\s+)?\s*(?:altı|altında|alt)/i;
+  // P6.19: 'bin' çarpanı yardımcı — match içinde 'bin' geçiyorsa ×1000.
+  const numFromMatch = (numStr: string, hasBin: boolean): number => {
+    const n = parseInt(numStr.replace(/\./g, ""));
+    return hasBin ? n * 1000 : n;
+  };
+
+  // "X TL altı" / "X TL'nin altında" / "X bin altı"
+  const maxRe = /(\d+(?:\.\d{3})*)\s*(bin)?\s*(?:tl|lira|₺)?(?:'?nin?\s+)?\s*(?:altı|altında|alt)/i;
   const maxM = query.match(maxRe);
   if (maxM) {
-    max = parseInt(maxM[1].replace(/\./g, ""));
+    max = numFromMatch(maxM[1], Boolean(maxM[2]));
     remaining = remaining.replace(maxM[0], "").trim();
   }
 
-  // "X TL üstü" / "X TL'nin üstünde" / "X lira üstü"
-  const minRe = /(\d+(?:\.\d{3})*)\s*(?:tl|lira|₺)(?:'?nin?\s+)?\s*(?:üstü|üstünde|üst|üzeri)/i;
+  // "X TL üstü" / "X TL'nin üstünde" / "X bin üzeri"
+  const minRe = /(\d+(?:\.\d{3})*)\s*(bin)?\s*(?:tl|lira|₺)?(?:'?nin?\s+)?\s*(?:üstü|üstünde|üst|üzeri)/i;
   const minM = query.match(minRe);
   if (minM) {
-    min = parseInt(minM[1].replace(/\./g, ""));
+    min = numFromMatch(minM[1], Boolean(minM[2]));
     remaining = remaining.replace(minM[0], "").trim();
+  }
+
+  // P6.19: "X bine kadar" / "X TL'ye kadar"
+  if (max === null) {
+    const kadarRe = /(\d+(?:\.\d{3})*)\s*(bin)?\s*(?:tl|lira|₺)?(?:'?ye)?\s*kadar/i;
+    const kadarM = query.match(kadarRe);
+    if (kadarM) {
+      max = numFromMatch(kadarM[1], Boolean(kadarM[2]));
+      remaining = remaining.replace(kadarM[0], "").trim();
+    }
+  }
+
+  // P6.19: "max X TL" / "en fazla X bin"
+  if (max === null) {
+    const maxKwRe = /(?:max|en\s+fazla)\s+(\d+(?:\.\d{3})*)\s*(bin)?\s*(?:tl|lira|₺)?/i;
+    const maxKwM = query.match(maxKwRe);
+    if (maxKwM) {
+      max = numFromMatch(maxKwM[1], Boolean(maxKwM[2]));
+      remaining = remaining.replace(maxKwM[0], "").trim();
+    }
+  }
+
+  // P6.19: "min X TL" / "en az X bin"
+  if (min === null) {
+    const minKwRe = /(?:min|en\s+az)\s+(\d+(?:\.\d{3})*)\s*(bin)?\s*(?:tl|lira|₺)?/i;
+    const minKwM = query.match(minKwRe);
+    if (minKwM) {
+      min = numFromMatch(minKwM[1], Boolean(minKwM[2]));
+      remaining = remaining.replace(minKwM[0], "").trim();
+    }
   }
 
   // "X TL ile Y TL arası"
