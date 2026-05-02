@@ -37,7 +37,14 @@ function hierUrl(
     warnedSlugs.add(slug);
     console.warn(`[Header] Unknown NAV slug: "${slug}" — DB taxonomy'de eşleşme yok`);
   }
-  return "/" + (q ? "?q=" + encodeURIComponent(q) : "");
+  // P6.20-B: SSR'da catMap empty kaldığında eski fallback /?q=<slug> ana
+  // sayfaya yönlendiriyordu (kullanıcı raporu: linkler ana sayfaya dönüyor).
+  // Yeni davranış: /anasayfa/<slug> raw passthrough — segment route resolver
+  // (full-path veya leaf-suffix) sunucu tarafında çözer. DB'de hiç match
+  // yoksa 404 ana sayfa redirect'ten daha açık UX. Kalıcı çözüm SSR-side
+  // cats prefetch (P6.20-A, Codex Header sprint sonrası).
+  const fallbackBase = "/anasayfa/" + slug;
+  return q ? `${fallbackBase}?q=${encodeURIComponent(q)}` : fallbackBase;
 }
 
 type NavTag = string;
