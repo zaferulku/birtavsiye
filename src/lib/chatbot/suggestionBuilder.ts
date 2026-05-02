@@ -97,7 +97,57 @@ export async function buildSuggestions(
     return buildPopularFollowUpSuggestions(intent, products, userMessage);
   }
 
-  if (products.length <= 1) return null;
+  if (products.length === 0) return null;
+
+  // P6.10 fix (2026-05-02): 1 ürün edge case — kullanıcı çıkmaza girmesin.
+  // Aktif filtreyi gevşeten "broaden" chip'leri (filter remove via intentHint reset).
+  if (products.length === 1) {
+    const chips: Suggestion[] = [];
+    const mustHaveCount = intent?.must_have_specs
+      ? Object.keys(intent.must_have_specs).length
+      : 0;
+    if (mustHaveCount > 0) {
+      chips.push({
+        label: "Diğer renk/varyantlar",
+        value: "varyantları göster",
+        type: "shortcut",
+        icon: "🎨",
+        intentHint: {
+          variant_color_patterns: [],
+          variant_storage_patterns: [],
+          mode: "reset",
+        },
+      });
+    }
+    if ((intent?.brand_filter?.length ?? 0) > 0) {
+      chips.push({
+        label: "Markaları genişlet",
+        value: "tüm markalar",
+        type: "shortcut",
+        icon: "🏷️",
+        intentHint: { brand_filter: [], mode: "reset" },
+      });
+    }
+    if (intent?.price_range.min != null || intent?.price_range.max != null) {
+      chips.push({
+        label: "Fiyat aralığını genişlet",
+        value: "fiyat genişlet",
+        type: "shortcut",
+        icon: "💰",
+        intentHint: { price_min: null, price_max: null, mode: "reset" },
+      });
+    }
+    // Hiç aktif filter yoksa ama 1 ürün → genel broaden fallback
+    if (chips.length === 0) {
+      chips.push({
+        label: "Başka seçenek göster",
+        value: "baska secenek goster",
+        type: "shortcut",
+        icon: "🔁",
+      });
+    }
+    return chips;
+  }
 
   const nextStep = getNextCategoryFlowStep({
     categorySlug: intent?.category_slug ?? ctx.categorySlug ?? null,
