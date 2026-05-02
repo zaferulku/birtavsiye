@@ -9,6 +9,7 @@ import {
   formatIntentExamples,
   selectIntentExamples,
 } from "./intentExamples";
+import { buildCategoryKnowledgeSnippet } from "./categoryKnowledge";
 
 const INTENT_CACHE_TTL_MS = 5 * 60 * 1000;
 const INTENT_CACHE_MAX = 500;
@@ -63,7 +64,8 @@ export async function parseIntent(
   message: string,
   knowledgeChunks: KnowledgeChunk[],
   categoryTaxonomy: string[],
-  conversationHistory: Array<{ role: string; content: string }> = []
+  conversationHistory: Array<{ role: string; content: string }> = [],
+  contextCategorySlug: string | null = null
 ): Promise<StructuredIntent> {
   const historyHash = conversationHistory
     .map((messageEntry) => messageEntry.content.slice(0, 30))
@@ -84,7 +86,11 @@ export async function parseIntent(
     knowledgeChunks,
     categoryTaxonomy,
     conversationHistory,
-    formatIntentExamples(selectIntentExamples(message, conversationHistory))
+    formatIntentExamples(selectIntentExamples(message, conversationHistory)),
+    buildCategoryKnowledgeSnippet({
+      categorySlug: contextCategorySlug,
+      userMessage: message,
+    })
   );
 
   const providers: IntentProvider[] = [

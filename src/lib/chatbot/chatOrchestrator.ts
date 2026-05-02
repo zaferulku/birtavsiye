@@ -521,7 +521,8 @@ async function runSlowPath(
     searchMessage,
     knowledgeChunks,
     input.categoryTaxonomy,
-    input.conversationHistory || []
+    input.conversationHistory || [],
+    getResponseCategorySlug(input, null)
   );
 
   // Override: LLM bazen DB'de OLMAYAN slug halüsinasyonu yapar ("spor-antas",

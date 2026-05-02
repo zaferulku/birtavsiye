@@ -137,7 +137,8 @@ export function buildIntentParserPrompt(
   knowledgeChunks: KnowledgeChunk[],
   categoryTaxonomy: string[],
   conversationHistory: Array<{ role: string; content: string }> = [],
-  exampleContext = "(ilgili örnek konuşma bulunamadı)"
+  exampleContext = "(ilgili örnek konuşma bulunamadı)",
+  categoryKnowledgeNote: string | null = null
 ): string {
   const kbContext = formatKnowledgeContext(knowledgeChunks);
   const taxonomySample = formatTaxonomy(categoryTaxonomy);
@@ -154,6 +155,8 @@ ${taxonomySample}
 
 BİLGİ KAYNAKLARI (konuyla ilgili Türkçe sözlük):
 ${kbContext}
+
+${categoryKnowledgeNote ? `KATEGORI BILGI NOTU:\n${categoryKnowledgeNote}\n` : ""}
 
 BENZER ÖRNEK KONUŞMALAR:
 ${exampleContext}
