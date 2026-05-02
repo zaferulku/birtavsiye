@@ -5,7 +5,10 @@ export type HeaderSearchSuggestion = {
 };
 
 const suggestionCatalog: HeaderSearchSuggestion[] = [
+  { id: "iphone-15", label: "iPhone 15", description: "Telefon" },
   { id: "iphone-15-pro", label: "iPhone 15 Pro", description: "Telefon" },
+  { id: "iphone-15-pro-max", label: "iPhone 15 Pro Max", description: "Telefon" },
+  { id: "iphone-15-plus", label: "iPhone 15 Plus", description: "Telefon" },
   { id: "iphone-16", label: "iPhone 16", description: "Telefon" },
   { id: "iphone-kilif", label: "iPhone kilif", description: "Telefon aksesuari" },
   { id: "samsung-galaxy", label: "Samsung Galaxy", description: "Telefon" },
@@ -52,17 +55,22 @@ function normalize(value: string) {
 export function getHeaderSearchSuggestions(query: string): HeaderSearchSuggestion[] {
   const normalized = normalize(query);
   if (normalized.length < 2) return [];
+  const queryTokens = normalized.split(/\s+/).filter(Boolean);
 
   const ranked = suggestionCatalog
     .map((item) => {
       const label = normalize(item.label);
       const description = normalize(item.description);
+      const labelTokens = label.split(/\s+/).filter(Boolean);
       let score = 0;
 
       if (label.startsWith(normalized)) score += 6;
       if (label.includes(normalized)) score += 4;
       if (description.includes(normalized)) score += 2;
       if (label.split(" ").some((token) => token.startsWith(normalized))) score += 2;
+      if (queryTokens.every((token) => label.includes(token))) score += 5;
+      if (queryTokens.every((token) => labelTokens.some((labelToken) => labelToken.startsWith(token)))) score += 3;
+      if (queryTokens.length > 1 && labelTokens.length > queryTokens.length) score += 1;
 
       return { item, score };
     })

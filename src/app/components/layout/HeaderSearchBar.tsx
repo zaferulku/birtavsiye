@@ -30,7 +30,7 @@ export default function HeaderSearchBar({
 
   return (
     <div
-      className="relative flex-1 min-w-0"
+      className="relative z-[70] flex-1 min-w-0"
       onFocus={() => {
         if (blurTimer.current) clearTimeout(blurTimer.current);
         if (query.trim()) setIsOpen(true);
@@ -112,11 +112,11 @@ export default function HeaderSearchBar({
       </form>
 
       {isOpen && suggestions.length > 0 && (
-        <div className="absolute left-0 right-0 top-full mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_16px_42px_rgba(15,23,42,0.12)]">
-          <div className="border-b border-slate-100 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.16em] text-slate-400">
+        <div className="absolute left-0 right-0 top-full z-[80] mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_20px_44px_rgba(15,23,42,0.16)]">
+          <div className="border-b border-slate-100 px-4 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
             Yazdikca tamamla
           </div>
-          <div className="py-1.5">
+          <div className="py-0.5">
             {suggestions.map((suggestion, index) => {
               const isActive = index === activeIndex;
 
@@ -126,15 +126,15 @@ export default function HeaderSearchBar({
                   type="button"
                   onMouseEnter={() => setActiveIndex(index)}
                   onClick={() => submit(suggestion.label)}
-                  className={`flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition ${
+                  className={`flex w-full items-center justify-between gap-3 px-4 py-2 text-left transition ${
                     isActive ? "bg-[#FFF5EF] text-[#E8460A]" : "text-slate-700 hover:bg-slate-50"
                   }`}
                 >
                   <div className="min-w-0">
-                    <div className="truncate text-sm font-semibold">{suggestion.label}</div>
-                    <div className="truncate text-xs text-slate-400">{suggestion.description}</div>
+                    <div className="truncate text-[13px] font-semibold leading-[18px]">{suggestion.label}</div>
+                    <div className="truncate text-[11px] leading-[14px] text-slate-400">{suggestion.description}</div>
                   </div>
-                  <span className="text-xs font-medium text-slate-300">Tamamla</span>
+                  <span className="text-[11px] font-medium text-slate-300">Tamamla</span>
                 </button>
               );
             })}
