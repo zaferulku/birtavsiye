@@ -3,7 +3,7 @@
 > **Bu dosya tek kaynak gerçek.** Yeni sohbet/oturum başlattığınızda
 > bu dosyayı Claude veya Claude Code'a verin — tüm bağlamı 30 saniyede alır.
 
-**Son güncelleme:** 2026-05-02 v15.3 (akşam — Phase 6 13 borç kapatıldı: P6.4/6/7/8/9/10/11/12 partial/13 + Migration 030-033 zinciri + Codex paralel UI çalışması NOTU)
+**Son güncelleme:** 2026-05-02 v15.3 (gece — Phase 6 13 borç + P6.12 lint hijyen sprint 47 fix/5 commit, lint baseline 223→174, any 138→107)
 
 ---
 
@@ -56,10 +56,32 @@ P6.12 kısmi başlatıldı. Codex paralel UI çalışması in-progress.
   `fitness-aksesuar` → `spor-outdoor/fitness`, eski `elektronik/telefon/aksesuar` regresyon önlendi)
 - `migrate-eval-fixtures.mts` MANUAL_OVERRIDE 16 → 110+ entry + Türkçe ascii-normalize + `--dump-taxonomy` flag
 
-**P6.12 Lint hijyen kısmi (`efe1fed`):**
-- 8 fix: prefer-const + html-link (3) + set-state-in-effect (1) + img (2)
-- Lint baseline: 254 → 223 → 213 (10 düşüş)
-- Kalan: img (9), unused-vars (33), unescaped-entities (14), hooks (12), any (138), scripts/ (173) = ~370 toplam
+**P6.12 Lint hijyen tam sprint (5 commit, 47 fix):**
+- `efe1fed` Aşama 1+2 partial (8 fix): prefer-const + html-link (3) + set-state-in-effect (1) + img (2)
+- `3990a45` Aşama 3 (4 fix): admin/page.tsx exhaustive-deps (4 useEffect deps eslint-disable
+  + justification, useCallback wrap scope dışı P6.12g borç)
+- `ee0fadb` Aşama 4 G1 (11 fix): scrapers/live any → tip
+  - mediamarkt/trendyol/pttavm catch (err: any) → unknown + instanceof Error narrowing
+  - JSON-LD parse param any → JsonLdProduct/Record<string, unknown>
+  - normalizeOffers + OfferLike type tanımı
+  - useLivePrices SSE error handler MessageEvent typed
+- `12eed6f` Aşama 4 G3 partial (2 fix): Header (User type) + api/live-prices (catch unknown)
+- `e579565` Aşama 4 G2 (22 fix): admin + karsilastir any → tip
+  - karsilastir RawJoinRow + flattenObject Record<string,unknown>
+  - admin AdminProductRow/CategoryRow/StoreRow/PriceRow/CsvRow/IcecatSpecGroup interface'leri
+  - Cascade fix: 3 TS2339 (csvParsed.category undefined, makeSlug param, created_at conditional)
+- **LINT BASELINE: 223 → 174 (-49, %22 azalma)**
+- **no-explicit-any: 138 → 107 (-31, %22 azalma)**
+
+KALAN P6.12 SUB-BORÇLAR:
+- **P6.12g-mediamarkt**: `mediamarkt.mts` (6) + `mediamarkt-categories.mts` (1) any.
+  Denendi, JSON-LD apolloState/featureGroups deep nested narrowing 15+ TS2339
+  cascade üretti → REVERT, ayrı sprint (JsonLdProduct + ApolloState interface tasarım gerek)
+- **P6.12f-codex**: TopicFeed + profil + tavsiyeler + tavsiye/[id] (10 any + 8 hooks).
+  Codex backup'tan reapply sonrası ele alınır
+- **P6.12c**: scripts/ 78 any (fix-kb-mojibake-db.ts içinde 72) — one-shot, ayrı sprint
+- src/ kalan ~50 any (chatbot strict, Codex pipeline güvenliği — dokunulmaz)
+- no-unescaped-entities (14) + no-unused-vars (33) — mekanik fix, ayrı sprint
 
 ### P6.5 KAPATMA (audit only, dokunulmadı):
 - `categoryKnowledge.ts` loose substring match çalışıyor (normalize() `/` → space sayesinde)
@@ -73,17 +95,22 @@ P6.12 kısmi başlatıldı. Codex paralel UI çalışması in-progress.
   Scope mega paket dışı (Migration + Header refactor + smoke ~3-5 saat).
   Phase 7 / ayrı sprint.
 
-### Codex paralel çalışması (IN PROGRESS, uncommitted):
+### Codex paralel çalışması (IN PROGRESS, backup'ta + uncommitted):
 
-4 UI dosyası uncommitted (kullanıcı bilgilendirdi, P6.12 batch'te tespit edildi):
-- `src/app/components/home/TopicFeed.tsx`
-- `src/app/profil/page.tsx`
+**4 forum/profil dosya:** Codex `backups/ui/2026-05-02-forum-profile/` altına
+yedeklendi + working tree'den restore edildi (origin state'e döndü, Codex
+kendi sprint'inde reapply edecek):
+- `src/app/components/home/TopicFeed.tsx` (gradient + bento UI)
+- `src/app/profil/page.tsx` (gradient + kullanıcı paneli badge)
 - `src/app/tavsiye/[id]/page.tsx`
 - `src/app/tavsiyeler/page.tsx`
 
-Muhtemel kapsam: gradient/badge/border-radius UI iyileştirme (radial-gradient
-backgrounds, [#efe6dc] border, kullanıcı paneli badge eklemesi).
-Codex kendi flow'unda commit edecek, sonra v15.4'te işlenir.
+**Yeni Codex değişikliği (uncommitted):**
+- `src/app/ara/page.tsx` — store-source display labels feature
+  (sourceDisplayLabels Record + getSourceDisplayName + StoreLogo render)
+
+P6.12 sprint'te commit edilmedi (selective `git commit --only` ile dışarıda
+bırakıldı). Codex kendi flow'unda commit edecek, v15.4'te işlenir.
 
 ### Production durumu:
 - Working dir: 4 unstaged Codex UI dosyası (yukarıda listelendi)
@@ -1338,6 +1365,11 @@ anne_bebek (11) = **141**
 ## ✅ COMMIT GEÇMİŞİ (son 30)
 
 ```
+e579565   fix(lint): P6.12 Aşama 4 G2 — admin + karsilastir any → tip (22 fix)
+12eed6f   fix(lint): P6.12 Aşama 4 G3 partial — Header + api/live-prices any (2)
+ee0fadb   fix(lint): P6.12 Aşama 4 G1 — scrapers/live any → tip (11 fix)
+3990a45   fix(lint): P6.12 Aşama 3 — admin/page.tsx exhaustive-deps (4 fix)
+6a00f3a   docs(state): v15.3 — Phase 6 13 borç + Mega paket + Codex paralel
 efe1fed   chore(lint): P6.12 Aşama 1+2 partial — auto-fix + html-link + img (admin)
 7132abb   fix(eval): P6.8 — fixture unmatched 120 → 0 manuel mapping
 3cd6eba   fix(chatbot): P6.7 — LLM prompt'ta slug yerine display label
@@ -1508,6 +1540,17 @@ e0b318d   fix(ui): liste kart başlığı = brand + model_family + storage + col
       mode) için eslint-disable + sub-borç markdown'a yaz, refactor scope dışı
     - "Aşama 1+2: ~2 saat, 28 fix" gibi tahminler gerçekleşmiyor; gerçek
       hız 6-10 fix/saat (bulk imza migration'da daha hızlı, ad-hoc'ta yavaş)
+21. **TS2339 cascade threshold:** `any → unknown / Record<string, unknown>`
+    narrowing'de >5 cascade hatası varsa **REVERT** + sub-borç (P6.12g-<scope>)
+    işaretle. 1+ saat zincir hatası ile uğraşmaktansa interface tasarımıyla
+    ayrı sprint daha sağlıklı. Ders: mediamarkt.mts JSON-LD `apolloState/
+    featureGroups/breadcrumb` deep nested 15+ TS2339 → REVERT, P6.12g-mediamarkt.
+    Karsilastir RawJoinRow + admin AdminProductRow gibi minimal interface
+    yaklaşımı 3 cascade limitinde tuttu — başarılı pattern.
+22. **Cascade kontrol her edit sonrası:** `npx tsc --noEmit | grep "TS2339\|TS2353\|TS2769"`.
+    >5 → revert. 1-5 → düzelt + commit. 0 → ideal. Cascade fix'leri kategori
+    olarak: undefined fallback (`?? ""`), conditional render (`p.field ? ... : ""`),
+    Supabase nested select bypass (`as unknown as RowType[]`).
 
 ### Kullanıcı için
 
@@ -1645,6 +1688,7 @@ yeni kategoriler ekler. Tur 2 fixture taxonomy gereği.
 | 2026-05-02 | v15.1 — Phase 6 partial (P6.1 chatbot kategori match restore: bisect → Migration 030 is_leaf backfill 1→172 + eval fixture migrate, 0/5→3/5 PASS) + P6.2a scraper classifier Phase 5 uyumu (52 entry leaf→full path + resolveLeafToFullPath helper + auto-create devre dışı). Codex paralel zinciri (4 commit: knowledge→intent+ranking, fast-path, bug fix, chat izolasyonu httpOnly cookie + session scope). Kod hijyen A1 (orphan sil Hero/BlogSection + .env.example + CI workflow). Yeni borçlar P6.6-11 (is_leaf trigger, response leaf-only, 120 fixture unmatched, provider timeout, suggestion empty, kahve makinesi 0 sonuç). Davranış kuralları 17 (CRLF/LF) + 18 (Codex paralel). | Claude |
 | 2026-05-02 | v15.2 — Phase 6 partial-2 (P6.9 provider timeout+retry, P6.10 1-ürün suggestion chip, P6.11 sticky-aware kategori tie-break, P6.13 elektronik/akilli-ev leaf Migration 031) + ŞAH A-D zinciri (A: .gitattributes LF normalize, B: v15.1 commit, C: NAV slug fix + akilli-ev leaf, D: Codex chatbot polish). CI fail-soft (continue-on-error src/+scripts/ 254 lint borç P6.12'ye). Yeni borçlar P6.12 (lint hijyen) + P6.13b (~16 IoT ürün manuel re-categorization). Davranış kuralı 19 (sticky kategori context tie-break). Kod etkisi: 2 dosya P6.11 + suggestionBuilder + intentParserRuntime + Header + Migration 031 SQL. Codex izolasyonu korundu. | Claude |
 | 2026-05-02 | v15.3 — Akşam oturumu, Phase 6 13 borç kapatıldı: P6.4 (tavsiye/[id]/layout anon→admin), P6.6 (Migration 032 is_leaf trigger), P6.7 (LLM response leaf-only display), P6.8 (120 fixture unmatched → 0 + 564/564 resolved + Türkçe ascii-norm + 110+ MANUAL_OVERRIDE), P6.13b (Migration 033 — 30 IoT ürün re-categorization 24+6). P6.5 KAPATMA (audit only, dokunulmadı, Codex pipeline riski). P6.12 partial (8/254 lint fix; html-link 3 + set-state 1 + img 2 + prefer-const auto-fix). DEFERRED: P6.3 NAV dup converge (53 dup, scope mega paket dışı, Phase 7). NOT: 4 Codex UI dosyası uncommitted (TopicFeed/profil/tavsiye/tavsiyeler — gradient/badge UI iyileştirme), v15.4'te işlenir. Yeni davranış kuralı 20 (Bulk lint fix gate sürtünmesi). | Claude |
+| 2026-05-02 | v15.3 (gece extension) — P6.12 lint hijyen tam sprint: 5 commit, 47 fix. Aşama 1+2 partial (8) + Aşama 3 admin hooks (4) + Aşama 4 G1 scrapers/live any (11) + Aşama 4 G3 partial Header+live-prices (2) + Aşama 4 G2 admin+karsilastir any (22). Lint 223→174 (%22 azalma), no-explicit-any 138→107 (%22 azalma). DEFERRED sub-borçlar: P6.12g-mediamarkt (TS2339 cascade revert, JSON-LD interface tasarım gerek), P6.12f-codex (Codex reapply sonrası), P6.12c scripts/ (one-shot). Codex backup'ta 4 forum/profil dosya + ara/page.tsx (store-source labels) yeni değişiklik uncommitted. Yeni davranış kuralları 21 (TS2339 cascade threshold >5 → revert) + 22 (cascade kontrol her edit sonrası). | Claude |
 
 ---
 
