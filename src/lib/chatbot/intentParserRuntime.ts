@@ -16,8 +16,10 @@ import {
 
 const INTENT_CACHE_TTL_MS = 5 * 60 * 1000;
 const INTENT_CACHE_MAX = 500;
-const REQUEST_TIMEOUT_MS = 5_000;
-const FAST_FOLLOWUP_TIMEOUT_MS = 1_800;
+// P6.9 fix (2026-05-02): NVIDIA NIM cold start tipik 2-5s. Eski değerler
+// (5000/1800) çok agresifti, "Timeout after 1800ms" log spam.
+const REQUEST_TIMEOUT_MS = 6_000;        // 5000 → 6000 (1s margin)
+const FAST_FOLLOWUP_TIMEOUT_MS = 2_500;  // 1800 → 2500 (cold start tolerans)
 const FAST_SORT_PATTERN =
   /^(en ucuz|en populer|en populer|en hesapli|en iyi|hepsini goster|tavsiye ver)$/i;
 const FAST_FOLLOWUP_PATTERN =
@@ -204,7 +206,7 @@ export async function parseIntent(
   for (let index = 0; index < providers.length; index += 1) {
     const provider = providers[index];
     try {
-      const rawResponse = await withAbortTimeout(provider, timeoutMs);
+      const rawResponse = await tryProviderWithRetry(provider, timeoutMs);
       const intent = parseIntentResponse(rawResponse);
       cacheSet(key, intent);
       return intent;
@@ -382,6 +384,29 @@ async function withAbortTimeout<T>(
     throw error;
   } finally {
     clearTimeout(timer);
+  }
+}
+
+/**
+ * P6.9 fix: NVIDIA cold start sonrası warm cache yakalamak için
+ * timeout error'unda 1 retry. Diğer error'larda (auth, parse, rate limit)
+ * retry yapılmaz çünkü kalıcı sorun olabilir.
+ */
+async function tryProviderWithRetry<T>(
+  runner: (signal: AbortSignal) => Promise<T>,
+  timeoutMs: number,
+): Promise<T> {
+  try {
+    return await withAbortTimeout(runner, timeoutMs);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    // Sadece Timeout durumunda retry (Auth/parse/rate limit'te NO)
+    if (!message.includes("Timeout after")) {
+      throw err;
+    }
+    // 200ms backoff, sonra aynı provider'a tek retry
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    return await withAbortTimeout(runner, timeoutMs);
   }
 }
 
