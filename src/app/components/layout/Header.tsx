@@ -81,7 +81,7 @@ const NAV: NavGroup[] = [
           { label: "Soundbar & Ev Sinema", slug: "soundbar", tags: ["Soundbar", "2.1 Ses Sistemi", "5.1 Ev Sinema", "Dolby Atmos", "Samsung", "Sony", "Bose", "JBL"] },
           { label: "Bluetooth Hoparlör", slug: "bluetooth-hoparlor", tags: ["Taşınabilir", "Su Geçirmez", "JBL", "Bose", "Sony", "Marshall", "Harman Kardon"] },
           { label: "Projeksiyon", slug: "projeksiyon", tags: ["Full HD", "4K", "Mini LED", "Taşınabilir", "Epson", "BenQ", "Optoma", "ViewSonic"] },
-          { label: "Akıllı Ev", slug: "elektronik/ag-guvenlik", tags: ["Google Nest", "Amazon Echo", "Akıllı Priz", "Akıllı Ampul", "Philips Hue", "Xiaomi"] },
+          { label: "Akıllı Ev", slug: "elektronik/akilli-ev", tags: ["Google Nest", "Amazon Echo", "Akıllı Priz", "Akıllı Ampul", "Philips Hue", "Xiaomi"] },
         ]
       },
       {
