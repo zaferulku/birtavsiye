@@ -1,13 +1,93 @@
-# birtavsiye.net — Project State v15.5
+# birtavsiye.net — Project State v15.6
 
 > **Bu dosya tek kaynak gerçek.** Yeni sohbet/oturum başlattığınızda
 > bu dosyayı Claude veya Claude Code'a verin — tüm bağlamı 30 saniyede alır.
 
-**Son güncelleme:** 2026-05-03 v15.5 (erken — Phase 6 ek borç temizliği: 7 borç DONE (P6.14/15/17/18/18b/19 + pre-existing eslint) + Migration 035-036 (VACUUM serisi) + 3 yeni borç (P6.15b/P6.18b-rt/P6.19b))
+**Son güncelleme:** 2026-05-03 v15.6 (erken hızlı combo — P6.15b + P6.16 kapanış (Migration 037, 70 MB recovery) + pg_stat anomali 4. örneği (blind DROP veri kaybı riski tuzağı) + kural 26 genişletme)
 
 ---
 
-## 🔴 GÜNCEL DURUM (3 May 2026 erken — v15.5 paket)
+## 🔴 GÜNCEL DURUM (3 May 2026 erken — v15.6 paket, hızlı combo)
+
+v15.5 sonrası ~45dk hızlı combo. P6.15b + P6.16 ardışık kapanış. Kritik
+öğreti: pg_stat anomalisinin 4. örneği gerçek veri kayıp riskine yakın
+geçti — kural 26 genişletildi.
+
+### Bu oturumda kapatılan ek borçlar (2):
+
+- ✅ **P6.15b** orphan auth users (audit-only):
+  - `test1@test.com` + `test1@test1.com` (NO_PROFILE durumu)
+  - Bağlı kayıt 0/0/0/0 (topics/topic_answers/community_posts/favorites)
+  - **Aksiyon:** Studio Authentication panel'den manuel DELETE (kullanıcı
+    eylem alanında, auth.\* Supabase managed → Migration yapma yetkimiz YOK)
+  - Karar: KAPALI (manuel intervention path netleşti)
+
+- ✅ **P6.16** backup_2026* DROP — **Migration 037** (`ef29602`):
+  - 5 backup tablo DROP, ~70 MB disk recovery:
+    - `backup_20260422_products` (43,176 row, 47 MB)
+    - `backup_20260422_prices` (43,279 row, 9 MB)
+    - `backup_20260422_price_history` (54,107 row, 5 MB)
+    - `backup_20260422_categories` (195 row, 40 kB)
+    - `backup_20260430_products_categories` (44,173 row, 8.7 MB)
+  - **KORUNDU:** `backup_20260430_categories` (189 row, 72 kB) — Phase 5 son
+    safety net, ~6 ay sonra P6.16-v2 ile DROP edilir
+  - Restore senaryosu kabul edilemez (Phase 5 + Migrations 023-034 +
+    2542 yeni ürün geri alınamaz)
+
+### KRİTİK ÖĞRETİ — pg_stat anomalisi 4. örneği
+
+P6.16 audit'inde **veri kayıp tuzağı** ortaya çıktı:
+- `backup_20260422_*` tabloları pg_stat `n_live_tup=0` raporu yanıltıcı
+- Gerçek `COUNT(*)`: 43,176 + 43,279 + 54,107 + 195 + 44,173 = **184,930 row!**
+- "Boş tablo" sanıp blind DROP yapsaydık 184k+ row kaybı + audit trail kaybı
+
+**Pattern özeti (4 örnek, hepsi pg_stat n_live=0 yanlışı):**
+- Migration 035 stores (gerçek 9 row, aktif tablo)
+- P6.15 auth.users (gerçek 3 row, Supabase managed)
+- Migration 036 knowledge_chunks (gerçek 121 chunk, RAG aktif)
+- Migration 037 backup_20260422_* (gerçek 184k+ row, audit trail!)
+
+**Davranış kuralı 26 GENİŞLETİLDİ** — yeni 5-adımlı doğrulama prosedürü
++ blind DROP/TRUNCATE yasağı.
+
+### Disk recovery
+- Migration 037 net: **~70 MB** geri kazanıldı
+- backup_20260430_categories: 72 kB KORU
+- NANO compute disk bütçesinde anlamlı kazanım
+
+### Production durumu:
+- Working dir CLEAN
+- TSC + build clean
+- CI yeşil (lint 148'de)
+- 7 Migration toplam apply (031-037 serisi tek günde)
+
+### Bekleyen İşler (v15.6 sonrası):
+
+**🟠 ORTA — Kalan Phase 6:**
+- **P6.3-A** — 45 NAV dup dedup (Codex sprint sonrası, ~2.5h)
+- **P6.3-C** — flat slug full-path (Codex sonrası, ~30dk)
+- **P6.5e** — `supermarket/kahve` content gap (DB scrape entegrasyon)
+- **P6.12f-codex** — Codex 4 backup reapply sonrası 18 any + 8 hooks
+- **P6.18b runtime** — token-set leaf compound gap (async path)
+- **P6.19b** — mergeIntent price dimension detection (Codex pipeline)
+- **🆕 P6.16-v2** — `backup_20260430_categories` DROP (~6 ay sonra,
+  Phase 5 stable + Phase 6 kapanış sonrası safety net'e gerek kalmaz)
+
+**🟡 DİĞER:**
+- Eval2 full re-run (LLM quota varsa, baseline 200 dialog)
+- Codex 4 backup reapply takip (P6.12f-codex'i unlock eder)
+- P6.15b auth user manuel delete (Studio Auth panel, ~1dk)
+
+**🟢 OPSIYONEL (MVP sonrası):**
+- listings.in_stock BOOLEAN DROP (6 ay sonra)
+- raw_offers ingestion (Migration 028 staging)
+- H16 Google AI dedup, H19 next-auth v5
+- Pro plan iptal kararı (29 May 2026)
+- Hosting değerlendirme (3-6 ay)
+
+---
+
+## 🔵 ÖNCEKİ DURUM (3 May 2026 erken — v15.5 paket)
 
 v15.4 sonrası ek 4-5 saatlik sprint. Cron baseline 24h sağlık check'inde
 3 pg_stat anomalisi tespit edildi (stores/auth.users/knowledge_chunks),
@@ -1511,6 +1591,15 @@ ProductDetailShell.tsx ortak nokta — uyumlu.
   (P6.17). pg_stat anomalisi (n_live_tup=0, gerçek 121 chunk). HNSW
   768-dim vector index (~1.8 MB) rebuild, lock <500ms. Studio apply.
 
+**v15.6'da tamamlandı:**
+- Migration **037** ✅ (2026-05-03 erken): backup_2026* DROP (P6.16,
+  `ef29602`). 5 tablo DROP, ~70 MB disk recovery. pg_stat anomalisi 4.
+  örneği: `n_live_tup=0` yanıltıcı, gerçek 184k+ row vardı (43176 +
+  43279 + 54107 + 195 + 44173). Blind DROP yapılsaydı veri kayıp riski.
+  COUNT(*) doğrulaması yapıldı, restore senaryosu kabul edilemez (Phase 5
+  + Migrations 023-034 geri alınamaz) → DROP onaylı.
+  KORUNDU: backup_20260430_categories (189 row, 72 kB Phase 5 safety net).
+
 ### Knowledge Base
 12 doküman / 141 chunk (`docs/knowledge/`):
 parfum_notalari (10), cilt_bakimi (11), makyaj (12), moda_ust_giyim (13),
@@ -1602,6 +1691,9 @@ anne_bebek (11) = **141**
 ## ✅ COMMIT GEÇMİŞİ (son 30)
 
 ```
+ef29602   feat(db): Migration 037 — P6.16 eski backup tablo DROP (~70 MB)
+e821e31   fix(lint): P6.12g-product-narrow — JSON-LD extractor function refactor
+781f0e6   docs(state): v15.5 — Phase 6 ek borç temizliği (7 done + 3 yeni)
 703f1cf   feat(db): Migration 036 — P6.17 knowledge_chunks VACUUM (121 chunk)
 cd2866d   docs(state): P6.15 auth.users audit kapatıldı + P6.14 done strikethrough
 930f946   fix(chatbot): P6.19 — parseQuery price extraction pattern genişletme
@@ -1835,21 +1927,37 @@ e0b318d   fix(ui): liste kart başlığı = brand + model_family + storage + col
       ortaya çıktı. PASS rate aynı kalsa da fix legitimate.
     Strateji: P6.18 (state) → P6.18b (resolve) → P6.19 (parse) → P6.19b
     (merge) zinciri. Her katman ayrı borç + ayrı commit.
-26. **pg_stat anomalisi pattern (3 örnek):**
-    Küçük tablolar autovacuum threshold'a ulaşmaz (default n_dead_tup>50
-    + %20 dead). Cron baseline'da `n_live_tup=0` görüldüğünde:
-    1. **Önce gerçek `COUNT(*)` ile doğrula** — eğer veri var, raporlama
-       anomali (autovacuum hiç çalışmamış)
-    2. **Eğer veri var + public schema** → VACUUM (FULL, ANALYZE) Migration
-       olarak ekle (Studio'da manuel apply, BEGIN/COMMIT YOK)
-    3. **Eğer auth.\* schema** → Supabase managed, VACUUM/ANALYZE/GRANT
-       yapma yetkisi YOK, doc-only kapatma
-    Pattern referans:
-    - Migration 035 (`stores` VACUUM, P6.14)
-    - Migration 036 (`knowledge_chunks` VACUUM, P6.17)
-    - P6.15 (`auth.users` doc-only)
-    Production etkisi genelde sıfır — pg_stat raporlama hatası, RPC/SELECT
-    direkt tabloya bakar; ama vector similarity için ANALYZE faydalı.
+26. **pg_stat anomalisi + blind DROP yasağı (4 örnek):**
+    `pg_stat_user_tables.n_live_tup=0` raporu **YANILTICI** olabilir.
+    Tablo gerçekten boş mu yoksa istatistik mi stale — ZORUNLU AYIRT ET.
+
+    **DOĞRULAMA PROCEDURE (zorunlu sıra):**
+    1. **Önce gerçek `COUNT(*)` sorgu çalıştır** (pg_stat'a güvenme)
+    2. ⚠️ "n_live=0" görünce **blind `DROP`/`TRUNCATE` YASAK** — önce data
+       gerçek doğrulanır
+    3. Eğer veri sağlıklı + tablo aktif (`public` schema) → VACUUM (FULL,
+       ANALYZE) Migration olarak (örnek: Migration 035, 036)
+    4. Eğer `auth.*` schema → Supabase managed, VACUUM/ANALYZE/GRANT yapma
+       yetkisi YOK, doc-only kapatma
+    5. Eğer DROP karar verildiyse → COUNT(*) gerçek + restore senaryosu
+       analizi gerekli (örnek P6.16: 184k row gerçek dolu, ama Migration
+       023-034 geri alınamaz → DROP onaylı)
+
+    **Pattern referansları (4 örnek, hepsi pg_stat n_live=0 yanlışı):**
+    - Migration 035: `stores` (n_live=0 yanlış → gerçek 9, küçük tablo,
+      autovacuum threshold)
+    - P6.15: `auth.users` (n_live=0 yanlış → gerçek 3 user, Supabase
+      managed schema, doc-only)
+    - Migration 036: `knowledge_chunks` (n_live=0 yanlış → gerçek 121
+      chunk, RAG aktif)
+    - **Migration 037**: `backup_20260422_*` (n_live=0 ÇOK YANLIŞ → gerçek
+      **184k+ row**, blind DROP olsaydı veri/audit trail kayıp riski!)
+
+    **KÖK NEDEN:** Küçük tablolar veya autovacuum threshold'a hiç ulaşmamış
+    tablolar pg_stat reset state'inde (NULL). Bu sadece raporlama hatası;
+    SELECT/COUNT(*) ile doğrulanmadan DESTRUCTIVE işlem YASAK.
+
+    Bu kural **kritik** — gelecekte yeni audit'te aynı tuzağa düşme.
 
 ### Kullanıcı için
 
@@ -1990,6 +2098,7 @@ yeni kategoriler ekler. Tur 2 fixture taxonomy gereği.
 | 2026-05-02 | v15.3 (gece extension) — P6.12 lint hijyen tam sprint: 5 commit, 47 fix. Aşama 1+2 partial (8) + Aşama 3 admin hooks (4) + Aşama 4 G1 scrapers/live any (11) + Aşama 4 G3 partial Header+live-prices (2) + Aşama 4 G2 admin+karsilastir any (22). Lint 223→174 (%22 azalma), no-explicit-any 138→107 (%22 azalma). DEFERRED sub-borçlar: P6.12g-mediamarkt (TS2339 cascade revert, JSON-LD interface tasarım gerek), P6.12f-codex (Codex reapply sonrası), P6.12c scripts/ (one-shot). Codex backup'ta 4 forum/profil dosya + ara/page.tsx (store-source labels) yeni değişiklik uncommitted. Yeni davranış kuralları 21 (TS2339 cascade threshold >5 → revert) + 22 (cascade kontrol her edit sonrası). | Claude |
 | 2026-05-02 | v15.4 — Gece geç. Ek 4-5h sprint. P6.12 sprint final 3 ek commit (49 fix): P6.12g mediamarkt JSON-LD interface (mediamarkt-types.mts yeni 118 satır + 6 fix, 1 sub-borç P6.12g-product-narrow), P6.12 mekanik combo (14 unescaped + 7 unused), P6.12c permanent defer (86 any × 42 dosya scripts/, audit revize). P6.3-B Migration 034 9 yeni sub-leaf (bilesenler/parca-cevre-veri, parfum/kadin-erkek-unisex, konsol/aksesuar-vr-pc) + Header.tsx 9 entry slug update minimal scope. Cron baseline 24h sağlık check ✓ (cache %100, conn 24, dead tup düşük; bonus stores 100% dead → P6.14 yeni borç). Codex paralel sprint 2 commit (search filter modularize + header autocomplete) + ara/page.tsx commit. Yeni davranış kuralı 24 (paralel Codex sprint minimal Header diff). DEFERRED: P6.3-A 45 dup dedup, P6.3-C flat slug (Codex sprint sonrası), P6.12g-product-narrow, P6.12f-codex (backup reapply sonrası), P6.14 stores dead tup. Total: ~9-10 commit gece, lint baseline 174→148 (-26 ek). | Claude |
 | 2026-05-03 | v15.5 — Erken (gece geç devamı). v15.4 sonrası 4-5h ek sprint. KAPATILAN (7): P6.14 stores VACUUM (Migration 035), P6.15 auth.users audit doc-only (Senaryo B, Supabase managed), P6.17 knowledge_chunks VACUUM (Migration 036), P6.18 state.category_slug raw flat fallback kaldırıldı, P6.18b compound flat resolve (compound-path match katmanı), P6.19 parseQuery price extraction (5 yeni regex), pre-existing eslint sync/route.ts strikethrough (zaten kapalıydı). YENİ BORÇLAR (3): P6.15b orphan auth users (test1@/test1@test1 profiles yok), P6.18b runtime token-set leaf compound gap (async path), P6.19b mergeIntent price dimension detection (Codex pipeline). Eval2 ilerleme: 3/5 PASS aynı (kompozit fail tipi degradation: corrupt → null → mergeIntent drop), Dialog 4 turn 0 katmanları düzeldi. Yeni davranış kuralları 25 (eval-driven katmanlı debug) + 26 (pg_stat anomalisi pattern, 3 örnek). 5 yeni Migration toplam (031-036). | Claude |
+| 2026-05-03 | v15.6 — Erken hızlı combo (~45dk). KAPATILAN (2): P6.15b orphan auth users (manuel Studio Auth panel intervention path, bağlı kayıt 0/0/0/0 doğrulandı), P6.16 backup_2026* DROP (Migration 037, 5 tablo, ~70 MB recovery, backup_20260430_categories KORUNDU Phase 5 safety net). KRİTİK ÖĞRETİ: pg_stat anomalisi 4. örneği (backup_20260422_*) — n_live=0 yanıltıcı, gerçek 184k+ row vardı. Blind DROP veri+audit kaybı riskliydi. Davranış kuralı 26 GENİŞLETİLDİ: blind DROP/TRUNCATE yasağı + 5-adımlı doğrulama prosedürü + 4 pattern referans. P6.12g-product-narrow JSON-LD extractor function refactor (e821e31, sub-borç KAPATILDI). Yeni borç: P6.16-v2 (backup_20260430_categories ~6 ay sonra DROP). 7 Migration apply tek günde (031-037). | Claude |
 
 ---
 
