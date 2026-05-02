@@ -1,13 +1,119 @@
-# birtavsiye.net — Project State v13
+# birtavsiye.net — Project State v14
 
 > **Bu dosya tek kaynak gerçek.** Yeni sohbet/oturum başlattığınızda
 > bu dosyayı Claude veya Claude Code'a verin — tüm bağlamı 30 saniyede alır.
 
-**Son güncelleme:** 2026-05-01 v13 (Schema enhancement v1: Migrations 024-028 + 027b BLOCKER fix + turn-type detection paketi + Phase 5 smoke test tanı)
+**Son güncelleme:** 2026-05-02 v14 (Phase 5 frontend refactor done: 5A→5F hierarchik slug full-path routing + sitemap RLS fix + turkishNormalize chatbot entegrasyon + Header NAV 73→0 broken)
 
 ---
 
-## 🟢 GÜNCEL DURUM (1 May 2026 gece — Tonight, v13 paket)
+## 🟢 GÜNCEL DURUM (2 May 2026 — Phase 5 done, v14 paket)
+
+**YAPILAN İŞLER:**
+
+**Phase 5 — Kategori URL routing refactor (5A → 5F, 8 commit):**
+- **5A** — `[...segments]/page.tsx` hierarchik full-path lookup (categories.slug = `<root>/<sub>/<leaf>`).
+  `/kategori/[slug]/` klasörü tamamen silindi (eski URL'ler 404, redirect yok).
+  `categorySlugMap.ts` ("68 kırık fix") silindi — leaf-suffix match runtime helper'a devredildi.
+- **5B** — URL üretimi 9 dosyada `/kategori/` → `/anasayfa/`
+  (Header NAV, Categories chip, HomeBanner, QuickLinks, ModelPageView,
+   ProductDetailShell, urun/[slug]/page.tsx, karsilastir, not-found, sitemap).
+- **5C** — chatbot `validateOrFuzzyMatchSlug` leaf-suffix match (full path resolver).
+  LLM/queryParser leaf-only döndüğünde (`akilli-telefon`) DB hierarchik path'e
+  (`elektronik/telefon/akilli-telefon`) çevirir. Tek match → kullan; çoklu → fuzzy'ye bırak.
+- **5D** — `sitemap.ts` anon client → supabaseAdmin (Migration 016 yan etkisi:
+  anon REVOKE sonrası SSR sitemap 0 row dönüyordu → 1225 URL geri geldi).
+- **5D-3.1** — `turkishNormalize` categoryValidation helper'a entegre.
+  Cache'e `normalizedIndex Map<normalized, original>` eklendi; 4 match
+  katmanı (exact, leaf-suffix, token-set, fuzzy) normalize üzerinden.
+  Sonuç: "kılıf"→`elektronik/telefon/kilif`, "şarj-kablo"→`elektronik/telefon/sarj-kablo`,
+  "buzdolabı"→`beyaz-esya/buzdolabi`, "küçük-ev-aletleri"→`kucuk-ev-aletleri`.
+- **5D-3.2** — Header `hierUrl` 5C helper entegrasyonu.
+  `findCanonicalSlugSync` (exact + leaf-suffix + token-set, fuzzy YOK)
+  sync helper export. Header `catMap.get` miss → helper fallback →
+  hâlâ yoksa per-session `console.warn`. cats map zaten state'te
+  olduğu için sync (DB hit yok, race condition yok).
+- **5D-3.3** — NAV constant DB sync (74 slug, 131 replacement).
+  73 broken → **0 broken** (159 unique → 145, 14 dup converge).
+  Mapping kategorileri:
+  * A) Direct rename (50): `cilt-bakimi`→`kozmetik/cilt-bakim`, `oyun-konsol`→`elektronik/oyun/konsol`
+  * B) Parent fallback (21): `erkek-pantolon`→`moda/erkek-giyim`, `bebek-kozmetik`→`anne-bebek/bebek-bakim`
+  * C) Helper rescued (1): `puset-araba`→`anne-bebek/bebek-tasima/araba-puset`
+  * D) Geçici parent borç (1, P6.2): `networking`→`elektronik`
+  * E) Ambiguous resolved (1): `temizlik`→`ev-yasam/temizlik`
+- **5E** — production smoke test 7/7 PASS (Test 6 mantıksal garantili).
+
+**Production verification (7-test paketi):**
+| # | URL | Sonuç |
+|---|---|---|
+| 1 | `/anasayfa/elektronik/telefon/akilli-telefon` | 200 + 208 ürün ref ✓ |
+| 2 | `/anasayfa` | 307 → / ✓ |
+| 3 | `/kategori/akilli-telefon` (eski) | 404 ✓ |
+| 4 | `/sitemap.xml` | 1225 URL, 200 hierarchik kategori path ✓ |
+| 5 | 5 random NAV kategori | 5/5 = 200 (TTFB 0.8-1.5s) ✓ |
+| 6 | Console NAV warning | 0 (mantıksal: 145/145 exact match) |
+| 7 | Ürün detay breadcrumb | `/anasayfa/kozmetik/makyaj` 200 ✓ |
+
+**Bonus — Sitemap RLS fix (kritik bug):**
+- Migration 016 anon REVOKE 30 tabloda yapıldıktan sonra `sitemap.ts`
+  hâlâ anon Supabase client kullanıyordu → SSR'da 0 satır → boş sitemap
+- supabaseAdmin'e geçirildi (`fde6afc`) → 1225 URL geri geldi
+- Aynı pattern P6.4 audit'te diğer SSR sayfalarda kontrol edilecek
+
+**Yeni Routing Standartı (v14 itibariyle):**
+- Canonical URL: `/anasayfa/<root>/<sub>/<leaf>` (örn. `/anasayfa/elektronik/telefon/akilli-telefon`)
+- `categories.slug` DB'de full hierarchik path (`elektronik/telefon/akilli-telefon`)
+- Eski flat `/kategori/<slug>` URL'ler **404** (redirect yok, kasıtlı karar)
+- `/anasayfa` tek başına → **307 → /** redirect
+- Header NAV constant 145/145 DB ile **exact match sync**
+- `categorySlugMap.ts` ("68 kırık fix") **SİLİNDİ** — leaf-suffix runtime helper'la çözülüyor
+- Chatbot/queryParser leaf-only slug çıktıları otomatik full path'e dönüşür
+
+**Phase 5 commit'leri:**
+- `92f4852` redesign(routing): Phase 5A — hierarchik slug full-path route
+- `ea24e67` redesign(routing): Phase 5B — URL üretimi 9 dosyada
+- `21c4efb` feat(chatbot): Phase 5C — category_slug leaf-suffix match
+- `fde6afc` fix(sitemap): Phase 5D — anon client → supabaseAdmin
+- `939001e` fix(chatbot): 5D-3.1 — turkishNormalize entegre
+- `ff52e53` fix(routing): 5D-3.2 — Header linkFor 5C helper
+- `4282c55` redesign(routing): 5D-3.3 — NAV constant DB sync (73 → 0 broken)
+- `1edbec9` docs(probe): 5D-3 Test 3 — broken slug öneri tablosu generator
+
+**YARIN PLAN (2026-05-03):**
+
+🔴 KRİTİK:
+1. **Migration 029 — categories.keywords backfill** (yeni borç).
+   Hierarchik keyword index — kategori arama kalitesi için.
+2. **Migration 025b** — scraper price_history manuel INSERT'leri kaldır
+   + `log_price_change` trigger bağla (5 yer: scrape-mediamarkt,
+   scrape-pttavm, src/app/api/sync, +2). Çift kayıt önleme.
+3. **Eval2 re-run** — `npx tsx scripts/eval-chatbot-dialogs.mjs --input
+   tests/chatbot/fixtures/chatbot_dialogs_eval2_200.jsonl` (LLM quota
+   reset sonra, d4/id7/id10 PASS hedefi).
+
+🟡 ORTA — Phase 6 borçları:
+- **P6.1 — chatbot context-aware tie-break**: `aksesuar` gibi çoklu match
+  (3 path: `elektronik/telefon/aksesuar`, `moda/aksesuar`, `pet-shop/aksesuar`)
+  için önceki turn category bağlamından tie-break (parent_id mesafesi).
+  Şu an `validateOrFuzzyMatchSlug` çoklu match'te null dönüyor.
+- **P6.2 — `networking` kategorisi DB'de eksik**: NAV "Ağ & Modem & Akıllı Ev"
+  → şu an `elektronik` parent fallback (geçici). DB'ye yeni leaf eklenmeli
+  (`elektronik/networking` veya `elektronik/ag-akilli-ev`) veya NAV'dan kaldırılmalı.
+- **P6.3 — NAV constant 14 duplicate converge**: 159→145 unique sonra
+  14 NAV item aynı parent'a dönüştü (örn. 4 farklı `erkek-*` → `moda/erkek-giyim`).
+  Header UX iyileştirme: ya parent altında gerçek leaf yarat ya NAV item'ları konsolide et.
+- **P6.4 — Migration 016 yan etki tarama**: sitemap.ts dışında anon RLS
+  sızıntısı kalan SSR sayfa var mı? `[...segments]`, `urun/[slug]`,
+  `tavsiyeler`, `urunler` vs. supabaseAdmin geçişi audit gerek.
+
+🟢 OPSIYONEL:
+- listings.in_stock BOOLEAN DROP (6 ay sonra, frontend/scraper migrate sonrası)
+- raw_offers ingestion (yeni scraper davranışı, Migration 028 staging tablosu kullanım)
+- backup_20260430_categories + backup_20260422_products silme kararı
+
+---
+
+## 🔵 ÖNCEKİ DURUM (1 May 2026 gece — Tonight, v13 paket)
 
 **YAPILAN İŞLER (tonight oturumu):**
 
@@ -688,8 +794,10 @@ ProductDetailShell.tsx ortak nokta — uyumlu.
 | **028_raw_offers_staging.sql** | ✅ (staging tablosu, boş) |
 
 **Bekleyen (ÖNEMLI):**
-- Migration **025b** (yarın): scraper'lardaki manuel `price_history INSERT`'leri
+- Migration **025b** (KRİTİK, 2026-05-03): scraper'lardaki manuel `price_history INSERT`'leri
   kaldır + `log_price_change` trigger bağla (5 yer). Çift kayıt önleme.
+- Migration **029** (yeni borç, 2026-05-03): `categories.keywords` backfill —
+  hierarchik keyword index, kategori arama kalitesi için.
 - Migration **listings.in_stock DROP** (6 ay sonra, frontend/scraper migrate sonrası).
 
 ### Knowledge Base
@@ -716,13 +824,14 @@ anne_bebek (11) = **141**
 
 ### Frontend route'ları
 
-| Route | Dosya |
-|---|---|
-| `/` | src/app/page.tsx |
-| `/kategori/[slug]` | src/app/kategori/[slug]/page.tsx |
-| `/anasayfa/[...segments]` | src/app/[...segments]/page.tsx |
-| `/urun/[slug]` | src/app/urun/[slug]/page.tsx |
-| `/sonuclar` | src/app/sonuclar/page.tsx |
+| Route | Dosya | Not |
+|---|---|---|
+| `/` | src/app/page.tsx | |
+| `/anasayfa/<root>/<sub>/<leaf>` | src/app/[...segments]/page.tsx | Phase 5A: hierarchik full-path lookup, canonical |
+| `/anasayfa` (tek) | (redirect) | 307 → / |
+| `/kategori/<slug>` (eski flat) | (silindi) | Phase 5A: 404, redirect yok |
+| `/urun/[slug]` | src/app/urun/[slug]/page.tsx | |
+| `/sonuclar` | src/app/sonuclar/page.tsx | |
 
 ### Mağaza scraper'ları
 
@@ -782,6 +891,15 @@ anne_bebek (11) = **141**
 ## ✅ COMMIT GEÇMİŞİ (son 30)
 
 ```
+1edbec9   docs(probe): 5D-3 Test 3 — broken slug öneri tablosu generator (2 May)
+4282c55   redesign(routing): 5D-3.3 — NAV constant DB sync (73 → 0 broken)
+ff52e53   fix(routing): 5D-3.2 — Header linkFor 5C helper entegrasyonu
+939001e   fix(chatbot): 5D-3.1 — turkishNormalize categoryValidation helper'a entegre
+fde6afc   fix(sitemap): Phase 5D — anon client → supabaseAdmin (RLS bypass)
+21c4efb   feat(chatbot): Phase 5C — category_slug leaf-suffix match (full path resolver)
+ea24e67   redesign(routing): Phase 5B — URL üretimi 9 dosyada /kategori/ → /anasayfa/
+92f4852   redesign(routing): Phase 5A — hierarchik slug full-path route
+61f23b4   docs(state): v13 — schema enhancement v1 + turn-type detection + Phase 5 tanı
 075a62d   feat(chatbot): turn-type detection + eval2 specialized actions (1 May tonight)
 6b2dd05   docs(state): kural 16 — yeni kodda akakce/cimri ismi yasağı
 896ef96   fix(schema): listings stock_sync trigger INSERT desteği (Migration 027b — BLOCKER)
@@ -1019,6 +1137,7 @@ yeni kategoriler ekler. Tur 2 fixture taxonomy gereği.
 | 2026-04-29 | v11 — Paket Ç + Faz 1 + Tur 1 bug fix (A,B,C,D,E.1) + Eval suite | Claude |
 | 2026-04-29 | v12 — Mega gün (16+ saat): Migration 013-023, eval %80, güvenlik krizi, kategori refactor v2 | Claude |
 | 2026-05-01 | v13 — Tonight paketi: Migrations 024-028 + 027b BLOCKER, turn-type detection (MergeAction + 7 TurnType + classifyTurn pure func), eval2 specialized actions (installment_filter_added/rating_filter_added/best_value_sort_applied), Phase 5 frontend smoke test (TEST 1 KIRIK — yarın refactor), naming kuralı 16 | Claude |
+| 2026-05-02 | v14 — Phase 5 frontend refactor done (5A→5F, 8 commit): hierarchik slug full-path routing + sitemap RLS fix (Migration 016 yan etkisi) + turkishNormalize chatbot entegrasyon + Header NAV 73→0 broken (74 slug DB sync, 159→145 unique) + production smoke test 7/7 PASS. Phase 6 borçları: P6.1 chatbot tie-break, P6.2 networking DB eksik, P6.3 NAV dup converge, P6.4 anon RLS audit | Claude |
 
 ---
 
