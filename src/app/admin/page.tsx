@@ -109,6 +109,11 @@ export default function AdminPanel() {
   const [categorySlug, setCategorySlug] = useState("telefon");
   const [icecatProductId, setIcecatProductId] = useState("");
 
+  // P6.12: 4 useEffect aşağıdaki deps array'lerine fn-ref'ler eklenmedi —
+  // her render'da fn yeniden oluşur, deps'e koyunca infinite loop oluşur.
+  // Doğru çözüm useCallback wrap (6 fn × ayrı audit) scope dışı, P6.12g borç.
+  // Mevcut davranış mount/state-trigger ile manuel kontrol, infinite loop yok.
+  /* eslint-disable react-hooks/exhaustive-deps */
   useEffect(() => {
     checkAdmin();
     loadProducts();
@@ -133,6 +138,7 @@ export default function AdminPanel() {
     else setPriceProductPrices([]);
     loadPriceHealth(priceProductId || undefined);
   }, [priceProductId, activeTab]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   const getAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
