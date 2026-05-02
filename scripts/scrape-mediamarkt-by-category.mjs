@@ -496,7 +496,12 @@ async function main() {
         }
       }
 
-      state.completedCategories.push(comboKey);
+      // P6.22-D1: completedCategories array'i geriye uyumluluk icin korunur,
+      // SKIP karari artik categoryLastScraped[comboKey] timestamp'ine gore.
+      if (!state.completedCategories.includes(comboKey)) {
+        state.completedCategories.push(comboKey);
+      }
+      state.categoryLastScraped[comboKey] = new Date().toISOString();
       saveState(state);
       console.log(`OK ${comboKey} tamamlandi`);
     }
