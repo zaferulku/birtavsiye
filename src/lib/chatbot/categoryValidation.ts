@@ -66,6 +66,26 @@ function levenshtein(a: string, b: string): number {
   return m[a.length][b.length];
 }
 
+// Hierarchik slug yolları arası en uzun ortak prefix segment sayısı.
+// "kucuk-ev-aletleri/mutfak/kahve-makinesi" vs "kucuk-ev-aletleri/mutfak/cay-makinesi" → 2.
+// "supermarket/kahve" vs "kucuk-ev-aletleri/mutfak/kahve-makinesi" → 0.
+// P6.11: Aynı leaf-suffix'e match'lenen birden çok slug arasında, mevcut sticky
+// context'e en yakın olanı seçmek için kullanılır.
+function commonPrefixDistance(a: string, b: string): number {
+  const aParts = a.split("/");
+  const bParts = b.split("/");
+  let i = 0;
+  while (i < aParts.length && i < bParts.length && aParts[i] === bParts[i]) i++;
+  return i;
+}
+
+export interface SlugMatchOptions {
+  // Mevcut konuşmada aktif kategori slug'ı (full path). Leaf-suffix katmanı
+  // birden çok eşleşme bulduğunda bu slug'la en uzun ortak prefix'i paylaşan
+  // adayı tercih eder. Yoksa eski davranış (multiple match → fallthrough) korunur.
+  stickyContextSlug?: string | null;
+}
+
 /**
  * Verilen slug'ın taxonomy'de geçerli olup olmadığını kontrol eder.
  * Geçersizse fuzzy match dener (Levenshtein ≤ maxDistance).
@@ -103,6 +123,7 @@ function normalizeSlugCandidate(input: string): string[] {
 export function findCanonicalSlugSync(
   inputSlug: string | null | undefined,
   taxonomy: Iterable<string>,
+  options?: SlugMatchOptions,
 ): string | null {
   if (!inputSlug) return null;
 
@@ -120,7 +141,11 @@ export function findCanonicalSlugSync(
     if (normalizedCandidates.includes(norm)) return original;
   }
 
-  // Leaf-suffix match (tek match varsa)
+  // Leaf-suffix match.
+  // Tek match → döndür.
+  // Birden çok match → P6.11: stickyContextSlug verilmişse, ortak prefix
+  // mesafesi en yüksek olanı seç (eşitlikte ilk match). Sticky yoksa eski
+  // davranış (fallthrough → token-set katmanı) korunur.
   for (const c of normalizedCandidates) {
     if (c.includes("/")) continue;
     const matches: string[] = [];
@@ -129,6 +154,15 @@ export function findCanonicalSlugSync(
       if (norm === c || norm.endsWith("/" + c)) matches.push(original);
     }
     if (matches.length === 1) return matches[0];
+    if (matches.length > 1 && options?.stickyContextSlug) {
+      const sticky = options.stickyContextSlug;
+      let best: { slug: string; dist: number } | null = null;
+      for (const candidate of matches) {
+        const dist = commonPrefixDistance(candidate, sticky);
+        if (!best || dist > best.dist) best = { slug: candidate, dist };
+      }
+      if (best && best.dist > 0) return best.slug;
+    }
   }
 
   // Token-set match (leaf segment scope)
@@ -153,6 +187,7 @@ export function findCanonicalSlugSync(
 export async function validateOrFuzzyMatchSlug(
   inputSlug: string | null,
   maxDistance: number = 2,
+  options?: SlugMatchOptions,
 ): Promise<string | null> {
   if (!inputSlug) return null;
 
@@ -160,7 +195,7 @@ export async function validateOrFuzzyMatchSlug(
   const normalizedIndex = await getNormalizedIndex();
 
   // Önce sync helper (exact + leaf-suffix + token-set)
-  const syncMatch = findCanonicalSlugSync(inputSlug, taxonomy);
+  const syncMatch = findCanonicalSlugSync(inputSlug, taxonomy, options);
   if (syncMatch) {
     // İsteğe bağlı log: hangi katmandan match'lendi (sync helper sessiz)
     console.log(`[categoryValidation] sync match: "${inputSlug}" → "${syncMatch}"`);

@@ -745,7 +745,13 @@ export async function POST(req: Request) {
       fallbackCategorySlug,
       queryInterpretation.searchMessage || message
     );
-    const validParsedCategory = await validateOrFuzzyMatchSlug(parsedCategoryRaw, 1);
+    // P6.11: Sticky context'i tie-break için geçir. "espresso olsun" gibi
+    // follow-up'larda LLM bazen "kahve" gibi kısa bir slug üretir; leaf-suffix
+    // birden çok match'lendiğinde (supermarket/kahve vs kucuk-ev-aletleri/
+    // mutfak/kahve-makinesi) önceki state'le ortak prefix'i en uzun olan kazanır.
+    const validParsedCategory = await validateOrFuzzyMatchSlug(parsedCategoryRaw, 1, {
+      stickyContextSlug: previousState?.category_slug ?? null,
+    });
     const resilientParsedCategory = validParsedCategory ?? parsedCategoryRaw;
 
     // Feature dimension extraction (basit regex-based)
@@ -902,7 +908,10 @@ export async function POST(req: Request) {
     if (llmIntent) {
       const enrichedDims: string[] = [];
       const llmCategoryRaw = llmIntent.category_slug ?? null;
-      const validLlmCategory = await validateOrFuzzyMatchSlug(llmCategoryRaw, 2);
+      // P6.11: LLM intent slug'ında da sticky tie-break uygula.
+      const validLlmCategory = await validateOrFuzzyMatchSlug(llmCategoryRaw, 2, {
+        stickyContextSlug: previousState?.category_slug ?? null,
+      });
       if (validLlmCategory && !conversationState.category_slug) {
         conversationState.category_slug = validLlmCategory;
         enrichedDims.push("category");
