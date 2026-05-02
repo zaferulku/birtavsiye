@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useEffect, Suspense, useEffectEvent } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { Suspense, useEffect, useEffectEvent, useState } from "react";
 import Link from "next/link";
-import Header from "../components/layout/Header";
+import { useRouter, useSearchParams } from "next/navigation";
 import Footer from "../components/layout/Footer";
+import Header from "../components/layout/Header";
+import StoreLogo from "../components/ui/StoreLogo";
 import {
   formatFreshnessLabel,
+  getActiveListings,
   getActiveOfferCount,
   getFreshestSeenAt,
   getLowestActivePrice,
@@ -48,13 +50,152 @@ const popularSearches = [
   "Dyson",
 ];
 
+const sourceDisplayLabels: Record<string, string> = {
+  amazon: "Amazon",
+  hepsiburada: "Hepsiburada",
+  idefix: "idefix",
+  mediamarkt: "MediaMarkt",
+  n11: "n11",
+  pasaj: "Turkcell Pasaj",
+  pttavm: "PttAVM",
+  trendyol: "Trendyol",
+  vatan: "Vatan Bilgisayar",
+};
+
+type RelatedSuggestion = {
+  label: string;
+  hint: string;
+  query: string;
+};
+
+function getSourceDisplayName(source: string | null): string {
+  if (!source) return "Magaza";
+
+  return (
+    sourceDisplayLabels[source] ??
+    source
+      .replace(/[-_]+/g, " ")
+      .replace(/\b\w/g, (character) => character.toUpperCase())
+  );
+}
+
+function getOfferHighlights(prices: Product["prices"]) {
+  const listings = getActiveListings(prices).sort((left, right) => left.price - right.price);
+  const lowestBySource = new Map<string, (typeof listings)[number]>();
+
+  listings.forEach((listing, index) => {
+    const sourceKey = listing.source ?? `unknown-${index}`;
+    if (!lowestBySource.has(sourceKey)) lowestBySource.set(sourceKey, listing);
+  });
+
+  return Array.from(lowestBySource.values())
+    .slice(0, 3)
+    .map((listing, index) => ({
+      ...listing,
+      badge: index === 0 ? "En dusuk" : `${index + 1}. teklif`,
+    }));
+}
+
+function normalizeSearchText(value: string): string {
+  return value
+    .toLocaleLowerCase("tr-TR")
+    .replace(/ı/g, "i")
+    .replace(/ç/g, "c")
+    .replace(/ğ/g, "g")
+    .replace(/ö/g, "o")
+    .replace(/ş/g, "s")
+    .replace(/ü/g, "u");
+}
+
+function getRelatedSuggestions(query: string): RelatedSuggestion[] {
+  const trimmed = query.trim();
+  if (!trimmed) return [];
+
+  const normalized = normalizeSearchText(trimmed);
+
+  const phoneSignals = [
+    "iphone",
+    "telefon",
+    "galaxy",
+    "redmi",
+    "xiaomi",
+    "samsung",
+    "oppo",
+    "vivo",
+    "honor",
+    "akilli telefon",
+  ];
+
+  const laptopSignals = ["laptop", "notebook", "macbook", "dizustu", "oyuncu laptopu"];
+  const tabletSignals = ["tablet", "ipad", "galaxy tab"];
+
+  if (phoneSignals.some((signal) => normalized.includes(signal))) {
+    return [
+      { label: "Kılıf", hint: "Koruyucu aksesuar", query: `${trimmed} kilif` },
+      { label: "Şarj Aleti", hint: "Hızlı şarj", query: `${trimmed} sarj aleti` },
+      { label: "Kulaklık", hint: "Kablosuz modeller", query: `${trimmed} kulaklik` },
+      { label: "Powerbank", hint: "Taşınabilir enerji", query: `${trimmed} powerbank` },
+      { label: "Ekran Koruyucu", hint: "Cam ve film", query: `${trimmed} ekran koruyucu` },
+    ];
+  }
+
+  if (tabletSignals.some((signal) => normalized.includes(signal))) {
+    return [
+      { label: "Kılıf", hint: "Standlı kapaklar", query: `${trimmed} kilif` },
+      { label: "Kalem", hint: "Not alma ve çizim", query: `${trimmed} kalem` },
+      { label: "Klavye", hint: "Taşınabilir kullanım", query: `${trimmed} klavye` },
+      { label: "Şarj Aleti", hint: "Hızlı şarj", query: `${trimmed} sarj aleti` },
+    ];
+  }
+
+  if (laptopSignals.some((signal) => normalized.includes(signal))) {
+    return [
+      { label: "Mouse", hint: "Kablosuz modeller", query: `${trimmed} mouse` },
+      { label: "Çanta", hint: "Taşıma çözümleri", query: `${trimmed} canta` },
+      { label: "Soğutucu", hint: "Performans desteği", query: `${trimmed} sogutucu` },
+      { label: "USB-C Hub", hint: "Bağlantı genişletme", query: `${trimmed} usb c hub` },
+    ];
+  }
+
+  return [
+    { label: "Benzer Ürünler", hint: "Alternatif aramalar", query: `${trimmed} benzer urunler` },
+    { label: "Aksesuarlar", hint: "Tamamlayıcı ürünler", query: `${trimmed} aksesuar` },
+    { label: "En Uygunlar", hint: "Daha avantajlı sonuçlar", query: `${trimmed} en uygun` },
+  ];
+}
+
+function FavoriteIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.8">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 20.25s-6.716-4.29-8.66-8.162C1.925 9.267 3.46 5.75 7.126 5.75c1.915 0 3.143 1.003 3.874 2.073.73-1.07 1.958-2.073 3.873-2.073 3.667 0 5.202 3.517 3.786 6.338C18.716 15.96 12 20.25 12 20.25Z"
+      />
+    </svg>
+  );
+}
+
+function BellIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.8">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M14.25 18.5a2.25 2.25 0 0 1-4.5 0M5.75 16.5h12.5c-.88-.94-1.5-2.242-1.5-3.75v-1.5a4.75 4.75 0 1 0-9.5 0v1.5c0 1.508-.62 2.81-1.5 3.75Z"
+      />
+    </svg>
+  );
+}
+
 function AramaIcerik({ initialQuery }: { initialQuery: string }) {
   const router = useRouter();
   const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
-  const [sortBy, setSortBy] = useState("varsayilan");
+  const [sortBy, setSortBy] = useState("populer");
   const [selectedBrand, setSelectedBrand] = useState("");
+  const [selectedStorage, setSelectedStorage] = useState("");
 
   const search = useEffectEvent(async (term: string) => {
     if (!term.trim()) return;
@@ -72,7 +213,6 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
 
     const payload = (await response.json()) as { products?: Product[] };
     setResults((payload.products ?? []).filter((product) => (product.prices?.length ?? 0) > 0));
-
     setLoading(false);
   });
 
@@ -85,11 +225,23 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
     if (query.trim()) router.push(`/ara?q=${encodeURIComponent(query)}`);
   };
 
-  const brands = [...new Set(results.map((product) => product.brand))].filter(Boolean);
+  const brands = [...new Set(results.map((product) => product.brand?.trim()).filter(Boolean))];
+  const relatedSuggestions = getRelatedSuggestions(initialQuery);
+  const storages = [
+    ...new Set(
+      results
+        .map((product) => product.variant_storage?.trim())
+        .filter((value): value is string => Boolean(value))
+    ),
+  ];
 
   const filteredResults = results
-    .filter((product) => selectedBrand === "" || product.brand === selectedBrand)
+    .filter((product) => selectedBrand === "" || product.brand?.trim() === selectedBrand)
+    .filter((product) => selectedStorage === "" || product.variant_storage?.trim() === selectedStorage)
     .sort((left, right) => {
+      if (sortBy === "guncel") {
+        return (getFreshestSeenAt(right.prices) ?? "").localeCompare(getFreshestSeenAt(left.prices) ?? "");
+      }
       if (sortBy === "ucuz") {
         return (getLowestActivePrice(left.prices) ?? Infinity) - (getLowestActivePrice(right.prices) ?? Infinity);
       }
@@ -105,63 +257,65 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
     });
 
   return (
-    <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-4 md:py-6">
-      <form onSubmit={handleSearch} className="flex gap-2 sm:gap-3 mb-4 md:mb-6">
-        <div className="flex-1 flex items-center bg-white border-2 border-gray-200 rounded-xl px-3 sm:px-4 gap-2 sm:gap-3 h-12 focus-within:border-[#E8460A] transition-all min-w-0">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="w-4 h-4 text-gray-400 flex-shrink-0"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-            />
-          </svg>
-          <input
-            type="text"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Urun, kategori veya marka ara..."
-            className="flex-1 bg-transparent text-sm outline-none text-gray-800 placeholder:text-gray-400 min-w-0"
-            autoFocus
-          />
-          {query && (
-            <button
-              type="button"
-              onClick={() => {
-                setQuery("");
-                router.push("/ara?q=");
-              }}
-              className="text-gray-400 hover:text-gray-600 text-lg flex-shrink-0 min-w-11 min-h-11 flex items-center justify-center"
+    <div className="mx-auto max-w-[1480px] px-3 py-4 sm:px-6 md:py-6 lg:px-8">
+      {!initialQuery && (
+        <form onSubmit={handleSearch} className="mb-4 flex gap-2 sm:gap-3 md:mb-6">
+          <div className="flex h-12 min-w-0 flex-1 items-center gap-2 rounded-xl border-2 border-gray-200 bg-white px-3 transition-all focus-within:border-[#E8460A] sm:gap-3 sm:px-4">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-4 w-4 flex-shrink-0 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
             >
-              x
-            </button>
-          )}
-        </div>
-        <button
-          type="submit"
-          className="bg-[#E8460A] text-white px-4 sm:px-8 h-12 rounded-xl text-sm font-bold hover:bg-[#C93A08] transition-all flex-shrink-0"
-        >
-          Ara
-        </button>
-      </form>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+            <input
+              type="text"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Urun, kategori veya marka ara..."
+              className="min-w-0 flex-1 bg-transparent text-sm text-gray-800 outline-none placeholder:text-gray-400"
+              autoFocus
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery("");
+                  router.push("/ara?q=");
+                }}
+                className="flex min-h-11 min-w-11 flex-shrink-0 items-center justify-center text-lg text-gray-400 hover:text-gray-600"
+              >
+                x
+              </button>
+            )}
+          </div>
+          <button
+            type="submit"
+            className="h-12 flex-shrink-0 rounded-xl bg-[#E8460A] px-4 text-sm font-bold text-white transition-all hover:bg-[#C93A08] sm:px-8"
+          >
+            Ara
+          </button>
+        </form>
+      )}
 
       {!initialQuery && !loading && (
-        <div className="text-center py-12">
-          <div className="text-5xl mb-4">Ara</div>
-          <div className="text-base font-bold text-gray-800 mb-2">Ne aramak istersiniz?</div>
-          <div className="text-sm text-gray-500 mb-8">Urun adi, marka veya kategori yazin</div>
-          <div className="flex flex-wrap gap-2 justify-center">
+        <div className="py-12 text-center">
+          <div className="mb-4 text-5xl">Ara</div>
+          <div className="mb-2 text-base font-bold text-gray-800">Ne aramak istersiniz?</div>
+          <div className="mb-8 text-sm text-gray-500">Urun adi, marka veya kategori yazin</div>
+          <div className="flex flex-wrap justify-center gap-2">
             {popularSearches.map((term) => (
               <button
                 key={term}
                 onClick={() => router.push(`/ara?q=${encodeURIComponent(term)}`)}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-600 hover:border-[#E8460A] hover:text-[#E8460A] transition-all"
+                className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm text-gray-600 transition-all hover:border-[#E8460A] hover:text-[#E8460A]"
               >
                 {term}
               </button>
@@ -171,25 +325,25 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
       )}
 
       {loading && (
-        <div className="text-center py-16">
-          <div className="text-4xl mb-3 animate-pulse">Ara</div>
+        <div className="py-16 text-center">
+          <div className="mb-3 animate-pulse text-4xl">Ara</div>
           <div className="text-sm text-gray-500">Araniyor...</div>
         </div>
       )}
 
       {!loading && initialQuery && results.length === 0 && (
-        <div className="text-center py-16">
-          <div className="text-5xl mb-4">Sonuc yok</div>
-          <div className="text-base font-bold text-gray-800 mb-2">
+        <div className="py-16 text-center">
+          <div className="mb-4 text-5xl">Sonuc yok</div>
+          <div className="mb-2 text-base font-bold text-gray-800">
             &quot;{initialQuery}&quot; icin sonuc bulunamadi
           </div>
-          <div className="text-sm text-gray-500 mb-6">Farkli bir kelime deneyin</div>
-          <div className="flex flex-wrap gap-2 justify-center">
+          <div className="mb-6 text-sm text-gray-500">Farkli bir kelime deneyin</div>
+          <div className="flex flex-wrap justify-center gap-2">
             {popularSearches.map((term) => (
               <button
                 key={term}
                 onClick={() => router.push(`/ara?q=${encodeURIComponent(term)}`)}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-full text-sm text-gray-600 hover:border-[#E8460A] hover:text-[#E8460A] transition-all"
+                className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm text-gray-600 transition-all hover:border-[#E8460A] hover:text-[#E8460A]"
               >
                 {term}
               </button>
@@ -198,130 +352,378 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
         </div>
       )}
 
-      {!loading && filteredResults.length > 0 && (
-        <div className="flex flex-col md:flex-row gap-4 md:gap-6">
-          <div className="w-full md:w-56 flex-shrink-0">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sticky top-24">
-              <h3 className="font-bold text-sm text-gray-900 mb-4">Filtrele</h3>
+      {!loading && initialQuery && results.length > 0 && filteredResults.length === 0 && (
+        <div className="rounded-[28px] border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
+          <div className="mb-2 text-lg font-bold text-slate-900">Secili filtrelerle urun bulunamadi</div>
+          <div className="mb-6 text-sm text-slate-500">Marka veya kapasite filtresini gevsetmeyi deneyin.</div>
+          <div className="flex flex-wrap justify-center gap-2">
+            {selectedBrand && (
+              <button
+                type="button"
+                onClick={() => setSelectedBrand("")}
+                className="rounded-full border border-slate-200 px-4 py-2 text-xs font-medium text-slate-600 hover:border-[#E8460A] hover:text-[#E8460A]"
+              >
+                Marka filtresini temizle
+              </button>
+            )}
+            {selectedStorage && (
+              <button
+                type="button"
+                onClick={() => setSelectedStorage("")}
+                className="rounded-full border border-slate-200 px-4 py-2 text-xs font-medium text-slate-600 hover:border-[#E8460A] hover:text-[#E8460A]"
+              >
+                Hafiza filtresini temizle
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
-              <div className="mb-4">
-                <div className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Siralama</div>
-                {[
-                  { value: "varsayilan", label: "Varsayilan" },
-                  { value: "ucuz", label: "En Ucuz" },
-                  { value: "pahali", label: "En Pahali" },
-                  { value: "magaza", label: "En Fazla Magaza" },
-                  { value: "a-z", label: "A-Z" },
-                  { value: "z-a", label: "Z-A" },
-                ].map((sort) => (
-                  <button
-                    key={sort.value}
-                    onClick={() => setSortBy(sort.value)}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-xs mb-1 transition-all ${
-                      sortBy === sort.value
-                        ? "bg-orange-50 text-[#E8460A] font-semibold"
-                        : "text-gray-600 hover:bg-gray-50"
-                    }`}
+      {!loading && filteredResults.length > 0 && (
+        <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
+          <aside className="w-full flex-shrink-0 lg:w-[248px]">
+            <div className="sticky top-24">
+              <div className="flex max-h-[calc(100vh-7rem)] flex-col overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_16px_42px_rgba(15,23,42,0.08)]">
+                <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 via-white to-[#FFF6F1] px-4 py-4">
+                  <div className="mb-1 text-[28px] leading-none text-slate-200">⌕</div>
+                  <div className="text-[16px] font-black tracking-tight text-slate-900">Filtrele</div>
+                  <div className="mt-1 text-[13px] leading-5 text-slate-500">Aramani biraz daha netlestirelim.</div>
+                </div>
+
+                <div className="space-y-5 overflow-y-auto px-5 py-5">
+                  {relatedSuggestions.length > 0 && (
+                    <div className="rounded-[22px] border border-slate-200 bg-white p-3.5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+                      <div className="mb-3 flex items-center justify-between">
+                        <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                          Ilgili Alt Kategoriler
+                        </div>
+                        <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-400">
+                          {relatedSuggestions.length}
+                        </span>
+                      </div>
+                      <div className="space-y-0.5">
+                        {relatedSuggestions.map((suggestion) => (
+                          <button
+                            key={suggestion.query}
+                            type="button"
+                            onClick={() => router.push(`/ara?q=${encodeURIComponent(suggestion.query)}`)}
+                            className="flex w-full items-center gap-2.5 rounded-lg px-1.5 py-1.5 text-left transition hover:bg-slate-50"
+                          >
+                            <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-[5px] border border-slate-300 bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]" />
+                            <span className="min-w-0 text-[13px] font-medium text-slate-700">{suggestion.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {(selectedBrand || selectedStorage) && (
+                    <div className="rounded-[22px] border border-[#F9D7C6] bg-[#FFF7F2] p-3">
+                      <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#E8460A]/75">
+                        Aktif filtreler
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {selectedStorage && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedStorage("")}
+                            className="rounded-full border border-[#F3C7B2] bg-white px-3 py-1.5 text-xs font-semibold text-[#E8460A]"
+                          >
+                            {selectedStorage} ×
+                          </button>
+                        )}
+                        {selectedBrand && (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedBrand("")}
+                            className="rounded-full border border-[#F3C7B2] bg-white px-3 py-1.5 text-xs font-semibold text-[#E8460A]"
+                          >
+                            {selectedBrand} ×
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {storages.length > 1 && (
+                    <div className="rounded-[24px] border border-slate-200 bg-slate-50/60 p-4">
+                      <div className="mb-3 flex items-center justify-between">
+                        <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                          Kapasite
+                        </div>
+                        <span className="rounded-full bg-white px-2 py-1 text-[10px] font-bold text-slate-400">
+                          {storages.length}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedStorage("")}
+                          className={`rounded-full border px-3 py-2 text-xs font-semibold transition-all ${
+                            selectedStorage === ""
+                              ? "border-[#E8460A] bg-[#FFF4EE] text-[#E8460A]"
+                              : "border-slate-200 bg-white text-slate-600 hover:border-[#E8460A]/35"
+                          }`}
+                        >
+                          Tumu
+                        </button>
+                        {storages.slice(0, 8).map((storage) => (
+                          <button
+                            key={storage}
+                            type="button"
+                            onClick={() => setSelectedStorage(storage)}
+                            className={`rounded-full border px-3 py-2 text-xs font-semibold transition-all ${
+                              selectedStorage === storage
+                                ? "border-[#E8460A] bg-[#FFF4EE] text-[#E8460A]"
+                                : "border-slate-200 bg-white text-slate-600 hover:border-[#E8460A]/35"
+                            }`}
+                          >
+                            {storage}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {brands.length > 1 && (
+                    <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
+                      <div className="mb-3 flex items-center justify-between">
+                        <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
+                          Marka
+                        </div>
+                        <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-400">
+                          {brands.length}
+                        </span>
+                      </div>
+                      <div className="space-y-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedBrand("")}
+                          className={`flex w-full items-center justify-between rounded-2xl px-3 py-2.5 text-left text-sm transition-all ${
+                            selectedBrand === ""
+                              ? "bg-[#FFF4EE] text-[#E8460A]"
+                              : "text-slate-600 hover:bg-slate-50"
+                          }`}
+                        >
+                          <span className="font-medium">Tumu</span>
+                          <span className="rounded-full bg-white/80 px-2 py-0.5 text-[10px] text-slate-400">
+                            {results.length}
+                          </span>
+                        </button>
+                        {brands.map((brand) => (
+                          <button
+                            key={brand}
+                            type="button"
+                            onClick={() => setSelectedBrand(brand ?? "")}
+                            className={`flex w-full items-center justify-between rounded-2xl px-3 py-2.5 text-left text-sm transition-all ${
+                              selectedBrand === brand
+                                ? "bg-[#FFF4EE] text-[#E8460A]"
+                                : "text-slate-600 hover:bg-slate-50"
+                            }`}
+                          >
+                            <span className="font-medium">{brand}</span>
+                            <span className="rounded-full bg-slate-50 px-2 py-0.5 text-[10px] text-slate-400">
+                              {results.filter((product) => product.brand?.trim() === brand).length}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <section className="min-w-0 flex-1">
+            <div className="rounded-[28px] border border-slate-200 bg-white px-5 py-4 shadow-[0_8px_32px_rgba(15,23,42,0.05)]">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div>
+                  <div className="text-xl font-bold text-slate-900">
+                    &quot;{initialQuery}&quot; icin arama sonuclari
+                  </div>
+                  <div className="mt-1 text-sm text-slate-500">
+                    Aramana uygun <span className="font-semibold text-slate-900">{filteredResults.length}</span> urun
+                    listelendi.
+                  </div>
+                </div>
+                <label className="flex items-center gap-3 text-sm text-slate-500">
+                  <span className="font-medium">Sirala</span>
+                  <select
+                    value={sortBy}
+                    onChange={(event) => setSortBy(event.target.value)}
+                    className="h-11 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 outline-none transition focus:border-[#E8460A]"
                   >
-                    {sort.label}
-                  </button>
-                ))}
+                    <option value="populer">En Populer Urunler</option>
+                    <option value="ucuz">En Ucuz</option>
+                    <option value="pahali">En Pahali</option>
+                    <option value="magaza">En Fazla Magaza</option>
+                    <option value="guncel">En Guncel Fiyatlar</option>
+                    <option value="a-z">A-Z</option>
+                    <option value="z-a">Z-A</option>
+                  </select>
+                </label>
               </div>
 
-              {brands.length > 1 && (
-                <div>
-                  <div className="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">Marka</div>
-                  <button
-                    onClick={() => setSelectedBrand("")}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-xs mb-1 transition-all ${
-                      selectedBrand === ""
-                        ? "bg-orange-50 text-[#E8460A] font-semibold"
-                        : "text-gray-600 hover:bg-gray-50"
-                    }`}
-                  >
-                    Tumu ({results.length})
-                  </button>
-                  {brands.map((brand) => (
+              {storages.length > 1 && (
+                <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-4">
+                  {storages.slice(0, 8).map((storage) => (
                     <button
-                      key={brand}
-                      onClick={() => setSelectedBrand(brand ?? "")}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-xs mb-1 transition-all ${
-                        selectedBrand === brand
-                          ? "bg-orange-50 text-[#E8460A] font-semibold"
-                          : "text-gray-600 hover:bg-gray-50"
+                      key={storage}
+                      type="button"
+                      onClick={() => setSelectedStorage((current) => (current === storage ? "" : storage))}
+                      className={`rounded-full border px-3 py-2 text-xs font-semibold transition-all ${
+                        selectedStorage === storage
+                          ? "border-[#E8460A] bg-[#FFF4EE] text-[#E8460A]"
+                          : "border-slate-200 bg-slate-50 text-slate-600 hover:border-[#E8460A]/35"
                       }`}
                     >
-                      {brand} ({results.filter((product) => product.brand === brand).length})
+                      Dahili Hafiza {storage}
                     </button>
                   ))}
                 </div>
               )}
             </div>
-          </div>
 
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center justify-between mb-4">
-              <div className="text-sm text-gray-500">
-                <span className="font-bold text-gray-900">{filteredResults.length}</span> sonuc bulundu -{" "}
-                <span className="text-[#E8460A] font-medium">&quot;{initialQuery}&quot;</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+            <div className="mt-4 space-y-4">
               {filteredResults.map((product) => {
                 const minPrice = getLowestActivePrice(product.prices);
                 const offerCount = getActiveOfferCount(product.prices);
                 const freshestSeenAt = getFreshestSeenAt(product.prices);
+                const offers = getOfferHighlights(product.prices);
+                const title = cleanProductTitle(product.title) || getDiscoveryProductLabel(product);
+
                 return (
-                  <Link href={`/urun/${product.slug}`} key={product.id}>
-                    <div className="bg-white border border-gray-100 rounded-2xl overflow-hidden hover:shadow-lg hover:border-[#E8460A]/30 transition-all cursor-pointer group">
-                      <div className="aspect-square bg-gray-50 overflow-hidden">
-                        {product.image_url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={product.image_url}
-                            alt={product.title}
-                            className="w-full h-full object-contain p-2 group-hover:scale-105 transition-transform duration-300"
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-4xl">?</div>
-                        )}
-                      </div>
-                      <div className="p-3">
-                        <div className="text-xs font-bold text-[#E8460A] uppercase tracking-wide mb-1">
-                          {product.brand}
-                        </div>
-                        <div className="text-xs font-semibold text-gray-800 line-clamp-2 leading-snug mb-2">
-                          {/* Detay sayfasıyla aynı title — kart kısaltma yapmıyor */}
-                          {cleanProductTitle(product.title) || getDiscoveryProductLabel(product)}
-                        </div>
-                        {minPrice !== null ? (
-                          <div>
-                            <div className="flex items-baseline justify-between gap-2">
-                              <div className="text-sm font-bold text-gray-900">
-                                {minPrice.toLocaleString("tr-TR")}{" "}
-                                <span className="text-xs font-normal text-gray-400">TL</span>
-                              </div>
-                              {offerCount > 1 && (
-                                <span className="text-[9px] text-gray-500 font-medium bg-gray-100 rounded-full px-1.5 py-0.5">
-                                  {offerCount} satici
-                                </span>
-                              )}
+                  <Link href={`/urun/${product.slug}`} key={product.id} className="group block">
+                    <article className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-[0_10px_35px_rgba(15,23,42,0.07)] transition-all hover:-translate-y-0.5 hover:border-[#E8460A]/35 hover:shadow-[0_18px_48px_rgba(15,23,42,0.12)]">
+                      <div className="grid lg:grid-cols-[152px_minmax(0,1fr)_186px]">
+                        <div className="relative flex items-center justify-center border-b border-slate-100 bg-gradient-to-b from-slate-50 to-white px-1 py-1 lg:border-b-0 lg:border-r">
+                          <div className="absolute left-4 top-4 rounded-full bg-[#EAF8F0] px-2.5 py-1 text-[10px] font-bold text-[#0B8A44]">
+                            %{Math.min(offerCount * 2, 12)}+
+                          </div>
+                          {product.image_url ? (
+                            <div className="flex h-[172px] w-[138px] items-center justify-center overflow-hidden">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={product.image_url}
+                                alt={title}
+                                className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.04] scale-[1.62]"
+                              />
                             </div>
-                            <div className="mt-1 text-[10px] text-gray-400">
-                              Son fiyat: {formatFreshnessLabel(freshestSeenAt)}
+                          ) : (
+                            <div className="flex h-[172px] w-[138px] items-center justify-center rounded-3xl bg-slate-100 text-5xl text-slate-300">
+                              ?
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="px-4 py-2.5 md:px-[18px]">
+                          <div className="mb-2 flex flex-wrap items-center gap-2">
+                            {product.brand && (
+                              <span className="text-xs font-bold uppercase tracking-[0.16em] text-[#E8460A]">
+                                {product.brand}
+                              </span>
+                            )}
+                            {product.variant_storage && (
+                              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-500">
+                                {product.variant_storage}
+                              </span>
+                            )}
+                            {product.variant_color && (
+                              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-500">
+                                {product.variant_color}
+                              </span>
+                            )}
+                            <div className="flex gap-2 text-slate-400">
+                              <span className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white transition hover:border-[#E8460A]/30 hover:text-[#E8460A]">
+                                <FavoriteIcon />
+                              </span>
+                              <span className="flex h-9 w-9 items-center justify-center rounded-full border border-slate-200 bg-white transition hover:border-[#E8460A]/30 hover:text-[#E8460A]">
+                                <BellIcon />
+                              </span>
                             </div>
                           </div>
-                        ) : (
-                          <div className="text-xs text-[#E8460A] font-medium">Fiyatlari Karsilastir -&gt;</div>
-                        )}
+
+                          <h2 className="max-w-4xl text-[14px] font-bold leading-5 text-slate-900 md:text-[15px]">
+                            {title}
+                          </h2>
+
+                          <div className="mt-3 flex flex-wrap items-center gap-3 text-xs text-slate-500">
+                            <span className="font-medium text-slate-700">{offerCount} fiyat bulundu</span>
+                            <span className="h-1 w-1 rounded-full bg-slate-300" />
+                            <span>Son fiyat kontrolu {formatFreshnessLabel(freshestSeenAt)}</span>
+                          </div>
+
+                          <div className="mt-2.5 grid gap-2 xl:grid-cols-3">
+                            {offers.length > 0 ? (
+                              offers.map((offer) => (
+                                <div
+                                  key={`${product.id}-${offer.source}-${offer.price}`}
+                                  className="rounded-[17px] border border-slate-200 bg-white px-3 py-2.5 shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition-all group-hover:border-slate-300"
+                                >
+                                  <div className="mb-2 inline-flex rounded-full bg-[#EEF8F2] px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-[#159857]">
+                                    {offer.badge}
+                                  </div>
+                                  <div className="text-[21px] font-black tracking-tight text-slate-900">
+                                    {offer.price.toLocaleString("tr-TR")}
+                                    <span className="ml-1 text-sm font-semibold text-slate-400">TL</span>
+                                  </div>
+                                  <div className="mt-2.5 flex items-center justify-between gap-3">
+                                    <div className="flex min-w-0 items-center gap-2.5">
+                                      <StoreLogo name={getSourceDisplayName(offer.source)} size={20} />
+                                      <div className="min-w-0">
+                                        <div className="truncate text-xs font-bold text-slate-700">
+                                          {getSourceDisplayName(offer.source)}
+                                        </div>
+                                        <div className="text-[11px] text-slate-400">
+                                          {formatFreshnessLabel(offer.last_seen)}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-500">
+                                      Teklif
+                                    </span>
+                                  </div>
+                                </div>
+                              ))
+                            ) : (
+                              <div className="rounded-[22px] border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-400 xl:col-span-3">
+                                Aktif fiyat bilgisi yok.
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="border-t border-slate-100 bg-[#F5FAFF] px-3 py-2.5 lg:border-l lg:border-t-0">
+                          <div className="flex h-full flex-col justify-between gap-3.5">
+                            <div className="rounded-[20px] border border-[#D4E7FB] bg-white/90 px-3.5 py-3.5 shadow-[0_8px_24px_rgba(29,112,224,0.08)]">
+                              <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[#1D70E0]/70">
+                                En uygun teklif
+                              </div>
+                              <div className="mt-2 text-[27px] font-black tracking-tight text-slate-900">
+                                {minPrice !== null ? minPrice.toLocaleString("tr-TR") : "-"}
+                                {minPrice !== null && <span className="ml-1 text-sm font-semibold text-slate-400">TL</span>}
+                              </div>
+                              <div className="mt-1 text-xs text-slate-500">
+                                Son fiyat kontrolu {formatFreshnessLabel(freshestSeenAt)}
+                              </div>
+                            </div>
+
+                            <div className="rounded-[20px] bg-[#E9F4FF] px-3.5 py-3.5 text-center transition-all group-hover:bg-[#DDF0FF]">
+                              <div className="text-[13px] font-bold text-[#1D70E0]">
+                                {Math.max(offerCount, 1)}+ Fiyat daha incele
+                              </div>
+                              <div className="mt-1 text-[11px] text-[#5A87C7]">Urun detayina git</div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
+                    </article>
                   </Link>
                 );
               })}
             </div>
-          </div>
+          </section>
         </div>
       )}
     </div>
@@ -337,9 +739,9 @@ function AramaSayfasiIcerik() {
 
 export default function AramaSayfasi() {
   return (
-    <main className="bg-white min-h-screen">
+    <main className="min-h-screen bg-white">
       <Header />
-      <Suspense fallback={<div className="text-center py-20 text-gray-400">Yukleniyor...</div>}>
+      <Suspense fallback={<div className="py-20 text-center text-gray-400">Yukleniyor...</div>}>
         <AramaSayfasiIcerik />
       </Suspense>
       <Footer />
