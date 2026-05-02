@@ -269,10 +269,12 @@ export default async function KategoriSayfasi({ params, searchParams }: {
       typeof lowestPrice === "number" && lowestPrice > 0 ? lowestPrice : undefined,
     );
     return !(acc.isAccessory && acc.confidence === "high");
-  });
-  let products: ProductCard[] = mergedRawProducts.filter(
-    (product) => !kaynak || visibleListingsOf(product).length > 0
+  }).filter(
+    // P6.21: aktif listing'i olmayan (orphan) urunleri gizle.
+    // 38k+ PTT urunu listings'de yok -> "Fiyatlari Karsilastir" placeholder kalkti.
+    (product) => visibleListingsOf(product).length > 0
   );
+  let products: ProductCard[] = mergedRawProducts;
 
   // Filtreler
   if (selectedBrands.length > 0) {
@@ -331,7 +333,8 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   const sourceCounts: Record<string, number> = {};
   const countBaseProducts = normalizeProducts((allProducts as ProductCard[] | null) ?? [])
     .filter((product) => !shouldHideDiscoveryProduct(product))
-    .filter((product) => !kaynak || getActiveListings(product.prices, kaynak).length > 0);
+    // P6.21: orphan (listing'siz) urunleri sidebar count'larindan da dusur.
+    .filter((product) => getActiveListings(product.prices, kaynak ?? null).length > 0);
   // Filter listesinde invalid model_family (SKU/EAN sayisal, Apple SKU MTPxxxTU/A) gizlensin
   const isInvalidFamily = (v: string | null | undefined): boolean => {
     if (!v) return true;

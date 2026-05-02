@@ -64,23 +64,27 @@ function extractColorFromTitle(title) {
 }
 
 function loadState() {
-  if (!existsSync(STATE_FILE)) {
-    return {
-      startedAt: null,
-      completedCategories: [],
-      lastCategory: null,
-      lastPage: 0,
-      stats: {
-        totalUrlsCollected: 0,
-        totalScraped: 0,
-        inserted: 0,
-        updated: 0,
-        skipped: 0,
-        fails: 0,
-      },
-    };
-  }
-  return JSON.parse(readFileSync(STATE_FILE, 'utf-8'));
+  const defaults = {
+    startedAt: null,
+    completedCategories: [],
+    lastCategory: null,
+    lastPage: 0,
+    stats: {
+      totalUrlsCollected: 0,
+      totalScraped: 0,
+      inserted: 0,
+      updated: 0,
+      skipped: 0,
+      fails: 0,
+    },
+  };
+  if (!existsSync(STATE_FILE)) return defaults;
+  const persisted = JSON.parse(readFileSync(STATE_FILE, 'utf-8'));
+  return {
+    ...defaults,
+    ...persisted,
+    stats: { ...defaults.stats, ...(persisted.stats ?? {}) },
+  };
 }
 
 function saveState(state) {
