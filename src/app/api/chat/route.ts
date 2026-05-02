@@ -752,7 +752,18 @@ export async function POST(req: Request) {
     const validParsedCategory = await validateOrFuzzyMatchSlug(parsedCategoryRaw, 1, {
       stickyContextSlug: previousState?.category_slug ?? null,
     });
-    const resilientParsedCategory = validParsedCategory ?? parsedCategoryRaw;
+    // P6.18: validateOrFuzzyMatchSlug resolve edemediği FLAT slug'ları state'e
+    // yazma. Eski davranış raw fallback yapıyordu, eval2 dialog 4'te
+    // 'erkek-giyim-ust' (flat compound) state'te kaldı — search runtime resolve
+    // etti ama state corrupt. Yeni davranış:
+    // - validParsed varsa kullan
+    // - yoksa raw full-path ise (içinde '/') kullan (geriye dönük uyum)
+    // - yoksa previousState'e fallback (null da olabilir)
+    const resilientParsedCategory =
+      validParsedCategory ??
+      (parsedCategoryRaw && parsedCategoryRaw.includes("/")
+        ? parsedCategoryRaw
+        : previousState?.category_slug ?? null);
 
     // Feature dimension extraction (basit regex-based)
     const features: string[] = [];
