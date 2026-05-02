@@ -32,6 +32,13 @@ const DELAY_MS = process.env.MM_DELAY_MS ? Number(process.env.MM_DELAY_MS) : 350
 const STATE_FILE = './scripts/scraper-state.json';
 const ONLY_DB_SLUG = process.env.ONLY_DB_SLUG || null;
 const SKIP_24H_FRESH = process.env.SKIP_24H !== '0';  // default true; SKIP_24H=0 ile bypass
+// P6.22-D1: kategori bazli "tamamlandi" sonsuza kadar SKIP edilirdi -> mevcut DB
+// donmusu olusuyordu. Artik comboKey 7 gunden eski ise re-scrape edilir.
+// FORCE_RESCRAPE=1 ile tum kategoriler zorla yeniden taranir.
+const RESCRAPE_AFTER_DAYS = process.env.RESCRAPE_AFTER_DAYS
+  ? Number(process.env.RESCRAPE_AFTER_DAYS)
+  : 7;
+const FORCE_RESCRAPE = process.env.FORCE_RESCRAPE === '1';
 
 const sb = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
@@ -67,6 +74,11 @@ function loadState() {
   const defaults = {
     startedAt: null,
     completedCategories: [],
+    // P6.22-D1: comboKey -> ISO timestamp. completedCategories array'i geriye
+    // uyumluluk icin korunur; SKIP karari artik bu map + RESCRAPE_AFTER_DAYS'e
+    // gore verilir. State migrate yapilmaz; eksik comboKey "never scraped"
+    // sayilir ve re-scrape edilir.
+    categoryLastScraped: {},
     lastCategory: null,
     lastPage: 0,
     stats: {
@@ -84,6 +96,7 @@ function loadState() {
     ...defaults,
     ...persisted,
     stats: { ...defaults.stats, ...(persisted.stats ?? {}) },
+    categoryLastScraped: { ...(persisted.categoryLastScraped ?? {}) },
   };
 }
 
@@ -157,7 +170,27 @@ async function getCategoryId(slug) {
 async function upsertListing(scraped) {
   let productId = null;
 
+  // P6.22-D Asama 1: In-source listing GTIN match (Migration 038).
+  // Ayni kaynaktan ayni GTIN -> kesin ayni urun. Brand verify gereksiz cunku
+  // "MM kendi DB'sinde ayni barkod ayni urun" varsayimi guvenli (canonical
+  // false-positive cross-platform durumu degil).
   if (scraped.gtin13) {
+    const { data: lsHit } = await sb
+      .from('listings')
+      .select('product_id')
+      .eq('source', 'mediamarkt')
+      .eq('gtin', scraped.gtin13)
+      .limit(1)
+      .maybeSingle();
+    if (lsHit?.product_id) {
+      productId = lsHit.product_id;
+    }
+  }
+
+  // P6.22-D Asama 2: products.gtin match (brand-verified, P6.22-A).
+  // Asama 1 in-source bulamadi -> baska bir kaynaktan zaten ayni canonical
+  // product gelmis olabilir (brand-verified guvenli).
+  if (!productId && scraped.gtin13) {
     // Önce yeni canonical gtin kolonu üzerinden ara, sonra legacy specs->>gtin13
     let { data: p } = await sb
       .from('products')
@@ -282,6 +315,9 @@ async function upsertListing(scraped) {
     raw_images: scraped.raw_images,
     raw_description: scraped.raw_description,
     raw_specs: scraped.raw_specs,
+    // P6.22-C: per-source GTIN (Migration 038). Match akisi: in-source listing
+    // GTIN match -> resolveExistingProduct (brand-verified) -> yeni canonical.
+    gtin: scraped.gtin13 ?? null,
     last_seen: new Date().toISOString(),
   };
 
@@ -325,21 +361,43 @@ async function main() {
   }
 
   console.log(`Hedef DB kategorisi: ${targets.length}`);
-  console.log(`Tamamlanan: ${state.completedCategories.length}\n`);
+  console.log(`Tamamlanan (legacy list): ${state.completedCategories.length}`);
+  console.log(`RESCRAPE_AFTER_DAYS=${RESCRAPE_AFTER_DAYS}${FORCE_RESCRAPE ? ' [FORCE]' : ''}\n`);
+
+  const rescrapeThresholdMs = RESCRAPE_AFTER_DAYS * 24 * 3600 * 1000;
 
   for (const target of targets) {
     for (const mmName of target.mmBreadcrumbNames) {
       const comboKey = `${target.dbSlug}::${mmName}`;
 
-      if (state.completedCategories.includes(comboKey)) {
-        console.log(`[SKIP] ${comboKey}`);
-        continue;
+      // P6.22-D1: SKIP karari artik tarih bazli.
+      // FORCE_RESCRAPE=1 -> hicbir SKIP yok.
+      // Aksi takdirde categoryLastScraped[comboKey] var ve threshold'dan
+      // taze ise SKIP. Map'te yoksa ve completedCategories'de varsa "yasi
+      // bilinmeyen" eski tamamlanma -> re-scrape (bir kere taze stamp atilir).
+      if (!FORCE_RESCRAPE) {
+        const lastScrapedIso = state.categoryLastScraped[comboKey];
+        if (lastScrapedIso) {
+          const ageMs = Date.now() - new Date(lastScrapedIso).getTime();
+          if (ageMs < rescrapeThresholdMs) {
+            const ageDays = (ageMs / (24 * 3600 * 1000)).toFixed(1);
+            console.log(`[SKIP] ${comboKey} (${ageDays}g once)`);
+            continue;
+          }
+          const ageDays = (ageMs / (24 * 3600 * 1000)).toFixed(1);
+          console.log(`[RE-SCRAPE] ${comboKey} (${ageDays}g once)`);
+        } else if (state.completedCategories.includes(comboKey)) {
+          console.log(`[RE-SCRAPE] ${comboKey} (legacy: tarih yok)`);
+        }
       }
 
       const mmSlugs = findMmSlugByName(mmName);
       if (mmSlugs.length === 0) {
         console.warn(`[WARN] ${mmName} -> MM slug yok, atlaniyor`);
-        state.completedCategories.push(comboKey);
+        if (!state.completedCategories.includes(comboKey)) {
+          state.completedCategories.push(comboKey);
+        }
+        state.categoryLastScraped[comboKey] = new Date().toISOString();
         saveState(state);
         continue;
       }

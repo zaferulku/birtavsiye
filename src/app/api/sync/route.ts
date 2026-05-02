@@ -165,11 +165,31 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
     let productId: string | null = null;
     let queueAgentValidation = false;
 
-    let existingProduct = await resolveExistingProduct({
-      sb,
-      identity,
-      categoryId: effectiveCategoryId,
-    });
+    // P6.22-D Asama 1: In-source listing GTIN match (Migration 038).
+    // Ayni kaynaktan ayni GTIN -> kesin ayni urun. Brand verify gereksiz cunku
+    // platform kendi DB'sinde duplicate barkod kullanmaz (canonical false-
+    // positive cross-platform durumu degil).
+    if (identity.gtin) {
+      const { data: lsHit } = await sb
+        .from("listings")
+        .select("product_id")
+        .eq("source", source)
+        .eq("gtin", identity.gtin)
+        .limit(1)
+        .maybeSingle();
+      if (lsHit?.product_id) {
+        productId = lsHit.product_id;
+      }
+    }
+
+    // P6.22-D Asama 2: resolveExistingProduct (Asama 1 boşsa, brand-verified).
+    let existingProduct = !productId
+      ? await resolveExistingProduct({
+          sb,
+          identity,
+          categoryId: effectiveCategoryId,
+        })
+      : null;
 
     if (existingProduct) {
       productId = existingProduct.id;
@@ -196,7 +216,11 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
           continue;
         }
       }
-    } else {
+    } else if (!productId) {
+      // P6.22-D: Asama 1 + 2 ikisi de boş -> yeni canonical product olustur.
+      // Asama 1 hit ettiyse (productId dolu) bu blok atlanir; product zaten var,
+      // direkt listings update'e gecilir. Backfill (image/specs) bir sonraki
+      // resolveExistingProduct path'inde yapilir.
       if (!effectiveCategoryId) {
         if (firstError.length < 3) {
           firstError.push(`product:missing_category:slug=${identity.slug}`);
@@ -305,6 +329,10 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
       is_active: true,
       last_seen: nowIso,
       warranty_type: detectWarrantyType(source, product.name),
+      // P6.22-C: per-source GTIN (Migration 038). product.gtin scraper'dan gelir
+      // (PttAVM/Trendyol/Hepsiburada icin sayfadan extract edilebilirse). Match
+      // akisi: in-source listing GTIN -> resolveExistingProduct fallback.
+      gtin: product.gtin ?? null,
     };
     if (!existingListing || previousPrice !== product.price) {
       listingPayload.last_price_change = nowIso;
