@@ -141,3 +141,98 @@ console.log(
 console.log(
   `Sonra: ${broken.length} broken (helper sonrası, kurtarılan: ${rescued.length})`,
 );
+
+// ================================================
+// TEST 3 — Broken slug'lar için DB öneri tablosu (5D-3.3)
+// ================================================
+function tokenSet(s: string): Set<string> {
+  // Leaf segment + tokenize
+  const leaf = s.split("/").pop() ?? s;
+  return new Set(leaf.split("-").filter(Boolean));
+}
+
+function jaccardSimilarity(a: Set<string>, b: Set<string>): number {
+  if (a.size === 0 && b.size === 0) return 0;
+  let intersection = 0;
+  for (const t of a) if (b.has(t)) intersection++;
+  const union = a.size + b.size - intersection;
+  return union === 0 ? 0 : intersection / union;
+}
+
+function levenshtein(a: string, b: string): number {
+  const m: number[][] = Array.from({ length: a.length + 1 }, () =>
+    new Array(b.length + 1).fill(0),
+  );
+  for (let i = 0; i <= a.length; i++) m[i][0] = i;
+  for (let j = 0; j <= b.length; j++) m[0][j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    for (let j = 1; j <= b.length; j++) {
+      m[i][j] =
+        a[i - 1] === b[j - 1]
+          ? m[i - 1][j - 1]
+          : 1 + Math.min(m[i - 1][j - 1], m[i - 1][j], m[i][j - 1]);
+    }
+  }
+  return m[a.length][b.length];
+}
+
+function suggestForBroken(brokenSlug: string, taxIter: Iterable<string>): {
+  slug: string;
+  score: number;
+  reason: string;
+}[] {
+  const inputTokens = tokenSet(brokenSlug);
+  const inputLeaf = brokenSlug.split("/").pop() ?? brokenSlug;
+  const candidates: { slug: string; score: number; reason: string }[] = [];
+
+  for (const dbSlug of taxIter) {
+    const dbTokens = tokenSet(dbSlug);
+    const dbLeaf = dbSlug.split("/").pop() ?? dbSlug;
+
+    const jaccard = jaccardSimilarity(inputTokens, dbTokens);
+    const lev = levenshtein(inputLeaf, dbLeaf);
+    const maxLen = Math.max(inputLeaf.length, dbLeaf.length);
+    const levRatio = maxLen === 0 ? 1 : 1 - lev / maxLen;
+    // ILIKE-benzeri substring
+    const substringHit =
+      dbLeaf.includes(inputLeaf) || inputLeaf.includes(dbLeaf) ? 0.3 : 0;
+
+    const score = jaccard * 0.5 + levRatio * 0.4 + substringHit;
+    if (score < 0.3) continue;
+
+    let reason = "";
+    if (jaccard >= 0.5) reason = `token-overlap=${jaccard.toFixed(2)}`;
+    else if (substringHit > 0) reason = `substring`;
+    else reason = `lev=${lev}/${maxLen}`;
+
+    candidates.push({ slug: dbSlug, score, reason });
+  }
+
+  return candidates.sort((a, b) => b.score - a.score).slice(0, 3);
+}
+
+console.log(`\n========== TEST 3: Broken slug öneri tablosu ==========`);
+console.log(`(her broken slug için top 3 DB önerisi, score ≥ 0.3)\n`);
+
+const mappingProposals: { broken: string; suggestions: ReturnType<typeof suggestForBroken> }[] = [];
+for (const b of broken) {
+  const suggestions = suggestForBroken(b, taxonomy);
+  mappingProposals.push({ broken: b, suggestions });
+}
+
+console.log(`| NAV slug (eski) | Öneri 1 | Öneri 2 | Öneri 3 |`);
+console.log(`|---|---|---|---|`);
+for (const { broken: b, suggestions } of mappingProposals) {
+  const cols = [b];
+  for (let i = 0; i < 3; i++) {
+    const s = suggestions[i];
+    cols.push(s ? `${s.slug} (${s.score.toFixed(2)}, ${s.reason})` : "-");
+  }
+  console.log(`| ${cols.join(" | ")} |`);
+}
+
+const noSuggestion = mappingProposals.filter((p) => p.suggestions.length === 0);
+console.log(`\nÖnerisiz (DB'de yakın eşleşme yok): ${noSuggestion.length}`);
+if (noSuggestion.length > 0) {
+  for (const p of noSuggestion) console.log(`  ✗ "${p.broken}"`);
+}
