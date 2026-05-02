@@ -1,0 +1,6582 @@
+[
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/laptop/laptop",
+    "tag": "Gaming Laptop",
+    "newSlug": "elektronik/bilgisayar-tablet/laptop/laptop/gaming-laptop"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/tablet",
+    "tag": "Tablet Kılıfı",
+    "newSlug": "elektronik/bilgisayar-tablet/tablet/tablet-kilifi"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/tablet",
+    "tag": "Tablet Klavyesi",
+    "newSlug": "elektronik/bilgisayar-tablet/tablet/tablet-klavyesi"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/masaustu",
+    "tag": "All-in-One",
+    "newSlug": "elektronik/bilgisayar-tablet/masaustu/all-in-one"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/masaustu",
+    "tag": "MacBook Mini",
+    "newSlug": "elektronik/bilgisayar-tablet/masaustu/macbook-mini"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/masaustu",
+    "tag": "Mini PC",
+    "newSlug": "elektronik/bilgisayar-tablet/masaustu/mini-pc"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/masaustu",
+    "tag": "Gaming PC",
+    "newSlug": "elektronik/bilgisayar-tablet/masaustu/gaming-pc"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/masaustu",
+    "tag": "İş İstasyonu",
+    "newSlug": "elektronik/bilgisayar-tablet/masaustu/is-istasyonu"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol",
+    "tag": "Oyuncu Klavyesi",
+    "newSlug": "elektronik/oyun/konsol/oyuncu-klavyesi"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol",
+    "tag": "Gaming Laptop",
+    "newSlug": "elektronik/oyun/konsol/gaming-laptop"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol",
+    "tag": "Oyuncu Mouse",
+    "newSlug": "elektronik/oyun/konsol/oyuncu-mouse"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol",
+    "tag": "Oyuncu Kulaklığı",
+    "newSlug": "elektronik/oyun/konsol/oyuncu-kulakligi"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol",
+    "tag": "Oyuncu Monitörü",
+    "newSlug": "elektronik/oyun/konsol/oyuncu-monitoru"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol",
+    "tag": "Mekanik Klavye",
+    "newSlug": "elektronik/oyun/konsol/mekanik-klavye"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol",
+    "tag": "Oyuncu Koltuk",
+    "newSlug": "elektronik/oyun/konsol/oyuncu-koltuk"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/monitor",
+    "tag": "Kavisli",
+    "newSlug": "elektronik/bilgisayar-tablet/monitor/kavisli"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/monitor",
+    "tag": "27 inç",
+    "newSlug": "elektronik/bilgisayar-tablet/monitor/27-inc"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/monitor",
+    "tag": "32 inç",
+    "newSlug": "elektronik/bilgisayar-tablet/monitor/32-inc"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/bilesenler/parca",
+    "tag": "Anakart",
+    "newSlug": "elektronik/bilgisayar-tablet/bilesenler/parca/anakart"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/bilesenler/parca",
+    "tag": "Ekran Kartı",
+    "newSlug": "elektronik/bilgisayar-tablet/bilesenler/parca/ekran-karti"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/bilesenler/parca",
+    "tag": "İşlemci",
+    "newSlug": "elektronik/bilgisayar-tablet/bilesenler/parca/islemci"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/bilesenler/parca",
+    "tag": "Kasa",
+    "newSlug": "elektronik/bilgisayar-tablet/bilesenler/parca/kasa"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/bilesenler/parca",
+    "tag": "Nvidia",
+    "newSlug": "elektronik/bilgisayar-tablet/bilesenler/parca/nvidia"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/bilesenler/parca",
+    "tag": "Intel",
+    "newSlug": "elektronik/bilgisayar-tablet/bilesenler/parca/intel"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/klavye-mouse",
+    "tag": "Mekanik Klavye",
+    "newSlug": "elektronik/bilgisayar-tablet/klavye-mouse/mekanik-klavye"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/klavye-mouse",
+    "tag": "Kablosuz",
+    "newSlug": "elektronik/bilgisayar-tablet/klavye-mouse/kablosuz"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/bilesenler/cevre-birim",
+    "tag": "Klavye & Mouse Set",
+    "newSlug": "elektronik/bilgisayar-tablet/bilesenler/cevre-birim/klavye-mouse-set"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/bilesenler/cevre-birim",
+    "tag": "Mouse",
+    "newSlug": "elektronik/bilgisayar-tablet/bilesenler/cevre-birim/mouse"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/bilesenler/cevre-birim",
+    "tag": "Klavye",
+    "newSlug": "elektronik/bilgisayar-tablet/bilesenler/cevre-birim/klavye"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/bilesenler/cevre-birim",
+    "tag": "Webcam",
+    "newSlug": "elektronik/bilgisayar-tablet/bilesenler/cevre-birim/webcam"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/bilesenler/cevre-birim",
+    "tag": "Yazıcı",
+    "newSlug": "elektronik/bilgisayar-tablet/bilesenler/cevre-birim/yazici"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/bilesenler/cevre-birim",
+    "tag": "Tarayıcı",
+    "newSlug": "elektronik/bilgisayar-tablet/bilesenler/cevre-birim/tarayici"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/bilesenler/cevre-birim",
+    "tag": "VR Gözlük",
+    "newSlug": "elektronik/bilgisayar-tablet/bilesenler/cevre-birim/vr-gozluk"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/bilesenler/veri-depolama",
+    "tag": "USB Bellek",
+    "newSlug": "elektronik/bilgisayar-tablet/bilesenler/veri-depolama/usb-bellek"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/bilesenler/veri-depolama",
+    "tag": "Hard Disk",
+    "newSlug": "elektronik/bilgisayar-tablet/bilesenler/veri-depolama/hard-disk"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/bilesenler/veri-depolama",
+    "tag": "Hafıza Kartı",
+    "newSlug": "elektronik/bilgisayar-tablet/bilesenler/veri-depolama/hafiza-karti"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/bilesenler/veri-depolama",
+    "tag": "Taşınabilir SSD",
+    "newSlug": "elektronik/bilgisayar-tablet/bilesenler/veri-depolama/tasinabilir-ssd"
+  },
+  {
+    "subSlug": "elektronik/ag-guvenlik/modem",
+    "tag": "Router",
+    "newSlug": "elektronik/ag-guvenlik/modem/router"
+  },
+  {
+    "subSlug": "elektronik/ag-guvenlik/modem",
+    "tag": "Modem",
+    "newSlug": "elektronik/ag-guvenlik/modem/modem"
+  },
+  {
+    "subSlug": "elektronik/ag-guvenlik/modem",
+    "tag": "Access Point",
+    "newSlug": "elektronik/ag-guvenlik/modem/access-point"
+  },
+  {
+    "subSlug": "elektronik/ag-guvenlik/modem",
+    "tag": "Switch",
+    "newSlug": "elektronik/ag-guvenlik/modem/switch"
+  },
+  {
+    "subSlug": "elektronik/ag-guvenlik/modem",
+    "tag": "Powerline",
+    "newSlug": "elektronik/ag-guvenlik/modem/powerline"
+  },
+  {
+    "subSlug": "elektronik/ag-guvenlik/modem",
+    "tag": "Akıllı Priz",
+    "newSlug": "elektronik/ag-guvenlik/modem/akilli-priz"
+  },
+  {
+    "subSlug": "elektronik/ag-guvenlik/modem",
+    "tag": "Akıllı Ampul",
+    "newSlug": "elektronik/ag-guvenlik/modem/akilli-ampul"
+  },
+  {
+    "subSlug": "elektronik/telefon/aksesuar",
+    "tag": "Laptop Çantası",
+    "newSlug": "elektronik/telefon/aksesuar/laptop-cantasi"
+  },
+  {
+    "subSlug": "elektronik/telefon/aksesuar",
+    "tag": "Tablet Çantası",
+    "newSlug": "elektronik/telefon/aksesuar/tablet-cantasi"
+  },
+  {
+    "subSlug": "elektronik/telefon/aksesuar",
+    "tag": "Kablo & Hub",
+    "newSlug": "elektronik/telefon/aksesuar/kablo-hub"
+  },
+  {
+    "subSlug": "elektronik/telefon/aksesuar",
+    "tag": "Soğutucu",
+    "newSlug": "elektronik/telefon/aksesuar/sogutucu"
+  },
+  {
+    "subSlug": "elektronik/telefon/aksesuar",
+    "tag": "Mouse Pad",
+    "newSlug": "elektronik/telefon/aksesuar/mouse-pad"
+  },
+  {
+    "subSlug": "elektronik/telefon/kilif",
+    "tag": "Deri Kılıf",
+    "newSlug": "elektronik/telefon/kilif/deri-kilif"
+  },
+  {
+    "subSlug": "elektronik/telefon/kilif",
+    "tag": "Şeffaf Kılıf",
+    "newSlug": "elektronik/telefon/kilif/seffaf-kilif"
+  },
+  {
+    "subSlug": "elektronik/telefon/kilif",
+    "tag": "Cüzdanlı Kılıf",
+    "newSlug": "elektronik/telefon/kilif/cuzdanli-kilif"
+  },
+  {
+    "subSlug": "elektronik/telefon/sarj-kablo",
+    "tag": "Hızlı Şarj",
+    "newSlug": "elektronik/telefon/sarj-kablo/hizli-sarj"
+  },
+  {
+    "subSlug": "elektronik/telefon/sarj-kablo",
+    "tag": "Kablosuz Şarj",
+    "newSlug": "elektronik/telefon/sarj-kablo/kablosuz-sarj"
+  },
+  {
+    "subSlug": "elektronik/telefon/sarj-kablo",
+    "tag": "USB-C Kablo",
+    "newSlug": "elektronik/telefon/sarj-kablo/usb-c-kablo"
+  },
+  {
+    "subSlug": "elektronik/telefon/sarj-kablo",
+    "tag": "Lightning Kablo",
+    "newSlug": "elektronik/telefon/sarj-kablo/lightning-kablo"
+  },
+  {
+    "subSlug": "elektronik/telefon/sarj-kablo",
+    "tag": "Power Bank",
+    "newSlug": "elektronik/telefon/sarj-kablo/power-bank"
+  },
+  {
+    "subSlug": "elektronik/telefon/sarj-kablo",
+    "tag": "Araç Şarjı",
+    "newSlug": "elektronik/telefon/sarj-kablo/arac-sarji"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/kulaklik",
+    "tag": "Bluetooth",
+    "newSlug": "elektronik/tv-ses-goruntu/kulaklik/bluetooth"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/kulaklik",
+    "tag": "Kulak İçi",
+    "newSlug": "elektronik/tv-ses-goruntu/kulaklik/kulak-ici"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/kulaklik",
+    "tag": "Kulak Üstü",
+    "newSlug": "elektronik/tv-ses-goruntu/kulaklik/kulak-ustu"
+  },
+  {
+    "subSlug": "elektronik/telefon/powerbank",
+    "tag": "Hızlı Şarj",
+    "newSlug": "elektronik/telefon/powerbank/hizli-sarj"
+  },
+  {
+    "subSlug": "elektronik/telefon/powerbank",
+    "tag": "Kablosuz",
+    "newSlug": "elektronik/telefon/powerbank/kablosuz"
+  },
+  {
+    "subSlug": "elektronik/telefon/yedek-parca",
+    "tag": "Ekran",
+    "newSlug": "elektronik/telefon/yedek-parca/ekran"
+  },
+  {
+    "subSlug": "elektronik/telefon/yedek-parca",
+    "tag": "Batarya",
+    "newSlug": "elektronik/telefon/yedek-parca/batarya"
+  },
+  {
+    "subSlug": "elektronik/telefon/yedek-parca",
+    "tag": "Şarj Soketi",
+    "newSlug": "elektronik/telefon/yedek-parca/sarj-soketi"
+  },
+  {
+    "subSlug": "elektronik/telefon/yedek-parca",
+    "tag": "Hoparlör",
+    "newSlug": "elektronik/telefon/yedek-parca/hoparlor"
+  },
+  {
+    "subSlug": "elektronik/telefon/yedek-parca",
+    "tag": "Kamera Cam",
+    "newSlug": "elektronik/telefon/yedek-parca/kamera-cam"
+  },
+  {
+    "subSlug": "elektronik/telefon/yedek-parca",
+    "tag": "Tampon",
+    "newSlug": "elektronik/telefon/yedek-parca/tampon"
+  },
+  {
+    "subSlug": "elektronik/telefon/ekran-koruyucu",
+    "tag": "Cam Koruyucu",
+    "newSlug": "elektronik/telefon/ekran-koruyucu/cam-koruyucu"
+  },
+  {
+    "subSlug": "elektronik/telefon/ekran-koruyucu",
+    "tag": "Selfie Çubuğu",
+    "newSlug": "elektronik/telefon/ekran-koruyucu/selfie-cubugu"
+  },
+  {
+    "subSlug": "elektronik/telefon/ekran-koruyucu",
+    "tag": "Tripod",
+    "newSlug": "elektronik/telefon/ekran-koruyucu/tripod"
+  },
+  {
+    "subSlug": "elektronik/telefon/ekran-koruyucu",
+    "tag": "Gimbal",
+    "newSlug": "elektronik/telefon/ekran-koruyucu/gimbal"
+  },
+  {
+    "subSlug": "elektronik/telefon/ekran-koruyucu",
+    "tag": "Lens",
+    "newSlug": "elektronik/telefon/ekran-koruyucu/lens"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/televizyon",
+    "tag": "55 inç",
+    "newSlug": "elektronik/tv-ses-goruntu/televizyon/55-inc"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/televizyon",
+    "tag": "65 inç",
+    "newSlug": "elektronik/tv-ses-goruntu/televizyon/65-inc"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/televizyon",
+    "tag": "75 inç",
+    "newSlug": "elektronik/tv-ses-goruntu/televizyon/75-inc"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/televizyon",
+    "tag": "Hisense",
+    "newSlug": "elektronik/tv-ses-goruntu/televizyon/hisense"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/tv-aksesuar",
+    "tag": "Kumanda",
+    "newSlug": "elektronik/tv-ses-goruntu/tv-aksesuar/kumanda"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/tv-aksesuar",
+    "tag": "Duvar Askı",
+    "newSlug": "elektronik/tv-ses-goruntu/tv-aksesuar/duvar-aski"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/tv-aksesuar",
+    "tag": "TV Sehpa",
+    "newSlug": "elektronik/tv-ses-goruntu/tv-aksesuar/tv-sehpa"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/tv-aksesuar",
+    "tag": "HDMI Kablo",
+    "newSlug": "elektronik/tv-ses-goruntu/tv-aksesuar/hdmi-kablo"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/tv-aksesuar",
+    "tag": "Anten",
+    "newSlug": "elektronik/tv-ses-goruntu/tv-aksesuar/anten"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/soundbar",
+    "tag": "Soundbar",
+    "newSlug": "elektronik/tv-ses-goruntu/soundbar/soundbar"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/soundbar",
+    "tag": "2.1 Ses Sistemi",
+    "newSlug": "elektronik/tv-ses-goruntu/soundbar/21-ses-sistemi"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/soundbar",
+    "tag": "5.1 Ev Sinema",
+    "newSlug": "elektronik/tv-ses-goruntu/soundbar/51-ev-sinema"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/soundbar",
+    "tag": "Dolby Atmos",
+    "newSlug": "elektronik/tv-ses-goruntu/soundbar/dolby-atmos"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/bluetooth-hoparlor",
+    "tag": "Taşınabilir",
+    "newSlug": "elektronik/tv-ses-goruntu/bluetooth-hoparlor/tasinabilir"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/bluetooth-hoparlor",
+    "tag": "Su Geçirmez",
+    "newSlug": "elektronik/tv-ses-goruntu/bluetooth-hoparlor/su-gecirmez"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/projeksiyon",
+    "tag": "Mini LED",
+    "newSlug": "elektronik/tv-ses-goruntu/projeksiyon/mini-led"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/projeksiyon",
+    "tag": "Taşınabilir",
+    "newSlug": "elektronik/tv-ses-goruntu/projeksiyon/tasinabilir"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/projeksiyon",
+    "tag": "Epson",
+    "newSlug": "elektronik/tv-ses-goruntu/projeksiyon/epson"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/projeksiyon",
+    "tag": "BenQ",
+    "newSlug": "elektronik/tv-ses-goruntu/projeksiyon/benq"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/projeksiyon",
+    "tag": "Optoma",
+    "newSlug": "elektronik/tv-ses-goruntu/projeksiyon/optoma"
+  },
+  {
+    "subSlug": "elektronik/tv-ses-goruntu/projeksiyon",
+    "tag": "ViewSonic",
+    "newSlug": "elektronik/tv-ses-goruntu/projeksiyon/viewsonic"
+  },
+  {
+    "subSlug": "elektronik/akilli-ev",
+    "tag": "Google Nest",
+    "newSlug": "elektronik/akilli-ev/google-nest"
+  },
+  {
+    "subSlug": "elektronik/akilli-ev",
+    "tag": "Amazon Echo",
+    "newSlug": "elektronik/akilli-ev/amazon-echo"
+  },
+  {
+    "subSlug": "elektronik/akilli-ev",
+    "tag": "Akıllı Priz",
+    "newSlug": "elektronik/akilli-ev/akilli-priz"
+  },
+  {
+    "subSlug": "elektronik/akilli-ev",
+    "tag": "Akıllı Ampul",
+    "newSlug": "elektronik/akilli-ev/akilli-ampul"
+  },
+  {
+    "subSlug": "elektronik/akilli-ev",
+    "tag": "Philips Hue",
+    "newSlug": "elektronik/akilli-ev/philips-hue"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/yazici/yazici",
+    "tag": "Lazer Yazıcı",
+    "newSlug": "elektronik/bilgisayar-tablet/yazici/yazici/lazer-yazici"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/yazici/yazici",
+    "tag": "Mürekkepli Yazıcı",
+    "newSlug": "elektronik/bilgisayar-tablet/yazici/yazici/murekkepli-yazici"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/yazici/yazici",
+    "tag": "Fotoğraf Yazıcısı",
+    "newSlug": "elektronik/bilgisayar-tablet/yazici/yazici/fotograf-yazicisi"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/yazici/yazici",
+    "tag": "Epson",
+    "newSlug": "elektronik/bilgisayar-tablet/yazici/yazici/epson"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/yazici/cok-fonksiyonlu-yazici",
+    "tag": "Fotokopi",
+    "newSlug": "elektronik/bilgisayar-tablet/yazici/cok-fonksiyonlu-yazici/fotokopi"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/yazici/cok-fonksiyonlu-yazici",
+    "tag": "Faks",
+    "newSlug": "elektronik/bilgisayar-tablet/yazici/cok-fonksiyonlu-yazici/faks"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/yazici/cok-fonksiyonlu-yazici",
+    "tag": "Tarayıcı",
+    "newSlug": "elektronik/bilgisayar-tablet/yazici/cok-fonksiyonlu-yazici/tarayici"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/yazici/cok-fonksiyonlu-yazici",
+    "tag": "Wi-Fi",
+    "newSlug": "elektronik/bilgisayar-tablet/yazici/cok-fonksiyonlu-yazici/wi-fi"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/yazici/murekkep-toner",
+    "tag": "Orijinal Kartuş",
+    "newSlug": "elektronik/bilgisayar-tablet/yazici/murekkep-toner/orijinal-kartus"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/yazici/murekkep-toner",
+    "tag": "Muadil Kartuş",
+    "newSlug": "elektronik/bilgisayar-tablet/yazici/murekkep-toner/muadil-kartus"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/yazici/murekkep-toner",
+    "tag": "Toner",
+    "newSlug": "elektronik/bilgisayar-tablet/yazici/murekkep-toner/toner"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/yazici/murekkep-toner",
+    "tag": "Şerit",
+    "newSlug": "elektronik/bilgisayar-tablet/yazici/murekkep-toner/serit"
+  },
+  {
+    "subSlug": "elektronik/bilgisayar-tablet/yazici/murekkep-toner",
+    "tag": "Drum",
+    "newSlug": "elektronik/bilgisayar-tablet/yazici/murekkep-toner/drum"
+  },
+  {
+    "subSlug": "elektronik/kamera/fotograf-makinesi",
+    "tag": "Mirrorless",
+    "newSlug": "elektronik/kamera/fotograf-makinesi/mirrorless"
+  },
+  {
+    "subSlug": "elektronik/kamera/fotograf-makinesi",
+    "tag": "Kompakt",
+    "newSlug": "elektronik/kamera/fotograf-makinesi/kompakt"
+  },
+  {
+    "subSlug": "elektronik/kamera/drone",
+    "tag": "FPV Drone",
+    "newSlug": "elektronik/kamera/drone/fpv-drone"
+  },
+  {
+    "subSlug": "elektronik/kamera/drone",
+    "tag": "Yarış Drone",
+    "newSlug": "elektronik/kamera/drone/yaris-drone"
+  },
+  {
+    "subSlug": "elektronik/kamera/aksiyon-kamera",
+    "tag": "GoPro Hero",
+    "newSlug": "elektronik/kamera/aksiyon-kamera/gopro-hero"
+  },
+  {
+    "subSlug": "elektronik/kamera/aksiyon-kamera",
+    "tag": "Su Altı",
+    "newSlug": "elektronik/kamera/aksiyon-kamera/su-alti"
+  },
+  {
+    "subSlug": "elektronik/kamera/aksiyon-kamera",
+    "tag": "360° Kamera",
+    "newSlug": "elektronik/kamera/aksiyon-kamera/360-kamera"
+  },
+  {
+    "subSlug": "elektronik/ag-guvenlik/guvenlik-kamera",
+    "tag": "IP Kamera",
+    "newSlug": "elektronik/ag-guvenlik/guvenlik-kamera/ip-kamera"
+  },
+  {
+    "subSlug": "elektronik/ag-guvenlik/guvenlik-kamera",
+    "tag": "Dome Kamera",
+    "newSlug": "elektronik/ag-guvenlik/guvenlik-kamera/dome-kamera"
+  },
+  {
+    "subSlug": "elektronik/ag-guvenlik/guvenlik-kamera",
+    "tag": "Gece Görüş",
+    "newSlug": "elektronik/ag-guvenlik/guvenlik-kamera/gece-gorus"
+  },
+  {
+    "subSlug": "elektronik/ag-guvenlik/guvenlik-kamera",
+    "tag": "Wi-Fi Kamera",
+    "newSlug": "elektronik/ag-guvenlik/guvenlik-kamera/wi-fi-kamera"
+  },
+  {
+    "subSlug": "elektronik/ag-guvenlik/guvenlik-kamera",
+    "tag": "Kapalı Devre",
+    "newSlug": "elektronik/ag-guvenlik/guvenlik-kamera/kapali-devre"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/oyun-konsolu",
+    "tag": "PlayStation 5",
+    "newSlug": "elektronik/oyun/konsol/oyun-konsolu/playstation-5"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/oyun-konsolu",
+    "tag": "Xbox Series X",
+    "newSlug": "elektronik/oyun/konsol/oyun-konsolu/xbox-series-x"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/oyun-konsolu",
+    "tag": "Nintendo Switch",
+    "newSlug": "elektronik/oyun/konsol/oyun-konsolu/nintendo-switch"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/oyun-konsolu",
+    "tag": "PS4",
+    "newSlug": "elektronik/oyun/konsol/oyun-konsolu/ps4"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/oyun-konsolu",
+    "tag": "Xbox One",
+    "newSlug": "elektronik/oyun/konsol/oyun-konsolu/xbox-one"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/oyun-konsolu",
+    "tag": "Retro Konsol",
+    "newSlug": "elektronik/oyun/konsol/oyun-konsolu/retro-konsol"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/aksesuar",
+    "tag": "PS5 Oyun",
+    "newSlug": "elektronik/oyun/konsol/aksesuar/ps5-oyun"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/aksesuar",
+    "tag": "Xbox Oyun",
+    "newSlug": "elektronik/oyun/konsol/aksesuar/xbox-oyun"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/aksesuar",
+    "tag": "Nintendo Oyun",
+    "newSlug": "elektronik/oyun/konsol/aksesuar/nintendo-oyun"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/aksesuar",
+    "tag": "DualSense Kol",
+    "newSlug": "elektronik/oyun/konsol/aksesuar/dualsense-kol"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/aksesuar",
+    "tag": "Xbox Kol",
+    "newSlug": "elektronik/oyun/konsol/aksesuar/xbox-kol"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/aksesuar",
+    "tag": "Şarj İstasyonu",
+    "newSlug": "elektronik/oyun/konsol/aksesuar/sarj-istasyonu"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/pc-oyun",
+    "tag": "Oyuncu Kulaklığı",
+    "newSlug": "elektronik/oyun/konsol/pc-oyun/oyuncu-kulakligi"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/pc-oyun",
+    "tag": "Gaming Mouse",
+    "newSlug": "elektronik/oyun/konsol/pc-oyun/gaming-mouse"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/pc-oyun",
+    "tag": "Mekanik Klavye",
+    "newSlug": "elektronik/oyun/konsol/pc-oyun/mekanik-klavye"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/pc-oyun",
+    "tag": "Mousepad",
+    "newSlug": "elektronik/oyun/konsol/pc-oyun/mousepad"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/pc-oyun",
+    "tag": "Headset Stand",
+    "newSlug": "elektronik/oyun/konsol/pc-oyun/headset-stand"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/vr-sim",
+    "tag": "Meta Quest",
+    "newSlug": "elektronik/oyun/konsol/vr-sim/meta-quest"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/vr-sim",
+    "tag": "PlayStation VR",
+    "newSlug": "elektronik/oyun/konsol/vr-sim/playstation-vr"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/vr-sim",
+    "tag": "Sim Racing",
+    "newSlug": "elektronik/oyun/konsol/vr-sim/sim-racing"
+  },
+  {
+    "subSlug": "elektronik/oyun/konsol/vr-sim",
+    "tag": "Joystick",
+    "newSlug": "elektronik/oyun/konsol/vr-sim/joystick"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/elbise",
+    "tag": "Günlük Elbise",
+    "newSlug": "moda/kadin-giyim/elbise/gunluk-elbise"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/elbise",
+    "tag": "Abiye",
+    "newSlug": "moda/kadin-giyim/elbise/abiye"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/elbise",
+    "tag": "Mini Elbise",
+    "newSlug": "moda/kadin-giyim/elbise/mini-elbise"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/elbise",
+    "tag": "Midi Elbise",
+    "newSlug": "moda/kadin-giyim/elbise/midi-elbise"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/elbise",
+    "tag": "Maxi Elbise",
+    "newSlug": "moda/kadin-giyim/elbise/maxi-elbise"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/elbise",
+    "tag": "Tül Elbise",
+    "newSlug": "moda/kadin-giyim/elbise/tul-elbise"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/elbise",
+    "tag": "Çiçekli",
+    "newSlug": "moda/kadin-giyim/elbise/cicekli"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/ust",
+    "tag": "Tişört",
+    "newSlug": "moda/kadin-giyim/ust/tisort"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/ust",
+    "tag": "Bluz",
+    "newSlug": "moda/kadin-giyim/ust/bluz"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/ust",
+    "tag": "Crop Top",
+    "newSlug": "moda/kadin-giyim/ust/crop-top"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/ust",
+    "tag": "Atlet",
+    "newSlug": "moda/kadin-giyim/ust/atlet"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/ust",
+    "tag": "Body",
+    "newSlug": "moda/kadin-giyim/ust/body"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/tisort-bluz",
+    "tag": "Basic Tişört",
+    "newSlug": "moda/kadin-giyim/tisort-bluz/basic-tisort"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/tisort-bluz",
+    "tag": "Oversize Tişört",
+    "newSlug": "moda/kadin-giyim/tisort-bluz/oversize-tisort"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/tisort-bluz",
+    "tag": "Crop Top",
+    "newSlug": "moda/kadin-giyim/tisort-bluz/crop-top"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/tisort-bluz",
+    "tag": "Polo Yaka",
+    "newSlug": "moda/kadin-giyim/tisort-bluz/polo-yaka"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/tisort-bluz",
+    "tag": "Pamuklu",
+    "newSlug": "moda/kadin-giyim/tisort-bluz/pamuklu"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/tisort-bluz",
+    "tag": "Keten",
+    "newSlug": "moda/kadin-giyim/tisort-bluz/keten"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/alt",
+    "tag": "Pantolon",
+    "newSlug": "moda/kadin-giyim/alt/pantolon"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/alt",
+    "tag": "Jean",
+    "newSlug": "moda/kadin-giyim/alt/jean"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/alt",
+    "tag": "Şort",
+    "newSlug": "moda/kadin-giyim/alt/sort"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/alt",
+    "tag": "Tayt",
+    "newSlug": "moda/kadin-giyim/alt/tayt"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/pantolon-jean",
+    "tag": "Skinny Jean",
+    "newSlug": "moda/kadin-giyim/pantolon-jean/skinny-jean"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/pantolon-jean",
+    "tag": "Mom Jean",
+    "newSlug": "moda/kadin-giyim/pantolon-jean/mom-jean"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/pantolon-jean",
+    "tag": "Wide Leg",
+    "newSlug": "moda/kadin-giyim/pantolon-jean/wide-leg"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/pantolon-jean",
+    "tag": "Yüksek Bel",
+    "newSlug": "moda/kadin-giyim/pantolon-jean/yuksek-bel"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/pantolon-jean",
+    "tag": "Kumaş Pantolon",
+    "newSlug": "moda/kadin-giyim/pantolon-jean/kumas-pantolon"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/pantolon-jean",
+    "tag": "Tayt",
+    "newSlug": "moda/kadin-giyim/pantolon-jean/tayt"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/dis-giyim",
+    "tag": "Ceket",
+    "newSlug": "moda/kadin-giyim/dis-giyim/ceket"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/dis-giyim",
+    "tag": "Mont",
+    "newSlug": "moda/kadin-giyim/dis-giyim/mont"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/dis-giyim",
+    "tag": "Trençkot",
+    "newSlug": "moda/kadin-giyim/dis-giyim/trenckot"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/dis-giyim",
+    "tag": "Yağmurluk",
+    "newSlug": "moda/kadin-giyim/dis-giyim/yagmurluk"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/dis-giyim",
+    "tag": "Yelek",
+    "newSlug": "moda/kadin-giyim/dis-giyim/yelek"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/ceket-mont",
+    "tag": "Blazer",
+    "newSlug": "moda/kadin-giyim/ceket-mont/blazer"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/ceket-mont",
+    "tag": "Deri Ceket",
+    "newSlug": "moda/kadin-giyim/ceket-mont/deri-ceket"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/ceket-mont",
+    "tag": "Kaban",
+    "newSlug": "moda/kadin-giyim/ceket-mont/kaban"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/ceket-mont",
+    "tag": "Parka",
+    "newSlug": "moda/kadin-giyim/ceket-mont/parka"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/ceket-mont",
+    "tag": "Trençkot",
+    "newSlug": "moda/kadin-giyim/ceket-mont/trenckot"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/ceket-mont",
+    "tag": "Puffer Mont",
+    "newSlug": "moda/kadin-giyim/ceket-mont/puffer-mont"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/etek",
+    "tag": "Mini Etek",
+    "newSlug": "moda/kadin-giyim/etek/mini-etek"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/etek",
+    "tag": "Midi Etek",
+    "newSlug": "moda/kadin-giyim/etek/midi-etek"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/etek",
+    "tag": "Maxi Etek",
+    "newSlug": "moda/kadin-giyim/etek/maxi-etek"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/etek",
+    "tag": "Pileli Etek",
+    "newSlug": "moda/kadin-giyim/etek/pileli-etek"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/etek",
+    "tag": "Deri Etek",
+    "newSlug": "moda/kadin-giyim/etek/deri-etek"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/etek",
+    "tag": "Tül Etek",
+    "newSlug": "moda/kadin-giyim/etek/tul-etek"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/kazak-hirka",
+    "tag": "Oversize Kazak",
+    "newSlug": "moda/kadin-giyim/kazak-hirka/oversize-kazak"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/kazak-hirka",
+    "tag": "Crop Kazak",
+    "newSlug": "moda/kadin-giyim/kazak-hirka/crop-kazak"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/kazak-hirka",
+    "tag": "Örgü Kazak",
+    "newSlug": "moda/kadin-giyim/kazak-hirka/orgu-kazak"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/kazak-hirka",
+    "tag": "Polar",
+    "newSlug": "moda/kadin-giyim/kazak-hirka/polar"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/kazak-hirka",
+    "tag": "Sweatshirt",
+    "newSlug": "moda/kadin-giyim/kazak-hirka/sweatshirt"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/kazak-hirka",
+    "tag": "Kapüşonlu",
+    "newSlug": "moda/kadin-giyim/kazak-hirka/kapusonlu"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/buyuk-beden",
+    "tag": "Büyük Beden Elbise",
+    "newSlug": "moda/kadin-giyim/buyuk-beden/buyuk-beden-elbise"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/buyuk-beden",
+    "tag": "Büyük Beden Tişört",
+    "newSlug": "moda/kadin-giyim/buyuk-beden/buyuk-beden-tisort"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/buyuk-beden",
+    "tag": "Büyük Beden Jean",
+    "newSlug": "moda/kadin-giyim/buyuk-beden/buyuk-beden-jean"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/buyuk-beden",
+    "tag": "Tunik",
+    "newSlug": "moda/kadin-giyim/buyuk-beden/tunik"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/tesettur",
+    "tag": "Tunik",
+    "newSlug": "moda/kadin-giyim/tesettur/tunik"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/tesettur",
+    "tag": "Abaya",
+    "newSlug": "moda/kadin-giyim/tesettur/abaya"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/tesettur",
+    "tag": "Tesettür Elbise",
+    "newSlug": "moda/kadin-giyim/tesettur/tesettur-elbise"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/tesettur",
+    "tag": "Pardesü",
+    "newSlug": "moda/kadin-giyim/tesettur/pardesu"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/tesettur",
+    "tag": "Şal",
+    "newSlug": "moda/kadin-giyim/tesettur/sal"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/tesettur",
+    "tag": "Eşarp",
+    "newSlug": "moda/kadin-giyim/tesettur/esarp"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/tesettur",
+    "tag": "Tesettür Takım",
+    "newSlug": "moda/kadin-giyim/tesettur/tesettur-takim"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/ust",
+    "tag": "Tişört",
+    "newSlug": "moda/erkek-giyim/ust/tisort"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/ust",
+    "tag": "Gömlek",
+    "newSlug": "moda/erkek-giyim/ust/gomlek"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/ust",
+    "tag": "Polo",
+    "newSlug": "moda/erkek-giyim/ust/polo"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/ust",
+    "tag": "Sweatshirt",
+    "newSlug": "moda/erkek-giyim/ust/sweatshirt"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/ust",
+    "tag": "Kazak",
+    "newSlug": "moda/erkek-giyim/ust/kazak"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/tisort",
+    "tag": "Basic",
+    "newSlug": "moda/erkek-giyim/tisort/basic"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/tisort",
+    "tag": "Polo Yaka",
+    "newSlug": "moda/erkek-giyim/tisort/polo-yaka"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/tisort",
+    "tag": "Oversize",
+    "newSlug": "moda/erkek-giyim/tisort/oversize"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/tisort",
+    "tag": "V Yaka",
+    "newSlug": "moda/erkek-giyim/tisort/v-yaka"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/tisort",
+    "tag": "Pamuklu",
+    "newSlug": "moda/erkek-giyim/tisort/pamuklu"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/tisort",
+    "tag": "Baskılı",
+    "newSlug": "moda/erkek-giyim/tisort/baskili"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/gomlek",
+    "tag": "Slim Fit",
+    "newSlug": "moda/erkek-giyim/gomlek/slim-fit"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/gomlek",
+    "tag": "Regular Fit",
+    "newSlug": "moda/erkek-giyim/gomlek/regular-fit"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/gomlek",
+    "tag": "Oxford",
+    "newSlug": "moda/erkek-giyim/gomlek/oxford"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/gomlek",
+    "tag": "Çizgili",
+    "newSlug": "moda/erkek-giyim/gomlek/cizgili"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/gomlek",
+    "tag": "Keten",
+    "newSlug": "moda/erkek-giyim/gomlek/keten"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/gomlek",
+    "tag": "Denim",
+    "newSlug": "moda/erkek-giyim/gomlek/denim"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/gomlek",
+    "tag": "Flannel",
+    "newSlug": "moda/erkek-giyim/gomlek/flannel"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/alt",
+    "tag": "Pantolon",
+    "newSlug": "moda/erkek-giyim/alt/pantolon"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/alt",
+    "tag": "Jean",
+    "newSlug": "moda/erkek-giyim/alt/jean"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/alt",
+    "tag": "Şort",
+    "newSlug": "moda/erkek-giyim/alt/sort"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/alt",
+    "tag": "Bermuda",
+    "newSlug": "moda/erkek-giyim/alt/bermuda"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/pantolon-jean",
+    "tag": "Slim Fit Jean",
+    "newSlug": "moda/erkek-giyim/pantolon-jean/slim-fit-jean"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/pantolon-jean",
+    "tag": "Regular Jean",
+    "newSlug": "moda/erkek-giyim/pantolon-jean/regular-jean"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/pantolon-jean",
+    "tag": "Cargo",
+    "newSlug": "moda/erkek-giyim/pantolon-jean/cargo"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/pantolon-jean",
+    "tag": "Chino",
+    "newSlug": "moda/erkek-giyim/pantolon-jean/chino"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/pantolon-jean",
+    "tag": "Spor Şort",
+    "newSlug": "moda/erkek-giyim/pantolon-jean/spor-sort"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/pantolon-jean",
+    "tag": "Bermuda",
+    "newSlug": "moda/erkek-giyim/pantolon-jean/bermuda"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/dis-giyim",
+    "tag": "Ceket",
+    "newSlug": "moda/erkek-giyim/dis-giyim/ceket"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/dis-giyim",
+    "tag": "Mont",
+    "newSlug": "moda/erkek-giyim/dis-giyim/mont"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/dis-giyim",
+    "tag": "Kaban",
+    "newSlug": "moda/erkek-giyim/dis-giyim/kaban"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/dis-giyim",
+    "tag": "Yağmurluk",
+    "newSlug": "moda/erkek-giyim/dis-giyim/yagmurluk"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/dis-giyim",
+    "tag": "Yelek",
+    "newSlug": "moda/erkek-giyim/dis-giyim/yelek"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/ceket-mont",
+    "tag": "Blazer",
+    "newSlug": "moda/erkek-giyim/ceket-mont/blazer"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/ceket-mont",
+    "tag": "Deri Ceket",
+    "newSlug": "moda/erkek-giyim/ceket-mont/deri-ceket"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/ceket-mont",
+    "tag": "Kaban",
+    "newSlug": "moda/erkek-giyim/ceket-mont/kaban"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/ceket-mont",
+    "tag": "Parka",
+    "newSlug": "moda/erkek-giyim/ceket-mont/parka"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/ceket-mont",
+    "tag": "Puffer",
+    "newSlug": "moda/erkek-giyim/ceket-mont/puffer"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/ceket-mont",
+    "tag": "Denim Ceket",
+    "newSlug": "moda/erkek-giyim/ceket-mont/denim-ceket"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/takim-elbise",
+    "tag": "Slim Fit",
+    "newSlug": "moda/erkek-giyim/takim-elbise/slim-fit"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/takim-elbise",
+    "tag": "Regular Fit",
+    "newSlug": "moda/erkek-giyim/takim-elbise/regular-fit"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/takim-elbise",
+    "tag": "2 Parça Takım",
+    "newSlug": "moda/erkek-giyim/takim-elbise/2-parca-takim"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/takim-elbise",
+    "tag": "3 Parça Takım",
+    "newSlug": "moda/erkek-giyim/takim-elbise/3-parca-takim"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/takim-elbise",
+    "tag": "Düğün Takımı",
+    "newSlug": "moda/erkek-giyim/takim-elbise/dugun-takimi"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/esofman",
+    "tag": "Eşofman Takım",
+    "newSlug": "moda/erkek-giyim/esofman/esofman-takim"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/esofman",
+    "tag": "Eşofman Altı",
+    "newSlug": "moda/erkek-giyim/esofman/esofman-alti"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/esofman",
+    "tag": "Sweatshirt",
+    "newSlug": "moda/erkek-giyim/esofman/sweatshirt"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/esofman",
+    "tag": "Kapüşonlu",
+    "newSlug": "moda/erkek-giyim/esofman/kapusonlu"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/esofman",
+    "tag": "Polar",
+    "newSlug": "moda/erkek-giyim/esofman/polar"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/ic-giyim",
+    "tag": "Boxer",
+    "newSlug": "moda/kadin-giyim/ic-giyim/boxer"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/ic-giyim",
+    "tag": "Slip",
+    "newSlug": "moda/kadin-giyim/ic-giyim/slip"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/ic-giyim",
+    "tag": "Atlet",
+    "newSlug": "moda/kadin-giyim/ic-giyim/atlet"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/ic-giyim",
+    "tag": "Çorap",
+    "newSlug": "moda/kadin-giyim/ic-giyim/corap"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/ic-giyim",
+    "tag": "Pijama",
+    "newSlug": "moda/kadin-giyim/ic-giyim/pijama"
+  },
+  {
+    "subSlug": "moda/kadin-giyim/ic-giyim",
+    "tag": "Termal İçlik",
+    "newSlug": "moda/kadin-giyim/ic-giyim/termal-iclik"
+  },
+  {
+    "subSlug": "moda/kadin-ayakkabi/topuklu",
+    "tag": "Stiletto",
+    "newSlug": "moda/kadin-ayakkabi/topuklu/stiletto"
+  },
+  {
+    "subSlug": "moda/kadin-ayakkabi/topuklu",
+    "tag": "Platform Topuk",
+    "newSlug": "moda/kadin-ayakkabi/topuklu/platform-topuk"
+  },
+  {
+    "subSlug": "moda/kadin-ayakkabi/topuklu",
+    "tag": "Dolgu Topuk",
+    "newSlug": "moda/kadin-ayakkabi/topuklu/dolgu-topuk"
+  },
+  {
+    "subSlug": "moda/kadin-ayakkabi/topuklu",
+    "tag": "Kısa Topuk",
+    "newSlug": "moda/kadin-ayakkabi/topuklu/kisa-topuk"
+  },
+  {
+    "subSlug": "moda/kadin-ayakkabi/topuklu",
+    "tag": "Abiye Topuklu",
+    "newSlug": "moda/kadin-ayakkabi/topuklu/abiye-topuklu"
+  },
+  {
+    "subSlug": "moda/kadin-ayakkabi/sandalet",
+    "tag": "Düz Sandalet",
+    "newSlug": "moda/kadin-ayakkabi/sandalet/duz-sandalet"
+  },
+  {
+    "subSlug": "moda/kadin-ayakkabi/sandalet",
+    "tag": "Topuklu Sandalet",
+    "newSlug": "moda/kadin-ayakkabi/sandalet/topuklu-sandalet"
+  },
+  {
+    "subSlug": "moda/kadin-ayakkabi/sandalet",
+    "tag": "Havuzbaşı Terlik",
+    "newSlug": "moda/kadin-ayakkabi/sandalet/havuzbasi-terlik"
+  },
+  {
+    "subSlug": "moda/kadin-ayakkabi/sandalet",
+    "tag": "Parmak Arası",
+    "newSlug": "moda/kadin-ayakkabi/sandalet/parmak-arasi"
+  },
+  {
+    "subSlug": "moda/kadin-ayakkabi/bot",
+    "tag": "Diz Altı Bot",
+    "newSlug": "moda/kadin-ayakkabi/bot/diz-alti-bot"
+  },
+  {
+    "subSlug": "moda/kadin-ayakkabi/bot",
+    "tag": "Diz Üstü Çizme",
+    "newSlug": "moda/kadin-ayakkabi/bot/diz-ustu-cizme"
+  },
+  {
+    "subSlug": "moda/kadin-ayakkabi/bot",
+    "tag": "Chelsea Bot",
+    "newSlug": "moda/kadin-ayakkabi/bot/chelsea-bot"
+  },
+  {
+    "subSlug": "moda/kadin-ayakkabi/bot",
+    "tag": "Kar Botu",
+    "newSlug": "moda/kadin-ayakkabi/bot/kar-botu"
+  },
+  {
+    "subSlug": "moda/kadin-ayakkabi/bot",
+    "tag": "Combat Boot",
+    "newSlug": "moda/kadin-ayakkabi/bot/combat-boot"
+  },
+  {
+    "subSlug": "moda/kadin-ayakkabi/babet",
+    "tag": "Deri Babet",
+    "newSlug": "moda/kadin-ayakkabi/babet/deri-babet"
+  },
+  {
+    "subSlug": "moda/kadin-ayakkabi/babet",
+    "tag": "Tokalı Babet",
+    "newSlug": "moda/kadin-ayakkabi/babet/tokali-babet"
+  },
+  {
+    "subSlug": "moda/kadin-ayakkabi/babet",
+    "tag": "Loafer",
+    "newSlug": "moda/kadin-ayakkabi/babet/loafer"
+  },
+  {
+    "subSlug": "moda/kadin-ayakkabi/babet",
+    "tag": "Espadrille",
+    "newSlug": "moda/kadin-ayakkabi/babet/espadrille"
+  },
+  {
+    "subSlug": "moda/kadin-ayakkabi/babet",
+    "tag": "Mokasen",
+    "newSlug": "moda/kadin-ayakkabi/babet/mokasen"
+  },
+  {
+    "subSlug": "moda/erkek-ayakkabi/klasik",
+    "tag": "Oxford",
+    "newSlug": "moda/erkek-ayakkabi/klasik/oxford"
+  },
+  {
+    "subSlug": "moda/erkek-ayakkabi/klasik",
+    "tag": "Derby",
+    "newSlug": "moda/erkek-ayakkabi/klasik/derby"
+  },
+  {
+    "subSlug": "moda/erkek-ayakkabi/klasik",
+    "tag": "Loafer",
+    "newSlug": "moda/erkek-ayakkabi/klasik/loafer"
+  },
+  {
+    "subSlug": "moda/erkek-ayakkabi/klasik",
+    "tag": "Deri Ayakkabı",
+    "newSlug": "moda/erkek-ayakkabi/klasik/deri-ayakkabi"
+  },
+  {
+    "subSlug": "moda/erkek-ayakkabi/klasik",
+    "tag": "Mokasen",
+    "newSlug": "moda/erkek-ayakkabi/klasik/mokasen"
+  },
+  {
+    "subSlug": "moda/erkek-ayakkabi/bot",
+    "tag": "Chelsea Bot",
+    "newSlug": "moda/erkek-ayakkabi/bot/chelsea-bot"
+  },
+  {
+    "subSlug": "moda/erkek-ayakkabi/bot",
+    "tag": "Timberland",
+    "newSlug": "moda/erkek-ayakkabi/bot/timberland"
+  },
+  {
+    "subSlug": "moda/erkek-ayakkabi/bot",
+    "tag": "Kar Botu",
+    "newSlug": "moda/erkek-ayakkabi/bot/kar-botu"
+  },
+  {
+    "subSlug": "moda/erkek-ayakkabi/bot",
+    "tag": "Combat Boot",
+    "newSlug": "moda/erkek-ayakkabi/bot/combat-boot"
+  },
+  {
+    "subSlug": "moda/erkek-ayakkabi/bot",
+    "tag": "Deri Bot",
+    "newSlug": "moda/erkek-ayakkabi/bot/deri-bot"
+  },
+  {
+    "subSlug": "moda/erkek-ayakkabi/spor-kosu",
+    "tag": "Koşu Ayakkabısı",
+    "newSlug": "moda/erkek-ayakkabi/spor-kosu/kosu-ayakkabisi"
+  },
+  {
+    "subSlug": "moda/erkek-ayakkabi/spor-kosu",
+    "tag": "Training",
+    "newSlug": "moda/erkek-ayakkabi/spor-kosu/training"
+  },
+  {
+    "subSlug": "moda/erkek-ayakkabi/spor-kosu",
+    "tag": "Basketbol",
+    "newSlug": "moda/erkek-ayakkabi/spor-kosu/basketbol"
+  },
+  {
+    "subSlug": "moda/erkek-ayakkabi/spor-kosu",
+    "tag": "Futsal",
+    "newSlug": "moda/erkek-ayakkabi/spor-kosu/futsal"
+  },
+  {
+    "subSlug": "moda/erkek-ayakkabi/spor-kosu",
+    "tag": "Trek",
+    "newSlug": "moda/erkek-ayakkabi/spor-kosu/trek"
+  },
+  {
+    "subSlug": "moda/erkek-ayakkabi/sandalet-terlik",
+    "tag": "Deri Sandalet",
+    "newSlug": "moda/erkek-ayakkabi/sandalet-terlik/deri-sandalet"
+  },
+  {
+    "subSlug": "moda/erkek-ayakkabi/sandalet-terlik",
+    "tag": "Flip Flop",
+    "newSlug": "moda/erkek-ayakkabi/sandalet-terlik/flip-flop"
+  },
+  {
+    "subSlug": "moda/erkek-ayakkabi/sandalet-terlik",
+    "tag": "Ev Terliği",
+    "newSlug": "moda/erkek-ayakkabi/sandalet-terlik/ev-terligi"
+  },
+  {
+    "subSlug": "moda/erkek-ayakkabi/sandalet-terlik",
+    "tag": "Casual Sandalet",
+    "newSlug": "moda/erkek-ayakkabi/sandalet-terlik/casual-sandalet"
+  },
+  {
+    "subSlug": "moda/aksesuar/canta-cuzdan/kadin-canta",
+    "tag": "Omuz Çantası",
+    "newSlug": "moda/aksesuar/canta-cuzdan/kadin-canta/omuz-cantasi"
+  },
+  {
+    "subSlug": "moda/aksesuar/canta-cuzdan/kadin-canta",
+    "tag": "Sırt Çantası",
+    "newSlug": "moda/aksesuar/canta-cuzdan/kadin-canta/sirt-cantasi"
+  },
+  {
+    "subSlug": "moda/aksesuar/canta-cuzdan/kadin-canta",
+    "tag": "El Çantası",
+    "newSlug": "moda/aksesuar/canta-cuzdan/kadin-canta/el-cantasi"
+  },
+  {
+    "subSlug": "moda/aksesuar/canta-cuzdan/kadin-canta",
+    "tag": "Crossbody",
+    "newSlug": "moda/aksesuar/canta-cuzdan/kadin-canta/crossbody"
+  },
+  {
+    "subSlug": "moda/aksesuar/canta-cuzdan/kadin-canta",
+    "tag": "Tote Çanta",
+    "newSlug": "moda/aksesuar/canta-cuzdan/kadin-canta/tote-canta"
+  },
+  {
+    "subSlug": "moda/aksesuar/canta-cuzdan/kadin-canta",
+    "tag": "Bel Çantası",
+    "newSlug": "moda/aksesuar/canta-cuzdan/kadin-canta/bel-cantasi"
+  },
+  {
+    "subSlug": "moda/aksesuar/canta-cuzdan/kadin-canta",
+    "tag": "Abiye Çanta",
+    "newSlug": "moda/aksesuar/canta-cuzdan/kadin-canta/abiye-canta"
+  },
+  {
+    "subSlug": "moda/aksesuar/canta-cuzdan/erkek-canta",
+    "tag": "Sırt Çantası",
+    "newSlug": "moda/aksesuar/canta-cuzdan/erkek-canta/sirt-cantasi"
+  },
+  {
+    "subSlug": "moda/aksesuar/canta-cuzdan/erkek-canta",
+    "tag": "Laptop Çantası",
+    "newSlug": "moda/aksesuar/canta-cuzdan/erkek-canta/laptop-cantasi"
+  },
+  {
+    "subSlug": "moda/aksesuar/canta-cuzdan/erkek-canta",
+    "tag": "Postacı Çantası",
+    "newSlug": "moda/aksesuar/canta-cuzdan/erkek-canta/postaci-cantasi"
+  },
+  {
+    "subSlug": "moda/aksesuar/canta-cuzdan/erkek-canta",
+    "tag": "Bel Çantası",
+    "newSlug": "moda/aksesuar/canta-cuzdan/erkek-canta/bel-cantasi"
+  },
+  {
+    "subSlug": "moda/aksesuar/canta-cuzdan/erkek-canta",
+    "tag": "Evrak Çantası",
+    "newSlug": "moda/aksesuar/canta-cuzdan/erkek-canta/evrak-cantasi"
+  },
+  {
+    "subSlug": "moda/aksesuar/canta-cuzdan/valiz-bavul",
+    "tag": "Kabin Boy",
+    "newSlug": "moda/aksesuar/canta-cuzdan/valiz-bavul/kabin-boy"
+  },
+  {
+    "subSlug": "moda/aksesuar/canta-cuzdan/valiz-bavul",
+    "tag": "Orta Boy",
+    "newSlug": "moda/aksesuar/canta-cuzdan/valiz-bavul/orta-boy"
+  },
+  {
+    "subSlug": "moda/aksesuar/canta-cuzdan/valiz-bavul",
+    "tag": "Büyük Boy",
+    "newSlug": "moda/aksesuar/canta-cuzdan/valiz-bavul/buyuk-boy"
+  },
+  {
+    "subSlug": "moda/aksesuar/canta-cuzdan/valiz-bavul",
+    "tag": "Set Valiz",
+    "newSlug": "moda/aksesuar/canta-cuzdan/valiz-bavul/set-valiz"
+  },
+  {
+    "subSlug": "moda/aksesuar/canta-cuzdan/cuzdan-kartlik",
+    "tag": "Deri Cüzdan",
+    "newSlug": "moda/aksesuar/canta-cuzdan/cuzdan-kartlik/deri-cuzdan"
+  },
+  {
+    "subSlug": "moda/aksesuar/canta-cuzdan/cuzdan-kartlik",
+    "tag": "Kartlık",
+    "newSlug": "moda/aksesuar/canta-cuzdan/cuzdan-kartlik/kartlik"
+  },
+  {
+    "subSlug": "moda/aksesuar/canta-cuzdan/cuzdan-kartlik",
+    "tag": "Bozuk Para Kesesi",
+    "newSlug": "moda/aksesuar/canta-cuzdan/cuzdan-kartlik/bozuk-para-kesesi"
+  },
+  {
+    "subSlug": "moda/aksesuar/canta-cuzdan/cuzdan-kartlik",
+    "tag": "Pasaport Kılıfı",
+    "newSlug": "moda/aksesuar/canta-cuzdan/cuzdan-kartlik/pasaport-kilifi"
+  },
+  {
+    "subSlug": "moda/aksesuar/saat-taki/taki",
+    "tag": "Kolye",
+    "newSlug": "moda/aksesuar/saat-taki/taki/kolye"
+  },
+  {
+    "subSlug": "moda/aksesuar/saat-taki/taki",
+    "tag": "Yüzük",
+    "newSlug": "moda/aksesuar/saat-taki/taki/yuzuk"
+  },
+  {
+    "subSlug": "moda/aksesuar/saat-taki/taki",
+    "tag": "Bileklik",
+    "newSlug": "moda/aksesuar/saat-taki/taki/bileklik"
+  },
+  {
+    "subSlug": "moda/aksesuar/saat-taki/taki",
+    "tag": "Küpe",
+    "newSlug": "moda/aksesuar/saat-taki/taki/kupe"
+  },
+  {
+    "subSlug": "moda/aksesuar/saat-taki/taki",
+    "tag": "Takı Seti",
+    "newSlug": "moda/aksesuar/saat-taki/taki/taki-seti"
+  },
+  {
+    "subSlug": "moda/aksesuar/saat-taki/taki",
+    "tag": "Gümüş",
+    "newSlug": "moda/aksesuar/saat-taki/taki/gumus"
+  },
+  {
+    "subSlug": "moda/aksesuar/saat-taki/taki",
+    "tag": "Altın Kaplama",
+    "newSlug": "moda/aksesuar/saat-taki/taki/altin-kaplama"
+  },
+  {
+    "subSlug": "moda/aksesuar/gozluk",
+    "tag": "Polarize",
+    "newSlug": "moda/aksesuar/gozluk/polarize"
+  },
+  {
+    "subSlug": "moda/aksesuar/gozluk",
+    "tag": "Pilot",
+    "newSlug": "moda/aksesuar/gozluk/pilot"
+  },
+  {
+    "subSlug": "moda/aksesuar/gozluk",
+    "tag": "Wayfarer",
+    "newSlug": "moda/aksesuar/gozluk/wayfarer"
+  },
+  {
+    "subSlug": "moda/aksesuar/gozluk",
+    "tag": "Spor Gözlük",
+    "newSlug": "moda/aksesuar/gozluk/spor-gozluk"
+  },
+  {
+    "subSlug": "moda/aksesuar/saat-taki/kemer-aksesuar",
+    "tag": "Deri Kemer",
+    "newSlug": "moda/aksesuar/saat-taki/kemer-aksesuar/deri-kemer"
+  },
+  {
+    "subSlug": "moda/aksesuar/saat-taki/kemer-aksesuar",
+    "tag": "Şapka",
+    "newSlug": "moda/aksesuar/saat-taki/kemer-aksesuar/sapka"
+  },
+  {
+    "subSlug": "moda/aksesuar/saat-taki/kemer-aksesuar",
+    "tag": "Bere",
+    "newSlug": "moda/aksesuar/saat-taki/kemer-aksesuar/bere"
+  },
+  {
+    "subSlug": "moda/aksesuar/saat-taki/kemer-aksesuar",
+    "tag": "Atkı",
+    "newSlug": "moda/aksesuar/saat-taki/kemer-aksesuar/atki"
+  },
+  {
+    "subSlug": "moda/aksesuar/saat-taki/kemer-aksesuar",
+    "tag": "Eldiven",
+    "newSlug": "moda/aksesuar/saat-taki/kemer-aksesuar/eldiven"
+  },
+  {
+    "subSlug": "moda/aksesuar/saat-taki/kemer-aksesuar",
+    "tag": "Kravat",
+    "newSlug": "moda/aksesuar/saat-taki/kemer-aksesuar/kravat"
+  },
+  {
+    "subSlug": "moda/aksesuar/saat-taki/kemer-aksesuar",
+    "tag": "Boyunluk",
+    "newSlug": "moda/aksesuar/saat-taki/kemer-aksesuar/boyunluk"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/kiz-cocuk",
+    "tag": "Elbise",
+    "newSlug": "moda/cocuk-moda/giyim/kiz-cocuk/elbise"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/kiz-cocuk",
+    "tag": "Tişört",
+    "newSlug": "moda/cocuk-moda/giyim/kiz-cocuk/tisort"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/kiz-cocuk",
+    "tag": "Tayt",
+    "newSlug": "moda/cocuk-moda/giyim/kiz-cocuk/tayt"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/kiz-cocuk",
+    "tag": "Sweatshirt",
+    "newSlug": "moda/cocuk-moda/giyim/kiz-cocuk/sweatshirt"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/kiz-cocuk",
+    "tag": "Etek",
+    "newSlug": "moda/cocuk-moda/giyim/kiz-cocuk/etek"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/kiz-cocuk",
+    "tag": "Mont",
+    "newSlug": "moda/cocuk-moda/giyim/kiz-cocuk/mont"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/erkek-cocuk",
+    "tag": "Tişört",
+    "newSlug": "moda/cocuk-moda/giyim/erkek-cocuk/tisort"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/erkek-cocuk",
+    "tag": "Jean",
+    "newSlug": "moda/cocuk-moda/giyim/erkek-cocuk/jean"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/erkek-cocuk",
+    "tag": "Eşofman",
+    "newSlug": "moda/cocuk-moda/giyim/erkek-cocuk/esofman"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/erkek-cocuk",
+    "tag": "Şort",
+    "newSlug": "moda/cocuk-moda/giyim/erkek-cocuk/sort"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/erkek-cocuk",
+    "tag": "Gömlek",
+    "newSlug": "moda/cocuk-moda/giyim/erkek-cocuk/gomlek"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/erkek-cocuk",
+    "tag": "Mont",
+    "newSlug": "moda/cocuk-moda/giyim/erkek-cocuk/mont"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/bebek-giyim",
+    "tag": "Body",
+    "newSlug": "moda/cocuk-moda/giyim/bebek-giyim/body"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/bebek-giyim",
+    "tag": "Tulum",
+    "newSlug": "moda/cocuk-moda/giyim/bebek-giyim/tulum"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/bebek-giyim",
+    "tag": "Pijama Set",
+    "newSlug": "moda/cocuk-moda/giyim/bebek-giyim/pijama-set"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/bebek-giyim",
+    "tag": "Hastane Çıkışı",
+    "newSlug": "moda/cocuk-moda/giyim/bebek-giyim/hastane-cikisi"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/bebek-giyim",
+    "tag": "Çorap",
+    "newSlug": "moda/cocuk-moda/giyim/bebek-giyim/corap"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/bebek-giyim",
+    "tag": "Şapka & Eldiven",
+    "newSlug": "moda/cocuk-moda/giyim/bebek-giyim/sapka-eldiven"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/ayakkabi",
+    "tag": "Spor Ayakkabı",
+    "newSlug": "moda/cocuk-moda/ayakkabi/spor-ayakkabi"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/ayakkabi",
+    "tag": "Bot",
+    "newSlug": "moda/cocuk-moda/ayakkabi/bot"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/ayakkabi",
+    "tag": "Sandalet",
+    "newSlug": "moda/cocuk-moda/ayakkabi/sandalet"
+  },
+  {
+    "subSlug": "beyaz-esya/bulasik-makinesi",
+    "tag": "Ankastre",
+    "newSlug": "beyaz-esya/bulasik-makinesi/ankastre"
+  },
+  {
+    "subSlug": "beyaz-esya/buzdolabi",
+    "tag": "Çift Kapılı",
+    "newSlug": "beyaz-esya/buzdolabi/cift-kapili"
+  },
+  {
+    "subSlug": "beyaz-esya/buzdolabi",
+    "tag": "Side by Side",
+    "newSlug": "beyaz-esya/buzdolabi/side-by-side"
+  },
+  {
+    "subSlug": "beyaz-esya/firin-ocak",
+    "tag": "Ankastre Fırın",
+    "newSlug": "beyaz-esya/firin-ocak/ankastre-firin"
+  },
+  {
+    "subSlug": "beyaz-esya/firin-ocak",
+    "tag": "Bağımsız Ocak",
+    "newSlug": "beyaz-esya/firin-ocak/bagimsiz-ocak"
+  },
+  {
+    "subSlug": "beyaz-esya/firin-ocak",
+    "tag": "Ankastre Ocak",
+    "newSlug": "beyaz-esya/firin-ocak/ankastre-ocak"
+  },
+  {
+    "subSlug": "beyaz-esya/kurutma-makinesi",
+    "tag": "Isı Pompalı",
+    "newSlug": "beyaz-esya/kurutma-makinesi/isi-pompali"
+  },
+  {
+    "subSlug": "beyaz-esya/kurutma-makinesi",
+    "tag": "Yoğuşmalı",
+    "newSlug": "beyaz-esya/kurutma-makinesi/yogusmali"
+  },
+  {
+    "subSlug": "beyaz-esya/klima",
+    "tag": "Split Klima",
+    "newSlug": "beyaz-esya/klima/split-klima"
+  },
+  {
+    "subSlug": "beyaz-esya/klima",
+    "tag": "Inverter Klima",
+    "newSlug": "beyaz-esya/klima/inverter-klima"
+  },
+  {
+    "subSlug": "beyaz-esya/klima",
+    "tag": "Taşınabilir Klima",
+    "newSlug": "beyaz-esya/klima/tasinabilir-klima"
+  },
+  {
+    "subSlug": "beyaz-esya/aspirator-davlumbaz",
+    "tag": "Davlumbaz",
+    "newSlug": "beyaz-esya/aspirator-davlumbaz/davlumbaz"
+  },
+  {
+    "subSlug": "beyaz-esya/aspirator-davlumbaz",
+    "tag": "Aspiratör",
+    "newSlug": "beyaz-esya/aspirator-davlumbaz/aspirator"
+  },
+  {
+    "subSlug": "beyaz-esya/aspirator-davlumbaz",
+    "tag": "Ankastre",
+    "newSlug": "beyaz-esya/aspirator-davlumbaz/ankastre"
+  },
+  {
+    "subSlug": "beyaz-esya/isitici-soba",
+    "tag": "Elektrikli Isıtıcı",
+    "newSlug": "beyaz-esya/isitici-soba/elektrikli-isitici"
+  },
+  {
+    "subSlug": "beyaz-esya/isitici-soba",
+    "tag": "Yağlı Radyatör",
+    "newSlug": "beyaz-esya/isitici-soba/yagli-radyator"
+  },
+  {
+    "subSlug": "beyaz-esya/isitici-soba",
+    "tag": "Halojen",
+    "newSlug": "beyaz-esya/isitici-soba/halojen"
+  },
+  {
+    "subSlug": "beyaz-esya/isitici-soba",
+    "tag": "Soba",
+    "newSlug": "beyaz-esya/isitici-soba/soba"
+  },
+  {
+    "subSlug": "beyaz-esya/isitici-soba",
+    "tag": "Şömine",
+    "newSlug": "beyaz-esya/isitici-soba/somine"
+  },
+  {
+    "subSlug": "beyaz-esya/isitici-soba",
+    "tag": "Argo",
+    "newSlug": "beyaz-esya/isitici-soba/argo"
+  },
+  {
+    "subSlug": "beyaz-esya/mikrodalga",
+    "tag": "Ankastre Mikrodalga",
+    "newSlug": "beyaz-esya/mikrodalga/ankastre-mikrodalga"
+  },
+  {
+    "subSlug": "beyaz-esya/mikrodalga",
+    "tag": "Tezgah Üstü",
+    "newSlug": "beyaz-esya/mikrodalga/tezgah-ustu"
+  },
+  {
+    "subSlug": "beyaz-esya/mikrodalga",
+    "tag": "Grill",
+    "newSlug": "beyaz-esya/mikrodalga/grill"
+  },
+  {
+    "subSlug": "beyaz-esya/mikrodalga",
+    "tag": "Inverter",
+    "newSlug": "beyaz-esya/mikrodalga/inverter"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/temizlik/supurge",
+    "tag": "Robot Süpürge",
+    "newSlug": "kucuk-ev-aletleri/temizlik/supurge/robot-supurge"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/temizlik/supurge",
+    "tag": "Dikey Süpürge",
+    "newSlug": "kucuk-ev-aletleri/temizlik/supurge/dikey-supurge"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/temizlik/supurge",
+    "tag": "Torbası",
+    "newSlug": "kucuk-ev-aletleri/temizlik/supurge/torbasi"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/temizlik/robot-supurge",
+    "tag": "Xiaomi Mi",
+    "newSlug": "kucuk-ev-aletleri/temizlik/robot-supurge/xiaomi-mi"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/temizlik/robot-supurge",
+    "tag": "Lazerli",
+    "newSlug": "kucuk-ev-aletleri/temizlik/robot-supurge/lazerli"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/temizlik",
+    "tag": "Buharlı Temizleyici",
+    "newSlug": "kucuk-ev-aletleri/temizlik/buharli-temizleyici"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/temizlik",
+    "tag": "Halı Yıkama",
+    "newSlug": "kucuk-ev-aletleri/temizlik/hali-yikama"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/temizlik",
+    "tag": "Cam Temizleyici",
+    "newSlug": "kucuk-ev-aletleri/temizlik/cam-temizleyici"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/temizlik",
+    "tag": "Dezenfektan",
+    "newSlug": "kucuk-ev-aletleri/temizlik/dezenfektan"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+    "tag": "Espresso Makinesi",
+    "newSlug": "kucuk-ev-aletleri/mutfak/kahve-makinesi/espresso-makinesi"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+    "tag": "Çay Makinesi",
+    "newSlug": "kucuk-ev-aletleri/mutfak/kahve-makinesi/cay-makinesi"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+    "tag": "French Press",
+    "newSlug": "kucuk-ev-aletleri/mutfak/kahve-makinesi/french-press"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/mutfak",
+    "tag": "Mutfak Robotu",
+    "newSlug": "kucuk-ev-aletleri/mutfak/mutfak-robotu"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/mutfak",
+    "tag": "Çok Pişirici",
+    "newSlug": "kucuk-ev-aletleri/mutfak/cok-pisirici"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/mutfak",
+    "tag": "Waffle",
+    "newSlug": "kucuk-ev-aletleri/mutfak/waffle"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/mutfak/airfryer",
+    "tag": "Philips Airfryer",
+    "newSlug": "kucuk-ev-aletleri/mutfak/airfryer/philips-airfryer"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/mutfak/airfryer",
+    "tag": "Tefal Actifry",
+    "newSlug": "kucuk-ev-aletleri/mutfak/airfryer/tefal-actifry"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/mutfak/airfryer",
+    "tag": "Ninja Foodi",
+    "newSlug": "kucuk-ev-aletleri/mutfak/airfryer/ninja-foodi"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/mutfak/blender-mutfak-robotu",
+    "tag": "Süt Putirici",
+    "newSlug": "kucuk-ev-aletleri/mutfak/blender-mutfak-robotu/sut-putirici"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/mutfak/blender-mutfak-robotu",
+    "tag": "Smoothie Maker",
+    "newSlug": "kucuk-ev-aletleri/mutfak/blender-mutfak-robotu/smoothie-maker"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/mutfak/blender-mutfak-robotu",
+    "tag": "Bosch MUM",
+    "newSlug": "kucuk-ev-aletleri/mutfak/blender-mutfak-robotu/bosch-mum"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/mutfak/mikser",
+    "tag": "El Mikseri",
+    "newSlug": "kucuk-ev-aletleri/mutfak/mikser/el-mikseri"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/mutfak/mikser",
+    "tag": "Stand Mikser",
+    "newSlug": "kucuk-ev-aletleri/mutfak/mikser/stand-mikser"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/mutfak/mikser",
+    "tag": "Hamur Yoğurma",
+    "newSlug": "kucuk-ev-aletleri/mutfak/mikser/hamur-yogurma"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/mutfak/tost-makinesi",
+    "tag": "Granitli",
+    "newSlug": "kucuk-ev-aletleri/mutfak/tost-makinesi/granitli"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/mutfak/tost-makinesi",
+    "tag": "Çıkarılabilir",
+    "newSlug": "kucuk-ev-aletleri/mutfak/tost-makinesi/cikarilabilir"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/mutfak/su-isiticisi",
+    "tag": "Cam Kettle",
+    "newSlug": "kucuk-ev-aletleri/mutfak/su-isiticisi/cam-kettle"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/mutfak/su-isiticisi",
+    "tag": "Sıcaklık Ayarlı",
+    "newSlug": "kucuk-ev-aletleri/mutfak/su-isiticisi/sicaklik-ayarli"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/ev-cihazlari/hava-temizleyici",
+    "tag": "HEPA Filtre",
+    "newSlug": "kucuk-ev-aletleri/ev-cihazlari/hava-temizleyici/hepa-filtre"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/ev-cihazlari/hava-temizleyici",
+    "tag": "Nem Cihazı",
+    "newSlug": "kucuk-ev-aletleri/ev-cihazlari/hava-temizleyici/nem-cihazi"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/ev-cihazlari/hava-temizleyici",
+    "tag": "Air Purifier",
+    "newSlug": "kucuk-ev-aletleri/ev-cihazlari/hava-temizleyici/air-purifier"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/ev-cihazlari/tarti",
+    "tag": "Dijital Tartı",
+    "newSlug": "kucuk-ev-aletleri/ev-cihazlari/tarti/dijital-tarti"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/ev-cihazlari/tarti",
+    "tag": "Bluetooth Tartı",
+    "newSlug": "kucuk-ev-aletleri/ev-cihazlari/tarti/bluetooth-tarti"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/ev-cihazlari/tarti",
+    "tag": "Vücut Analiz",
+    "newSlug": "kucuk-ev-aletleri/ev-cihazlari/tarti/vucut-analiz"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/ev-cihazlari/tarti",
+    "tag": "Korona",
+    "newSlug": "kucuk-ev-aletleri/ev-cihazlari/tarti/korona"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/ev-cihazlari/utu",
+    "tag": "Buharlı Ütü",
+    "newSlug": "kucuk-ev-aletleri/ev-cihazlari/utu/buharli-utu"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/ev-cihazlari/utu",
+    "tag": "Buharlı Dikey",
+    "newSlug": "kucuk-ev-aletleri/ev-cihazlari/utu/buharli-dikey"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim",
+    "tag": "Saç Kurutma Makinesi",
+    "newSlug": "kozmetik/sac-bakim/sac-kurutma-makinesi"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim",
+    "tag": "Düzleştirici",
+    "newSlug": "kozmetik/sac-bakim/duzlestirici"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim",
+    "tag": "Maşa",
+    "newSlug": "kozmetik/sac-bakim/masa"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/kisisel-bakim-aleti",
+    "tag": "Tıraş Makinesi",
+    "newSlug": "kucuk-ev-aletleri/kisisel-bakim-aleti/tiras-makinesi"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/kisisel-bakim-aleti",
+    "tag": "Epilatör",
+    "newSlug": "kucuk-ev-aletleri/kisisel-bakim-aleti/epilator"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/kisisel-bakim-aleti",
+    "tag": "Yüz Temizleyici",
+    "newSlug": "kucuk-ev-aletleri/kisisel-bakim-aleti/yuz-temizleyici"
+  },
+  {
+    "subSlug": "kucuk-ev-aletleri/kisisel-bakim-aleti",
+    "tag": "Diş Fırçası",
+    "newSlug": "kucuk-ev-aletleri/kisisel-bakim-aleti/dis-fircasi"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya",
+    "tag": "Koltuk Takımı",
+    "newSlug": "ev-yasam/mobilya/koltuk-takimi"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya",
+    "tag": "Tekli Koltuk",
+    "newSlug": "ev-yasam/mobilya/tekli-koltuk"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya",
+    "tag": "Sehpa",
+    "newSlug": "ev-yasam/mobilya/sehpa"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya",
+    "tag": "TV Ünitesi",
+    "newSlug": "ev-yasam/mobilya/tv-unitesi"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya",
+    "tag": "Kitaplık",
+    "newSlug": "ev-yasam/mobilya/kitaplik"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya",
+    "tag": "Köşe Koltuk",
+    "newSlug": "ev-yasam/mobilya/kose-koltuk"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya",
+    "tag": "Yatak",
+    "newSlug": "ev-yasam/mobilya/yatak"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya",
+    "tag": "Baza",
+    "newSlug": "ev-yasam/mobilya/baza"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya",
+    "tag": "Başlık",
+    "newSlug": "ev-yasam/mobilya/baslik"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya",
+    "tag": "Gardırop",
+    "newSlug": "ev-yasam/mobilya/gardirop"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya",
+    "tag": "Komodin",
+    "newSlug": "ev-yasam/mobilya/komodin"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya",
+    "tag": "Şifonyer",
+    "newSlug": "ev-yasam/mobilya/sifonyer"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/yemek-calisma",
+    "tag": "Yemek Masası",
+    "newSlug": "ev-yasam/mobilya/yemek-calisma/yemek-masasi"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/yemek-calisma",
+    "tag": "Sandalye",
+    "newSlug": "ev-yasam/mobilya/yemek-calisma/sandalye"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/yemek-calisma",
+    "tag": "Çalışma Masası",
+    "newSlug": "ev-yasam/mobilya/yemek-calisma/calisma-masasi"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/yemek-calisma",
+    "tag": "Ofis Koltuğu",
+    "newSlug": "ev-yasam/mobilya/yemek-calisma/ofis-koltugu"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/yemek-calisma",
+    "tag": "Raf",
+    "newSlug": "ev-yasam/mobilya/yemek-calisma/raf"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/yemek-calisma",
+    "tag": "Kitaplık",
+    "newSlug": "ev-yasam/mobilya/yemek-calisma/kitaplik"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/dekorasyon",
+    "tag": "Tablo",
+    "newSlug": "ev-yasam/mobilya/dekorasyon/tablo"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/dekorasyon",
+    "tag": "Ayna",
+    "newSlug": "ev-yasam/mobilya/dekorasyon/ayna"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/dekorasyon",
+    "tag": "Vazo",
+    "newSlug": "ev-yasam/mobilya/dekorasyon/vazo"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/dekorasyon",
+    "tag": "Mum",
+    "newSlug": "ev-yasam/mobilya/dekorasyon/mum"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/dekorasyon",
+    "tag": "Mumluk",
+    "newSlug": "ev-yasam/mobilya/dekorasyon/mumluk"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/dekorasyon",
+    "tag": "Duvar Saati",
+    "newSlug": "ev-yasam/mobilya/dekorasyon/duvar-saati"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/dekorasyon",
+    "tag": "Heykelcik",
+    "newSlug": "ev-yasam/mobilya/dekorasyon/heykelcik"
+  },
+  {
+    "subSlug": "ev-yasam/aydinlatma",
+    "tag": "Avize",
+    "newSlug": "ev-yasam/aydinlatma/avize"
+  },
+  {
+    "subSlug": "ev-yasam/aydinlatma",
+    "tag": "Lambader",
+    "newSlug": "ev-yasam/aydinlatma/lambader"
+  },
+  {
+    "subSlug": "ev-yasam/aydinlatma",
+    "tag": "Duvar Apliki",
+    "newSlug": "ev-yasam/aydinlatma/duvar-apliki"
+  },
+  {
+    "subSlug": "ev-yasam/aydinlatma",
+    "tag": "Masa Lambası",
+    "newSlug": "ev-yasam/aydinlatma/masa-lambasi"
+  },
+  {
+    "subSlug": "ev-yasam/aydinlatma",
+    "tag": "LED Şerit",
+    "newSlug": "ev-yasam/aydinlatma/led-serit"
+  },
+  {
+    "subSlug": "ev-yasam/aydinlatma",
+    "tag": "Gece Lambası",
+    "newSlug": "ev-yasam/aydinlatma/gece-lambasi"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon",
+    "tag": "Bahçe Mobilyası",
+    "newSlug": "ev-yasam/bahce-balkon/bahce-mobilyasi"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon",
+    "tag": "Şezlong",
+    "newSlug": "ev-yasam/bahce-balkon/sezlong"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon",
+    "tag": "Hamak",
+    "newSlug": "ev-yasam/bahce-balkon/hamak"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon",
+    "tag": "Saksı",
+    "newSlug": "ev-yasam/bahce-balkon/saksi"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon",
+    "tag": "Fener",
+    "newSlug": "ev-yasam/bahce-balkon/fener"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon",
+    "tag": "Güneşlik",
+    "newSlug": "ev-yasam/bahce-balkon/guneslik"
+  },
+  {
+    "subSlug": "ev-yasam/mutfak-sofra/pisirme-grubu",
+    "tag": "Tencere Seti",
+    "newSlug": "ev-yasam/mutfak-sofra/pisirme-grubu/tencere-seti"
+  },
+  {
+    "subSlug": "ev-yasam/mutfak-sofra/pisirme-grubu",
+    "tag": "Döküm Tencere",
+    "newSlug": "ev-yasam/mutfak-sofra/pisirme-grubu/dokum-tencere"
+  },
+  {
+    "subSlug": "ev-yasam/mutfak-sofra/pisirme-grubu",
+    "tag": "Tava",
+    "newSlug": "ev-yasam/mutfak-sofra/pisirme-grubu/tava"
+  },
+  {
+    "subSlug": "ev-yasam/mutfak-sofra/pisirme-grubu",
+    "tag": "Wok",
+    "newSlug": "ev-yasam/mutfak-sofra/pisirme-grubu/wok"
+  },
+  {
+    "subSlug": "ev-yasam/mutfak-sofra/pisirme-grubu",
+    "tag": "Düdüklü Tencere",
+    "newSlug": "ev-yasam/mutfak-sofra/pisirme-grubu/duduklu-tencere"
+  },
+  {
+    "subSlug": "ev-yasam/mutfak-sofra/yemek-kahvalti-takimi",
+    "tag": "Seramik Set",
+    "newSlug": "ev-yasam/mutfak-sofra/yemek-kahvalti-takimi/seramik-set"
+  },
+  {
+    "subSlug": "ev-yasam/mutfak-sofra/yemek-kahvalti-takimi",
+    "tag": "Porselen Set",
+    "newSlug": "ev-yasam/mutfak-sofra/yemek-kahvalti-takimi/porselen-set"
+  },
+  {
+    "subSlug": "ev-yasam/mutfak-sofra/yemek-kahvalti-takimi",
+    "tag": "Bardak Seti",
+    "newSlug": "ev-yasam/mutfak-sofra/yemek-kahvalti-takimi/bardak-seti"
+  },
+  {
+    "subSlug": "ev-yasam/mutfak-sofra/yemek-kahvalti-takimi",
+    "tag": "Çatal Bıçak",
+    "newSlug": "ev-yasam/mutfak-sofra/yemek-kahvalti-takimi/catal-bicak"
+  },
+  {
+    "subSlug": "ev-yasam/mutfak-sofra/yemek-kahvalti-takimi",
+    "tag": "Kahvaltı Seti",
+    "newSlug": "ev-yasam/mutfak-sofra/yemek-kahvalti-takimi/kahvalti-seti"
+  },
+  {
+    "subSlug": "ev-yasam/mutfak-sofra/saklama-depolama",
+    "tag": "Saklama Kabı",
+    "newSlug": "ev-yasam/mutfak-sofra/saklama-depolama/saklama-kabi"
+  },
+  {
+    "subSlug": "ev-yasam/mutfak-sofra/saklama-depolama",
+    "tag": "Kavanoz",
+    "newSlug": "ev-yasam/mutfak-sofra/saklama-depolama/kavanoz"
+  },
+  {
+    "subSlug": "ev-yasam/mutfak-sofra/saklama-depolama",
+    "tag": "Vakumlu Kap",
+    "newSlug": "ev-yasam/mutfak-sofra/saklama-depolama/vakumlu-kap"
+  },
+  {
+    "subSlug": "ev-yasam/mutfak-sofra/saklama-depolama",
+    "tag": "Baharat Seti",
+    "newSlug": "ev-yasam/mutfak-sofra/saklama-depolama/baharat-seti"
+  },
+  {
+    "subSlug": "ev-yasam/mutfak-sofra/saklama-depolama",
+    "tag": "Organizer",
+    "newSlug": "ev-yasam/mutfak-sofra/saklama-depolama/organizer"
+  },
+  {
+    "subSlug": "ev-yasam/mutfak-sofra/temizlik-aksesuar",
+    "tag": "Mutfak Havlusu",
+    "newSlug": "ev-yasam/mutfak-sofra/temizlik-aksesuar/mutfak-havlusu"
+  },
+  {
+    "subSlug": "ev-yasam/mutfak-sofra/temizlik-aksesuar",
+    "tag": "Önlük",
+    "newSlug": "ev-yasam/mutfak-sofra/temizlik-aksesuar/onluk"
+  },
+  {
+    "subSlug": "ev-yasam/mutfak-sofra/temizlik-aksesuar",
+    "tag": "Fırın Eldiveni",
+    "newSlug": "ev-yasam/mutfak-sofra/temizlik-aksesuar/firin-eldiveni"
+  },
+  {
+    "subSlug": "ev-yasam/mutfak-sofra/temizlik-aksesuar",
+    "tag": "Süzgeç",
+    "newSlug": "ev-yasam/mutfak-sofra/temizlik-aksesuar/suzgec"
+  },
+  {
+    "subSlug": "ev-yasam/mutfak-sofra/temizlik-aksesuar",
+    "tag": "Rende",
+    "newSlug": "ev-yasam/mutfak-sofra/temizlik-aksesuar/rende"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/nevresim-yatak",
+    "tag": "Nevresim Takımı",
+    "newSlug": "ev-yasam/ev-tekstili/nevresim-yatak/nevresim-takimi"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/nevresim-yatak",
+    "tag": "Yorgan",
+    "newSlug": "ev-yasam/ev-tekstili/nevresim-yatak/yorgan"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/nevresim-yatak",
+    "tag": "Yastık",
+    "newSlug": "ev-yasam/ev-tekstili/nevresim-yatak/yastik"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/nevresim-yatak",
+    "tag": "Uyku Seti",
+    "newSlug": "ev-yasam/ev-tekstili/nevresim-yatak/uyku-seti"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/nevresim-yatak",
+    "tag": "Pike",
+    "newSlug": "ev-yasam/ev-tekstili/nevresim-yatak/pike"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/nevresim-yatak",
+    "tag": "Çarşaf",
+    "newSlug": "ev-yasam/ev-tekstili/nevresim-yatak/carsaf"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/havlu-bornoz",
+    "tag": "Banyo Havlusu",
+    "newSlug": "ev-yasam/ev-tekstili/havlu-bornoz/banyo-havlusu"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/havlu-bornoz",
+    "tag": "El Havlusu",
+    "newSlug": "ev-yasam/ev-tekstili/havlu-bornoz/el-havlusu"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/havlu-bornoz",
+    "tag": "Bornoz",
+    "newSlug": "ev-yasam/ev-tekstili/havlu-bornoz/bornoz"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/havlu-bornoz",
+    "tag": "Peshtemal",
+    "newSlug": "ev-yasam/ev-tekstili/havlu-bornoz/peshtemal"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/havlu-bornoz",
+    "tag": "Bambu Havlu",
+    "newSlug": "ev-yasam/ev-tekstili/havlu-bornoz/bambu-havlu"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/hali-perde",
+    "tag": "Makine Halısı",
+    "newSlug": "ev-yasam/ev-tekstili/hali-perde/makine-halisi"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/hali-perde",
+    "tag": "Kilim",
+    "newSlug": "ev-yasam/ev-tekstili/hali-perde/kilim"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/hali-perde",
+    "tag": "Tül Perde",
+    "newSlug": "ev-yasam/ev-tekstili/hali-perde/tul-perde"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/hali-perde",
+    "tag": "Fon Perde",
+    "newSlug": "ev-yasam/ev-tekstili/hali-perde/fon-perde"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/hali-perde",
+    "tag": "Stor Perde",
+    "newSlug": "ev-yasam/ev-tekstili/hali-perde/stor-perde"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/hali-perde",
+    "tag": "Jaluzi",
+    "newSlug": "ev-yasam/ev-tekstili/hali-perde/jaluzi"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/koltuk-ortusu-kirlent",
+    "tag": "Kanepe Örtüsü",
+    "newSlug": "ev-yasam/ev-tekstili/koltuk-ortusu-kirlent/kanepe-ortusu"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/koltuk-ortusu-kirlent",
+    "tag": "Kırlent",
+    "newSlug": "ev-yasam/ev-tekstili/koltuk-ortusu-kirlent/kirlent"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/koltuk-ortusu-kirlent",
+    "tag": "Yastık Kılıfı",
+    "newSlug": "ev-yasam/ev-tekstili/koltuk-ortusu-kirlent/yastik-kilifi"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili/koltuk-ortusu-kirlent",
+    "tag": "Koltuk Kılıfı",
+    "newSlug": "ev-yasam/ev-tekstili/koltuk-ortusu-kirlent/koltuk-kilifi"
+  },
+  {
+    "subSlug": "yapi-market/elektrikli-el-aletleri",
+    "tag": "Matkap",
+    "newSlug": "yapi-market/elektrikli-el-aletleri/matkap"
+  },
+  {
+    "subSlug": "yapi-market/elektrikli-el-aletleri",
+    "tag": "Testere",
+    "newSlug": "yapi-market/elektrikli-el-aletleri/testere"
+  },
+  {
+    "subSlug": "yapi-market/elektrikli-el-aletleri",
+    "tag": "Taşlama Makinesi",
+    "newSlug": "yapi-market/elektrikli-el-aletleri/taslama-makinesi"
+  },
+  {
+    "subSlug": "yapi-market/elektrikli-el-aletleri",
+    "tag": "Makita",
+    "newSlug": "yapi-market/elektrikli-el-aletleri/makita"
+  },
+  {
+    "subSlug": "yapi-market/elektrikli-el-aletleri",
+    "tag": "DeWalt",
+    "newSlug": "yapi-market/elektrikli-el-aletleri/dewalt"
+  },
+  {
+    "subSlug": "yapi-market/elektrikli-el-aletleri",
+    "tag": "Black+Decker",
+    "newSlug": "yapi-market/elektrikli-el-aletleri/blackdecker"
+  },
+  {
+    "subSlug": "yapi-market",
+    "tag": "Tornavida Seti",
+    "newSlug": "yapi-market/tornavida-seti"
+  },
+  {
+    "subSlug": "yapi-market",
+    "tag": "Çekiç",
+    "newSlug": "yapi-market/cekic"
+  },
+  {
+    "subSlug": "yapi-market",
+    "tag": "Pense",
+    "newSlug": "yapi-market/pense"
+  },
+  {
+    "subSlug": "yapi-market",
+    "tag": "Anahtar Seti",
+    "newSlug": "yapi-market/anahtar-seti"
+  },
+  {
+    "subSlug": "yapi-market",
+    "tag": "Stanley",
+    "newSlug": "yapi-market/stanley"
+  },
+  {
+    "subSlug": "yapi-market",
+    "tag": "Bahçe Seti",
+    "newSlug": "yapi-market/bahce-seti"
+  },
+  {
+    "subSlug": "yapi-market/boya-yapistirici",
+    "tag": "İç Cephe Boyası",
+    "newSlug": "yapi-market/boya-yapistirici/ic-cephe-boyasi"
+  },
+  {
+    "subSlug": "yapi-market/boya-yapistirici",
+    "tag": "Dış Cephe",
+    "newSlug": "yapi-market/boya-yapistirici/dis-cephe"
+  },
+  {
+    "subSlug": "yapi-market/boya-yapistirici",
+    "tag": "Silikon",
+    "newSlug": "yapi-market/boya-yapistirici/silikon"
+  },
+  {
+    "subSlug": "yapi-market/boya-yapistirici",
+    "tag": "Macun",
+    "newSlug": "yapi-market/boya-yapistirici/macun"
+  },
+  {
+    "subSlug": "yapi-market/boya-yapistirici",
+    "tag": "Astar",
+    "newSlug": "yapi-market/boya-yapistirici/astar"
+  },
+  {
+    "subSlug": "yapi-market/boya-yapistirici",
+    "tag": "Rulo Fırça",
+    "newSlug": "yapi-market/boya-yapistirici/rulo-firca"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon/bahce-aletleri",
+    "tag": "Çim Biçme",
+    "newSlug": "ev-yasam/bahce-balkon/bahce-aletleri/cim-bicme"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon/bahce-aletleri",
+    "tag": "Çalı Kesme",
+    "newSlug": "ev-yasam/bahce-balkon/bahce-aletleri/cali-kesme"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon/bahce-aletleri",
+    "tag": "Sulama Sistemi",
+    "newSlug": "ev-yasam/bahce-balkon/bahce-aletleri/sulama-sistemi"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon/bahce-aletleri",
+    "tag": "Gardena",
+    "newSlug": "ev-yasam/bahce-balkon/bahce-aletleri/gardena"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon/bahce-aletleri",
+    "tag": "Husqvarna",
+    "newSlug": "ev-yasam/bahce-balkon/bahce-aletleri/husqvarna"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-malzemeleri",
+    "tag": "Defter",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-malzemeleri/defter"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-malzemeleri",
+    "tag": "Kalem Seti",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-malzemeleri/kalem-seti"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-malzemeleri",
+    "tag": "Silgi",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-malzemeleri/silgi"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-malzemeleri",
+    "tag": "Cetvel",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-malzemeleri/cetvel"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-malzemeleri",
+    "tag": "Pergel",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-malzemeleri/pergel"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-malzemeleri",
+    "tag": "Boya Kalemi",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-malzemeleri/boya-kalemi"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/ofis-malzemeleri",
+    "tag": "Ajanda",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/ofis-malzemeleri/ajanda"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/ofis-malzemeleri",
+    "tag": "Dosyalama",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/ofis-malzemeleri/dosyalama"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/ofis-malzemeleri",
+    "tag": "Klasör",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/ofis-malzemeleri/klasor"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/ofis-malzemeleri",
+    "tag": "Zımba",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/ofis-malzemeleri/zimba"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/ofis-malzemeleri",
+    "tag": "Delgeç",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/ofis-malzemeleri/delgec"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/ofis-malzemeleri",
+    "tag": "Beyaz Tahta",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/ofis-malzemeleri/beyaz-tahta"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/ofis",
+    "tag": "Ergonomik Koltuk",
+    "newSlug": "ev-yasam/mobilya/ofis/ergonomik-koltuk"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/ofis",
+    "tag": "Ayaklı Masa",
+    "newSlug": "ev-yasam/mobilya/ofis/ayakli-masa"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/ofis",
+    "tag": "Çekmeceli Raf",
+    "newSlug": "ev-yasam/mobilya/ofis/cekmeceli-raf"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/ofis",
+    "tag": "Gaming Koltuk",
+    "newSlug": "ev-yasam/mobilya/ofis/gaming-koltuk"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/ofis",
+    "tag": "Herman Miller",
+    "newSlug": "ev-yasam/mobilya/ofis/herman-miller"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/ofis",
+    "tag": "Bilimsel Hesap Makinesi",
+    "newSlug": "ev-yasam/mobilya/ofis/bilimsel-hesap-makinesi"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/ofis",
+    "tag": "Grafik",
+    "newSlug": "ev-yasam/mobilya/ofis/grafik"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/ofis",
+    "tag": "Masaüstü",
+    "newSlug": "ev-yasam/mobilya/ofis/masaustu"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya/ofis",
+    "tag": "Barkod Okuyucu",
+    "newSlug": "ev-yasam/mobilya/ofis/barkod-okuyucu"
+  },
+  {
+    "subSlug": "otomotiv",
+    "tag": "2 DIN",
+    "newSlug": "otomotiv/2-din"
+  },
+  {
+    "subSlug": "otomotiv",
+    "tag": "Android Auto",
+    "newSlug": "otomotiv/android-auto"
+  },
+  {
+    "subSlug": "otomotiv",
+    "tag": "Apple CarPlay",
+    "newSlug": "otomotiv/apple-carplay"
+  },
+  {
+    "subSlug": "otomotiv",
+    "tag": "Pioneer",
+    "newSlug": "otomotiv/pioneer"
+  },
+  {
+    "subSlug": "otomotiv",
+    "tag": "Kenwood",
+    "newSlug": "otomotiv/kenwood"
+  },
+  {
+    "subSlug": "otomotiv/navigasyon",
+    "tag": "TomTom",
+    "newSlug": "otomotiv/navigasyon/tomtom"
+  },
+  {
+    "subSlug": "otomotiv/navigasyon",
+    "tag": "Oto GPS",
+    "newSlug": "otomotiv/navigasyon/oto-gps"
+  },
+  {
+    "subSlug": "otomotiv/navigasyon",
+    "tag": "Navigasyon Ekranı",
+    "newSlug": "otomotiv/navigasyon/navigasyon-ekrani"
+  },
+  {
+    "subSlug": "otomotiv/navigasyon",
+    "tag": "Taşınabilir GPS",
+    "newSlug": "otomotiv/navigasyon/tasinabilir-gps"
+  },
+  {
+    "subSlug": "otomotiv/arac-elektronigi/dashcam-geri-gorus",
+    "tag": "Araç İçi Kamera",
+    "newSlug": "otomotiv/arac-elektronigi/dashcam-geri-gorus/arac-ici-kamera"
+  },
+  {
+    "subSlug": "otomotiv/arac-elektronigi/dashcam-geri-gorus",
+    "tag": "Geri Görüş Kamerası",
+    "newSlug": "otomotiv/arac-elektronigi/dashcam-geri-gorus/geri-gorus-kamerasi"
+  },
+  {
+    "subSlug": "otomotiv/arac-elektronigi/dashcam-geri-gorus",
+    "tag": "360° Kamera",
+    "newSlug": "otomotiv/arac-elektronigi/dashcam-geri-gorus/360-kamera"
+  },
+  {
+    "subSlug": "otomotiv/arac-elektronigi/dashcam-geri-gorus",
+    "tag": "Gece Görüş",
+    "newSlug": "otomotiv/arac-elektronigi/dashcam-geri-gorus/gece-gorus"
+  },
+  {
+    "subSlug": "otomotiv/arac-elektronigi/arac-ses-sistemi",
+    "tag": "Hoparlör",
+    "newSlug": "otomotiv/arac-elektronigi/arac-ses-sistemi/hoparlor"
+  },
+  {
+    "subSlug": "otomotiv/arac-elektronigi/arac-ses-sistemi",
+    "tag": "Subwoofer",
+    "newSlug": "otomotiv/arac-elektronigi/arac-ses-sistemi/subwoofer"
+  },
+  {
+    "subSlug": "otomotiv/arac-elektronigi/arac-ses-sistemi",
+    "tag": "Amfi",
+    "newSlug": "otomotiv/arac-elektronigi/arac-ses-sistemi/amfi"
+  },
+  {
+    "subSlug": "otomotiv/arac-elektronigi/arac-ses-sistemi",
+    "tag": "Pioneer",
+    "newSlug": "otomotiv/arac-elektronigi/arac-ses-sistemi/pioneer"
+  },
+  {
+    "subSlug": "otomotiv/arac-elektronigi/arac-ses-sistemi",
+    "tag": "Hertz",
+    "newSlug": "otomotiv/arac-elektronigi/arac-ses-sistemi/hertz"
+  },
+  {
+    "subSlug": "otomotiv/arac-elektronigi/arac-guvenligi",
+    "tag": "Alarm",
+    "newSlug": "otomotiv/arac-elektronigi/arac-guvenligi/alarm"
+  },
+  {
+    "subSlug": "otomotiv/arac-elektronigi/arac-guvenligi",
+    "tag": "Takip Cihazı",
+    "newSlug": "otomotiv/arac-elektronigi/arac-guvenligi/takip-cihazi"
+  },
+  {
+    "subSlug": "otomotiv/arac-elektronigi/arac-guvenligi",
+    "tag": "Kilit",
+    "newSlug": "otomotiv/arac-elektronigi/arac-guvenligi/kilit"
+  },
+  {
+    "subSlug": "otomotiv/arac-elektronigi/arac-guvenligi",
+    "tag": "İmmobilizer",
+    "newSlug": "otomotiv/arac-elektronigi/arac-guvenligi/immobilizer"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/yaz-lastigi",
+    "tag": "Michelin",
+    "newSlug": "otomotiv/lastik-jant/yaz-lastigi/michelin"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/yaz-lastigi",
+    "tag": "Bridgestone",
+    "newSlug": "otomotiv/lastik-jant/yaz-lastigi/bridgestone"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/yaz-lastigi",
+    "tag": "Pirelli",
+    "newSlug": "otomotiv/lastik-jant/yaz-lastigi/pirelli"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/yaz-lastigi",
+    "tag": "Goodyear",
+    "newSlug": "otomotiv/lastik-jant/yaz-lastigi/goodyear"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/yaz-lastigi",
+    "tag": "Continental",
+    "newSlug": "otomotiv/lastik-jant/yaz-lastigi/continental"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/yaz-lastigi",
+    "tag": "Dunlop",
+    "newSlug": "otomotiv/lastik-jant/yaz-lastigi/dunlop"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/kis-4-mevsim-lastigi",
+    "tag": "Michelin Kış",
+    "newSlug": "otomotiv/lastik-jant/kis-4-mevsim-lastigi/michelin-kis"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/kis-4-mevsim-lastigi",
+    "tag": "Nokian",
+    "newSlug": "otomotiv/lastik-jant/kis-4-mevsim-lastigi/nokian"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/kis-4-mevsim-lastigi",
+    "tag": "Bridgestone Blizzak",
+    "newSlug": "otomotiv/lastik-jant/kis-4-mevsim-lastigi/bridgestone-blizzak"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/kis-4-mevsim-lastigi",
+    "tag": "4 Mevsim",
+    "newSlug": "otomotiv/lastik-jant/kis-4-mevsim-lastigi/4-mevsim"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/kis-4-mevsim-lastigi",
+    "tag": "Dunlop Winter",
+    "newSlug": "otomotiv/lastik-jant/kis-4-mevsim-lastigi/dunlop-winter"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/jant",
+    "tag": "Çelik Jant",
+    "newSlug": "otomotiv/lastik-jant/jant/celik-jant"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/jant",
+    "tag": "Alüminyum Jant",
+    "newSlug": "otomotiv/lastik-jant/jant/aluminyum-jant"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/jant",
+    "tag": "15 inç",
+    "newSlug": "otomotiv/lastik-jant/jant/15-inc"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/jant",
+    "tag": "17 inç",
+    "newSlug": "otomotiv/lastik-jant/jant/17-inc"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/jant",
+    "tag": "18 inç",
+    "newSlug": "otomotiv/lastik-jant/jant/18-inc"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/jant",
+    "tag": "19 inç",
+    "newSlug": "otomotiv/lastik-jant/jant/19-inc"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/lastik-aksesuar",
+    "tag": "Kar Zinciri",
+    "newSlug": "otomotiv/lastik-jant/lastik-aksesuar/kar-zinciri"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/lastik-aksesuar",
+    "tag": "Lastik Basınç Ölçer",
+    "newSlug": "otomotiv/lastik-jant/lastik-aksesuar/lastik-basinc-olcer"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/lastik-aksesuar",
+    "tag": "Çivi Lastiği",
+    "newSlug": "otomotiv/lastik-jant/lastik-aksesuar/civi-lastigi"
+  },
+  {
+    "subSlug": "otomotiv/lastik-jant/lastik-aksesuar",
+    "tag": "Nitrojen Valfi",
+    "newSlug": "otomotiv/lastik-jant/lastik-aksesuar/nitrojen-valfi"
+  },
+  {
+    "subSlug": "otomotiv/arac-aksesuar/dis-aksesuar",
+    "tag": "Oto Paspas",
+    "newSlug": "otomotiv/arac-aksesuar/dis-aksesuar/oto-paspas"
+  },
+  {
+    "subSlug": "otomotiv/arac-aksesuar/dis-aksesuar",
+    "tag": "Güneşlik",
+    "newSlug": "otomotiv/arac-aksesuar/dis-aksesuar/guneslik"
+  },
+  {
+    "subSlug": "otomotiv/arac-aksesuar/dis-aksesuar",
+    "tag": "Kar Fırçası",
+    "newSlug": "otomotiv/arac-aksesuar/dis-aksesuar/kar-fircasi"
+  },
+  {
+    "subSlug": "otomotiv/arac-aksesuar/dis-aksesuar",
+    "tag": "Silecek Süpürgesi",
+    "newSlug": "otomotiv/arac-aksesuar/dis-aksesuar/silecek-supurgesi"
+  },
+  {
+    "subSlug": "otomotiv/arac-aksesuar/dis-aksesuar",
+    "tag": "Anten",
+    "newSlug": "otomotiv/arac-aksesuar/dis-aksesuar/anten"
+  },
+  {
+    "subSlug": "otomotiv/arac-aksesuar/dis-aksesuar",
+    "tag": "Spoiler",
+    "newSlug": "otomotiv/arac-aksesuar/dis-aksesuar/spoiler"
+  },
+  {
+    "subSlug": "otomotiv/arac-aksesuar/ic-aksesuar",
+    "tag": "Kol Dayama",
+    "newSlug": "otomotiv/arac-aksesuar/ic-aksesuar/kol-dayama"
+  },
+  {
+    "subSlug": "otomotiv/arac-aksesuar/ic-aksesuar",
+    "tag": "Deri Kılıf",
+    "newSlug": "otomotiv/arac-aksesuar/ic-aksesuar/deri-kilif"
+  },
+  {
+    "subSlug": "otomotiv/arac-aksesuar/ic-aksesuar",
+    "tag": "Oto Organizeri",
+    "newSlug": "otomotiv/arac-aksesuar/ic-aksesuar/oto-organizeri"
+  },
+  {
+    "subSlug": "otomotiv/arac-aksesuar/ic-aksesuar",
+    "tag": "Vantuz Tutucu",
+    "newSlug": "otomotiv/arac-aksesuar/ic-aksesuar/vantuz-tutucu"
+  },
+  {
+    "subSlug": "otomotiv/arac-aksesuar/ic-aksesuar",
+    "tag": "Araç Parfümü",
+    "newSlug": "otomotiv/arac-aksesuar/ic-aksesuar/arac-parfumu"
+  },
+  {
+    "subSlug": "otomotiv/arac-aksesuar/bakim-temizlik",
+    "tag": "Motor Yağı",
+    "newSlug": "otomotiv/arac-aksesuar/bakim-temizlik/motor-yagi"
+  },
+  {
+    "subSlug": "otomotiv/arac-aksesuar/bakim-temizlik",
+    "tag": "Antifriz",
+    "newSlug": "otomotiv/arac-aksesuar/bakim-temizlik/antifriz"
+  },
+  {
+    "subSlug": "otomotiv/arac-aksesuar/bakim-temizlik",
+    "tag": "Araç Cilası",
+    "newSlug": "otomotiv/arac-aksesuar/bakim-temizlik/arac-cilasi"
+  },
+  {
+    "subSlug": "otomotiv/arac-aksesuar/bakim-temizlik",
+    "tag": "Fren Sıvısı",
+    "newSlug": "otomotiv/arac-aksesuar/bakim-temizlik/fren-sivisi"
+  },
+  {
+    "subSlug": "otomotiv/arac-aksesuar/aku-elektrik",
+    "tag": "Akü",
+    "newSlug": "otomotiv/arac-aksesuar/aku-elektrik/aku"
+  },
+  {
+    "subSlug": "otomotiv/arac-aksesuar/aku-elektrik",
+    "tag": "Taşınabilir Şarj",
+    "newSlug": "otomotiv/arac-aksesuar/aku-elektrik/tasinabilir-sarj"
+  },
+  {
+    "subSlug": "otomotiv/arac-aksesuar/aku-elektrik",
+    "tag": "OBD2 Tarayıcı",
+    "newSlug": "otomotiv/arac-aksesuar/aku-elektrik/obd2-tarayici"
+  },
+  {
+    "subSlug": "otomotiv/arac-aksesuar/aku-elektrik",
+    "tag": "Atlama Kablosu",
+    "newSlug": "otomotiv/arac-aksesuar/aku-elektrik/atlama-kablosu"
+  },
+  {
+    "subSlug": "otomotiv/motor-scooter/motosiklet-ekipmani",
+    "tag": "Kask",
+    "newSlug": "otomotiv/motor-scooter/motosiklet-ekipmani/kask"
+  },
+  {
+    "subSlug": "otomotiv/motor-scooter/motosiklet-ekipmani",
+    "tag": "Motosiklet Eldiveni",
+    "newSlug": "otomotiv/motor-scooter/motosiklet-ekipmani/motosiklet-eldiveni"
+  },
+  {
+    "subSlug": "otomotiv/motor-scooter/motosiklet-ekipmani",
+    "tag": "Motosiklet Montu",
+    "newSlug": "otomotiv/motor-scooter/motosiklet-ekipmani/motosiklet-montu"
+  },
+  {
+    "subSlug": "otomotiv/motor-scooter/motosiklet-ekipmani",
+    "tag": "Motosiklet Botu",
+    "newSlug": "otomotiv/motor-scooter/motosiklet-ekipmani/motosiklet-botu"
+  },
+  {
+    "subSlug": "otomotiv/motor-scooter/motosiklet-ekipmani",
+    "tag": "Bel Kemeri",
+    "newSlug": "otomotiv/motor-scooter/motosiklet-ekipmani/bel-kemeri"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/elektrikli-scooter",
+    "tag": "Segway Ninebot",
+    "newSlug": "spor-outdoor/bisiklet/elektrikli-scooter/segway-ninebot"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/elektrikli-scooter",
+    "tag": "Kaabo",
+    "newSlug": "spor-outdoor/bisiklet/elektrikli-scooter/kaabo"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/elektrikli-scooter",
+    "tag": "Motus",
+    "newSlug": "spor-outdoor/bisiklet/elektrikli-scooter/motus"
+  },
+  {
+    "subSlug": "otomotiv/motor-scooter/motosiklet-aksesuar",
+    "tag": "Yan Çanta",
+    "newSlug": "otomotiv/motor-scooter/motosiklet-aksesuar/yan-canta"
+  },
+  {
+    "subSlug": "otomotiv/motor-scooter/motosiklet-aksesuar",
+    "tag": "GPS Tutucu",
+    "newSlug": "otomotiv/motor-scooter/motosiklet-aksesuar/gps-tutucu"
+  },
+  {
+    "subSlug": "otomotiv/motor-scooter/motosiklet-aksesuar",
+    "tag": "Kilit",
+    "newSlug": "otomotiv/motor-scooter/motosiklet-aksesuar/kilit"
+  },
+  {
+    "subSlug": "otomotiv/motor-scooter/motosiklet-aksesuar",
+    "tag": "Örtü",
+    "newSlug": "otomotiv/motor-scooter/motosiklet-aksesuar/ortu"
+  },
+  {
+    "subSlug": "otomotiv/motor-scooter/motosiklet-aksesuar",
+    "tag": "Hava Filtresi",
+    "newSlug": "otomotiv/motor-scooter/motosiklet-aksesuar/hava-filtresi"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon/bahce-aletleri",
+    "tag": "Çim Biçme Makinesi",
+    "newSlug": "ev-yasam/bahce-balkon/bahce-aletleri/cim-bicme-makinesi"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon/bahce-aletleri",
+    "tag": "Budama Makası",
+    "newSlug": "ev-yasam/bahce-balkon/bahce-aletleri/budama-makasi"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon/sulama-sistemi",
+    "tag": "Otomatik Sulama",
+    "newSlug": "ev-yasam/bahce-balkon/sulama-sistemi/otomatik-sulama"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon/sulama-sistemi",
+    "tag": "Hortum",
+    "newSlug": "ev-yasam/bahce-balkon/sulama-sistemi/hortum"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon/sulama-sistemi",
+    "tag": "Sulama Başlığı",
+    "newSlug": "ev-yasam/bahce-balkon/sulama-sistemi/sulama-basligi"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon/sulama-sistemi",
+    "tag": "Karavan Sulama",
+    "newSlug": "ev-yasam/bahce-balkon/sulama-sistemi/karavan-sulama"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon/sulama-sistemi",
+    "tag": "Gardena",
+    "newSlug": "ev-yasam/bahce-balkon/sulama-sistemi/gardena"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya",
+    "tag": "Bahçe Masası",
+    "newSlug": "ev-yasam/mobilya/bahce-masasi"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya",
+    "tag": "Plastik Sandalye",
+    "newSlug": "ev-yasam/mobilya/plastik-sandalye"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya",
+    "tag": "Hamak",
+    "newSlug": "ev-yasam/mobilya/hamak"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya",
+    "tag": "Şezlong",
+    "newSlug": "ev-yasam/mobilya/sezlong"
+  },
+  {
+    "subSlug": "ev-yasam/mobilya",
+    "tag": "Kamp Sandalyesi",
+    "newSlug": "ev-yasam/mobilya/kamp-sandalyesi"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon/bitki-saksi",
+    "tag": "Saksı",
+    "newSlug": "ev-yasam/bahce-balkon/bitki-saksi/saksi"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon/bitki-saksi",
+    "tag": "Toprak",
+    "newSlug": "ev-yasam/bahce-balkon/bitki-saksi/toprak"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon/bitki-saksi",
+    "tag": "Gübre",
+    "newSlug": "ev-yasam/bahce-balkon/bitki-saksi/gubre"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon/bitki-saksi",
+    "tag": "Tohum",
+    "newSlug": "ev-yasam/bahce-balkon/bitki-saksi/tohum"
+  },
+  {
+    "subSlug": "ev-yasam/bahce-balkon/bitki-saksi",
+    "tag": "İç Mekan Bitkisi",
+    "newSlug": "ev-yasam/bahce-balkon/bitki-saksi/ic-mekan-bitkisi"
+  },
+  {
+    "subSlug": "yapi-market/elektrikli-aletler",
+    "tag": "Matkap",
+    "newSlug": "yapi-market/elektrikli-aletler/matkap"
+  },
+  {
+    "subSlug": "yapi-market/elektrikli-aletler",
+    "tag": "Açılı Taşlama",
+    "newSlug": "yapi-market/elektrikli-aletler/acili-taslama"
+  },
+  {
+    "subSlug": "yapi-market/elektrikli-aletler",
+    "tag": "Daire Testere",
+    "newSlug": "yapi-market/elektrikli-aletler/daire-testere"
+  },
+  {
+    "subSlug": "yapi-market/elektrikli-aletler",
+    "tag": "Makita",
+    "newSlug": "yapi-market/elektrikli-aletler/makita"
+  },
+  {
+    "subSlug": "yapi-market/elektrikli-aletler",
+    "tag": "DeWalt",
+    "newSlug": "yapi-market/elektrikli-aletler/dewalt"
+  },
+  {
+    "subSlug": "yapi-market/elektrikli-aletler",
+    "tag": "Hikoki",
+    "newSlug": "yapi-market/elektrikli-aletler/hikoki"
+  },
+  {
+    "subSlug": "yapi-market/el-aletleri",
+    "tag": "Tornavida",
+    "newSlug": "yapi-market/el-aletleri/tornavida"
+  },
+  {
+    "subSlug": "yapi-market/el-aletleri",
+    "tag": "Çekiç",
+    "newSlug": "yapi-market/el-aletleri/cekic"
+  },
+  {
+    "subSlug": "yapi-market/el-aletleri",
+    "tag": "Pense Seti",
+    "newSlug": "yapi-market/el-aletleri/pense-seti"
+  },
+  {
+    "subSlug": "yapi-market/el-aletleri",
+    "tag": "İngiliz Anahtarı",
+    "newSlug": "yapi-market/el-aletleri/ingiliz-anahtari"
+  },
+  {
+    "subSlug": "yapi-market/el-aletleri",
+    "tag": "Stanley",
+    "newSlug": "yapi-market/el-aletleri/stanley"
+  },
+  {
+    "subSlug": "yapi-market/boya",
+    "tag": "İç Cephe",
+    "newSlug": "yapi-market/boya/ic-cephe"
+  },
+  {
+    "subSlug": "yapi-market/boya",
+    "tag": "Dış Cephe",
+    "newSlug": "yapi-market/boya/dis-cephe"
+  },
+  {
+    "subSlug": "yapi-market/boya",
+    "tag": "Astar",
+    "newSlug": "yapi-market/boya/astar"
+  },
+  {
+    "subSlug": "yapi-market/boya",
+    "tag": "Silikon",
+    "newSlug": "yapi-market/boya/silikon"
+  },
+  {
+    "subSlug": "yapi-market/boya",
+    "tag": "Filli Boya",
+    "newSlug": "yapi-market/boya/filli-boya"
+  },
+  {
+    "subSlug": "yapi-market/elektrik",
+    "tag": "Priz",
+    "newSlug": "yapi-market/elektrik/priz"
+  },
+  {
+    "subSlug": "yapi-market/elektrik",
+    "tag": "Anahtar",
+    "newSlug": "yapi-market/elektrik/anahtar"
+  },
+  {
+    "subSlug": "yapi-market/elektrik",
+    "tag": "LED Ampul",
+    "newSlug": "yapi-market/elektrik/led-ampul"
+  },
+  {
+    "subSlug": "yapi-market/elektrik",
+    "tag": "Uzatma Kablo",
+    "newSlug": "yapi-market/elektrik/uzatma-kablo"
+  },
+  {
+    "subSlug": "yapi-market/elektrik",
+    "tag": "Multimetre",
+    "newSlug": "yapi-market/elektrik/multimetre"
+  },
+  {
+    "subSlug": "yapi-market/su-tesisati",
+    "tag": "Duş Hortumu",
+    "newSlug": "yapi-market/su-tesisati/dus-hortumu"
+  },
+  {
+    "subSlug": "yapi-market/su-tesisati",
+    "tag": "Vana",
+    "newSlug": "yapi-market/su-tesisati/vana"
+  },
+  {
+    "subSlug": "yapi-market/su-tesisati",
+    "tag": "Musluk Contası",
+    "newSlug": "yapi-market/su-tesisati/musluk-contasi"
+  },
+  {
+    "subSlug": "yapi-market/hirdavat",
+    "tag": "Vida",
+    "newSlug": "yapi-market/hirdavat/vida"
+  },
+  {
+    "subSlug": "yapi-market/hirdavat",
+    "tag": "Dübel",
+    "newSlug": "yapi-market/hirdavat/dubel"
+  },
+  {
+    "subSlug": "yapi-market/hirdavat",
+    "tag": "Çivi",
+    "newSlug": "yapi-market/hirdavat/civi"
+  },
+  {
+    "subSlug": "yapi-market/hirdavat",
+    "tag": "Menteşe",
+    "newSlug": "yapi-market/hirdavat/mentese"
+  },
+  {
+    "subSlug": "otomotiv/oto-aku",
+    "tag": "60 AH",
+    "newSlug": "otomotiv/oto-aku/60-ah"
+  },
+  {
+    "subSlug": "otomotiv/oto-aku",
+    "tag": "75 AH",
+    "newSlug": "otomotiv/oto-aku/75-ah"
+  },
+  {
+    "subSlug": "otomotiv/oto-aku",
+    "tag": "Mutlu",
+    "newSlug": "otomotiv/oto-aku/mutlu"
+  },
+  {
+    "subSlug": "otomotiv/oto-aku",
+    "tag": "İnci",
+    "newSlug": "otomotiv/oto-aku/inci"
+  },
+  {
+    "subSlug": "otomotiv/oto-aku",
+    "tag": "Varta",
+    "newSlug": "otomotiv/oto-aku/varta"
+  },
+  {
+    "subSlug": "otomotiv/motor-yagi-bakim",
+    "tag": "Antifriz",
+    "newSlug": "otomotiv/motor-yagi-bakim/antifriz"
+  },
+  {
+    "subSlug": "otomotiv/oto-yedek-parca/fren-suspansiyon",
+    "tag": "Fren Balata",
+    "newSlug": "otomotiv/oto-yedek-parca/fren-suspansiyon/fren-balata"
+  },
+  {
+    "subSlug": "otomotiv/oto-yedek-parca/fren-suspansiyon",
+    "tag": "Fren Diski",
+    "newSlug": "otomotiv/oto-yedek-parca/fren-suspansiyon/fren-diski"
+  },
+  {
+    "subSlug": "otomotiv/oto-yedek-parca/fren-suspansiyon",
+    "tag": "Amortisör",
+    "newSlug": "otomotiv/oto-yedek-parca/fren-suspansiyon/amortisor"
+  },
+  {
+    "subSlug": "otomotiv/oto-yedek-parca/fren-suspansiyon",
+    "tag": "Debriyaj",
+    "newSlug": "otomotiv/oto-yedek-parca/fren-suspansiyon/debriyaj"
+  },
+  {
+    "subSlug": "otomotiv/oto-yedek-parca/silecek-ampul",
+    "tag": "Silecek",
+    "newSlug": "otomotiv/oto-yedek-parca/silecek-ampul/silecek"
+  },
+  {
+    "subSlug": "otomotiv/oto-yedek-parca/silecek-ampul",
+    "tag": "Far Ampul",
+    "newSlug": "otomotiv/oto-yedek-parca/silecek-ampul/far-ampul"
+  },
+  {
+    "subSlug": "otomotiv/oto-yedek-parca/silecek-ampul",
+    "tag": "Xenon",
+    "newSlug": "otomotiv/oto-yedek-parca/silecek-ampul/xenon"
+  },
+  {
+    "subSlug": "otomotiv/oto-yedek-parca/silecek-ampul",
+    "tag": "Stop Ampul",
+    "newSlug": "otomotiv/oto-yedek-parca/silecek-ampul/stop-ampul"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-bakim/bebek-bezi",
+    "tag": "Bebek Bezi Kovası",
+    "newSlug": "anne-bebek/bebek-bakim/bebek-bezi/bebek-bezi-kovasi"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-beslenme/biberon-emzik",
+    "tag": "Biberon",
+    "newSlug": "anne-bebek/bebek-beslenme/biberon-emzik/biberon"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-beslenme/biberon-emzik",
+    "tag": "Emzik",
+    "newSlug": "anne-bebek/bebek-beslenme/biberon-emzik/emzik"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-beslenme/biberon-emzik",
+    "tag": "Göğüs Pompası",
+    "newSlug": "anne-bebek/bebek-beslenme/biberon-emzik/gogus-pompasi"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-beslenme/biberon-emzik",
+    "tag": "Mama",
+    "newSlug": "anne-bebek/bebek-beslenme/biberon-emzik/mama"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-beslenme/biberon-emzik",
+    "tag": "Sterilizatör",
+    "newSlug": "anne-bebek/bebek-beslenme/biberon-emzik/sterilizator"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-beslenme/biberon-emzik",
+    "tag": "Biberon Isıtıcı",
+    "newSlug": "anne-bebek/bebek-beslenme/biberon-emzik/biberon-isitici"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-beslenme/biberon-emzik",
+    "tag": "Philips Avent",
+    "newSlug": "anne-bebek/bebek-beslenme/biberon-emzik/philips-avent"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-bakim/bebek-kozmetik",
+    "tag": "Bebek Şampuanı",
+    "newSlug": "anne-bebek/bebek-bakim/bebek-kozmetik/bebek-sampuani"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-bakim/bebek-kozmetik",
+    "tag": "Bebek Kremi",
+    "newSlug": "anne-bebek/bebek-bakim/bebek-kozmetik/bebek-kremi"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-bakim/bebek-kozmetik",
+    "tag": "Bebek Yağı",
+    "newSlug": "anne-bebek/bebek-bakim/bebek-kozmetik/bebek-yagi"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-bakim/bebek-kozmetik",
+    "tag": "Bebek Sabunu",
+    "newSlug": "anne-bebek/bebek-bakim/bebek-kozmetik/bebek-sabunu"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-bakim/bebek-sagligi",
+    "tag": "Ateş Ölçer",
+    "newSlug": "anne-bebek/bebek-bakim/bebek-sagligi/ates-olcer"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-bakim/bebek-sagligi",
+    "tag": "Burun Aspiratörü",
+    "newSlug": "anne-bebek/bebek-bakim/bebek-sagligi/burun-aspiratoru"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-bakim/bebek-sagligi",
+    "tag": "Tırnak Makası",
+    "newSlug": "anne-bebek/bebek-bakim/bebek-sagligi/tirnak-makasi"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-bakim/bebek-sagligi",
+    "tag": "Bebek Monitörü",
+    "newSlug": "anne-bebek/bebek-bakim/bebek-sagligi/bebek-monitoru"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-bakim/bebek-sagligi",
+    "tag": "Nazal Aspiratör",
+    "newSlug": "anne-bebek/bebek-bakim/bebek-sagligi/nazal-aspirator"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/araba-puset",
+    "tag": "Tam Yatar Araba",
+    "newSlug": "anne-bebek/bebek-tasima/araba-puset/tam-yatar-araba"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/araba-puset",
+    "tag": "Puset",
+    "newSlug": "anne-bebek/bebek-tasima/araba-puset/puset"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/araba-puset",
+    "tag": "3'ü 1 Arada",
+    "newSlug": "anne-bebek/bebek-tasima/araba-puset/3u-1-arada"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/araba-puset",
+    "tag": "Çift Bebek",
+    "newSlug": "anne-bebek/bebek-tasima/araba-puset/cift-bebek"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/araba-puset",
+    "tag": "Chicco",
+    "newSlug": "anne-bebek/bebek-tasima/araba-puset/chicco"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/araba-puset",
+    "tag": "Joie",
+    "newSlug": "anne-bebek/bebek-tasima/araba-puset/joie"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/araba-puset",
+    "tag": "Bugaboo",
+    "newSlug": "anne-bebek/bebek-tasima/araba-puset/bugaboo"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/araba-puset",
+    "tag": "Stokke",
+    "newSlug": "anne-bebek/bebek-tasima/araba-puset/stokke"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/oto-koltugu",
+    "tag": "0-13 kg",
+    "newSlug": "anne-bebek/bebek-tasima/oto-koltugu/0-13-kg"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/oto-koltugu",
+    "tag": "9-36 kg",
+    "newSlug": "anne-bebek/bebek-tasima/oto-koltugu/9-36-kg"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/oto-koltugu",
+    "tag": "9-18 kg",
+    "newSlug": "anne-bebek/bebek-tasima/oto-koltugu/9-18-kg"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/oto-koltugu",
+    "tag": "Maxi-Cosi",
+    "newSlug": "anne-bebek/bebek-tasima/oto-koltugu/maxi-cosi"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/oto-koltugu",
+    "tag": "Chicco",
+    "newSlug": "anne-bebek/bebek-tasima/oto-koltugu/chicco"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/oto-koltugu",
+    "tag": "BeSafe",
+    "newSlug": "anne-bebek/bebek-tasima/oto-koltugu/besafe"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/oto-koltugu",
+    "tag": "Cybex",
+    "newSlug": "anne-bebek/bebek-tasima/oto-koltugu/cybex"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/yurutec-salincak",
+    "tag": "Yürüteç",
+    "newSlug": "anne-bebek/bebek-tasima/yurutec-salincak/yurutec"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/yurutec-salincak",
+    "tag": "Bebek Salıncağı",
+    "newSlug": "anne-bebek/bebek-tasima/yurutec-salincak/bebek-salincagi"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/yurutec-salincak",
+    "tag": "Ana Kucağı",
+    "newSlug": "anne-bebek/bebek-tasima/yurutec-salincak/ana-kucagi"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/yurutec-salincak",
+    "tag": "Portbebe",
+    "newSlug": "anne-bebek/bebek-tasima/yurutec-salincak/portbebe"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/yurutec-salincak",
+    "tag": "Kanguru",
+    "newSlug": "anne-bebek/bebek-tasima/yurutec-salincak/kanguru"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-bakim",
+    "tag": "Kapı Kilidi",
+    "newSlug": "anne-bebek/bebek-bakim/kapi-kilidi"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-bakim",
+    "tag": "Köşe Koruyucu",
+    "newSlug": "anne-bebek/bebek-bakim/kose-koruyucu"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-bakim",
+    "tag": "Priz Kapağı",
+    "newSlug": "anne-bebek/bebek-bakim/priz-kapagi"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-bakim",
+    "tag": "Merdiven Kapısı",
+    "newSlug": "anne-bebek/bebek-bakim/merdiven-kapisi"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-bakim",
+    "tag": "Kamera",
+    "newSlug": "anne-bebek/bebek-bakim/kamera"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/besik",
+    "tag": "Ahşap Beşik",
+    "newSlug": "anne-bebek/bebek-tasima/besik/ahsap-besik"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/besik",
+    "tag": "Park Yatak",
+    "newSlug": "anne-bebek/bebek-tasima/besik/park-yatak"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/besik",
+    "tag": "Tekerlekli Beşik",
+    "newSlug": "anne-bebek/bebek-tasima/besik/tekerlekli-besik"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/besik",
+    "tag": "Co-Sleeper",
+    "newSlug": "anne-bebek/bebek-tasima/besik/co-sleeper"
+  },
+  {
+    "subSlug": "anne-bebek/bebek-tasima/besik",
+    "tag": "Çok Fonksiyonlu Beşik",
+    "newSlug": "anne-bebek/bebek-tasima/besik/cok-fonksiyonlu-besik"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili",
+    "tag": "Nevresim Seti",
+    "newSlug": "ev-yasam/ev-tekstili/nevresim-seti"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili",
+    "tag": "Uyku Seti",
+    "newSlug": "ev-yasam/ev-tekstili/uyku-seti"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili",
+    "tag": "Bebek Yorgan",
+    "newSlug": "ev-yasam/ev-tekstili/bebek-yorgan"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili",
+    "tag": "Bebek Yastığı",
+    "newSlug": "ev-yasam/ev-tekstili/bebek-yastigi"
+  },
+  {
+    "subSlug": "ev-yasam/ev-tekstili",
+    "tag": "Battaniye",
+    "newSlug": "ev-yasam/ev-tekstili/battaniye"
+  },
+  {
+    "subSlug": "anne-bebek/cocuk-odasi/oyun-mati-parki",
+    "tag": "Aktivite Matı",
+    "newSlug": "anne-bebek/cocuk-odasi/oyun-mati-parki/aktivite-mati"
+  },
+  {
+    "subSlug": "anne-bebek/cocuk-odasi/oyun-mati-parki",
+    "tag": "Oyun Parkı",
+    "newSlug": "anne-bebek/cocuk-odasi/oyun-mati-parki/oyun-parki"
+  },
+  {
+    "subSlug": "anne-bebek/cocuk-odasi/oyun-mati-parki",
+    "tag": "Oyun Halısı",
+    "newSlug": "anne-bebek/cocuk-odasi/oyun-mati-parki/oyun-halisi"
+  },
+  {
+    "subSlug": "anne-bebek/cocuk-odasi/oyun-mati-parki",
+    "tag": "Çadır Ev",
+    "newSlug": "anne-bebek/cocuk-odasi/oyun-mati-parki/cadir-ev"
+  },
+  {
+    "subSlug": "anne-bebek/cocuk-odasi/oyun-mati-parki",
+    "tag": "Kum Havuzu",
+    "newSlug": "anne-bebek/cocuk-odasi/oyun-mati-parki/kum-havuzu"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/lego",
+    "tag": "LEGO City",
+    "newSlug": "anne-bebek/oyuncak/lego/lego-city"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/lego",
+    "tag": "LEGO Technic",
+    "newSlug": "anne-bebek/oyuncak/lego/lego-technic"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/lego",
+    "tag": "LEGO Star Wars",
+    "newSlug": "anne-bebek/oyuncak/lego/lego-star-wars"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/lego",
+    "tag": "LEGO Friends",
+    "newSlug": "anne-bebek/oyuncak/lego/lego-friends"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/lego",
+    "tag": "LEGO Creator",
+    "newSlug": "anne-bebek/oyuncak/lego/lego-creator"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/lego",
+    "tag": "LEGO Duplo",
+    "newSlug": "anne-bebek/oyuncak/lego/lego-duplo"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/egitici",
+    "tag": "Montessori",
+    "newSlug": "anne-bebek/oyuncak/egitici/montessori"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/egitici",
+    "tag": "Ahşap Oyuncak",
+    "newSlug": "anne-bebek/oyuncak/egitici/ahsap-oyuncak"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/egitici",
+    "tag": "Puzzle",
+    "newSlug": "anne-bebek/oyuncak/egitici/puzzle"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/egitici",
+    "tag": "Dil Öğreten",
+    "newSlug": "anne-bebek/oyuncak/egitici/dil-ogreten"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/rc-robot",
+    "tag": "Kumandalı Araba",
+    "newSlug": "anne-bebek/oyuncak/rc-robot/kumandali-araba"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/rc-robot",
+    "tag": "RC Helikopter",
+    "newSlug": "anne-bebek/oyuncak/rc-robot/rc-helikopter"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/rc-robot",
+    "tag": "Mini Drone",
+    "newSlug": "anne-bebek/oyuncak/rc-robot/mini-drone"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/rc-robot",
+    "tag": "Robot",
+    "newSlug": "anne-bebek/oyuncak/rc-robot/robot"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/rc-robot",
+    "tag": "Yarış Pisti",
+    "newSlug": "anne-bebek/oyuncak/rc-robot/yaris-pisti"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/acik-hava-spor",
+    "tag": "Bisiklet",
+    "newSlug": "anne-bebek/oyuncak/acik-hava-spor/bisiklet"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/acik-hava-spor",
+    "tag": "Scooter",
+    "newSlug": "anne-bebek/oyuncak/acik-hava-spor/scooter"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/acik-hava-spor",
+    "tag": "Trambolin",
+    "newSlug": "anne-bebek/oyuncak/acik-hava-spor/trambolin"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/acik-hava-spor",
+    "tag": "Kaydırak",
+    "newSlug": "anne-bebek/oyuncak/acik-hava-spor/kaydirak"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/acik-hava-spor",
+    "tag": "Kum Havuzu",
+    "newSlug": "anne-bebek/oyuncak/acik-hava-spor/kum-havuzu"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/acik-hava-spor",
+    "tag": "Akülü Araba",
+    "newSlug": "anne-bebek/oyuncak/acik-hava-spor/akulu-araba"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/masa-oyunu",
+    "tag": "Monopoly",
+    "newSlug": "anne-bebek/oyuncak/masa-oyunu/monopoly"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/masa-oyunu",
+    "tag": "Scrabble",
+    "newSlug": "anne-bebek/oyuncak/masa-oyunu/scrabble"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/masa-oyunu",
+    "tag": "Chess",
+    "newSlug": "anne-bebek/oyuncak/masa-oyunu/chess"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/masa-oyunu",
+    "tag": "Jenga",
+    "newSlug": "anne-bebek/oyuncak/masa-oyunu/jenga"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/masa-oyunu",
+    "tag": "Cluedo",
+    "newSlug": "anne-bebek/oyuncak/masa-oyunu/cluedo"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/diger",
+    "tag": "Akıllı Oyuncak",
+    "newSlug": "anne-bebek/oyuncak/diger/akilli-oyuncak"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/diger",
+    "tag": "Yapboz",
+    "newSlug": "anne-bebek/oyuncak/diger/yapboz"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/diger",
+    "tag": "Müzikli",
+    "newSlug": "anne-bebek/oyuncak/diger/muzikli"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/diger",
+    "tag": "Bebek Yatak Oyuncağı",
+    "newSlug": "anne-bebek/oyuncak/diger/bebek-yatak-oyuncagi"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/diger",
+    "tag": "Banyo Oyuncağı",
+    "newSlug": "anne-bebek/oyuncak/diger/banyo-oyuncagi"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/kiz-cocuk",
+    "tag": "DeFacto",
+    "newSlug": "moda/cocuk-moda/giyim/kiz-cocuk/defacto"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/erkek-cocuk",
+    "tag": "DeFacto",
+    "newSlug": "moda/cocuk-moda/giyim/erkek-cocuk/defacto"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim",
+    "tag": "Spor Ayakkabı",
+    "newSlug": "moda/cocuk-moda/giyim/spor-ayakkabi"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim",
+    "tag": "Bot",
+    "newSlug": "moda/cocuk-moda/giyim/bot"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim",
+    "tag": "Sandalet",
+    "newSlug": "moda/cocuk-moda/giyim/sandalet"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim",
+    "tag": "Superfit",
+    "newSlug": "moda/cocuk-moda/giyim/superfit"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/bebek-giyim",
+    "tag": "Pijama",
+    "newSlug": "moda/cocuk-moda/giyim/bebek-giyim/pijama"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/bebek-giyim",
+    "tag": "Zıbın",
+    "newSlug": "moda/cocuk-moda/giyim/bebek-giyim/zibin"
+  },
+  {
+    "subSlug": "moda/cocuk-moda/giyim/bebek-giyim",
+    "tag": "Şapka",
+    "newSlug": "moda/cocuk-moda/giyim/bebek-giyim/sapka"
+  },
+  {
+    "subSlug": "spor-outdoor/kadin-spor-giyim",
+    "tag": "Tayt",
+    "newSlug": "spor-outdoor/kadin-spor-giyim/tayt"
+  },
+  {
+    "subSlug": "spor-outdoor/kadin-spor-giyim",
+    "tag": "Spor Sütyeni",
+    "newSlug": "spor-outdoor/kadin-spor-giyim/spor-sutyeni"
+  },
+  {
+    "subSlug": "spor-outdoor/kadin-spor-giyim",
+    "tag": "Crop Sweatshirt",
+    "newSlug": "spor-outdoor/kadin-spor-giyim/crop-sweatshirt"
+  },
+  {
+    "subSlug": "spor-outdoor/kadin-spor-giyim",
+    "tag": "Eşofman Takım",
+    "newSlug": "spor-outdoor/kadin-spor-giyim/esofman-takim"
+  },
+  {
+    "subSlug": "spor-outdoor/kadin-spor-giyim",
+    "tag": "Yağmurluk",
+    "newSlug": "spor-outdoor/kadin-spor-giyim/yagmurluk"
+  },
+  {
+    "subSlug": "spor-outdoor/kadin-spor-giyim",
+    "tag": "Termal",
+    "newSlug": "spor-outdoor/kadin-spor-giyim/termal"
+  },
+  {
+    "subSlug": "spor-outdoor/erkek-spor-giyim",
+    "tag": "Spor Tişört",
+    "newSlug": "spor-outdoor/erkek-spor-giyim/spor-tisort"
+  },
+  {
+    "subSlug": "spor-outdoor/erkek-spor-giyim",
+    "tag": "Şort",
+    "newSlug": "spor-outdoor/erkek-spor-giyim/sort"
+  },
+  {
+    "subSlug": "spor-outdoor/erkek-spor-giyim",
+    "tag": "Eşofman Takım",
+    "newSlug": "spor-outdoor/erkek-spor-giyim/esofman-takim"
+  },
+  {
+    "subSlug": "spor-outdoor/erkek-spor-giyim",
+    "tag": "Polar",
+    "newSlug": "spor-outdoor/erkek-spor-giyim/polar"
+  },
+  {
+    "subSlug": "spor-outdoor/erkek-spor-giyim",
+    "tag": "Parka",
+    "newSlug": "spor-outdoor/erkek-spor-giyim/parka"
+  },
+  {
+    "subSlug": "spor-outdoor/erkek-spor-giyim",
+    "tag": "Rüzgarlık",
+    "newSlug": "spor-outdoor/erkek-spor-giyim/ruzgarlik"
+  },
+  {
+    "subSlug": "spor-outdoor/kosu-ayakkabisi",
+    "tag": "Brooks",
+    "newSlug": "spor-outdoor/kosu-ayakkabisi/brooks"
+  },
+  {
+    "subSlug": "spor-outdoor/kosu-ayakkabisi",
+    "tag": "Saucony",
+    "newSlug": "spor-outdoor/kosu-ayakkabisi/saucony"
+  },
+  {
+    "subSlug": "spor-outdoor/kosu-ayakkabisi",
+    "tag": "Hoka",
+    "newSlug": "spor-outdoor/kosu-ayakkabisi/hoka"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/dis-giyim",
+    "tag": "The North Face",
+    "newSlug": "moda/erkek-giyim/dis-giyim/the-north-face"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/dis-giyim",
+    "tag": "Columbia",
+    "newSlug": "moda/erkek-giyim/dis-giyim/columbia"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/dis-giyim",
+    "tag": "Jack Wolfskin",
+    "newSlug": "moda/erkek-giyim/dis-giyim/jack-wolfskin"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/dis-giyim",
+    "tag": "Patagonia",
+    "newSlug": "moda/erkek-giyim/dis-giyim/patagonia"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/dis-giyim",
+    "tag": "Mammut",
+    "newSlug": "moda/erkek-giyim/dis-giyim/mammut"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/dis-giyim",
+    "tag": "Salomon",
+    "newSlug": "moda/erkek-giyim/dis-giyim/salomon"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/dis-giyim",
+    "tag": "Termal Tayt",
+    "newSlug": "moda/erkek-giyim/dis-giyim/termal-tayt"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/dis-giyim",
+    "tag": "Termal Tişört",
+    "newSlug": "moda/erkek-giyim/dis-giyim/termal-tisort"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/dis-giyim",
+    "tag": "Polar Yelek",
+    "newSlug": "moda/erkek-giyim/dis-giyim/polar-yelek"
+  },
+  {
+    "subSlug": "moda/erkek-giyim/dis-giyim",
+    "tag": "Softshell",
+    "newSlug": "moda/erkek-giyim/dis-giyim/softshell"
+  },
+  {
+    "subSlug": "spor-outdoor/fitness/kondisyon-aleti",
+    "tag": "Koşu Bandı",
+    "newSlug": "spor-outdoor/fitness/kondisyon-aleti/kosu-bandi"
+  },
+  {
+    "subSlug": "spor-outdoor/fitness/kondisyon-aleti",
+    "tag": "Eliptik Bisiklet",
+    "newSlug": "spor-outdoor/fitness/kondisyon-aleti/eliptik-bisiklet"
+  },
+  {
+    "subSlug": "spor-outdoor/fitness/kondisyon-aleti",
+    "tag": "Kondisyon Bisikleti",
+    "newSlug": "spor-outdoor/fitness/kondisyon-aleti/kondisyon-bisikleti"
+  },
+  {
+    "subSlug": "spor-outdoor/fitness/kondisyon-aleti",
+    "tag": "Kürek Makinesi",
+    "newSlug": "spor-outdoor/fitness/kondisyon-aleti/kurek-makinesi"
+  },
+  {
+    "subSlug": "spor-outdoor/fitness/agirlik-guc",
+    "tag": "Dumbbell Seti",
+    "newSlug": "spor-outdoor/fitness/agirlik-guc/dumbbell-seti"
+  },
+  {
+    "subSlug": "spor-outdoor/fitness/agirlik-guc",
+    "tag": "Olimpik Halter",
+    "newSlug": "spor-outdoor/fitness/agirlik-guc/olimpik-halter"
+  },
+  {
+    "subSlug": "spor-outdoor/fitness/agirlik-guc",
+    "tag": "Ağırlık Plakası",
+    "newSlug": "spor-outdoor/fitness/agirlik-guc/agirlik-plakasi"
+  },
+  {
+    "subSlug": "spor-outdoor/fitness/agirlik-guc",
+    "tag": "Rack",
+    "newSlug": "spor-outdoor/fitness/agirlik-guc/rack"
+  },
+  {
+    "subSlug": "spor-outdoor/fitness/agirlik-guc",
+    "tag": "Bench Press",
+    "newSlug": "spor-outdoor/fitness/agirlik-guc/bench-press"
+  },
+  {
+    "subSlug": "spor-outdoor/fitness/agirlik-guc",
+    "tag": "EZ Bar",
+    "newSlug": "spor-outdoor/fitness/agirlik-guc/ez-bar"
+  },
+  {
+    "subSlug": "spor-outdoor/fitness/fonksiyonel-ekipman",
+    "tag": "Kettlebell",
+    "newSlug": "spor-outdoor/fitness/fonksiyonel-ekipman/kettlebell"
+  },
+  {
+    "subSlug": "spor-outdoor/fitness/fonksiyonel-ekipman",
+    "tag": "Resistance Band",
+    "newSlug": "spor-outdoor/fitness/fonksiyonel-ekipman/resistance-band"
+  },
+  {
+    "subSlug": "spor-outdoor/fitness/fonksiyonel-ekipman",
+    "tag": "Pull-up Bar",
+    "newSlug": "spor-outdoor/fitness/fonksiyonel-ekipman/pull-up-bar"
+  },
+  {
+    "subSlug": "spor-outdoor/fitness/fonksiyonel-ekipman",
+    "tag": "Battle Rope",
+    "newSlug": "spor-outdoor/fitness/fonksiyonel-ekipman/battle-rope"
+  },
+  {
+    "subSlug": "spor-outdoor/fitness/fonksiyonel-ekipman",
+    "tag": "Ab Tekerleği",
+    "newSlug": "spor-outdoor/fitness/fonksiyonel-ekipman/ab-tekerlegi"
+  },
+  {
+    "subSlug": "spor-outdoor/yoga-pilates",
+    "tag": "Yoga Matı",
+    "newSlug": "spor-outdoor/yoga-pilates/yoga-mati"
+  },
+  {
+    "subSlug": "spor-outdoor/yoga-pilates",
+    "tag": "Yoga Bloku",
+    "newSlug": "spor-outdoor/yoga-pilates/yoga-bloku"
+  },
+  {
+    "subSlug": "spor-outdoor/yoga-pilates",
+    "tag": "Pilates Topu",
+    "newSlug": "spor-outdoor/yoga-pilates/pilates-topu"
+  },
+  {
+    "subSlug": "spor-outdoor/yoga-pilates",
+    "tag": "Foam Roller",
+    "newSlug": "spor-outdoor/yoga-pilates/foam-roller"
+  },
+  {
+    "subSlug": "spor-outdoor/fitness/sporcu-beslenmesi",
+    "tag": "Whey Protein",
+    "newSlug": "spor-outdoor/fitness/sporcu-beslenmesi/whey-protein"
+  },
+  {
+    "subSlug": "spor-outdoor/fitness/sporcu-beslenmesi",
+    "tag": "Kreatin",
+    "newSlug": "spor-outdoor/fitness/sporcu-beslenmesi/kreatin"
+  },
+  {
+    "subSlug": "spor-outdoor/fitness/sporcu-beslenmesi",
+    "tag": "Multivitamin",
+    "newSlug": "spor-outdoor/fitness/sporcu-beslenmesi/multivitamin"
+  },
+  {
+    "subSlug": "spor-outdoor/fitness/sporcu-beslenmesi",
+    "tag": "Pre-Workout",
+    "newSlug": "spor-outdoor/fitness/sporcu-beslenmesi/pre-workout"
+  },
+  {
+    "subSlug": "spor-outdoor/fitness/sporcu-beslenmesi",
+    "tag": "Protein Bar",
+    "newSlug": "spor-outdoor/fitness/sporcu-beslenmesi/protein-bar"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/kamp-ekipmanlari",
+    "tag": "Kamp Çadırı",
+    "newSlug": "spor-outdoor/kamp/kamp-ekipmanlari/kamp-cadiri"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/kamp-ekipmanlari",
+    "tag": "Uyku Tulumu",
+    "newSlug": "spor-outdoor/kamp/kamp-ekipmanlari/uyku-tulumu"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/kamp-ekipmanlari",
+    "tag": "Kamp Matı",
+    "newSlug": "spor-outdoor/kamp/kamp-ekipmanlari/kamp-mati"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/kamp-ekipmanlari",
+    "tag": "Kamp Ocağı",
+    "newSlug": "spor-outdoor/kamp/kamp-ekipmanlari/kamp-ocagi"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/kamp-ekipmanlari",
+    "tag": "Kamp Lambası",
+    "newSlug": "spor-outdoor/kamp/kamp-ekipmanlari/kamp-lambasi"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/kamp-ekipmanlari",
+    "tag": "Çakmak",
+    "newSlug": "spor-outdoor/kamp/kamp-ekipmanlari/cakmak"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/tirmanma-dagcilik",
+    "tag": "Tırmanma Ayakkabısı",
+    "newSlug": "spor-outdoor/kamp/tirmanma-dagcilik/tirmanma-ayakkabisi"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/tirmanma-dagcilik",
+    "tag": "Emniyet Kemeri",
+    "newSlug": "spor-outdoor/kamp/tirmanma-dagcilik/emniyet-kemeri"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/tirmanma-dagcilik",
+    "tag": "Karabina",
+    "newSlug": "spor-outdoor/kamp/tirmanma-dagcilik/karabina"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/tirmanma-dagcilik",
+    "tag": "Kask",
+    "newSlug": "spor-outdoor/kamp/tirmanma-dagcilik/kask"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/tirmanma-dagcilik",
+    "tag": "Bel Çantası",
+    "newSlug": "spor-outdoor/kamp/tirmanma-dagcilik/bel-cantasi"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/av-balikcilik",
+    "tag": "Olta Takımı",
+    "newSlug": "spor-outdoor/kamp/av-balikcilik/olta-takimi"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/av-balikcilik",
+    "tag": "Balık Makinesi",
+    "newSlug": "spor-outdoor/kamp/av-balikcilik/balik-makinesi"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/av-balikcilik",
+    "tag": "Misina",
+    "newSlug": "spor-outdoor/kamp/av-balikcilik/misina"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/av-balikcilik",
+    "tag": "Balık Çantası",
+    "newSlug": "spor-outdoor/kamp/av-balikcilik/balik-cantasi"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/av-balikcilik",
+    "tag": "Kuru Kafa",
+    "newSlug": "spor-outdoor/kamp/av-balikcilik/kuru-kafa"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/bas-lambasi-pusula",
+    "tag": "Baş Lambası",
+    "newSlug": "spor-outdoor/kamp/bas-lambasi-pusula/bas-lambasi"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/bas-lambasi-pusula",
+    "tag": "Fener",
+    "newSlug": "spor-outdoor/kamp/bas-lambasi-pusula/fener"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/bas-lambasi-pusula",
+    "tag": "Pusula",
+    "newSlug": "spor-outdoor/kamp/bas-lambasi-pusula/pusula"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/bas-lambasi-pusula",
+    "tag": "Düdük",
+    "newSlug": "spor-outdoor/kamp/bas-lambasi-pusula/duduk"
+  },
+  {
+    "subSlug": "spor-outdoor/kamp/bas-lambasi-pusula",
+    "tag": "Acil Set",
+    "newSlug": "spor-outdoor/kamp/bas-lambasi-pusula/acil-set"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/bisiklet",
+    "tag": "Dağ Bisikleti",
+    "newSlug": "spor-outdoor/bisiklet/bisiklet/dag-bisikleti"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/bisiklet",
+    "tag": "Yol Bisikleti",
+    "newSlug": "spor-outdoor/bisiklet/bisiklet/yol-bisikleti"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/bisiklet",
+    "tag": "Kent Bisikleti",
+    "newSlug": "spor-outdoor/bisiklet/bisiklet/kent-bisikleti"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/bisiklet",
+    "tag": "Elektrikli Bisiklet",
+    "newSlug": "spor-outdoor/bisiklet/bisiklet/elektrikli-bisiklet"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/bisiklet",
+    "tag": "Çocuk Bisikleti",
+    "newSlug": "spor-outdoor/bisiklet/bisiklet/cocuk-bisikleti"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/elektrikli-scooter",
+    "tag": "Xiaomi Scooter",
+    "newSlug": "spor-outdoor/bisiklet/elektrikli-scooter/xiaomi-scooter"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/elektrikli-scooter",
+    "tag": "Segway",
+    "newSlug": "spor-outdoor/bisiklet/elektrikli-scooter/segway"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/elektrikli-scooter",
+    "tag": "Ninebot",
+    "newSlug": "spor-outdoor/bisiklet/elektrikli-scooter/ninebot"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/bisiklet-aksesuar",
+    "tag": "Kask",
+    "newSlug": "spor-outdoor/bisiklet/bisiklet-aksesuar/kask"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/bisiklet-aksesuar",
+    "tag": "Kilit",
+    "newSlug": "spor-outdoor/bisiklet/bisiklet-aksesuar/kilit"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/bisiklet-aksesuar",
+    "tag": "Su Şişesi",
+    "newSlug": "spor-outdoor/bisiklet/bisiklet-aksesuar/su-sisesi"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/bisiklet-aksesuar",
+    "tag": "Bisiklet Çantası",
+    "newSlug": "spor-outdoor/bisiklet/bisiklet-aksesuar/bisiklet-cantasi"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/bisiklet-aksesuar",
+    "tag": "Işık Seti",
+    "newSlug": "spor-outdoor/bisiklet/bisiklet-aksesuar/isik-seti"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/bisiklet-aksesuar",
+    "tag": "Tamir Kiti",
+    "newSlug": "spor-outdoor/bisiklet/bisiklet-aksesuar/tamir-kiti"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/paten-kaykay",
+    "tag": "Inline Paten",
+    "newSlug": "spor-outdoor/bisiklet/paten-kaykay/inline-paten"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/paten-kaykay",
+    "tag": "Buz Pateni",
+    "newSlug": "spor-outdoor/bisiklet/paten-kaykay/buz-pateni"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/paten-kaykay",
+    "tag": "Skateboard",
+    "newSlug": "spor-outdoor/bisiklet/paten-kaykay/skateboard"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/paten-kaykay",
+    "tag": "Longboard",
+    "newSlug": "spor-outdoor/bisiklet/paten-kaykay/longboard"
+  },
+  {
+    "subSlug": "spor-outdoor/bisiklet/paten-kaykay",
+    "tag": "Paten Koruyucu",
+    "newSlug": "spor-outdoor/bisiklet/paten-kaykay/paten-koruyucu"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/futbol",
+    "tag": "Top",
+    "newSlug": "spor-outdoor/takim-sporlari/futbol/top"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/futbol",
+    "tag": "Krampon",
+    "newSlug": "spor-outdoor/takim-sporlari/futbol/krampon"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/futbol",
+    "tag": "Halı Saha Ayakkabısı",
+    "newSlug": "spor-outdoor/takim-sporlari/futbol/hali-saha-ayakkabisi"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/futbol",
+    "tag": "Kale Eldiveni",
+    "newSlug": "spor-outdoor/takim-sporlari/futbol/kale-eldiveni"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/futbol",
+    "tag": "Forma",
+    "newSlug": "spor-outdoor/takim-sporlari/futbol/forma"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/basketbol-voleybol",
+    "tag": "Basketbol Topu",
+    "newSlug": "spor-outdoor/takim-sporlari/basketbol-voleybol/basketbol-topu"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/basketbol-voleybol",
+    "tag": "Voleybol Topu",
+    "newSlug": "spor-outdoor/takim-sporlari/basketbol-voleybol/voleybol-topu"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/basketbol-voleybol",
+    "tag": "Pota",
+    "newSlug": "spor-outdoor/takim-sporlari/basketbol-voleybol/pota"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/basketbol-voleybol",
+    "tag": "Wilson",
+    "newSlug": "spor-outdoor/takim-sporlari/basketbol-voleybol/wilson"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/basketbol-voleybol",
+    "tag": "Spalding",
+    "newSlug": "spor-outdoor/takim-sporlari/basketbol-voleybol/spalding"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/basketbol-voleybol",
+    "tag": "Molten",
+    "newSlug": "spor-outdoor/takim-sporlari/basketbol-voleybol/molten"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/tenis-badminton",
+    "tag": "Tenis Raketi",
+    "newSlug": "spor-outdoor/takim-sporlari/tenis-badminton/tenis-raketi"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/tenis-badminton",
+    "tag": "Badminton Raketi",
+    "newSlug": "spor-outdoor/takim-sporlari/tenis-badminton/badminton-raketi"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/tenis-badminton",
+    "tag": "Top",
+    "newSlug": "spor-outdoor/takim-sporlari/tenis-badminton/top"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/tenis-badminton",
+    "tag": "Wilson",
+    "newSlug": "spor-outdoor/takim-sporlari/tenis-badminton/wilson"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/tenis-badminton",
+    "tag": "Head",
+    "newSlug": "spor-outdoor/takim-sporlari/tenis-badminton/head"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/tenis-badminton",
+    "tag": "Babolat",
+    "newSlug": "spor-outdoor/takim-sporlari/tenis-badminton/babolat"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/tenis-badminton",
+    "tag": "Yonex",
+    "newSlug": "spor-outdoor/takim-sporlari/tenis-badminton/yonex"
+  },
+  {
+    "subSlug": "spor-outdoor/su-sporlari",
+    "tag": "Mayo",
+    "newSlug": "spor-outdoor/su-sporlari/mayo"
+  },
+  {
+    "subSlug": "spor-outdoor/su-sporlari",
+    "tag": "Yüzücü Gözlüğü",
+    "newSlug": "spor-outdoor/su-sporlari/yuzucu-gozlugu"
+  },
+  {
+    "subSlug": "spor-outdoor/su-sporlari",
+    "tag": "Palet",
+    "newSlug": "spor-outdoor/su-sporlari/palet"
+  },
+  {
+    "subSlug": "spor-outdoor/su-sporlari",
+    "tag": "Çıkış Takımı",
+    "newSlug": "spor-outdoor/su-sporlari/cikis-takimi"
+  },
+  {
+    "subSlug": "spor-outdoor/su-sporlari",
+    "tag": "Speedo",
+    "newSlug": "spor-outdoor/su-sporlari/speedo"
+  },
+  {
+    "subSlug": "spor-outdoor/su-sporlari",
+    "tag": "Arena",
+    "newSlug": "spor-outdoor/su-sporlari/arena"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/boks-dovus",
+    "tag": "Boks Eldiveni",
+    "newSlug": "spor-outdoor/takim-sporlari/boks-dovus/boks-eldiveni"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/boks-dovus",
+    "tag": "Kum Torbası",
+    "newSlug": "spor-outdoor/takim-sporlari/boks-dovus/kum-torbasi"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/boks-dovus",
+    "tag": "Koruyucu",
+    "newSlug": "spor-outdoor/takim-sporlari/boks-dovus/koruyucu"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/boks-dovus",
+    "tag": "Atlatik",
+    "newSlug": "spor-outdoor/takim-sporlari/boks-dovus/atlatik"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/boks-dovus",
+    "tag": "Venum",
+    "newSlug": "spor-outdoor/takim-sporlari/boks-dovus/venum"
+  },
+  {
+    "subSlug": "spor-outdoor/takim-sporlari/boks-dovus",
+    "tag": "Everlast",
+    "newSlug": "spor-outdoor/takim-sporlari/boks-dovus/everlast"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/nemlendirici",
+    "tag": "Normal Cilt",
+    "newSlug": "kozmetik/cilt-bakim/nemlendirici/normal-cilt"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/nemlendirici",
+    "tag": "Yağlı Cilt",
+    "newSlug": "kozmetik/cilt-bakim/nemlendirici/yagli-cilt"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/nemlendirici",
+    "tag": "Kuru Cilt",
+    "newSlug": "kozmetik/cilt-bakim/nemlendirici/kuru-cilt"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/nemlendirici",
+    "tag": "Karma Cilt",
+    "newSlug": "kozmetik/cilt-bakim/nemlendirici/karma-cilt"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/yuz-temizleme",
+    "tag": "Yüz Köpüğü",
+    "newSlug": "kozmetik/cilt-bakim/yuz-temizleme/yuz-kopugu"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/yuz-temizleme",
+    "tag": "Yüz Jeli",
+    "newSlug": "kozmetik/cilt-bakim/yuz-temizleme/yuz-jeli"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/yuz-temizleme",
+    "tag": "Misel Suyu",
+    "newSlug": "kozmetik/cilt-bakim/yuz-temizleme/misel-suyu"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/yuz-temizleme",
+    "tag": "Tonik",
+    "newSlug": "kozmetik/cilt-bakim/yuz-temizleme/tonik"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/yuz-temizleme",
+    "tag": "Yüz Ovası",
+    "newSlug": "kozmetik/cilt-bakim/yuz-temizleme/yuz-ovasi"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/gunes-koruyucu",
+    "tag": "SPF 50+",
+    "newSlug": "kozmetik/cilt-bakim/gunes-koruyucu/spf-50"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/gunes-koruyucu",
+    "tag": "SPF 30",
+    "newSlug": "kozmetik/cilt-bakim/gunes-koruyucu/spf-30"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/gunes-koruyucu",
+    "tag": "Renkli Güneş Kremi",
+    "newSlug": "kozmetik/cilt-bakim/gunes-koruyucu/renkli-gunes-kremi"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/serum",
+    "tag": "C Vitamini Serumu",
+    "newSlug": "kozmetik/cilt-bakim/serum/c-vitamini-serumu"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/serum",
+    "tag": "Niacinamide",
+    "newSlug": "kozmetik/cilt-bakim/serum/niacinamide"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/serum",
+    "tag": "Retinol",
+    "newSlug": "kozmetik/cilt-bakim/serum/retinol"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/serum",
+    "tag": "Hyaluronik Asit",
+    "newSlug": "kozmetik/cilt-bakim/serum/hyaluronik-asit"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/maske",
+    "tag": "Kil Maskesi",
+    "newSlug": "kozmetik/cilt-bakim/maske/kil-maskesi"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/maske",
+    "tag": "Soyulabilir",
+    "newSlug": "kozmetik/cilt-bakim/maske/soyulabilir"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/maske",
+    "tag": "Yaprak Maske",
+    "newSlug": "kozmetik/cilt-bakim/maske/yaprak-maske"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/maske",
+    "tag": "Gözenek Temizleyici",
+    "newSlug": "kozmetik/cilt-bakim/maske/gozenek-temizleyici"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/vucut-bakimi",
+    "tag": "Vücut Losyonu",
+    "newSlug": "kozmetik/cilt-bakim/vucut-bakimi/vucut-losyonu"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/vucut-bakimi",
+    "tag": "Vücut Peelingi",
+    "newSlug": "kozmetik/cilt-bakim/vucut-bakimi/vucut-peelingi"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/vucut-bakimi",
+    "tag": "Selülit Kremi",
+    "newSlug": "kozmetik/cilt-bakim/vucut-bakimi/selulit-kremi"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim/vucut-bakimi",
+    "tag": "Sıkılaştırıcı",
+    "newSlug": "kozmetik/cilt-bakim/vucut-bakimi/sikilastirici"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/yuz",
+    "tag": "Fondöten",
+    "newSlug": "kozmetik/makyaj/yuz/fondoten"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/yuz",
+    "tag": "Kapatıcı",
+    "newSlug": "kozmetik/makyaj/yuz/kapatici"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/yuz",
+    "tag": "Pudra",
+    "newSlug": "kozmetik/makyaj/yuz/pudra"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/yuz",
+    "tag": "Allık",
+    "newSlug": "kozmetik/makyaj/yuz/allik"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/yuz",
+    "tag": "Highlighter",
+    "newSlug": "kozmetik/makyaj/yuz/highlighter"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/yuz",
+    "tag": "Kontür",
+    "newSlug": "kozmetik/makyaj/yuz/kontur"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/yuz",
+    "tag": "BB Krem",
+    "newSlug": "kozmetik/makyaj/yuz/bb-krem"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/goz",
+    "tag": "Maskara",
+    "newSlug": "kozmetik/makyaj/goz/maskara"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/goz",
+    "tag": "Eyeliner",
+    "newSlug": "kozmetik/makyaj/goz/eyeliner"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/goz",
+    "tag": "Far Paleti",
+    "newSlug": "kozmetik/makyaj/goz/far-paleti"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/goz",
+    "tag": "Göz Kalemi",
+    "newSlug": "kozmetik/makyaj/goz/goz-kalemi"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/goz",
+    "tag": "Kaş Kalemi",
+    "newSlug": "kozmetik/makyaj/goz/kas-kalemi"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/goz",
+    "tag": "Kaş Jeli",
+    "newSlug": "kozmetik/makyaj/goz/kas-jeli"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/goz",
+    "tag": "Kaş Penci",
+    "newSlug": "kozmetik/makyaj/goz/kas-penci"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/dudak",
+    "tag": "Ruj",
+    "newSlug": "kozmetik/makyaj/dudak/ruj"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/dudak",
+    "tag": "Lip Gloss",
+    "newSlug": "kozmetik/makyaj/dudak/lip-gloss"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/dudak",
+    "tag": "Dudak Kalemi",
+    "newSlug": "kozmetik/makyaj/dudak/dudak-kalemi"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/dudak",
+    "tag": "Lip Liner",
+    "newSlug": "kozmetik/makyaj/dudak/lip-liner"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/dudak",
+    "tag": "Charlotte Tilbury",
+    "newSlug": "kozmetik/makyaj/dudak/charlotte-tilbury"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/makyaj-aksesuari",
+    "tag": "Fırça Seti",
+    "newSlug": "kozmetik/makyaj/makyaj-aksesuari/firca-seti"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/makyaj-aksesuari",
+    "tag": "Makyaj Süngeri",
+    "newSlug": "kozmetik/makyaj/makyaj-aksesuari/makyaj-sungeri"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/makyaj-aksesuari",
+    "tag": "Makyaj Çantası",
+    "newSlug": "kozmetik/makyaj/makyaj-aksesuari/makyaj-cantasi"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/makyaj-aksesuari",
+    "tag": "Ayna",
+    "newSlug": "kozmetik/makyaj/makyaj-aksesuari/ayna"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/makyaj-aksesuari",
+    "tag": "Göz Kırpağı",
+    "newSlug": "kozmetik/makyaj/makyaj-aksesuari/goz-kirpagi"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/tirnak",
+    "tag": "Oje",
+    "newSlug": "kozmetik/makyaj/tirnak/oje"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/tirnak",
+    "tag": "Tırnak Jeli",
+    "newSlug": "kozmetik/makyaj/tirnak/tirnak-jeli"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/tirnak",
+    "tag": "UV Lamba",
+    "newSlug": "kozmetik/makyaj/tirnak/uv-lamba"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/tirnak",
+    "tag": "Bazlı Oje",
+    "newSlug": "kozmetik/makyaj/tirnak/bazli-oje"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/tirnak",
+    "tag": "Tırnak Bakım",
+    "newSlug": "kozmetik/makyaj/tirnak/tirnak-bakim"
+  },
+  {
+    "subSlug": "kozmetik/makyaj/tirnak",
+    "tag": "Essie",
+    "newSlug": "kozmetik/makyaj/tirnak/essie"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim/sampuan",
+    "tag": "Kepek Önleyici",
+    "newSlug": "kozmetik/sac-bakim/sampuan/kepek-onleyici"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim/sampuan",
+    "tag": "Boyalı Saç",
+    "newSlug": "kozmetik/sac-bakim/sampuan/boyali-sac"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim/sampuan",
+    "tag": "Kuru Saç",
+    "newSlug": "kozmetik/sac-bakim/sampuan/kuru-sac"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim/sampuan",
+    "tag": "Argan Yağlı",
+    "newSlug": "kozmetik/sac-bakim/sampuan/argan-yagli"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim/sampuan",
+    "tag": "Head & Shoulders",
+    "newSlug": "kozmetik/sac-bakim/sampuan/head-shoulders"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim/sampuan",
+    "tag": "Elvive",
+    "newSlug": "kozmetik/sac-bakim/sampuan/elvive"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim/sac-maskesi-serum",
+    "tag": "Keratin Maskesi",
+    "newSlug": "kozmetik/sac-bakim/sac-maskesi-serum/keratin-maskesi"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim/sac-maskesi-serum",
+    "tag": "Onarıcı Maske",
+    "newSlug": "kozmetik/sac-bakim/sac-maskesi-serum/onarici-maske"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim/sac-maskesi-serum",
+    "tag": "Saç Serumu",
+    "newSlug": "kozmetik/sac-bakim/sac-maskesi-serum/sac-serumu"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim/sac-maskesi-serum",
+    "tag": "Tresemmé",
+    "newSlug": "kozmetik/sac-bakim/sac-maskesi-serum/tresemm"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim/boya",
+    "tag": "Kalıcı Boya",
+    "newSlug": "kozmetik/sac-bakim/boya/kalici-boya"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim/boya",
+    "tag": "Yarı Kalıcı",
+    "newSlug": "kozmetik/sac-bakim/boya/yari-kalici"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim/boya",
+    "tag": "Röfle & Balyaj",
+    "newSlug": "kozmetik/sac-bakim/boya/rofle-balyaj"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim/boya",
+    "tag": "Garnier Olia",
+    "newSlug": "kozmetik/sac-bakim/boya/garnier-olia"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim/sac-sekillendirici",
+    "tag": "Wax",
+    "newSlug": "kozmetik/sac-bakim/sac-sekillendirici/wax"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim/sac-sekillendirici",
+    "tag": "Jöle",
+    "newSlug": "kozmetik/sac-bakim/sac-sekillendirici/jole"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim/sac-sekillendirici",
+    "tag": "Saç Spreyi",
+    "newSlug": "kozmetik/sac-bakim/sac-sekillendirici/sac-spreyi"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim/sac-sekillendirici",
+    "tag": "Kuru Şampuan",
+    "newSlug": "kozmetik/sac-bakim/sac-sekillendirici/kuru-sampuan"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim/sac-sekillendirici",
+    "tag": "Isı Koruyucu",
+    "newSlug": "kozmetik/sac-bakim/sac-sekillendirici/isi-koruyucu"
+  },
+  {
+    "subSlug": "kozmetik/sac-bakim/sac-sekillendirici",
+    "tag": "Saç Köpüğü",
+    "newSlug": "kozmetik/sac-bakim/sac-sekillendirici/sac-kopugu"
+  },
+  {
+    "subSlug": "kozmetik/parfum/kadin",
+    "tag": "Chanel No 5",
+    "newSlug": "kozmetik/parfum/kadin/chanel-no-5"
+  },
+  {
+    "subSlug": "kozmetik/parfum/kadin",
+    "tag": "Dior Miss Dior",
+    "newSlug": "kozmetik/parfum/kadin/dior-miss-dior"
+  },
+  {
+    "subSlug": "kozmetik/parfum/kadin",
+    "tag": "Versace Bright Crystal",
+    "newSlug": "kozmetik/parfum/kadin/versace-bright-crystal"
+  },
+  {
+    "subSlug": "kozmetik/parfum/kadin",
+    "tag": "YSL Black Opium",
+    "newSlug": "kozmetik/parfum/kadin/ysl-black-opium"
+  },
+  {
+    "subSlug": "kozmetik/parfum/kadin",
+    "tag": "Lancôme",
+    "newSlug": "kozmetik/parfum/kadin/lancme"
+  },
+  {
+    "subSlug": "kozmetik/parfum/kadin",
+    "tag": "Gucci",
+    "newSlug": "kozmetik/parfum/kadin/gucci"
+  },
+  {
+    "subSlug": "kozmetik/parfum/erkek",
+    "tag": "Dior Sauvage",
+    "newSlug": "kozmetik/parfum/erkek/dior-sauvage"
+  },
+  {
+    "subSlug": "kozmetik/parfum/erkek",
+    "tag": "Armani Acqua di Gio",
+    "newSlug": "kozmetik/parfum/erkek/armani-acqua-di-gio"
+  },
+  {
+    "subSlug": "kozmetik/parfum/erkek",
+    "tag": "Hugo Boss Bottled",
+    "newSlug": "kozmetik/parfum/erkek/hugo-boss-bottled"
+  },
+  {
+    "subSlug": "kozmetik/parfum/erkek",
+    "tag": "Paco Rabanne 1 Million",
+    "newSlug": "kozmetik/parfum/erkek/paco-rabanne-1-million"
+  },
+  {
+    "subSlug": "kozmetik/parfum/erkek",
+    "tag": "Bleu de Chanel",
+    "newSlug": "kozmetik/parfum/erkek/bleu-de-chanel"
+  },
+  {
+    "subSlug": "kozmetik/parfum/unisex",
+    "tag": "Maison Margiela",
+    "newSlug": "kozmetik/parfum/unisex/maison-margiela"
+  },
+  {
+    "subSlug": "kozmetik/parfum/unisex",
+    "tag": "Jo Malone",
+    "newSlug": "kozmetik/parfum/unisex/jo-malone"
+  },
+  {
+    "subSlug": "kozmetik/parfum/unisex",
+    "tag": "Acqua di Parma",
+    "newSlug": "kozmetik/parfum/unisex/acqua-di-parma"
+  },
+  {
+    "subSlug": "kozmetik/parfum/unisex",
+    "tag": "Tom Ford",
+    "newSlug": "kozmetik/parfum/unisex/tom-ford"
+  },
+  {
+    "subSlug": "kozmetik/parfum/unisex",
+    "tag": "Byredo",
+    "newSlug": "kozmetik/parfum/unisex/byredo"
+  },
+  {
+    "subSlug": "kozmetik/parfum/deodorant",
+    "tag": "Rexona",
+    "newSlug": "kozmetik/parfum/deodorant/rexona"
+  },
+  {
+    "subSlug": "kozmetik/parfum/deodorant",
+    "tag": "Axe",
+    "newSlug": "kozmetik/parfum/deodorant/axe"
+  },
+  {
+    "subSlug": "kozmetik/parfum/deodorant",
+    "tag": "Old Spice",
+    "newSlug": "kozmetik/parfum/deodorant/old-spice"
+  },
+  {
+    "subSlug": "kozmetik/parfum/deodorant",
+    "tag": "Roll-on",
+    "newSlug": "kozmetik/parfum/deodorant/roll-on"
+  },
+  {
+    "subSlug": "kozmetik/parfum/deodorant",
+    "tag": "Sprey Deodorant",
+    "newSlug": "kozmetik/parfum/deodorant/sprey-deodorant"
+  },
+  {
+    "subSlug": "kozmetik/parfum/kolonya",
+    "tag": "Limon Kolonyası",
+    "newSlug": "kozmetik/parfum/kolonya/limon-kolonyasi"
+  },
+  {
+    "subSlug": "kozmetik/parfum/kolonya",
+    "tag": "Çiçek Kolonyası",
+    "newSlug": "kozmetik/parfum/kolonya/cicek-kolonyasi"
+  },
+  {
+    "subSlug": "kozmetik/parfum/kolonya",
+    "tag": "Eyüp Sabri Tuncer",
+    "newSlug": "kozmetik/parfum/kolonya/eyup-sabri-tuncer"
+  },
+  {
+    "subSlug": "kozmetik/parfum/kolonya",
+    "tag": "Rebul",
+    "newSlug": "kozmetik/parfum/kolonya/rebul"
+  },
+  {
+    "subSlug": "kozmetik/parfum/kolonya",
+    "tag": "Arko",
+    "newSlug": "kozmetik/parfum/kolonya/arko"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-fircasi",
+    "tag": "Elektrikli Diş Fırçası",
+    "newSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-fircasi/elektrikli-dis-fircasi"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-fircasi",
+    "tag": "Sonik Diş Fırçası",
+    "newSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-fircasi/sonik-dis-fircasi"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-fircasi",
+    "tag": "Oral-B",
+    "newSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-fircasi/oral-b"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-fircasi",
+    "tag": "Philips Sonicare",
+    "newSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-fircasi/philips-sonicare"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-macunu-gargara",
+    "tag": "Beyazlatıcı",
+    "newSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-macunu-gargara/beyazlatici"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-macunu-gargara",
+    "tag": "Hassas Diş",
+    "newSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-macunu-gargara/hassas-dis"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-macunu-gargara",
+    "tag": "Florürsüz",
+    "newSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-macunu-gargara/florursuz"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-macunu-gargara",
+    "tag": "Colgate",
+    "newSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-macunu-gargara/colgate"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-macunu-gargara",
+    "tag": "Signal",
+    "newSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-macunu-gargara/signal"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-macunu-gargara",
+    "tag": "Sensodyne",
+    "newSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-macunu-gargara/sensodyne"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-macunu-gargara",
+    "tag": "Listerine",
+    "newSlug": "kozmetik/kisisel-bakim/agiz-dis/dis-macunu-gargara/listerine"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/agiz-dis/agiz-dusu-dis-ipi",
+    "tag": "Waterpik",
+    "newSlug": "kozmetik/kisisel-bakim/agiz-dis/agiz-dusu-dis-ipi/waterpik"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/agiz-dis/agiz-dusu-dis-ipi",
+    "tag": "Oral-B Ağız Duşu",
+    "newSlug": "kozmetik/kisisel-bakim/agiz-dis/agiz-dusu-dis-ipi/oral-b-agiz-dusu"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/agiz-dis/agiz-dusu-dis-ipi",
+    "tag": "Diş İpi",
+    "newSlug": "kozmetik/kisisel-bakim/agiz-dis/agiz-dusu-dis-ipi/dis-ipi"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/agiz-dis/agiz-dusu-dis-ipi",
+    "tag": "Ara Yüz Fırçası",
+    "newSlug": "kozmetik/kisisel-bakim/agiz-dis/agiz-dusu-dis-ipi/ara-yuz-fircasi"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/erkek/tiras-makinesi",
+    "tag": "Döner Başlık",
+    "newSlug": "kozmetik/kisisel-bakim/erkek/tiras-makinesi/doner-baslik"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/erkek/tiras-makinesi",
+    "tag": "Folyo Başlık",
+    "newSlug": "kozmetik/kisisel-bakim/erkek/tiras-makinesi/folyo-baslik"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/erkek/tiras-makinesi",
+    "tag": "Islak/Kuru",
+    "newSlug": "kozmetik/kisisel-bakim/erkek/tiras-makinesi/islakkuru"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/erkek/tiras-makinesi",
+    "tag": "Braun Series",
+    "newSlug": "kozmetik/kisisel-bakim/erkek/tiras-makinesi/braun-series"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/erkek/tiras-makinesi",
+    "tag": "Philips Series",
+    "newSlug": "kozmetik/kisisel-bakim/erkek/tiras-makinesi/philips-series"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/erkek/tiras-urunleri",
+    "tag": "Tıraş Jeli",
+    "newSlug": "kozmetik/kisisel-bakim/erkek/tiras-urunleri/tiras-jeli"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/erkek/tiras-urunleri",
+    "tag": "Köpük",
+    "newSlug": "kozmetik/kisisel-bakim/erkek/tiras-urunleri/kopuk"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/erkek/tiras-urunleri",
+    "tag": "Tıraş Sonrası Balm",
+    "newSlug": "kozmetik/kisisel-bakim/erkek/tiras-urunleri/tiras-sonrasi-balm"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/erkek/tiras-urunleri",
+    "tag": "Bıçak Kartuşu",
+    "newSlug": "kozmetik/kisisel-bakim/erkek/tiras-urunleri/bicak-kartusu"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/erkek/tiras-urunleri",
+    "tag": "Gillette Fusion",
+    "newSlug": "kozmetik/kisisel-bakim/erkek/tiras-urunleri/gillette-fusion"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/erkek/tiras-urunleri",
+    "tag": "Wilkinson",
+    "newSlug": "kozmetik/kisisel-bakim/erkek/tiras-urunleri/wilkinson"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/erkek/sac-sakal-makinesi",
+    "tag": "Saç Kesme Makinesi",
+    "newSlug": "kozmetik/kisisel-bakim/erkek/sac-sakal-makinesi/sac-kesme-makinesi"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/erkek/sac-sakal-makinesi",
+    "tag": "Sakal Makinesi",
+    "newSlug": "kozmetik/kisisel-bakim/erkek/sac-sakal-makinesi/sakal-makinesi"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/erkek/sac-sakal-makinesi",
+    "tag": "Tırım Makinesi",
+    "newSlug": "kozmetik/kisisel-bakim/erkek/sac-sakal-makinesi/tirim-makinesi"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/erkek/sac-sakal-makinesi",
+    "tag": "Wahl",
+    "newSlug": "kozmetik/kisisel-bakim/erkek/sac-sakal-makinesi/wahl"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/erkek/erkek-cilt-bakimi",
+    "tag": "Erkek Yüz Kremi",
+    "newSlug": "kozmetik/kisisel-bakim/erkek/erkek-cilt-bakimi/erkek-yuz-kremi"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/erkek/erkek-cilt-bakimi",
+    "tag": "Güneş Kremi",
+    "newSlug": "kozmetik/kisisel-bakim/erkek/erkek-cilt-bakimi/gunes-kremi"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/erkek/erkek-cilt-bakimi",
+    "tag": "Göz Kremi",
+    "newSlug": "kozmetik/kisisel-bakim/erkek/erkek-cilt-bakimi/goz-kremi"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/erkek/erkek-cilt-bakimi",
+    "tag": "Nivea Men",
+    "newSlug": "kozmetik/kisisel-bakim/erkek/erkek-cilt-bakimi/nivea-men"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/erkek/erkek-cilt-bakimi",
+    "tag": "L'Oréal Men Expert",
+    "newSlug": "kozmetik/kisisel-bakim/erkek/erkek-cilt-bakimi/loral-men-expert"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/camasir",
+    "tag": "Toz Deterjan",
+    "newSlug": "ev-yasam/temizlik/camasir/toz-deterjan"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/camasir",
+    "tag": "Sıvı Deterjan",
+    "newSlug": "ev-yasam/temizlik/camasir/sivi-deterjan"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/camasir",
+    "tag": "Kapsül",
+    "newSlug": "ev-yasam/temizlik/camasir/kapsul"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/camasir",
+    "tag": "Leke Çıkarıcı",
+    "newSlug": "ev-yasam/temizlik/camasir/leke-cikarici"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/camasir",
+    "tag": "Çamaşır Suyu",
+    "newSlug": "ev-yasam/temizlik/camasir/camasir-suyu"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/camasir",
+    "tag": "Yumuşatıcı",
+    "newSlug": "ev-yasam/temizlik/camasir/yumusatici"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/camasir",
+    "tag": "Ariel",
+    "newSlug": "ev-yasam/temizlik/camasir/ariel"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/camasir",
+    "tag": "Omo",
+    "newSlug": "ev-yasam/temizlik/camasir/omo"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/camasir",
+    "tag": "Persil",
+    "newSlug": "ev-yasam/temizlik/camasir/persil"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/bulasik",
+    "tag": "Bulaşık Deterjanı",
+    "newSlug": "ev-yasam/temizlik/bulasik/bulasik-deterjani"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/bulasik",
+    "tag": "Tablet",
+    "newSlug": "ev-yasam/temizlik/bulasik/tablet"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/bulasik",
+    "tag": "Kapsül",
+    "newSlug": "ev-yasam/temizlik/bulasik/kapsul"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/bulasik",
+    "tag": "Makine Tuzu",
+    "newSlug": "ev-yasam/temizlik/bulasik/makine-tuzu"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/bulasik",
+    "tag": "Parlatıcı",
+    "newSlug": "ev-yasam/temizlik/bulasik/parlatici"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/bulasik",
+    "tag": "Fairy",
+    "newSlug": "ev-yasam/temizlik/bulasik/fairy"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/bulasik",
+    "tag": "Pril",
+    "newSlug": "ev-yasam/temizlik/bulasik/pril"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/bulasik",
+    "tag": "Finish",
+    "newSlug": "ev-yasam/temizlik/bulasik/finish"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/yuzey-temizleyici",
+    "tag": "Çok Amaçlı",
+    "newSlug": "ev-yasam/temizlik/yuzey-temizleyici/cok-amacli"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/yuzey-temizleyici",
+    "tag": "Banyo Temizleyici",
+    "newSlug": "ev-yasam/temizlik/yuzey-temizleyici/banyo-temizleyici"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/yuzey-temizleyici",
+    "tag": "Mutfak Temizleyici",
+    "newSlug": "ev-yasam/temizlik/yuzey-temizleyici/mutfak-temizleyici"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/yuzey-temizleyici",
+    "tag": "Cam Sileceği",
+    "newSlug": "ev-yasam/temizlik/yuzey-temizleyici/cam-silecegi"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/yuzey-temizleyici",
+    "tag": "Domestos",
+    "newSlug": "ev-yasam/temizlik/yuzey-temizleyici/domestos"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/yuzey-temizleyici",
+    "tag": "Cillit Bang",
+    "newSlug": "ev-yasam/temizlik/yuzey-temizleyici/cillit-bang"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/kagit-urunleri",
+    "tag": "Tuvalet Kağıdı",
+    "newSlug": "ev-yasam/temizlik/kagit-urunleri/tuvalet-kagidi"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/kagit-urunleri",
+    "tag": "Kağıt Havlu",
+    "newSlug": "ev-yasam/temizlik/kagit-urunleri/kagit-havlu"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/kagit-urunleri",
+    "tag": "Peçete",
+    "newSlug": "ev-yasam/temizlik/kagit-urunleri/pecete"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/kagit-urunleri",
+    "tag": "Islak Mendil",
+    "newSlug": "ev-yasam/temizlik/kagit-urunleri/islak-mendil"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/kagit-urunleri",
+    "tag": "Selpak",
+    "newSlug": "ev-yasam/temizlik/kagit-urunleri/selpak"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/kagit-urunleri",
+    "tag": "Lotus",
+    "newSlug": "ev-yasam/temizlik/kagit-urunleri/lotus"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/kagit-urunleri",
+    "tag": "Papia",
+    "newSlug": "ev-yasam/temizlik/kagit-urunleri/papia"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/cop-torbasi-temizlik-araclari",
+    "tag": "Çöp Torbası",
+    "newSlug": "ev-yasam/temizlik/cop-torbasi-temizlik-araclari/cop-torbasi"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/cop-torbasi-temizlik-araclari",
+    "tag": "Temizlik Bezi",
+    "newSlug": "ev-yasam/temizlik/cop-torbasi-temizlik-araclari/temizlik-bezi"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/cop-torbasi-temizlik-araclari",
+    "tag": "Paspas",
+    "newSlug": "ev-yasam/temizlik/cop-torbasi-temizlik-araclari/paspas"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/cop-torbasi-temizlik-araclari",
+    "tag": "Fırça",
+    "newSlug": "ev-yasam/temizlik/cop-torbasi-temizlik-araclari/firca"
+  },
+  {
+    "subSlug": "ev-yasam/temizlik/cop-torbasi-temizlik-araclari",
+    "tag": "Süpürge",
+    "newSlug": "ev-yasam/temizlik/cop-torbasi-temizlik-araclari/supurge"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/hijyen/dus-banyo",
+    "tag": "Duş Jeli",
+    "newSlug": "kozmetik/kisisel-bakim/hijyen/dus-banyo/dus-jeli"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/hijyen/dus-banyo",
+    "tag": "Sabun",
+    "newSlug": "kozmetik/kisisel-bakim/hijyen/dus-banyo/sabun"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/hijyen/dus-banyo",
+    "tag": "Banyo Köpüğü",
+    "newSlug": "kozmetik/kisisel-bakim/hijyen/dus-banyo/banyo-kopugu"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/hijyen/dus-banyo",
+    "tag": "Vücut Fırçası",
+    "newSlug": "kozmetik/kisisel-bakim/hijyen/dus-banyo/vucut-fircasi"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/hijyen/dus-banyo",
+    "tag": "Palmolive",
+    "newSlug": "kozmetik/kisisel-bakim/hijyen/dus-banyo/palmolive"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/hijyen/dus-banyo",
+    "tag": "Lux",
+    "newSlug": "kozmetik/kisisel-bakim/hijyen/dus-banyo/lux"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/hijyen/kadin-hijyen",
+    "tag": "Günlük Ped",
+    "newSlug": "kozmetik/kisisel-bakim/hijyen/kadin-hijyen/gunluk-ped"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/hijyen/kadin-hijyen",
+    "tag": "Tampon",
+    "newSlug": "kozmetik/kisisel-bakim/hijyen/kadin-hijyen/tampon"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/hijyen/kadin-hijyen",
+    "tag": "Emici Iç Çamaşırı",
+    "newSlug": "kozmetik/kisisel-bakim/hijyen/kadin-hijyen/emici-ic-camasiri"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/hijyen/kadin-hijyen",
+    "tag": "Always",
+    "newSlug": "kozmetik/kisisel-bakim/hijyen/kadin-hijyen/always"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/hijyen/kadin-hijyen",
+    "tag": "Kotex",
+    "newSlug": "kozmetik/kisisel-bakim/hijyen/kadin-hijyen/kotex"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/hijyen/kadin-hijyen",
+    "tag": "Orkid",
+    "newSlug": "kozmetik/kisisel-bakim/hijyen/kadin-hijyen/orkid"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/hijyen/kadin-hijyen",
+    "tag": "Naturella",
+    "newSlug": "kozmetik/kisisel-bakim/hijyen/kadin-hijyen/naturella"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/hijyen/kil-giderme-epilasyon",
+    "tag": "Ağda",
+    "newSlug": "kozmetik/kisisel-bakim/hijyen/kil-giderme-epilasyon/agda"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/hijyen/kil-giderme-epilasyon",
+    "tag": "Epilasyon Bandı",
+    "newSlug": "kozmetik/kisisel-bakim/hijyen/kil-giderme-epilasyon/epilasyon-bandi"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/hijyen/kil-giderme-epilasyon",
+    "tag": "Epilasyon Kremi",
+    "newSlug": "kozmetik/kisisel-bakim/hijyen/kil-giderme-epilasyon/epilasyon-kremi"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/hijyen/kil-giderme-epilasyon",
+    "tag": "Bıçak",
+    "newSlug": "kozmetik/kisisel-bakim/hijyen/kil-giderme-epilasyon/bicak"
+  },
+  {
+    "subSlug": "kozmetik/kisisel-bakim/hijyen/kil-giderme-epilasyon",
+    "tag": "Braun Silk-épil",
+    "newSlug": "kozmetik/kisisel-bakim/hijyen/kil-giderme-epilasyon/braun-silk-pil"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim",
+    "tag": "SPF 50 Krem",
+    "newSlug": "kozmetik/cilt-bakim/spf-50-krem"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim",
+    "tag": "Bronzlaştırıcı",
+    "newSlug": "kozmetik/cilt-bakim/bronzlastirici"
+  },
+  {
+    "subSlug": "kozmetik/cilt-bakim",
+    "tag": "Güneş Sonrası Losyon",
+    "newSlug": "kozmetik/cilt-bakim/gunes-sonrasi-losyon"
+  },
+  {
+    "subSlug": "supermarket/atistirmalik",
+    "tag": "Çikolata",
+    "newSlug": "supermarket/atistirmalik/cikolata"
+  },
+  {
+    "subSlug": "supermarket/atistirmalik",
+    "tag": "Bisküvi",
+    "newSlug": "supermarket/atistirmalik/biskuvi"
+  },
+  {
+    "subSlug": "supermarket/atistirmalik",
+    "tag": "Gofret",
+    "newSlug": "supermarket/atistirmalik/gofret"
+  },
+  {
+    "subSlug": "supermarket/atistirmalik",
+    "tag": "Cips",
+    "newSlug": "supermarket/atistirmalik/cips"
+  },
+  {
+    "subSlug": "supermarket/atistirmalik",
+    "tag": "Kraker",
+    "newSlug": "supermarket/atistirmalik/kraker"
+  },
+  {
+    "subSlug": "supermarket/icecek",
+    "tag": "Kola",
+    "newSlug": "supermarket/icecek/kola"
+  },
+  {
+    "subSlug": "supermarket/icecek",
+    "tag": "Pepsi",
+    "newSlug": "supermarket/icecek/pepsi"
+  },
+  {
+    "subSlug": "supermarket/icecek",
+    "tag": "Meyve Suyu",
+    "newSlug": "supermarket/icecek/meyve-suyu"
+  },
+  {
+    "subSlug": "supermarket/icecek",
+    "tag": "Maden Suyu",
+    "newSlug": "supermarket/icecek/maden-suyu"
+  },
+  {
+    "subSlug": "supermarket/icecek",
+    "tag": "Ayran",
+    "newSlug": "supermarket/icecek/ayran"
+  },
+  {
+    "subSlug": "supermarket/icecek",
+    "tag": "Red Bull",
+    "newSlug": "supermarket/icecek/red-bull"
+  },
+  {
+    "subSlug": "supermarket/kahvalti-kahve",
+    "tag": "Granola",
+    "newSlug": "supermarket/kahvalti-kahve/granola"
+  },
+  {
+    "subSlug": "supermarket/kahvalti-kahve",
+    "tag": "Mısır Gevreği",
+    "newSlug": "supermarket/kahvalti-kahve/misir-gevregi"
+  },
+  {
+    "subSlug": "supermarket/kahvalti-kahve",
+    "tag": "Reçel",
+    "newSlug": "supermarket/kahvalti-kahve/recel"
+  },
+  {
+    "subSlug": "supermarket/kahvalti-kahve",
+    "tag": "Tahin",
+    "newSlug": "supermarket/kahvalti-kahve/tahin"
+  },
+  {
+    "subSlug": "supermarket/kahvalti-kahve",
+    "tag": "Bal",
+    "newSlug": "supermarket/kahvalti-kahve/bal"
+  },
+  {
+    "subSlug": "supermarket/kahve",
+    "tag": "Filtre Kahve",
+    "newSlug": "supermarket/kahve/filtre-kahve"
+  },
+  {
+    "subSlug": "supermarket/kahve",
+    "tag": "Espresso",
+    "newSlug": "supermarket/kahve/espresso"
+  },
+  {
+    "subSlug": "supermarket/kahve",
+    "tag": "Türk Kahvesi",
+    "newSlug": "supermarket/kahve/turk-kahvesi"
+  },
+  {
+    "subSlug": "supermarket/kahve",
+    "tag": "Nespresso Kapsül",
+    "newSlug": "supermarket/kahve/nespresso-kapsul"
+  },
+  {
+    "subSlug": "supermarket/bakliyat-makarna",
+    "tag": "Mercimek",
+    "newSlug": "supermarket/bakliyat-makarna/mercimek"
+  },
+  {
+    "subSlug": "supermarket/bakliyat-makarna",
+    "tag": "Nohut",
+    "newSlug": "supermarket/bakliyat-makarna/nohut"
+  },
+  {
+    "subSlug": "supermarket/bakliyat-makarna",
+    "tag": "Pirinç",
+    "newSlug": "supermarket/bakliyat-makarna/pirinc"
+  },
+  {
+    "subSlug": "supermarket/bakliyat-makarna",
+    "tag": "Bulgur",
+    "newSlug": "supermarket/bakliyat-makarna/bulgur"
+  },
+  {
+    "subSlug": "supermarket/bakliyat-makarna",
+    "tag": "Makarna",
+    "newSlug": "supermarket/bakliyat-makarna/makarna"
+  },
+  {
+    "subSlug": "supermarket/bakliyat-makarna",
+    "tag": "Spagetti",
+    "newSlug": "supermarket/bakliyat-makarna/spagetti"
+  },
+  {
+    "subSlug": "supermarket/konserve-sos",
+    "tag": "Ton Balığı",
+    "newSlug": "supermarket/konserve-sos/ton-baligi"
+  },
+  {
+    "subSlug": "supermarket/konserve-sos",
+    "tag": "Domates Sos",
+    "newSlug": "supermarket/konserve-sos/domates-sos"
+  },
+  {
+    "subSlug": "supermarket/konserve-sos",
+    "tag": "Mayonez",
+    "newSlug": "supermarket/konserve-sos/mayonez"
+  },
+  {
+    "subSlug": "supermarket/konserve-sos",
+    "tag": "Ketçap",
+    "newSlug": "supermarket/konserve-sos/ketcap"
+  },
+  {
+    "subSlug": "supermarket/konserve-sos",
+    "tag": "Zeytinyağı",
+    "newSlug": "supermarket/konserve-sos/zeytinyagi"
+  },
+  {
+    "subSlug": "supermarket/dondurma-tatli",
+    "tag": "Puding",
+    "newSlug": "supermarket/dondurma-tatli/puding"
+  },
+  {
+    "subSlug": "supermarket/dondurma-tatli",
+    "tag": "Jöle Toz",
+    "newSlug": "supermarket/dondurma-tatli/jole-toz"
+  },
+  {
+    "subSlug": "pet-shop/kedi/mama",
+    "tag": "Yavru Kedi",
+    "newSlug": "pet-shop/kedi/mama/yavru-kedi"
+  },
+  {
+    "subSlug": "pet-shop/kedi/mama",
+    "tag": "Yetişkin",
+    "newSlug": "pet-shop/kedi/mama/yetiskin"
+  },
+  {
+    "subSlug": "pet-shop/kedi/mama",
+    "tag": "Kısırlaştırılmış",
+    "newSlug": "pet-shop/kedi/mama/kisirlastirilmis"
+  },
+  {
+    "subSlug": "pet-shop/kedi/mama",
+    "tag": "Yaşlı Kedi",
+    "newSlug": "pet-shop/kedi/mama/yasli-kedi"
+  },
+  {
+    "subSlug": "pet-shop/kedi/mama",
+    "tag": "Purina Pro Plan",
+    "newSlug": "pet-shop/kedi/mama/purina-pro-plan"
+  },
+  {
+    "subSlug": "pet-shop/kedi/kum",
+    "tag": "Topaklaşan Kum",
+    "newSlug": "pet-shop/kedi/kum/topaklasan-kum"
+  },
+  {
+    "subSlug": "pet-shop/kedi/kum",
+    "tag": "Silika Kum",
+    "newSlug": "pet-shop/kedi/kum/silika-kum"
+  },
+  {
+    "subSlug": "pet-shop/kedi/kum",
+    "tag": "Doğal Kum",
+    "newSlug": "pet-shop/kedi/kum/dogal-kum"
+  },
+  {
+    "subSlug": "pet-shop/kedi/kum",
+    "tag": "Bentonit",
+    "newSlug": "pet-shop/kedi/kum/bentonit"
+  },
+  {
+    "subSlug": "pet-shop/aksesuar",
+    "tag": "Tırmalama Tahtası",
+    "newSlug": "pet-shop/aksesuar/tirmalama-tahtasi"
+  },
+  {
+    "subSlug": "pet-shop/aksesuar",
+    "tag": "Kedi Evi",
+    "newSlug": "pet-shop/aksesuar/kedi-evi"
+  },
+  {
+    "subSlug": "pet-shop/aksesuar",
+    "tag": "Mama Kabı",
+    "newSlug": "pet-shop/aksesuar/mama-kabi"
+  },
+  {
+    "subSlug": "pet-shop/aksesuar",
+    "tag": "Taşıma Çantası",
+    "newSlug": "pet-shop/aksesuar/tasima-cantasi"
+  },
+  {
+    "subSlug": "pet-shop/aksesuar",
+    "tag": "Lazer",
+    "newSlug": "pet-shop/aksesuar/lazer"
+  },
+  {
+    "subSlug": "pet-shop/kopek/mama",
+    "tag": "Yavru Köpek",
+    "newSlug": "pet-shop/kopek/mama/yavru-kopek"
+  },
+  {
+    "subSlug": "pet-shop/kopek/mama",
+    "tag": "Irk Maması",
+    "newSlug": "pet-shop/kopek/mama/irk-mamasi"
+  },
+  {
+    "subSlug": "pet-shop/kopek/mama",
+    "tag": "Büyük Irk",
+    "newSlug": "pet-shop/kopek/mama/buyuk-irk"
+  },
+  {
+    "subSlug": "pet-shop/aksesuar",
+    "tag": "Tasma",
+    "newSlug": "pet-shop/aksesuar/tasma"
+  },
+  {
+    "subSlug": "pet-shop/aksesuar",
+    "tag": "Köpek Yeleği",
+    "newSlug": "pet-shop/aksesuar/kopek-yelegi"
+  },
+  {
+    "subSlug": "pet-shop/aksesuar",
+    "tag": "Yatak",
+    "newSlug": "pet-shop/aksesuar/yatak"
+  },
+  {
+    "subSlug": "pet-shop/aksesuar",
+    "tag": "Oyuncak",
+    "newSlug": "pet-shop/aksesuar/oyuncak"
+  },
+  {
+    "subSlug": "pet-shop/aksesuar",
+    "tag": "Kemirlik",
+    "newSlug": "pet-shop/aksesuar/kemirlik"
+  },
+  {
+    "subSlug": "pet-shop/bakim-hijyen",
+    "tag": "Köpek Şampuanı",
+    "newSlug": "pet-shop/bakim-hijyen/kopek-sampuani"
+  },
+  {
+    "subSlug": "pet-shop/bakim-hijyen",
+    "tag": "Kene & Pire",
+    "newSlug": "pet-shop/bakim-hijyen/kene-pire"
+  },
+  {
+    "subSlug": "pet-shop/bakim-hijyen",
+    "tag": "Diş Bakım",
+    "newSlug": "pet-shop/bakim-hijyen/dis-bakim"
+  },
+  {
+    "subSlug": "pet-shop/bakim-hijyen",
+    "tag": "Deodorant",
+    "newSlug": "pet-shop/bakim-hijyen/deodorant"
+  },
+  {
+    "subSlug": "pet-shop/akvaryum",
+    "tag": "Akvaryum",
+    "newSlug": "pet-shop/akvaryum/akvaryum"
+  },
+  {
+    "subSlug": "pet-shop/akvaryum",
+    "tag": "Balık Yemi",
+    "newSlug": "pet-shop/akvaryum/balik-yemi"
+  },
+  {
+    "subSlug": "pet-shop/akvaryum",
+    "tag": "Filtre",
+    "newSlug": "pet-shop/akvaryum/filtre"
+  },
+  {
+    "subSlug": "pet-shop/akvaryum",
+    "tag": "Isıtıcı",
+    "newSlug": "pet-shop/akvaryum/isitici"
+  },
+  {
+    "subSlug": "pet-shop/kus",
+    "tag": "Kuş Kafesi",
+    "newSlug": "pet-shop/kus/kus-kafesi"
+  },
+  {
+    "subSlug": "pet-shop/kus",
+    "tag": "Kuş Yemi",
+    "newSlug": "pet-shop/kus/kus-yemi"
+  },
+  {
+    "subSlug": "pet-shop/kus",
+    "tag": "Vucut Spreyi",
+    "newSlug": "pet-shop/kus/vucut-spreyi"
+  },
+  {
+    "subSlug": "pet-shop/akvaryum",
+    "tag": "Pompa",
+    "newSlug": "pet-shop/akvaryum/pompa"
+  },
+  {
+    "subSlug": "pet-shop",
+    "tag": "Hamster Kafesi",
+    "newSlug": "pet-shop/hamster-kafesi"
+  },
+  {
+    "subSlug": "pet-shop",
+    "tag": "Tavşan Kafesi",
+    "newSlug": "pet-shop/tavsan-kafesi"
+  },
+  {
+    "subSlug": "pet-shop",
+    "tag": "Kemirgen Yemi",
+    "newSlug": "pet-shop/kemirgen-yemi"
+  },
+  {
+    "subSlug": "pet-shop",
+    "tag": "Talaş",
+    "newSlug": "pet-shop/talas"
+  },
+  {
+    "subSlug": "pet-shop",
+    "tag": "Oyuncak",
+    "newSlug": "pet-shop/oyuncak"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kitap/roman-edebiyat",
+    "tag": "Türk Edebiyatı",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kitap/roman-edebiyat/turk-edebiyati"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kitap/roman-edebiyat",
+    "tag": "Dünya Klasikleri",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kitap/roman-edebiyat/dunya-klasikleri"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kitap/roman-edebiyat",
+    "tag": "Polisiye",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kitap/roman-edebiyat/polisiye"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kitap/roman-edebiyat",
+    "tag": "Bilim Kurgu",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kitap/roman-edebiyat/bilim-kurgu"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kitap/roman-edebiyat",
+    "tag": "Fantastik",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kitap/roman-edebiyat/fantastik"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kitap/roman-edebiyat",
+    "tag": "Distopik",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kitap/roman-edebiyat/distopik"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kitap/kisisel-gelisim",
+    "tag": "Psikoloji",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kitap/kisisel-gelisim/psikoloji"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kitap/kisisel-gelisim",
+    "tag": "Motivasyon",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kitap/kisisel-gelisim/motivasyon"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kitap/kisisel-gelisim",
+    "tag": "Liderlik",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kitap/kisisel-gelisim/liderlik"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kitap/kisisel-gelisim",
+    "tag": "Finans & Yatırım",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kitap/kisisel-gelisim/finans-yatirim"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kitap/kisisel-gelisim",
+    "tag": "Farkındalık",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kitap/kisisel-gelisim/farkindalik"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kitap/kisisel-gelisim",
+    "tag": "Koçluk",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kitap/kisisel-gelisim/kocluk"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kitap/sinav-hazirlik",
+    "tag": "YÖKDİL",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kitap/sinav-hazirlik/yokdil"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/cocuk-kitap",
+    "tag": "Resimli Masal",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/cocuk-kitap/resimli-masal"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/cocuk-kitap",
+    "tag": "İlk Okuma",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/cocuk-kitap/ilk-okuma"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/cocuk-kitap",
+    "tag": "Boyama Kitabı",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/cocuk-kitap/boyama-kitabi"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/cocuk-kitap",
+    "tag": "0-3 Yaş",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/cocuk-kitap/0-3-yas"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/cocuk-kitap",
+    "tag": "4-8 Yaş",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/cocuk-kitap/4-8-yas"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/cocuk-kitap",
+    "tag": "9-12 Yaş",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/cocuk-kitap/9-12-yas"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kitap/bilim-akademik",
+    "tag": "Tarih",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kitap/bilim-akademik/tarih"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kitap/bilim-akademik",
+    "tag": "Felsefe",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kitap/bilim-akademik/felsefe"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kitap/bilim-akademik",
+    "tag": "Tıp",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kitap/bilim-akademik/tip"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kitap/bilim-akademik",
+    "tag": "Hukuk",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kitap/bilim-akademik/hukuk"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kitap/bilim-akademik",
+    "tag": "Mühendislik",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kitap/bilim-akademik/muhendislik"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kitap/bilim-akademik",
+    "tag": "Ekonomi",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kitap/bilim-akademik/ekonomi"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/muzik-aleti/gitar",
+    "tag": "Akustik Gitar",
+    "newSlug": "hobi-eglence/sanat-muzik/muzik-aleti/gitar/akustik-gitar"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/muzik-aleti/gitar",
+    "tag": "Elektro Gitar",
+    "newSlug": "hobi-eglence/sanat-muzik/muzik-aleti/gitar/elektro-gitar"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/muzik-aleti/gitar",
+    "tag": "Klasik Gitar",
+    "newSlug": "hobi-eglence/sanat-muzik/muzik-aleti/gitar/klasik-gitar"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/muzik-aleti/klavye-piyano",
+    "tag": "Dijital Piyano",
+    "newSlug": "hobi-eglence/sanat-muzik/muzik-aleti/klavye-piyano/dijital-piyano"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/muzik-aleti/klavye-piyano",
+    "tag": "Tuş Takımı",
+    "newSlug": "hobi-eglence/sanat-muzik/muzik-aleti/klavye-piyano/tus-takimi"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/muzik-aleti/klavye-piyano",
+    "tag": "Synthesizer",
+    "newSlug": "hobi-eglence/sanat-muzik/muzik-aleti/klavye-piyano/synthesizer"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/muzik-aleti/davul-perkusyon",
+    "tag": "Akustik Davul",
+    "newSlug": "hobi-eglence/sanat-muzik/muzik-aleti/davul-perkusyon/akustik-davul"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/muzik-aleti/davul-perkusyon",
+    "tag": "Elektronik Davul",
+    "newSlug": "hobi-eglence/sanat-muzik/muzik-aleti/davul-perkusyon/elektronik-davul"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/muzik-aleti/davul-perkusyon",
+    "tag": "Cajon",
+    "newSlug": "hobi-eglence/sanat-muzik/muzik-aleti/davul-perkusyon/cajon"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/muzik-aleti/studyo-kayit",
+    "tag": "Kondenser Mikrofon",
+    "newSlug": "hobi-eglence/sanat-muzik/muzik-aleti/studyo-kayit/kondenser-mikrofon"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/muzik-aleti/studyo-kayit",
+    "tag": "Ses Kartı",
+    "newSlug": "hobi-eglence/sanat-muzik/muzik-aleti/studyo-kayit/ses-karti"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/muzik-aleti/studyo-kayit",
+    "tag": "Stüdyo Monitörü",
+    "newSlug": "hobi-eglence/sanat-muzik/muzik-aleti/studyo-kayit/studyo-monitoru"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/muzik-aleti/nefesli-yayli",
+    "tag": "Keman",
+    "newSlug": "hobi-eglence/sanat-muzik/muzik-aleti/nefesli-yayli/keman"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/muzik-aleti/nefesli-yayli",
+    "tag": "Flüt",
+    "newSlug": "hobi-eglence/sanat-muzik/muzik-aleti/nefesli-yayli/flut"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/muzik-aleti/nefesli-yayli",
+    "tag": "Saksofon",
+    "newSlug": "hobi-eglence/sanat-muzik/muzik-aleti/nefesli-yayli/saksofon"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/muzik-aleti/nefesli-yayli",
+    "tag": "Trompet",
+    "newSlug": "hobi-eglence/sanat-muzik/muzik-aleti/nefesli-yayli/trompet"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/muzik-aleti/nefesli-yayli",
+    "tag": "Klarnet",
+    "newSlug": "hobi-eglence/sanat-muzik/muzik-aleti/nefesli-yayli/klarnet"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/muzik-aleti/nefesli-yayli",
+    "tag": "Bağlama",
+    "newSlug": "hobi-eglence/sanat-muzik/muzik-aleti/nefesli-yayli/baglama"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/blu-ray-dvd",
+    "tag": "4K Blu-ray",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/blu-ray-dvd/4k-blu-ray"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/blu-ray-dvd",
+    "tag": "Aksiyon",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/blu-ray-dvd/aksiyon"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/blu-ray-dvd",
+    "tag": "Komedi",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/blu-ray-dvd/komedi"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/blu-ray-dvd",
+    "tag": "Dram",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/blu-ray-dvd/dram"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/blu-ray-dvd",
+    "tag": "Animasyon",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/blu-ray-dvd/animasyon"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/blu-ray-dvd",
+    "tag": "Belgesel",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/blu-ray-dvd/belgesel"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/blu-ray-dvd",
+    "tag": "Korku",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/blu-ray-dvd/korku"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/dijital-film-dizi",
+    "tag": "Netflix",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/dijital-film-dizi/netflix"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/dijital-film-dizi",
+    "tag": "Amazon Prime",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/dijital-film-dizi/amazon-prime"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/dijital-film-dizi",
+    "tag": "Disney+",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/dijital-film-dizi/disney"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/dijital-film-dizi",
+    "tag": "BluTV",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/dijital-film-dizi/blutv"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/dijital-film-dizi",
+    "tag": "Gain",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/dijital-film-dizi/gain"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/dijital-film-dizi",
+    "tag": "Mubi",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/film-dizi/dijital-film-dizi/mubi"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/resim",
+    "tag": "Yağlı Boya",
+    "newSlug": "hobi-eglence/sanat-muzik/resim/yagli-boya"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/resim",
+    "tag": "Suluboya",
+    "newSlug": "hobi-eglence/sanat-muzik/resim/suluboya"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/resim",
+    "tag": "Akrilik Boya",
+    "newSlug": "hobi-eglence/sanat-muzik/resim/akrilik-boya"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/resim",
+    "tag": "Pastel",
+    "newSlug": "hobi-eglence/sanat-muzik/resim/pastel"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/resim",
+    "tag": "Renk Kalemi",
+    "newSlug": "hobi-eglence/sanat-muzik/resim/renk-kalemi"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/el-sanatlari",
+    "tag": "Örgü İpliği",
+    "newSlug": "hobi-eglence/sanat-muzik/el-sanatlari/orgu-ipligi"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/el-sanatlari",
+    "tag": "Amigurumi",
+    "newSlug": "hobi-eglence/sanat-muzik/el-sanatlari/amigurumi"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/el-sanatlari",
+    "tag": "Dikiş",
+    "newSlug": "hobi-eglence/sanat-muzik/el-sanatlari/dikis"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/el-sanatlari",
+    "tag": "Scrapbooking",
+    "newSlug": "hobi-eglence/sanat-muzik/el-sanatlari/scrapbooking"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/el-sanatlari",
+    "tag": "Boncuk",
+    "newSlug": "hobi-eglence/sanat-muzik/el-sanatlari/boncuk"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/el-sanatlari",
+    "tag": "Takı Yapımı",
+    "newSlug": "hobi-eglence/sanat-muzik/el-sanatlari/taki-yapimi"
+  },
+  {
+    "subSlug": "hobi-eglence/sanat-muzik/el-sanatlari",
+    "tag": "Reçine",
+    "newSlug": "hobi-eglence/sanat-muzik/el-sanatlari/recine"
+  },
+  {
+    "subSlug": "hobi-eglence/koleksiyon",
+    "tag": "Maket Araba",
+    "newSlug": "hobi-eglence/koleksiyon/maket-araba"
+  },
+  {
+    "subSlug": "hobi-eglence/koleksiyon",
+    "tag": "Maket Uçak",
+    "newSlug": "hobi-eglence/koleksiyon/maket-ucak"
+  },
+  {
+    "subSlug": "hobi-eglence/koleksiyon",
+    "tag": "Askeri Maket",
+    "newSlug": "hobi-eglence/koleksiyon/askeri-maket"
+  },
+  {
+    "subSlug": "hobi-eglence/koleksiyon",
+    "tag": "Airfix",
+    "newSlug": "hobi-eglence/koleksiyon/airfix"
+  },
+  {
+    "subSlug": "hobi-eglence/koleksiyon",
+    "tag": "Tamiya",
+    "newSlug": "hobi-eglence/koleksiyon/tamiya"
+  },
+  {
+    "subSlug": "hobi-eglence/koleksiyon",
+    "tag": "Revell",
+    "newSlug": "hobi-eglence/koleksiyon/revell"
+  },
+  {
+    "subSlug": "hobi-eglence/koleksiyon",
+    "tag": "Hasegawa",
+    "newSlug": "hobi-eglence/koleksiyon/hasegawa"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/masa-oyunu",
+    "tag": "Puzzle 1000 Parça",
+    "newSlug": "anne-bebek/oyuncak/masa-oyunu/puzzle-1000-parca"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/masa-oyunu",
+    "tag": "Satranç",
+    "newSlug": "anne-bebek/oyuncak/masa-oyunu/satranc"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/masa-oyunu",
+    "tag": "Catan",
+    "newSlug": "anne-bebek/oyuncak/masa-oyunu/catan"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/masa-oyunu",
+    "tag": "Ticket to Ride",
+    "newSlug": "anne-bebek/oyuncak/masa-oyunu/ticket-to-ride"
+  },
+  {
+    "subSlug": "anne-bebek/oyuncak/masa-oyunu",
+    "tag": "Codenames",
+    "newSlug": "anne-bebek/oyuncak/masa-oyunu/codenames"
+  },
+  {
+    "subSlug": "hobi-eglence/koleksiyon",
+    "tag": "LEGO Figür",
+    "newSlug": "hobi-eglence/koleksiyon/lego-figur"
+  },
+  {
+    "subSlug": "hobi-eglence/koleksiyon",
+    "tag": "Metal Araba",
+    "newSlug": "hobi-eglence/koleksiyon/metal-araba"
+  },
+  {
+    "subSlug": "hobi-eglence/koleksiyon",
+    "tag": "Manga",
+    "newSlug": "hobi-eglence/koleksiyon/manga"
+  },
+  {
+    "subSlug": "hobi-eglence/koleksiyon",
+    "tag": "Anime Figür",
+    "newSlug": "hobi-eglence/koleksiyon/anime-figur"
+  },
+  {
+    "subSlug": "hobi-eglence/parti-malzemeleri",
+    "tag": "Balon",
+    "newSlug": "hobi-eglence/parti-malzemeleri/balon"
+  },
+  {
+    "subSlug": "hobi-eglence/parti-malzemeleri",
+    "tag": "Doğum Günü Süsü",
+    "newSlug": "hobi-eglence/parti-malzemeleri/dogum-gunu-susu"
+  },
+  {
+    "subSlug": "hobi-eglence/parti-malzemeleri",
+    "tag": "Pasta Mumu",
+    "newSlug": "hobi-eglence/parti-malzemeleri/pasta-mumu"
+  },
+  {
+    "subSlug": "hobi-eglence/parti-malzemeleri",
+    "tag": "Kağıt Tabak",
+    "newSlug": "hobi-eglence/parti-malzemeleri/kagit-tabak"
+  },
+  {
+    "subSlug": "hobi-eglence/parti-malzemeleri",
+    "tag": "Folyo Balon",
+    "newSlug": "hobi-eglence/parti-malzemeleri/folyo-balon"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/kalem-yazi-gerecleri",
+    "tag": "Kurşun Kalem",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/kalem-yazi-gerecleri/kursun-kalem"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/kalem-yazi-gerecleri",
+    "tag": "Tükenmez Kalem",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/kalem-yazi-gerecleri/tukenmez-kalem"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/defter-ajanda",
+    "tag": "Spiralli Defter",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/defter-ajanda/spiralli-defter"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/defter-ajanda",
+    "tag": "Kareli Defter",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/defter-ajanda/kareli-defter"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/defter-ajanda",
+    "tag": "Noktalı Defter",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/defter-ajanda/noktali-defter"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-cantasi",
+    "tag": "İlkokul Çantası",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-cantasi/ilkokul-cantasi"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-cantasi",
+    "tag": "Ortaokul Çantası",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-cantasi/ortaokul-cantasi"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-cantasi",
+    "tag": "Ergonomik",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-cantasi/ergonomik"
+  },
+  {
+    "subSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-cantasi",
+    "tag": "Çekçekli",
+    "newSlug": "hobi-eglence/kitap-kirtasiye/kirtasiye/okul-cantasi/cekcekli"
+  },
+  {
+    "subSlug": "hobi-eglence",
+    "tag": "Yapıştırıcı",
+    "newSlug": "hobi-eglence/yapistirici"
+  },
+  {
+    "subSlug": "hobi-eglence",
+    "tag": "Makas",
+    "newSlug": "hobi-eglence/makas"
+  },
+  {
+    "subSlug": "hobi-eglence",
+    "tag": "Kesici",
+    "newSlug": "hobi-eglence/kesici"
+  },
+  {
+    "subSlug": "hobi-eglence",
+    "tag": "Kesim Matı",
+    "newSlug": "hobi-eglence/kesim-mati"
+  },
+  {
+    "subSlug": "hobi-eglence",
+    "tag": "Karton",
+    "newSlug": "hobi-eglence/karton"
+  },
+  {
+    "subSlug": "hobi-eglence",
+    "tag": "Özel Kağıt",
+    "newSlug": "hobi-eglence/ozel-kagit"
+  },
+  {
+    "subSlug": "saglik-vitamin/vitamin-mineral/c-vitamini",
+    "tag": "Liposomal C",
+    "newSlug": "saglik-vitamin/vitamin-mineral/c-vitamini/liposomal-c"
+  },
+  {
+    "subSlug": "saglik-vitamin/vitamin-mineral/c-vitamini",
+    "tag": "1000 mg",
+    "newSlug": "saglik-vitamin/vitamin-mineral/c-vitamini/1000-mg"
+  },
+  {
+    "subSlug": "saglik-vitamin/vitamin-mineral/c-vitamini",
+    "tag": "Çiğnenebilir",
+    "newSlug": "saglik-vitamin/vitamin-mineral/c-vitamini/cignenebilir"
+  },
+  {
+    "subSlug": "saglik-vitamin/vitamin-mineral/d-vitamini",
+    "tag": "1000 IU",
+    "newSlug": "saglik-vitamin/vitamin-mineral/d-vitamini/1000-iu"
+  },
+  {
+    "subSlug": "saglik-vitamin/vitamin-mineral/d-vitamini",
+    "tag": "2000 IU",
+    "newSlug": "saglik-vitamin/vitamin-mineral/d-vitamini/2000-iu"
+  },
+  {
+    "subSlug": "saglik-vitamin/vitamin-mineral/d-vitamini",
+    "tag": "Damla",
+    "newSlug": "saglik-vitamin/vitamin-mineral/d-vitamini/damla"
+  },
+  {
+    "subSlug": "saglik-vitamin/vitamin-mineral/b-vitamini",
+    "tag": "B Kompleks",
+    "newSlug": "saglik-vitamin/vitamin-mineral/b-vitamini/b-kompleks"
+  },
+  {
+    "subSlug": "saglik-vitamin/vitamin-mineral/b-vitamini",
+    "tag": "Folik Asit",
+    "newSlug": "saglik-vitamin/vitamin-mineral/b-vitamini/folik-asit"
+  },
+  {
+    "subSlug": "saglik-vitamin/vitamin-mineral/magnezyum-cinko",
+    "tag": "Magnezyum Sitrat",
+    "newSlug": "saglik-vitamin/vitamin-mineral/magnezyum-cinko/magnezyum-sitrat"
+  },
+  {
+    "subSlug": "saglik-vitamin/vitamin-mineral/magnezyum-cinko",
+    "tag": "Çinko Pikolinat",
+    "newSlug": "saglik-vitamin/vitamin-mineral/magnezyum-cinko/cinko-pikolinat"
+  },
+  {
+    "subSlug": "saglik-vitamin/vitamin-mineral/magnezyum-cinko",
+    "tag": "Demir",
+    "newSlug": "saglik-vitamin/vitamin-mineral/magnezyum-cinko/demir"
+  },
+  {
+    "subSlug": "saglik-vitamin/vitamin-mineral/magnezyum-cinko",
+    "tag": "Kalsiyum",
+    "newSlug": "saglik-vitamin/vitamin-mineral/magnezyum-cinko/kalsiyum"
+  },
+  {
+    "subSlug": "saglik-vitamin/vitamin-mineral/magnezyum-cinko",
+    "tag": "Selenyum",
+    "newSlug": "saglik-vitamin/vitamin-mineral/magnezyum-cinko/selenyum"
+  },
+  {
+    "subSlug": "saglik-vitamin/vitamin-mineral/omega-3-balik-yagi",
+    "tag": "Balıkçı Adam",
+    "newSlug": "saglik-vitamin/vitamin-mineral/omega-3-balik-yagi/balikci-adam"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/bitkisel-cay",
+    "tag": "Yeşil Çay",
+    "newSlug": "saglik-vitamin/bitkisel/bitkisel-cay/yesil-cay"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/bitkisel-cay",
+    "tag": "Adaçayı",
+    "newSlug": "saglik-vitamin/bitkisel/bitkisel-cay/adacayi"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/bitkisel-cay",
+    "tag": "Papatya",
+    "newSlug": "saglik-vitamin/bitkisel/bitkisel-cay/papatya"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/bitkisel-cay",
+    "tag": "Rezene",
+    "newSlug": "saglik-vitamin/bitkisel/bitkisel-cay/rezene"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/bitkisel-cay",
+    "tag": "Karadut",
+    "newSlug": "saglik-vitamin/bitkisel/bitkisel-cay/karadut"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/bitkisel-cay",
+    "tag": "Ekinezya",
+    "newSlug": "saglik-vitamin/bitkisel/bitkisel-cay/ekinezya"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/bitkisel-takviye",
+    "tag": "Ginseng",
+    "newSlug": "saglik-vitamin/bitkisel/bitkisel-takviye/ginseng"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/bitkisel-takviye",
+    "tag": "Sarımsak Hapı",
+    "newSlug": "saglik-vitamin/bitkisel/bitkisel-takviye/sarimsak-hapi"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/bitkisel-takviye",
+    "tag": "Kurkumin",
+    "newSlug": "saglik-vitamin/bitkisel/bitkisel-takviye/kurkumin"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/bitkisel-takviye",
+    "tag": "Maca",
+    "newSlug": "saglik-vitamin/bitkisel/bitkisel-takviye/maca"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/bitkisel-takviye",
+    "tag": "Spirulina",
+    "newSlug": "saglik-vitamin/bitkisel/bitkisel-takviye/spirulina"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/bitkisel-takviye",
+    "tag": "Ginkgo Biloba",
+    "newSlug": "saglik-vitamin/bitkisel/bitkisel-takviye/ginkgo-biloba"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/sut-kardeleni-karaciger",
+    "tag": "Süt Kardeleni",
+    "newSlug": "saglik-vitamin/bitkisel/sut-kardeleni-karaciger/sut-kardeleni"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/sut-kardeleni-karaciger",
+    "tag": "Karahindiba",
+    "newSlug": "saglik-vitamin/bitkisel/sut-kardeleni-karaciger/karahindiba"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/sut-kardeleni-karaciger",
+    "tag": "Detox",
+    "newSlug": "saglik-vitamin/bitkisel/sut-kardeleni-karaciger/detox"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/sut-kardeleni-karaciger",
+    "tag": "Karaciğer Desteği",
+    "newSlug": "saglik-vitamin/bitkisel/sut-kardeleni-karaciger/karaciger-destegi"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/bagisiklik-destek",
+    "tag": "Propolis",
+    "newSlug": "saglik-vitamin/bitkisel/bagisiklik-destek/propolis"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/bagisiklik-destek",
+    "tag": "Arı Sütü",
+    "newSlug": "saglik-vitamin/bitkisel/bagisiklik-destek/ari-sutu"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/bagisiklik-destek",
+    "tag": "Karadut",
+    "newSlug": "saglik-vitamin/bitkisel/bagisiklik-destek/karadut"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/bagisiklik-destek",
+    "tag": "Karaağaç",
+    "newSlug": "saglik-vitamin/bitkisel/bagisiklik-destek/karaagac"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/bagisiklik-destek",
+    "tag": "Zerdeçal",
+    "newSlug": "saglik-vitamin/bitkisel/bagisiklik-destek/zerdecal"
+  },
+  {
+    "subSlug": "saglik-vitamin/bitkisel/bagisiklik-destek",
+    "tag": "Zencefil",
+    "newSlug": "saglik-vitamin/bitkisel/bagisiklik-destek/zencefil"
+  },
+  {
+    "subSlug": "saglik-vitamin/spor-besin/protein-tozu",
+    "tag": "Whey Protein",
+    "newSlug": "saglik-vitamin/spor-besin/protein-tozu/whey-protein"
+  },
+  {
+    "subSlug": "saglik-vitamin/spor-besin/protein-tozu",
+    "tag": "Casein",
+    "newSlug": "saglik-vitamin/spor-besin/protein-tozu/casein"
+  },
+  {
+    "subSlug": "saglik-vitamin/spor-besin/protein-tozu",
+    "tag": "Vegan Protein",
+    "newSlug": "saglik-vitamin/spor-besin/protein-tozu/vegan-protein"
+  },
+  {
+    "subSlug": "saglik-vitamin/spor-besin/kreatin",
+    "tag": "Kreatin Monohidrat",
+    "newSlug": "saglik-vitamin/spor-besin/kreatin/kreatin-monohidrat"
+  },
+  {
+    "subSlug": "saglik-vitamin/spor-besin/kreatin",
+    "tag": "Mikronize",
+    "newSlug": "saglik-vitamin/spor-besin/kreatin/mikronize"
+  },
+  {
+    "subSlug": "saglik-vitamin/spor-besin/bcaa-aminoasit",
+    "tag": "Glutamin",
+    "newSlug": "saglik-vitamin/spor-besin/bcaa-aminoasit/glutamin"
+  },
+  {
+    "subSlug": "saglik-vitamin/spor-besin/pre-workout",
+    "tag": "Pre-Workout",
+    "newSlug": "saglik-vitamin/spor-besin/pre-workout/pre-workout"
+  },
+  {
+    "subSlug": "saglik-vitamin/spor-besin/pre-workout",
+    "tag": "Kafein",
+    "newSlug": "saglik-vitamin/spor-besin/pre-workout/kafein"
+  },
+  {
+    "subSlug": "saglik-vitamin/spor-besin/pre-workout",
+    "tag": "Beta Alanin",
+    "newSlug": "saglik-vitamin/spor-besin/pre-workout/beta-alanin"
+  },
+  {
+    "subSlug": "saglik-vitamin/spor-besin/mass-gainer",
+    "tag": "Weight Gainer",
+    "newSlug": "saglik-vitamin/spor-besin/mass-gainer/weight-gainer"
+  },
+  {
+    "subSlug": "saglik-vitamin/spor-besin/mass-gainer",
+    "tag": "Carb Gainer",
+    "newSlug": "saglik-vitamin/spor-besin/mass-gainer/carb-gainer"
+  },
+  {
+    "subSlug": "saglik-vitamin/spor-besin/yag-yakici",
+    "tag": "L-Karnitin",
+    "newSlug": "saglik-vitamin/spor-besin/yag-yakici/l-karnitin"
+  },
+  {
+    "subSlug": "saglik-vitamin/spor-besin/yag-yakici",
+    "tag": "Termojenik",
+    "newSlug": "saglik-vitamin/spor-besin/yag-yakici/termojenik"
+  }
+]

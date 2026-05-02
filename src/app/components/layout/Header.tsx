@@ -11,16 +11,50 @@ import HeaderSearchBar from "./HeaderSearchBar";
 // Tekrarlı warn'ı önlemek için per-session bir kez log'la.
 const warnedSlugs = new Set<string>();
 
-// categories.slug artık DB'de full hierarchik path. URL üretimi iki katmanlı:
-// 1) catMap.get(slug) — exact lookup, hızlı yol
-// 2) findCanonicalSlugSync — eski flat slug'ı leaf-suffix/token-set ile tam
-//    path'e çevir (Türkçe normalize dahil). Hâlâ yoksa console.warn + /?q= fallback.
+// Turkish-aware slug helper — Header tag'leri DB leaf path'iyle eslesmeyi dener.
+function slugifyTagForUrl(text: string): string {
+  return text
+    .toLocaleLowerCase("tr")
+    .replace(/ç/g, "c").replace(/ğ/g, "g").replace(/ı/g, "i")
+    .replace(/ö/g, "o").replace(/ş/g, "s").replace(/ü/g, "u")
+    .replace(/&/g, " ")
+    .replace(/'/g, "")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+// categories.slug artik DB'de full hierarchik path. URL uretimi iki katmanli:
+// 1) catMap.get(slug) — exact lookup, hizli yol
+// 2) findCanonicalSlugSync — eski flat slug'i leaf-suffix/token-set ile tam
+//    path'e cevir (Turkce normalize dahil). Hala yoksa console.warn + /?q= fallback.
+//
+// P6.26 (Migration 041): tag click "smart resolve". q parametresi geliyorsa
+// once <slug>/<slugify(q)> leaf'ini ara — DB'de varsa direkt o kategoriye
+// git (q-filter degil). Tag'ler artik kendi sayfalarini acar (orn. "Vucut
+// Losyonu" tag'i kozmetik/cilt-bakim/vucut-bakimi/vucut-losyonu sayfasina).
+// Marka tag'leri (Nivea, Apple) DB'de leaf yok -> q-filter fallback.
 function hierUrl(
   slug: string,
   catMap: Map<string, { id: string; slug: string; parent_id: string | null }>,
   _byId: Map<string, { id: string; slug: string; parent_id: string | null }>,
   q?: string,
 ): string {
+  // Smart tag-as-leaf resolve (q varsa)
+  if (q) {
+    const tagSlug = slugifyTagForUrl(q);
+    if (tagSlug) {
+      const baseCat = catMap.get(slug);
+      const baseSlug = baseCat?.slug ?? slug;
+      const tagLeafPath = `${baseSlug}/${tagSlug}`;
+      const leafCat = catMap.get(tagLeafPath);
+      if (leafCat) {
+        return "/anasayfa/" + leafCat.slug;
+      }
+    }
+  }
+
   const cat = catMap.get(slug);
   if (cat) {
     const base = "/anasayfa/" + cat.slug;

@@ -543,7 +543,12 @@ export default async function KategoriSayfasi({ params, searchParams }: {
             </span>
           </nav>
           <div className="flex items-center justify-between gap-3">
-            <h1 className="font-extrabold text-lg sm:text-2xl text-gray-900 min-w-0 truncate">{category.name}</h1>
+            <h1 className="font-extrabold text-lg sm:text-2xl text-gray-900 min-w-0 truncate">
+              {category.name}
+              {effectiveQuery && (
+                <span className="text-gray-500 font-medium">: {effectiveQuery}</span>
+              )}
+            </h1>
             <span className="text-xs sm:text-sm text-gray-500 flex-shrink-0">{filteredProductCount} ürün</span>
           </div>
         </div>
