@@ -27,7 +27,7 @@ import { aiEmbed } from "../ai/aiClient";
 import { generateResponse, type ProductForResponse } from "./generateResponse";
 import type { StructuredIntent } from "./intentParser";
 import { buildSuggestions, type Suggestion } from "./suggestionBuilder";
-import { buildCategoryRankingContext } from "./categoryKnowledge";
+import { buildCategoryRankingContext, findUsageProfile } from "./categoryKnowledge";
 import {
   getQueryRankingProfile,
   isStrictIntentTerm,
@@ -223,6 +223,32 @@ export async function orchestrateChat(
   } else {
     return await runSlowPath(input, decision, startTime, searchMessage);
   }
+}
+
+function shouldSkipKnowledgeRetrieval(
+  input: OrchestratorInput,
+  searchMessage: string
+): boolean {
+  const categorySlug = getResponseCategorySlug(input, null);
+  if (!categorySlug) return false;
+
+  const normalized = (searchMessage ?? "").trim().toLowerCase();
+  if (!normalized) return false;
+
+  if (/\b(nedir|nasil|nasıl|farki|farkı|neden|hangisi|ne demek)\b|\?/i.test(normalized)) {
+    return false;
+  }
+
+  if (findUsageProfile(categorySlug, searchMessage)) {
+    return true;
+  }
+
+  if (/^(en ucuz|en populer|en popüler|en hesapli|hepsini goster|tavsiye ver)$/i.test(normalized)) {
+    return true;
+  }
+
+  const wordCount = normalized.split(/\s+/).filter(Boolean).length;
+  return wordCount > 0 && wordCount <= 4;
 }
 
 // ============================================================================
@@ -528,10 +554,12 @@ async function runSlowPath(
 ): Promise<OrchestratorOutput> {
   // KB retrieval — query embedding zaten retrieveKnowledge içinde yapılıyor.
   // Eskiden Promise.all single-item idi (ölü paralelleştirme); kaldırıldı.
-  const knowledgeChunks = await retrieveKnowledge(input.sb, searchMessage, {
-    topN: 5,
-    minSim: 0.5,
-  });
+  const knowledgeChunks = shouldSkipKnowledgeRetrieval(input, searchMessage)
+    ? []
+    : await retrieveKnowledge(input.sb, searchMessage, {
+        topN: 5,
+        minSim: 0.5,
+      });
 
   // 2. Intent parser (Llama ş Groq ş Gemini Flash chain)
   const intent = await parseIntent(

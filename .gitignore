@@ -25,6 +25,13 @@ mm-sample.html
 # Log artifacts
 logs/
 .codex-*.log
+.dev-server.*.log
+_resp.json
+
+# Local keyword generation artifacts
+scripts/category-keywords-*.json
+scripts/build-category-keywords-static.mjs
+scripts/generate-category-keywords.mjs
 
 # Backups
 backups/

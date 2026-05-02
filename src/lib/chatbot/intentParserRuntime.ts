@@ -9,11 +9,23 @@ import {
   formatIntentExamples,
   selectIntentExamples,
 } from "./intentExamples";
-import { buildCategoryKnowledgeSnippet } from "./categoryKnowledge";
+import {
+  buildCategoryKnowledgeSnippet,
+  findUsageProfile,
+} from "./categoryKnowledge";
 
 const INTENT_CACHE_TTL_MS = 5 * 60 * 1000;
 const INTENT_CACHE_MAX = 500;
-const REQUEST_TIMEOUT_MS = 10_000;
+const REQUEST_TIMEOUT_MS = 5_000;
+const FAST_FOLLOWUP_TIMEOUT_MS = 1_800;
+const FAST_SORT_PATTERN =
+  /^(en ucuz|en populer|en populer|en hesapli|en iyi|hepsini goster|tavsiye ver)$/i;
+const FAST_FOLLOWUP_PATTERN =
+  /\b(olsun|goster|göster|istiyorum|isterim|lazim|lazım|bakiyorum|bakıyorum)\b/i;
+const FAST_VARIANT_PATTERN =
+  /\b(\d+\s?(gb|tb|hz|mp|mah)|siyah|beyaz|mavi|kirmizi|kırmızı|yesil|yeşil|pembe|gri)\b/i;
+const KNOWLEDGE_QUESTION_PATTERN =
+  /\b(nedir|nasil|nasıl|farki|farkı|neden|hangisi|ne demek)\b|\?/i;
 
 type CacheEntry = {
   intent: StructuredIntent;
@@ -58,6 +70,87 @@ function hashChunks(chunks: KnowledgeChunk[]): string {
     .slice(0, 100);
 }
 
+function normalizeMessage(message: string): string {
+  return (message ?? "")
+    .toLowerCase()
+    .replace(/\u0131/g, "i")
+    .replace(/\u0130/g, "i")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function splitIntentTerms(message: string): string[] {
+  return Array.from(
+    new Set(
+      normalizeMessage(message)
+        .split(/\s+/)
+        .map((part) => part.trim())
+        .filter((part) => part.length >= 2)
+    )
+  ).slice(0, 8);
+}
+
+function buildFastIntent(
+  message: string,
+  contextCategorySlug: string | null
+): StructuredIntent | null {
+  if (!contextCategorySlug) return null;
+
+  const normalized = normalizeMessage(message);
+  if (!normalized || KNOWLEDGE_QUESTION_PATTERN.test(normalized)) {
+    return null;
+  }
+
+  const terms = splitIntentTerms(message);
+  const wordCount = terms.length;
+  const usageProfile = findUsageProfile(contextCategorySlug, message);
+  const isShortContextualQuery = wordCount > 0 && wordCount <= 3;
+  const isFastFollowUp =
+    isShortContextualQuery ||
+    Boolean(usageProfile) ||
+    FAST_SORT_PATTERN.test(normalized) ||
+    FAST_FOLLOWUP_PATTERN.test(normalized) ||
+    FAST_VARIANT_PATTERN.test(normalized);
+
+  if (!isFastFollowUp) {
+    return null;
+  }
+
+  const semanticKeywords = Array.from(
+    new Set([
+      ...terms,
+      ...(usageProfile?.retrievalTerms.slice(0, 2) ?? []),
+    ])
+  ).slice(0, 8);
+
+  return {
+    category_slug: contextCategorySlug,
+    semantic_keywords: semanticKeywords,
+    must_have_specs: {},
+    nice_to_have_specs: {},
+    price_range: { min: null, max: null },
+    brand_filter: [],
+    confidence: usageProfile ? 0.84 : 0.72,
+    reasoning: usageProfile
+      ? `Hizli niyet cozuldu: ${usageProfile.id}`
+      : "Hizli oturum ici takip sorgusu",
+    is_too_vague: false,
+    is_off_topic: false,
+  };
+}
+
+function getIntentTimeoutMs(
+  message: string,
+  contextCategorySlug: string | null
+): number {
+  if (!contextCategorySlug) return REQUEST_TIMEOUT_MS;
+  return splitIntentTerms(message).length <= 4
+    ? FAST_FOLLOWUP_TIMEOUT_MS
+    : REQUEST_TIMEOUT_MS;
+}
+
 type IntentProvider = (signal: AbortSignal) => Promise<string>;
 
 export async function parseIntent(
@@ -81,6 +174,12 @@ export async function parseIntent(
     return cached;
   }
 
+  const fastIntent = buildFastIntent(message, contextCategorySlug);
+  if (fastIntent) {
+    cacheSet(key, fastIntent);
+    return fastIntent;
+  }
+
   const userPrompt = buildIntentParserPrompt(
     message,
     knowledgeChunks,
@@ -100,11 +199,12 @@ export async function parseIntent(
   ];
 
   let lastError: Error | null = null;
+  const timeoutMs = getIntentTimeoutMs(message, contextCategorySlug);
 
   for (let index = 0; index < providers.length; index += 1) {
     const provider = providers[index];
     try {
-      const rawResponse = await withAbortTimeout(provider, REQUEST_TIMEOUT_MS);
+      const rawResponse = await withAbortTimeout(provider, timeoutMs);
       const intent = parseIntentResponse(rawResponse);
       cacheSet(key, intent);
       return intent;
