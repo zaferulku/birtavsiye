@@ -186,18 +186,19 @@ export type ScrapeResult =
   | { ok: true; scraped: MmScrapedProduct }
   | { ok: false; reason: ScrapeFailReason; debugTitle?: string };
 
-export async function scrapePdpDetailed(pdpUrl: string): Promise<ScrapeResult> {
-  const html = await fetchText(pdpUrl);
-  const $ = cheerio.load(html);
-
-  // P6.12g: 'product' birden çok JSON-LD schema variant'ından (Product /
-  // ProductGroup / nested object/mainEntity wrapper) cheerio.each callback
-  // içinde dinamik atanır. JsonLdProductLike narrowing TS control flow analizini
-  // each() içindeki assignment'larla taşıyamayıp 17 TS2339 cascade üretti.
-  // Opt-out: bu satırda 'any' kabul edilir (sub-borç P6.12g-product-narrow,
-  // generic JSON-LD union narrowing veya extractor function refactor gerek).
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let product: any = null;
+// P6.12g-product-narrow: JSON-LD extractor pattern.
+// cheerio.each callback içinde 'let product' mutate ediyordu — TS control
+// flow analizi callback'lerden geçmediği için outer-scope 'product' tipini
+// 'never' olarak narrow ediyordu (17 TS2339 cascade). Refactor: tüm cheerio
+// dolaşımı bu helper içinde, dönüş struct'ı tipli (JsonLdProductLike | null).
+// Caller destructure + narrowing temiz çalışır (kural 21 cascade <5 garantisi).
+function extractJsonLdFromHtml($: cheerio.CheerioAPI): {
+  product: JsonLdProductLike | null;
+  breadcrumb: { name: string; position: number }[];
+  jsonldFound: boolean;
+  productTypeFound: boolean;
+} {
+  let product: JsonLdProductLike | null = null;
   let breadcrumb: { name: string; position: number }[] = [];
   let jsonldFound = false;
   let productTypeFound = false;
@@ -241,6 +242,15 @@ export async function scrapePdpDetailed(pdpUrl: string): Promise<ScrapeResult> {
       }
     } catch { /* parse fail, atla */ }
   });
+
+  return { product, breadcrumb, jsonldFound, productTypeFound };
+}
+
+export async function scrapePdpDetailed(pdpUrl: string): Promise<ScrapeResult> {
+  const html = await fetchText(pdpUrl);
+  const $ = cheerio.load(html);
+
+  const { product, breadcrumb, jsonldFound, productTypeFound } = extractJsonLdFromHtml($);
 
   if (!jsonldFound) return { ok: false, reason: 'no_jsonld' };
   if (!productTypeFound) return { ok: false, reason: 'no_product_type' };
