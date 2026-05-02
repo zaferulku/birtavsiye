@@ -88,7 +88,7 @@ Backup'taki 4 forum/profil dosya hâlâ uncommitted (Codex sprint kapsamında).
 
 **🟡 DİĞER (öncelik düşük):**
 - Eval2 full re-run (LLM quota reset sonrası, baseline ölçüm)
-- Pre-existing eslint sync/route.ts:9 (P6.12 sprint'te line 9 unused import bağlandı, başka borç yok)
+- ~~Pre-existing eslint sync/route.ts:9, :164~~ — ZATEN DONE (efe1fed prefer-const auto-fix + dac9bbb unused import remove)
 - Codex 4 backup reapply takip (P6.12f-codex'i unlock eder)
 
 **🟢 OPSIYONEL (MVP sonrası):**
