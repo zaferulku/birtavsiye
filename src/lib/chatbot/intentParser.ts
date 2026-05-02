@@ -136,7 +136,8 @@ export function buildIntentParserPrompt(
   message: string,
   knowledgeChunks: KnowledgeChunk[],
   categoryTaxonomy: string[],
-  conversationHistory: Array<{ role: string; content: string }> = []
+  conversationHistory: Array<{ role: string; content: string }> = [],
+  exampleContext = "(ilgili örnek konuşma bulunamadı)"
 ): string {
   const kbContext = formatKnowledgeContext(knowledgeChunks);
   const taxonomySample = formatTaxonomy(categoryTaxonomy);
@@ -153,12 +154,21 @@ ${taxonomySample}
 
 BİLGİ KAYNAKLARI (konuyla ilgili Türkçe sözlük):
 ${kbContext}
+
+BENZER ÖRNEK KONUŞMALAR:
+${exampleContext}
 ${historyContext}
 YENİ KULLANICI MESAJI:
 "${message}"
 
 Önceki konuşmayı dikkate alarak kullanıcının niyetini çıkar. Eğer önceki
 mesajlar bağlam veriyorsa (örn: "telefon" sonra "Apple"), bunu birleştir.
+
+ÖRNEKLERİ NASIL KULLAN:
+- Örneklerdeki kalıpları ezber gibi kopyalama; niyet mantığını çıkar.
+- Kullanıcı daraltıyorsa "refine", filtre kaldırıyorsa/genişletiyorsa "broaden",
+  önceki konuyu bırakıp yeni ürüne geçiyorsa "reset" mantığıyla düşün.
+- "sort_only" durumunda kategori ve filtreleri koruyup sadece sıralama niyetini anla.
 
 GÖREV:
 Yukarıdaki bilgiyi kullanarak kullanıcının arama niyetini çıkar. Bilgi
@@ -235,35 +245,58 @@ export function parseIntentResponse(rawResponse: string): StructuredIntent {
 /**
  * Parse edilmiş objeyi beklenen şemaya göre dşula ve normalize et.
  */
-function validateAndNormalize(raw: any): StructuredIntent {
+function validateAndNormalize(raw: unknown): StructuredIntent {
+  const source = isObject(raw) ? raw : {};
+  const priceRange = isObject(source.price_range) ? source.price_range : {};
   const normalized: StructuredIntent = {
-    category_slug: typeof raw.category_slug === "string" ? raw.category_slug : null,
-    semantic_keywords: Array.isArray(raw.semantic_keywords)
-      ? raw.semantic_keywords.filter((k: any) => typeof k === "string").slice(0, 10)
+    category_slug: typeof source.category_slug === "string" ? source.category_slug : null,
+    semantic_keywords: Array.isArray(source.semantic_keywords)
+      ? source.semantic_keywords.filter((k: unknown): k is string => typeof k === "string").slice(0, 10)
       : [],
-    must_have_specs: isObject(raw.must_have_specs) ? raw.must_have_specs : {},
-    nice_to_have_specs: isObject(raw.nice_to_have_specs) ? raw.nice_to_have_specs : {},
+    must_have_specs: normalizeSpecRecord(source.must_have_specs),
+    nice_to_have_specs: normalizeSpecRecord(source.nice_to_have_specs),
     price_range: {
-      min: typeof raw.price_range?.min === "number" ? raw.price_range.min : null,
-      max: typeof raw.price_range?.max === "number" ? raw.price_range.max : null,
+      min: typeof priceRange.min === "number" ? priceRange.min : null,
+      max: typeof priceRange.max === "number" ? priceRange.max : null,
     },
-    brand_filter: Array.isArray(raw.brand_filter)
-      ? raw.brand_filter.filter((b: any) => typeof b === "string").slice(0, 5)
+    brand_filter: Array.isArray(source.brand_filter)
+      ? source.brand_filter.filter((b: unknown): b is string => typeof b === "string").slice(0, 5)
       : [],
-    confidence: typeof raw.confidence === "number"
-      ? Math.max(0, Math.min(1, raw.confidence))
+    confidence: typeof source.confidence === "number"
+      ? Math.max(0, Math.min(1, source.confidence))
       : 0.5,
-    reasoning: typeof raw.reasoning === "string"
-      ? raw.reasoning.slice(0, 200)
+    reasoning: typeof source.reasoning === "string"
+      ? source.reasoning.slice(0, 200)
       : "",
-    is_too_vague: raw.is_too_vague === true,
-    is_off_topic: raw.is_off_topic === true,
+    is_too_vague: source.is_too_vague === true,
+    is_off_topic: source.is_off_topic === true,
   };
   return enrichBrandFilterFromKeywords(normalized);
 }
 
-function isObject(v: any): boolean {
+function isObject(v: unknown): v is Record<string, unknown> {
   return v !== null && typeof v === "object" && !Array.isArray(v);
+}
+
+function normalizeSpecRecord(
+  value: unknown
+): Record<string, string[] | string | number> {
+  if (!isObject(value)) return {};
+
+  const normalized: Record<string, string[] | string | number> = {};
+  for (const [key, entry] of Object.entries(value)) {
+    if (typeof entry === "string" || typeof entry === "number") {
+      normalized[key] = entry;
+      continue;
+    }
+    if (Array.isArray(entry)) {
+      const values = entry.filter((item): item is string => typeof item === "string");
+      if (values.length > 0) {
+        normalized[key] = values;
+      }
+    }
+  }
+  return normalized;
 }
 
 function enrichBrandFilterFromKeywords(intent: StructuredIntent): StructuredIntent {

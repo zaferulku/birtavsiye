@@ -5,6 +5,10 @@ import {
   buildIntentParserPrompt,
   parseIntentResponse,
 } from "./intentParser";
+import {
+  formatIntentExamples,
+  selectIntentExamples,
+} from "./intentExamples";
 
 const INTENT_CACHE_TTL_MS = 5 * 60 * 1000;
 const INTENT_CACHE_MAX = 500;
@@ -79,7 +83,8 @@ export async function parseIntent(
     message,
     knowledgeChunks,
     categoryTaxonomy,
-    conversationHistory
+    conversationHistory,
+    formatIntentExamples(selectIntentExamples(message, conversationHistory))
   );
 
   const providers: IntentProvider[] = [

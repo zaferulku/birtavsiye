@@ -10,7 +10,6 @@ import { parseQuery, type CategoryRef } from "../../../lib/search/queryParser";
 import {
   mergeIntent,
   rebuildStateFromHistory,
-  emptyState,
   type ConversationState,
   type RawIntent,
 } from "../../../lib/chatbot/conversationState";
@@ -26,6 +25,7 @@ import {
   type RetrievalRankingDiagnostics,
   type VectorCandidate,
 } from "../../../lib/search/productRetrieval";
+import { interpretChatQuery } from "../../../lib/chatbot/queryInterpreter";
 
 export const runtime = "nodejs";
 
@@ -497,14 +497,20 @@ export async function POST(req: Request) {
       });
     }
 
-    const categories = await loadCategories();
-    const parsed = parseQuery(message, categories);
-    const categoryTaxonomy = categories.map((category) => category.slug);
-
-    // ── Stateful conversation intent merge ────────────────────────────────────
     const previousState = rebuildStateFromHistory(
       (history ?? []) as Array<{ role: string; content: string; meta?: Partial<ConversationState> }>
     );
+
+    const categories = await loadCategories();
+    const queryInterpretation = interpretChatQuery({
+      message,
+      categories,
+      previousState,
+    });
+    const parsed = parseQuery(queryInterpretation.searchMessage, categories);
+    const categoryTaxonomy = categories.map((category) => category.slug);
+
+    // ── Stateful conversation intent merge ────────────────────────────────────
 
     // İlk pass: parseQuery (heuristic) — orchResult henüz yok.
     // LLM intent ile state enrich orchestrator sonrası yapılıyor (aşağıda).
@@ -572,6 +578,24 @@ export async function POST(req: Request) {
     });
 
     const effectiveCategory = conversationState.category_slug || intentHintCategory || parsed.category_slugs?.[0] || null;
+    const shouldLockCategoryToState =
+      Boolean(previousState.category_slug) &&
+      Boolean(conversationState.category_slug) &&
+      previousState.category_slug === conversationState.category_slug &&
+      mergeAction !== "category_changed_reset" &&
+      !queryInterpretation.accessoryHint &&
+      (
+        queryInterpretation.usedContextCategory ||
+        queryInterpretation.shortQueryKind === "contextual_refine" ||
+        queryInterpretation.shortQueryKind === "sort_only" ||
+        mergeAction === "single_word_widen" ||
+        mergeAction === "shortcut_keep_category" ||
+        mergeAction === "no_new_dims_keep" ||
+        mergeAction === "merge_with_new_dims"
+      );
+    const lockCategorySlug = shouldLockCategoryToState
+      ? conversationState.category_slug
+      : null;
 
     // Effective brand: first entry from state, or parsed brand
     const effectiveBrand =
@@ -588,6 +612,8 @@ export async function POST(req: Request) {
 
     const orchResult = await orchestrateChat({
       userMessage: message,
+      interpretedMessage: queryInterpretation.searchMessage,
+      lockCategorySlug,
       legacySearch: searchProducts,
       parsed: {
         category: effectiveCategory,
@@ -694,6 +720,16 @@ export async function POST(req: Request) {
             reply: typeof orchResult.response === "string" ? orchResult.response.slice(0, 200) : null,
             latency_ms: orchResult.latencyMs,
             diagnostics: orchResult.diagnostics,
+            query_interpretation: {
+              corrected_message: queryInterpretation.correctedMessage,
+              search_message: queryInterpretation.searchMessage,
+              corrections: queryInterpretation.corrections,
+              short_query_kind: queryInterpretation.shortQueryKind,
+              used_context_category: queryInterpretation.usedContextCategory,
+              used_context_brand: queryInterpretation.usedContextBrand,
+              accessory_hint: queryInterpretation.accessoryHint,
+              category_locked_to_state: lockCategorySlug,
+            },
             turn_type: turnType,
             merge_action: mergeAction,
           },
@@ -738,6 +774,16 @@ export async function POST(req: Request) {
         mergeAction,
         intentType: conversationState.intent_type,
         productLimit,
+        queryInterpretation: {
+          corrected_message: queryInterpretation.correctedMessage,
+          search_message: queryInterpretation.searchMessage,
+          corrections: queryInterpretation.corrections,
+          short_query_kind: queryInterpretation.shortQueryKind,
+          used_context_category: queryInterpretation.usedContextCategory,
+          used_context_brand: queryInterpretation.usedContextBrand,
+          accessory_hint: queryInterpretation.accessoryHint,
+          category_locked_to_state: lockCategorySlug,
+        },
       },
       // _debug field sadece dev/preview'de — prod'a internal architecture sızdırma
       ...(process.env.NODE_ENV !== "production" && {
@@ -748,6 +794,8 @@ export async function POST(req: Request) {
           kb_chunks: orchResult.kbChunkCount,
           orchestrator_latency_ms: orchResult.latencyMs,
           diagnostics: orchResult.diagnostics,
+          query_interpretation: queryInterpretation,
+          category_locked_to_state: lockCategorySlug,
         },
       }),
     });

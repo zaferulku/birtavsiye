@@ -42,6 +42,8 @@ import {
 
 export type OrchestratorInput = {
   userMessage: string;
+  interpretedMessage?: string | null;
+  lockCategorySlug?: string | null;
   // searchProducts (mevcut fonksiyon) ş bu modül oraya bşmlı olmasın
   legacySearch: (query: string) => Promise<LegacySearchResult>;
   // queryParser sonucu (mevcut chat route'tan geliyor)
@@ -154,6 +156,7 @@ export async function orchestrateChat(
   input: OrchestratorInput
 ): Promise<OrchestratorOutput> {
   const startTime = Date.now();
+  const searchMessage = input.interpretedMessage?.trim() || input.userMessage;
 
   // 0. INTENT_ROUTING dispatch — intent_type'a göre pipeline seç:
   //    short_response (greeting/smalltalk/off_topic) → kısa hazır cevap
@@ -173,12 +176,12 @@ export async function orchestrateChat(
   }
 
   // 1. Path decision (fast vs slow) — sadece product_search için
-  const decision = detectPath(input.userMessage, input.parsed);
+  const decision = detectPath(searchMessage, input.parsed);
 
   if (decision.path === "fast") {
-    return await runFastPath(input, decision, startTime);
+    return await runFastPath(input, decision, startTime, searchMessage);
   } else {
-    return await runSlowPath(input, decision, startTime);
+    return await runSlowPath(input, decision, startTime, searchMessage);
   }
 }
 
@@ -190,7 +193,8 @@ async function runKnowledgeQuery(
   input: OrchestratorInput,
   startTime: number
 ): Promise<OrchestratorOutput> {
-  const knowledgeChunks = await retrieveKnowledge(input.sb, input.userMessage, {
+  const knowledgeQuery = input.interpretedMessage?.trim() || input.userMessage;
+  const knowledgeChunks = await retrieveKnowledge(input.sb, knowledgeQuery, {
     topN: 6,
     minSim: 0.4,
   });
@@ -374,10 +378,11 @@ function runShortResponse(
 async function runFastPath(
   input: OrchestratorInput,
   decision: PathDecision,
-  startTime: number
+  startTime: number,
+  searchMessage: string
 ): Promise<OrchestratorOutput> {
   // Mevcut searchProducts() ş vector + keyword fallback zaten içinde
-  const searchResult = await input.legacySearch(input.userMessage);
+  const searchResult = await input.legacySearch(searchMessage);
 
   // Migration 013 fix: fast path 0 sonuç döndü ve state'te kategori varsa
   // (multi-turn carry-over) slow path'e düş — smart_search RPC'nin
@@ -389,7 +394,7 @@ async function runFastPath(
     console.log(
       `[orchestrator] fast path 0 sonuç + state.cat=${input.conversationState.category_slug} → slow path retry`
     );
-    return await runSlowPath(input, decision, startTime);
+    return await runSlowPath(input, decision, startTime, searchMessage);
   }
 
   // KB çşrmıyoruz, intent parse etmiyoruz ş fast path saf direkt arama
@@ -450,18 +455,19 @@ async function runFastPath(
 async function runSlowPath(
   input: OrchestratorInput,
   decision: PathDecision,
-  startTime: number
+  startTime: number,
+  searchMessage: string
 ): Promise<OrchestratorOutput> {
   // KB retrieval — query embedding zaten retrieveKnowledge içinde yapılıyor.
   // Eskiden Promise.all single-item idi (ölü paralelleştirme); kaldırıldı.
-  const knowledgeChunks = await retrieveKnowledge(input.sb, input.userMessage, {
+  const knowledgeChunks = await retrieveKnowledge(input.sb, searchMessage, {
     topN: 5,
     minSim: 0.5,
   });
 
   // 2. Intent parser (Llama ş Groq ş Gemini Flash chain)
   const intent = await parseIntent(
-    input.userMessage,
+    searchMessage,
     knowledgeChunks,
     input.categoryTaxonomy,
     input.conversationHistory || []
@@ -474,6 +480,7 @@ async function runSlowPath(
   // search filtre uygulamadan vector fallback'e düşer.
   const taxonomySet = new Set(input.categoryTaxonomy);
   const stateCategory = input.conversationState?.category_slug ?? null;
+  const lockedCategory = input.lockCategorySlug ?? null;
   if (intent.category_slug && !taxonomySet.has(intent.category_slug)) {
     if (stateCategory && taxonomySet.has(stateCategory)) {
       console.log(
@@ -488,7 +495,18 @@ async function runSlowPath(
     intent.category_slug = stateCategory;
   }
 
-  const queryTerms = splitSearchTerms(input.userMessage);
+  if (
+    lockedCategory &&
+    taxonomySet.has(lockedCategory) &&
+    intent.category_slug !== lockedCategory
+  ) {
+    console.log(
+      `[orchestrator] lock category "${lockedCategory}" over "${intent.category_slug ?? "null"}"`
+    );
+    intent.category_slug = lockedCategory;
+  }
+
+  const queryTerms = splitSearchTerms(searchMessage);
   const queryProfile = getQueryRankingProfile(queryTerms);
   const strictTermCount = queryTerms.filter(isStrictIntentTerm).length;
 
@@ -506,6 +524,7 @@ async function runSlowPath(
   if (intent.is_off_topic || (intent.is_too_vague && intent.confidence < 0.3 && !hasResolvedDimension)) {
     const response = await generateResponse({
       userMessage: input.userMessage,
+      styleMessage: searchMessage,
       intent,
       knowledgeChunks,
       products: [],
@@ -552,7 +571,7 @@ async function runSlowPath(
   let supplementalCandidateCount = 0;
 
   try {
-    smartResults = await runSmartSearch(input.sb, input.userMessage, intent);
+    smartResults = await runSmartSearch(input.sb, searchMessage, intent);
   } catch (err) {
     console.warn(
       `[orchestrator] smart_search failed: ${err instanceof Error ? err.message : err}`
@@ -562,7 +581,7 @@ async function runSlowPath(
   // 5. Smart search 0 sonuç ş mevcut searchProducts'a fallback
   let finalProducts: ChatProductResult[] = smartResults;
   if (smartResults.length === 0) {
-    const fallback = await input.legacySearch(input.userMessage);
+    const fallback = await input.legacySearch(searchMessage);
     finalProducts = fallback.products;
     method = `slow_fallback_${fallback.method}`;
   } else {
@@ -577,7 +596,7 @@ async function runSlowPath(
         queryProfile.mode === "specific" || strictTermCount > 0;
 
       if (shouldSupplementWithLegacy) {
-        const supplemental = await input.legacySearch(input.userMessage);
+        const supplemental = await input.legacySearch(searchMessage);
         supplementalCandidateCount = supplemental.products.length;
 
         if (supplemental.products.length > 0) {
@@ -614,7 +633,7 @@ async function runSlowPath(
       const reranked = await rerankKnownProducts({
         sb: input.sb,
         productIds: rerankProductIds,
-        query: input.userMessage,
+        query: searchMessage,
         categorySlug: intent.category_slug,
         limit: Math.max(smartResults.length, supplementalCandidateCount, 12),
         priceMin: intent.price_range.min,
@@ -639,6 +658,7 @@ async function runSlowPath(
   // 6. Response generation (KB context + intent + ürünler)
   const response = await generateResponse({
     userMessage: input.userMessage,
+    styleMessage: searchMessage,
     intent,
     knowledgeChunks,
     products: mapProductsForResponse(finalProducts),

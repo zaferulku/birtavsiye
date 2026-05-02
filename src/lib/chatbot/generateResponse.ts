@@ -1,32 +1,22 @@
-/**
- * Response Generation
- *
- * Chatbot'un kullanÄ±cÄ±ya dÃ¶necek doÄal dildeki yanÄ±tÄ±nÄ± Ã¼retir.
- *
- * Input: kullanÄ±cÄ± mesajÄ± + bulunan Ã¼rÃ¼nler + KB context + structured intent
- * Output: TÃ¼rkÃ§e samimi/profesyonel yanÄ±t (3-4 cÃ¼mle)
- *
- * Strateji:
- *   - Mevcut aiChat() fonksiyonunu kullanÄ±r (NVIDIA Llama 3.3 70B primary)
- *   - System prompt: rol + ton + kurallar
- *   - User prompt: dinamik (intent + KB + Ã¼rÃ¼nler + special cases)
- *   - "Bilmiyorum" davranÄ±ÅÄ±: 3 durum (vague, no_results, off_topic)
- */
-
 import { aiChat, type ChatMessage } from "../ai/aiClient";
+import {
+  getNextCategoryFlowStep,
+  resolveCategoryLabel,
+} from "./categoryFlow";
 import type { KnowledgeChunk, StructuredIntent } from "./intentParser";
-
-// ============================================================================
-// Types
-// ============================================================================
+import {
+  formatResponseStyleExamples,
+  selectResponseStyleExamples,
+} from "./responseExamples";
 
 export type ResponseInput = {
   userMessage: string;
-  intent: StructuredIntent | null;          // null = fast path (intent parser atlandÄ±)
-  knowledgeChunks: KnowledgeChunk[];         // boÅ olabilir
-  products: ProductForResponse[];            // boÅ olabilir
+  styleMessage?: string | null;
+  intent: StructuredIntent | null;
+  knowledgeChunks: KnowledgeChunk[];
+  products: ProductForResponse[];
   searchMethod: "vector" | "keyword" | "hybrid" | "specs" | "failed";
-  conversationHistory?: Array<{ role: string; content: string }>;  // proaktif sohbet
+  conversationHistory?: Array<{ role: string; content: string }>;
 };
 
 export type ProductForResponse = {
@@ -37,257 +27,193 @@ export type ProductForResponse = {
   listing_count: number;
 };
 
-// ============================================================================
-// System prompt
-// ============================================================================
+const SYSTEM_PROMPT = `Sen birtavsiye.net'in urun danismanisin.
 
-const SYSTEM_PROMPT = `Sen birtavsiye.net'in ürün danışmanısın. Türkçe konuşuyorsun, samimi ve profesyonel bir tonun var.
+KURALLAR:
+- Turkce yaz
+- Kisa yaz
+- Maksimum 2 cumle kullan
+- Sonuc varsa once kac urun listelendigini soyle
+- Gerekirse sadece tek bir takip sorusu sor
+- Uzun aciklama yapma
+- Magazaya yonlendirme yapma`;
 
-GÖREV:
-- Kullanıcının ürün arama mesajına yardımcı yanıt ver
-- Bulunan ürünleri kısaca tanıt (max 3 ürün)
-- Konunun bağlamını açıkla (örnek: "lavanta çiçeksi koku ailesinde")
-
-ÜSLUP KURALLARI:
-- Kısa yanıt (3-4 cümle)
-- Samimi ama profesyonel ("siz" değil "sen" hitabı)
-- Emoji minimum (en fazla 1 tane, yer varsa)
-- "Şurada satılıyor", "şu mağaza", "buradan al" gibi yönlendirme yapma
-- Fiyat söylerken format: "X TL'den başlıyor"
-- Marka ismini belirt
-- Liste oluştururken numara kullan
-
-YASAK:
-- Ezberden ders verme (KB bilgisini ürün önerisi için kullan, anlatma)
-- Bulamadığın bir özelliği uydurma
-- Çok uzun açıklama yapma
-
-ÖZEL DURUMLAR:
-- Ürün bulunamadıysa: "Şu an sistemde uyan ürün yok" de, alternatif öner
-- Sorgu çok genelse: Kategori veya detay sor
-- Alakasız sorgu: Kibarca alışverişe yönlendir
-
-DARALTILMIŞ SOHBET KURALLARI (chip butonları frontend'te):
-- "siyah telefon" gibi GENEL sorguda ürünü liste yapma; kısa sor:
-  "Siyah telefonlar için hangi marka?" (max 1 cümle)
-- "Apple siyah telefon" gibi MARKA + FİLTRE sorgusunda:
-  "Apple. Hangi fiyat aralığı?" (max 1 cümle)
-- "iPhone 15 Pro Max 256GB" gibi SPESİFİK sorguda direkt öner.
-- "tavsiye ver" geçerse 3 segment formatı:
-  "💰 EKONOMİK [ucuz] / ⭐ DENGE [orta] / 🚀 PREMIUM [pahalı]"
-- "en popüler" geçerse: "İşte en çok tercih edilenler:" + kısa özet.
-- "hepsini göster", "fark etmez", "yeni arama" geçerse direkt öner.
-
-ÖNEMLİ: Bot mesajı KISA olsun (max 2 cümle). Ürün listesi gridde;
-mesaj sadece yönlendirici cümle + en fazla 1 ürün özeti.`;
-
-// ============================================================================
-// Main entry point
-// ============================================================================
-
-/**
- * KullanÄ±cÄ±ya dÃ¶nÃ¼lecek yanÄ±tÄ± Ã¼retir.
- *
- * @param input TÃ¼m baÄlam (kullanÄ±cÄ±, intent, KB, Ã¼rÃ¼nler)
- * @returns TÃ¼rkÃ§e yanÄ±t metni
- */
 export async function generateResponse(input: ResponseInput): Promise<string> {
-  // Special case 1: off-topic (intent parser tespit etti)
   if (input.intent?.is_off_topic) {
-    return "Ben birtavsiye.net'in ürün danışmanıyım, alışveriş konularında yardımcı oluyorum. Sana ne bulayım? 🛒";
+    return "Ben alisveris asistaniyim. Sana hangi urunu bulayim?";
   }
 
-  // Special case 2: too vague (intent parser tespit etti)
   if (input.intent?.is_too_vague && input.products.length === 0) {
     return buildVagueResponse(input);
   }
 
-  // Special case 3: Ã¼rÃ¼n bulunamadÄ±
   if (input.products.length === 0) {
     return buildNoResultsResponse(input);
   }
 
-  // Normal akÄ±Å: Ã¼rÃ¼nler var, LLM ile zenginleÅtirilmiÅ yanÄ±t Ã¼ret
+  const guidedResponse = buildGuidedProductResponse(input);
+  if (guidedResponse) {
+    return guidedResponse;
+  }
+
   const messages = buildPromptMessages(input);
 
   try {
     const response = await aiChat({
       messages,
-      maxTokens: 300,
-      temperature: 0.7,
+      maxTokens: 180,
+      temperature: 0.35,
     });
 
     const content = response.content?.trim();
-
-    if (!content || content.length < 10) {
-      // LLM Ã§Ã¶p dÃ¶ndÃ¼rdÃ¼ â fallback
+    if (!content || content.length < 6) {
       return buildFallbackProductResponse(input);
     }
 
     return content;
-  } catch (err) {
+  } catch (error) {
     console.warn(
-      `[generateResponse] LLM failed: ${err instanceof Error ? err.message : err}`
+      `[generateResponse] LLM failed: ${
+        error instanceof Error ? error.message : String(error)
+      }`
     );
     return buildFallbackProductResponse(input);
   }
 }
 
-// ============================================================================
-// Prompt builder (normal case)
-// ============================================================================
-
 function buildPromptMessages(input: ResponseInput): ChatMessage[] {
-  const userPromptParts: string[] = [];
+  const parts: string[] = [];
+  const styleExamples = selectResponseStyleExamples(
+    input.styleMessage ?? input.userMessage,
+    input.intent,
+    input.products.length > 0
+  );
 
-  // Önceki konuşma context'i (proaktif sohbet için)
   if (input.conversationHistory && input.conversationHistory.length > 0) {
     const historyText = input.conversationHistory
-      .map(m => `${m.role === 'user' ? 'Kullanıcı' : 'Sen'}: ${m.content}`)
-      .join('\n');
-    userPromptParts.push(`ÖNCEKİ KONUŞMA:\n${historyText}`);
+      .map((entry) => `${entry.role === "user" ? "Kullanici" : "Bot"}: ${entry.content}`)
+      .join("\n");
+    parts.push(`ONCEKI KONUŞMA:\n${historyText}`);
   }
 
-  userPromptParts.push(`YENİ KULLANICI MESAJI: "${input.userMessage}"`);
+  parts.push(`YENI MESAJ: "${input.userMessage}"`);
+  parts.push(
+    `BENZER KISA CEVAP ORNEKLERI:\n${formatResponseStyleExamples(styleExamples)}`
+  );
 
-  // Intent context (sadece slow path varsa)
   if (input.intent && input.intent.confidence > 0.4) {
-    userPromptParts.push(formatIntentContext(input.intent));
+    parts.push(formatIntentContext(input.intent));
   }
 
-  // KB context (varsa)
   if (input.knowledgeChunks.length > 0) {
-    userPromptParts.push(formatKnowledgeContext(input.knowledgeChunks));
+    parts.push(formatKnowledgeContext(input.knowledgeChunks));
   }
 
-  // ÃrÃ¼nler
-  userPromptParts.push(formatProducts(input.products));
-
-  userPromptParts.push(
-    `\nKurallarına uygun, kısa ve yardımcı bir yanıt ver. Maksimum 3 ürün öner.`
+  parts.push(formatProducts(input.products));
+  parts.push(
+    "Kisa cevap ver. Ilk cumlede sonuc sayisini soyle. Gerekirse ikinci cumlede sadece tek bir takip sorusu sor."
   );
 
   return [
     { role: "system", content: SYSTEM_PROMPT },
-    { role: "user", content: userPromptParts.join("\n\n") },
+    { role: "user", content: parts.join("\n\n") },
   ];
 }
 
 function formatIntentContext(intent: StructuredIntent): string {
-  const parts: string[] = ["KULLANICININ ARAMA NİYETİ:"];
+  const lines: string[] = ["NIYET:"];
 
-  if (intent.category_slug) {
-    parts.push(`- Kategori: ${intent.category_slug}`);
-  }
+  if (intent.category_slug) lines.push(`- kategori: ${intent.category_slug}`);
   if (intent.semantic_keywords.length > 0) {
-    parts.push(`- Aradığı kavramlar: ${intent.semantic_keywords.join(", ")}`);
-  }
-  if (Object.keys(intent.must_have_specs).length > 0) {
-    const specs = Object.entries(intent.must_have_specs)
-      .map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(" veya ") : v}`)
-      .join("; ");
-    parts.push(`- Şart olanlar: ${specs}`);
+    lines.push(`- anahtar: ${intent.semantic_keywords.join(", ")}`);
   }
   if (intent.brand_filter.length > 0) {
-    parts.push(`- Marka tercihi: ${intent.brand_filter.join(", ")}`);
+    lines.push(`- marka: ${intent.brand_filter.join(", ")}`);
   }
-  if (intent.price_range.max) {
-    parts.push(`- Maksimum fiyat: ${intent.price_range.max} TL`);
+  if (intent.price_range.min != null || intent.price_range.max != null) {
+    lines.push(
+      `- fiyat: min=${intent.price_range.min ?? "null"} max=${intent.price_range.max ?? "null"}`
+    );
   }
 
-  return parts.join("\n");
+  return lines.join("\n");
 }
 
 function formatKnowledgeContext(chunks: KnowledgeChunk[]): string {
-  // Ä°lk 3 chunk'Ä± al (LLM'i bunaltma)
-  const top = chunks.slice(0, 3);
-  const lines = ["KONU İLE İLGİLİ BİLGİ (sözlükten):"];
+  const top = chunks.slice(0, 2);
+  if (top.length === 0) return "(bilgi yok)";
 
-  for (const c of top) {
-    const title = c.title || c.topic || "Bilgi";
-    // Ä°Ã§eriÄi 250 karakterle sÄ±nÄ±rla
-    const snippet = c.content.length > 250
-      ? c.content.slice(0, 247) + "..."
-      : c.content;
-    lines.push(`[${title}]\n${snippet}`);
-  }
-
-  return lines.join("\n\n");
+  return [
+    "ILGILI KISA BILGI:",
+    ...top.map((chunk) => {
+      const title = chunk.title || chunk.topic || "Bilgi";
+      const snippet =
+        chunk.content.length > 200
+          ? `${chunk.content.slice(0, 197)}...`
+          : chunk.content;
+      return `[${title}] ${snippet}`;
+    }),
+  ].join("\n");
 }
 
 function formatProducts(products: ProductForResponse[]): string {
   if (products.length === 0) {
-    return "BULUNAN ÜRÜNLER: (hiç ürün bulunamadı)";
+    return "URUNLER: yok";
   }
 
-  // İlk 5 ürünü prompt'a ver, LLM en uygun 3'ünü seçer
-  const top = products.slice(0, 5);
-  const lines = ["BULUNAN ÜRÜNLER:"];
-
-  for (let i = 0; i < top.length; i++) {
-    const p = top[i];
-    const brand = p.brand && p.brand !== "null" ? `[${p.brand}] ` : "";
-    const price = p.min_price
-      ? `${p.min_price.toLocaleString("tr-TR")} TL'den başlıyor`
-      : "fiyat bilgisi yok";
-    const listings = p.listing_count > 1
-      ? ` (${p.listing_count} mağazada)`
-      : "";
-    lines.push(`${i + 1}. ${brand}${p.title} — ${price}${listings}`);
-  }
-
-  return lines.join("\n");
+  return [
+    "URUNLER:",
+    ...products.slice(0, 5).map((product, index) => {
+      const brand =
+        product.brand && product.brand !== "null" ? `${product.brand} ` : "";
+      const price =
+        product.min_price != null
+          ? `${product.min_price.toLocaleString("tr-TR")} TL`
+          : "fiyat yok";
+      return `${index + 1}. ${brand}${product.title} - ${price}`;
+    }),
+  ].join("\n");
 }
 
-// ============================================================================
-// Fallback responses (LLM kullanmaz)
-// ============================================================================
+function buildGuidedProductResponse(input: ResponseInput): string {
+  const categoryLabel = resolveCategoryLabel(
+    input.intent?.category_slug,
+    input.userMessage
+  );
+  const countLine = `Aramana uygun ${input.products.length} ${categoryLabel} listelendi.`;
+  const nextStep = getNextCategoryFlowStep({
+    categorySlug: input.intent?.category_slug,
+    userMessage: input.userMessage,
+    hasBrand: (input.intent?.brand_filter?.length ?? 0) > 0,
+    hasPricePreference:
+      input.intent?.price_range.min != null || input.intent?.price_range.max != null,
+  });
 
-/**
- * Ãok genel sorgu â netleÅtirici sor.
- */
+  if (!nextStep) return countLine;
+  return `${countLine} ${nextStep.question}`;
+}
+
 function buildVagueResponse(input: ResponseInput): string {
-  // KB'den bağlam varsa kullan (proaktif)
-  const kbHint = input.knowledgeChunks[0]?.title || input.knowledgeChunks[0]?.topic || "";
+  const categoryLabel = resolveCategoryLabel(
+    input.intent?.category_slug,
+    input.userMessage
+  );
 
-  if (kbHint) {
-    return `${kbHint} ile ilgili mi arıyorsun? Biraz daha detay verirsen daha iyi öneri yapabilirim. Örneğin marka, bütçe veya özellik söyleyebilirsin.`;
+  if (categoryLabel !== "urun") {
+    return `${categoryLabel} icin biraz daha detay verir misin?`;
   }
 
-  return `Sana yardım etmek isterim. Biraz daha detay verirsen daha iyi öneri yapabilirim — örneğin marka, bütçe veya bir özellik söyleyebilirsin. Ya da doğrudan ürün adı yaz (örn: "iPhone 15", "lavanta deodorant").`;
+  return "Bir kategori ya da marka soylersen daha net gosterebilirim.";
 }
 
-/**
- * ÃrÃ¼n bulunamadÄ± â dÃ¼rÃ¼st ol, alternatif Ã¶ner.
- */
 function buildNoResultsResponse(input: ResponseInput): string {
-  const intent = input.intent;
-
-  // EÄer intent var ve KB'de bilgi varsa, KB Ã¼zerinden alternatif Ã¶ner
-  if (intent && input.knowledgeChunks.length > 0) {
-    const kbHint = input.knowledgeChunks[0]?.title || input.knowledgeChunks[0]?.topic || "";
-    return `"${input.userMessage}" için tam uyan ürün bulamadım şu an sistemde. Ama ${kbHint} kategorisinde başka seçeneklerimiz olabilir. Daha geniş bir arama yapmak ister misin? Örneğin marka veya kategori belirterek?`;
-  }
-
-  // KB de boÅ â generic mesaj
-  return `"${input.userMessage}" için sistemde ürün bulamadım. Aramanı biraz farklı yapmak ister misin? Marka adı, kategori veya özellik ekleyebilirsin.`;
+  return `"${input.userMessage}" icin uygun urun bulamadim. Markayi ya da ozelligi biraz degistirelim mi?`;
 }
 
-/**
- * LLM fail oldu, ama Ã¼rÃ¼n var â hardcoded format.
- */
 function buildFallbackProductResponse(input: ResponseInput): string {
-  const top = input.products.slice(0, 3);
-  const lines = [`İşte "${input.userMessage}" için bulduklarım:\n`];
-
-  for (let i = 0; i < top.length; i++) {
-    const p = top[i];
-    const brand = p.brand && p.brand !== "null" ? `${p.brand} ` : "";
-    const price = p.min_price
-      ? `${p.min_price.toLocaleString("tr-TR")} TL'den başlıyor`
-      : "fiyat bilgisi yok";
-    lines.push(`${i + 1}. ${brand}${p.title} — ${price}`);
-  }
-
-  return lines.join("\n");
+  const categoryLabel = resolveCategoryLabel(
+    input.intent?.category_slug,
+    input.userMessage
+  );
+  return `Aramana uygun ${input.products.length} ${categoryLabel} listelendi.`;
 }

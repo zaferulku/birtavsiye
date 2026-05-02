@@ -221,7 +221,14 @@ function extractCategories(
   for (const cat of categories) {
     const dbKeywords = cat.keywords ?? [];
     const staticKeywords = STATIC_CATEGORY_KEYWORDS[cat.slug] ?? [];
-    const allKeywords = [...dbKeywords, ...staticKeywords];
+    const slugParts = cat.slug.split("/");
+    const leafSlug = slugParts[slugParts.length - 1] ?? cat.slug;
+    const slugKeywords = [
+      cat.name,
+      leafSlug.replace(/-/g, " "),
+      cat.slug.replace(/[/-]/g, " "),
+    ];
+    const allKeywords = [...dbKeywords, ...staticKeywords, ...slugKeywords];
     if (allKeywords.length === 0) continue;
 
     let score = 0;

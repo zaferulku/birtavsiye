@@ -1,32 +1,23 @@
-/**
- * Suggestion Builder — Chatbot daraltıcı sohbet için chip butonları üretir.
- *
- * Karar mantığı:
- * 1. 3+ chip turundan sonra chip kapat (sonsuz döngü önleme)
- * 2. Terminator phrase ("hepsini göster", "yeni arama") → chip kapat
- * 3. Vague intent (kategori yok) → kategori chip'leri
- * 4. "Tavsiye ver" → 3 segment detay chip'leri
- * 5. "En popüler" → daraltıcı follow-up chip'leri
- * 6. Ürün ≤6 → chip yok, direkt göster
- * 7. Marka belirsiz → marka + shortcut chip'leri
- * 8. Bütçe belirsiz → bütçe chip'leri
- * 9. Hepsi belli → chip yok
- */
-
 import type { SupabaseClient } from "@supabase/supabase-js";
+import {
+  getNextCategoryFlowStep,
+  type FlowStepDefinition,
+} from "./categoryFlow";
 import type { StructuredIntent } from "./intentParser";
 import type { ProductForResponse } from "./generateResponse";
-
-// ============================================================================
-// Types
-// ============================================================================
 
 export type Suggestion = {
   label: string;
   value: string;
-  type: "shortcut" | "brand" | "price" | "category" | "freetext";
+  type:
+    | "shortcut"
+    | "brand"
+    | "price"
+    | "category"
+    | "freetext"
+    | "storage"
+    | "attribute";
   icon?: string;
-  /** Backward compat — eski chip'ler için korundu */
   categorySlug?: string;
   intentHint?: {
     category_slug?: string | null;
@@ -49,123 +40,137 @@ export type SuggestionContext = {
   categorySlug?: string | null;
 };
 
-// ============================================================================
-// Public entry
-// ============================================================================
+const TERMINATOR_PHRASES = [
+  "hepsini goster",
+  "fark etmez",
+  "yeni arama",
+  "butce onemli degil",
+  "hepsi olur",
+];
+
+const PROMPT_PHRASES = [
+  "hangi marka",
+  "hafiza kac gb",
+  "depolama kac gb",
+  "butce araligin ne olsun",
+  "nasil bir koku istiyorsun",
+  "cilt tipi nasil olsun",
+  "kapasite ne olsun",
+  "kac btu olsun",
+  "beden ne olsun",
+  "numara kac olsun",
+  "renk tercihin var mi",
+  "kulaklik tipi nasil olsun",
+  "televizyon kac inc olsun",
+  "monitor kac inc olsun",
+  "hangi tip olsun",
+  "supurge tipi nasil olsun",
+  "kum tipi nasil olsun",
+];
 
 export async function buildSuggestions(
   ctx: SuggestionContext
 ): Promise<Suggestion[] | null> {
   const { intent, products, conversationHistory, userMessage } = ctx;
 
-  // 1. Sonsuz döngü engelleme
   if (countChipTurns(conversationHistory) >= 3) return null;
-
-  // 2. Terminator phrase
   if (isTerminator(userMessage)) return null;
 
-  // 3. Vague intent → kategori chip'leri (sadece ürün YOKSA)
-  // Ürün döndüyse kategori biliniyor demektir, marka chip'lerine düş.
   if ((intent?.is_too_vague || !intent?.category_slug) && products.length === 0) {
     return buildCategorySuggestions();
   }
 
-  // 4. "Tavsiye ver" → segment detay
   if (wasRecommendationRequested(userMessage)) {
     return buildRecommendationDetailSuggestions(products);
   }
 
-  // 5. "En popüler" → daraltıcı follow-up
   if (wasPopularRequested(userMessage)) {
     return buildPopularFollowUpSuggestions(intent, products, userMessage);
   }
 
-  // 6. Tek ürün/sıfır → chip yok (kullanıcı zaten istediğini buldu).
-  // 2+ ürün → daraltma sun.
   if (products.length <= 1) return null;
 
-  // 7. Marka belirsiz
-  if (!intent?.brand_filter || intent.brand_filter.length === 0) {
-    return await buildBrandSuggestions(ctx, intent);
+  const nextStep = getNextCategoryFlowStep({
+    categorySlug: intent?.category_slug ?? ctx.categorySlug ?? null,
+    userMessage,
+    hasBrand: (intent?.brand_filter?.length ?? 0) > 0,
+    hasPricePreference:
+      intent?.price_range.min != null || intent?.price_range.max != null,
+  });
+
+  if (!nextStep) return null;
+
+  if (nextStep.key === "brand") {
+    return await buildBrandSuggestions(ctx);
   }
 
-  // 8. Bütçe belirsiz
-  if (intent && !intent.price_range?.max && !intent.price_range?.min) {
+  if (nextStep.key === "budget") {
     return buildPriceSuggestions(intent, userMessage);
   }
 
-  // 9. Hepsi belli
-  return null;
+  return buildAttributeSuggestions(ctx, intent, nextStep);
 }
 
-// ============================================================================
-// Helpers
-// ============================================================================
+function normalize(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/ı/g, "i")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c")
+    .trim();
+}
 
-const TERMINATOR_PHRASES = [
-  "hepsini göster",
-  "fark etmez",
-  "yeni arama",
-  "bütçe önemli değil",
-  "hepsi olur",
-];
+function getLeafCategorySlug(slug: string | null | undefined): string {
+  if (!slug) return "";
+  const normalized = normalize(slug);
+  const parts = normalized.split("/").filter(Boolean);
+  return parts[parts.length - 1] ?? normalized;
+}
 
 function isTerminator(message: string): boolean {
-  const lower = message.toLowerCase();
-  return TERMINATOR_PHRASES.some((p) => lower.includes(p));
+  const lower = normalize(message);
+  return TERMINATOR_PHRASES.some((phrase) => lower.includes(phrase));
 }
-
-const PROMPT_PHRASES = [
-  "hangi marka",
-  "hangi fiyat",
-  "hangi bütçe",
-  "hangi kategori",
-  "hangi tip",
-];
 
 function countChipTurns(history: Array<{ role: string; content: string }>): number {
   return history.filter(
-    (m) =>
-      m.role === "assistant" &&
-      PROMPT_PHRASES.some((p) => m.content.toLowerCase().includes(p))
+    (entry) =>
+      entry.role === "assistant" &&
+      PROMPT_PHRASES.some((phrase) => normalize(entry.content).includes(phrase))
   ).length;
 }
 
 function wasRecommendationRequested(message: string): boolean {
-  const lower = message.toLowerCase();
-  return lower.includes("tavsiye ver") || lower.includes("öner");
+  const lower = normalize(message);
+  return lower.includes("tavsiye ver") || lower.includes("oner") || lower.includes("öner");
 }
 
 function wasPopularRequested(message: string): boolean {
-  const lower = message.toLowerCase();
-  return lower.includes("en popüler") || lower.includes("populer");
+  const lower = normalize(message);
+  return lower.includes("en populer") || lower.includes("en populer");
 }
-
-// ============================================================================
-// Suggestion builders
-// ============================================================================
 
 function buildCategorySuggestions(): Suggestion[] {
   return [
     { label: "Telefon", value: "telefon", type: "category", icon: "📱", categorySlug: "akilli-telefon" },
     { label: "Laptop", value: "laptop", type: "category", icon: "💻", categorySlug: "laptop" },
-    { label: "Tablet", value: "tablet", type: "category", icon: "📲", categorySlug: "tablet" },
-    { label: "Akıllı saat", value: "akıllı saat", type: "category", icon: "⌚", categorySlug: "akilli-saat" },
-    { label: "Beyaz eşya", value: "beyaz eşya", type: "category", icon: "🧊", categorySlug: "buzdolabi" },
+    { label: "Kulaklik", value: "kulaklik", type: "category", icon: "🎧", categorySlug: "kulaklik" },
+    { label: "TV", value: "televizyon", type: "category", icon: "📺", categorySlug: "televizyon" },
+    { label: "Kahve makinesi", value: "kahve makinesi", type: "category", icon: "☕", categorySlug: "kahve-makinesi" },
+    { label: "Parfum", value: "parfum", type: "category", icon: "🌸", categorySlug: "parfum" },
   ];
 }
 
 async function buildBrandSuggestions(
-  ctx: SuggestionContext,
-  _intent: StructuredIntent | null
+  ctx: SuggestionContext
 ): Promise<Suggestion[]> {
   const baseValue = ctx.userMessage;
-
-  // Top markalar — sb varsa kategoriden, yoksa products'tan
+  const categorySlug = ctx.categorySlug ?? null;
   let topBrands: string[] = [];
 
-  // categorySlug üzerinden kategori-bazlı top markalar (Header'daki
-  // marka çeşitliliği için DB'den çek)
   if (ctx.sb && (ctx.categoryId || ctx.categorySlug)) {
     try {
       let query = ctx.sb
@@ -182,41 +187,53 @@ async function buildBrandSuggestions(
       }
 
       const { data } = await query;
-
       if (data) {
         const counts: Record<string, number> = {};
-        for (const r of data) {
-          const b = (r as { brand?: string | null }).brand;
-          if (b && b !== "null") counts[b] = (counts[b] || 0) + 1;
+        for (const row of data) {
+          const brand = (row as { brand?: string | null }).brand;
+          if (brand && brand !== "null") {
+            counts[brand] = (counts[brand] || 0) + 1;
+          }
         }
         topBrands = Object.entries(counts)
           .sort((a, b) => b[1] - a[1])
           .slice(0, 4)
-          .map(([b]) => b);
+          .map(([brand]) => brand);
       }
     } catch {
-      // ignore, use fallback below
+      // fallback below
     }
   }
 
   if (topBrands.length === 0) {
     const counts: Record<string, number> = {};
-    for (const p of ctx.products) {
-      if (p.brand && p.brand !== "null") {
-        counts[p.brand] = (counts[p.brand] || 0) + 1;
+    for (const product of ctx.products) {
+      if (product.brand && product.brand !== "null") {
+        counts[product.brand] = (counts[product.brand] || 0) + 1;
       }
     }
     topBrands = Object.entries(counts)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 4)
-      .map(([b]) => b);
+      .map(([brand]) => brand);
   }
 
-  const categorySlug = ctx.categorySlug ?? null;
-  const out: Suggestion[] = [
+  return [
+    ...topBrands.map(
+      (brand): Suggestion => ({
+        label: brand,
+        value: `${baseValue} ${brand}`,
+        type: "brand",
+        intentHint: {
+          category_slug: categorySlug,
+          brand_filter: [brand],
+          mode: "extend",
+        },
+      })
+    ),
     {
-      label: "En popüler",
-      value: `${baseValue} en popüler`,
+      label: "En populer",
+      value: `${baseValue} en populer`,
       type: "shortcut",
       icon: "🔥",
       intentHint: { category_slug: categorySlug, mode: "reset" },
@@ -228,73 +245,222 @@ async function buildBrandSuggestions(
       icon: "✨",
       intentHint: { category_slug: categorySlug, mode: "reset" },
     },
-    ...topBrands.map(
-      (brand): Suggestion => ({
-        label: brand,
-        value: `${baseValue} ${brand}`,
-        type: "brand",
-        intentHint: { category_slug: categorySlug, brand_filter: [brand], mode: "extend" },
+    {
+      label: "Hepsini goster",
+      value: `${baseValue} hepsini goster`,
+      type: "shortcut",
+      intentHint: { category_slug: categorySlug, mode: "reset" },
+    },
+  ];
+}
+
+function buildAttributeSuggestions(
+  ctx: SuggestionContext,
+  intent: StructuredIntent | null,
+  step: FlowStepDefinition
+): Suggestion[] {
+  const baseValue = ctx.userMessage;
+  const categorySlug = intent?.category_slug ?? ctx.categorySlug ?? null;
+
+  return [
+    ...step.options.map(
+      (option): Suggestion => ({
+        label: option,
+        value: `${baseValue} ${option}`,
+        type: step.key === "storage" ? "storage" : "attribute",
+        icon: step.icon,
+        intentHint: {
+          category_slug: categorySlug,
+          brand_filter: intent?.brand_filter ?? [],
+          ...(step.key === "storage"
+            ? { variant_storage_patterns: [option] }
+            : step.key === "color"
+              ? { variant_color_patterns: [option] }
+              : {}),
+          mode: "extend",
+        },
       })
     ),
-    { label: "Hepsini göster", value: `${baseValue} hepsini göster`, type: "shortcut" },
+    {
+      label: "Fark etmez",
+      value: `${baseValue} fark etmez`,
+      type: "shortcut",
+      intentHint: {
+        category_slug: categorySlug,
+        brand_filter: intent?.brand_filter ?? [],
+        mode: "extend",
+      },
+    },
   ];
-
-  return out;
 }
 
 function buildPriceSuggestions(
-  intent: StructuredIntent,
+  intent: StructuredIntent | null,
   userMessage: string
 ): Suggestion[] {
-  const ranges = priceRangesForCategory(intent.category_slug);
+  const ranges = priceRangesForCategory(intent?.category_slug ?? null);
   const baseValue = userMessage;
 
   return [
     ...ranges.map(
-      (r): Suggestion => ({
-        label: r.label,
-        value: `${baseValue} ${r.label}`,
+      (range): Suggestion => ({
+        label: range.label,
+        value: `${baseValue} ${range.label}`,
         type: "price",
         icon: "💰",
       })
     ),
-    { label: "Fark etmez", value: `${baseValue} fark etmez bütçe`, type: "shortcut" },
+    { label: "Fark etmez", value: `${baseValue} butce fark etmez`, type: "shortcut" },
   ];
 }
 
 function priceRangesForCategory(slug: string | null): Array<{ label: string }> {
+  const leaf = getLeafCategorySlug(slug);
   const map: Record<string, Array<{ label: string }>> = {
     "akilli-telefon": [
       { label: "5-15 bin TL" },
       { label: "15-30 bin TL" },
       { label: "30-60 bin TL" },
-      { label: "60 bin TL üstü" },
+      { label: "60 bin TL ustu" },
     ],
     laptop: [
       { label: "15-30 bin TL" },
       { label: "30-50 bin TL" },
       { label: "50-80 bin TL" },
-      { label: "80 bin TL üstü" },
-    ],
-    "akilli-saat": [
-      { label: "1-5 bin TL" },
-      { label: "5-15 bin TL" },
-      { label: "15-30 bin TL" },
-      { label: "30 bin TL üstü" },
+      { label: "80 bin TL ustu" },
     ],
     tablet: [
       { label: "5-15 bin TL" },
       { label: "15-30 bin TL" },
       { label: "30-60 bin TL" },
-      { label: "60 bin TL üstü" },
+      { label: "60 bin TL ustu" },
+    ],
+    "akilli-saat": [
+      { label: "1-5 bin TL" },
+      { label: "5-15 bin TL" },
+      { label: "15-30 bin TL" },
+      { label: "30 bin TL ustu" },
+    ],
+    kulaklik: [
+      { label: "1-3 bin TL" },
+      { label: "3-7 bin TL" },
+      { label: "7-15 bin TL" },
+      { label: "15 bin TL ustu" },
+    ],
+    televizyon: [
+      { label: "10-25 bin TL" },
+      { label: "25-50 bin TL" },
+      { label: "50-100 bin TL" },
+      { label: "100 bin TL ustu" },
+    ],
+    monitor: [
+      { label: "5-10 bin TL" },
+      { label: "10-20 bin TL" },
+      { label: "20-40 bin TL" },
+      { label: "40 bin TL ustu" },
+    ],
+    parfum: [
+      { label: "500-1.500 TL" },
+      { label: "1.500-3.000 TL" },
+      { label: "3.000 TL ustu" },
+    ],
+    deodorant: [
+      { label: "0-300 TL" },
+      { label: "300-700 TL" },
+      { label: "700 TL ustu" },
+    ],
+    "kahve-makinesi": [
+      { label: "2-7 bin TL" },
+      { label: "7-15 bin TL" },
+      { label: "15-30 bin TL" },
+      { label: "30 bin TL ustu" },
+    ],
+    airfryer: [
+      { label: "2-5 bin TL" },
+      { label: "5-10 bin TL" },
+      { label: "10-20 bin TL" },
+      { label: "20 bin TL ustu" },
+    ],
+    "robot-supurge": [
+      { label: "5-10 bin TL" },
+      { label: "10-20 bin TL" },
+      { label: "20-35 bin TL" },
+      { label: "35 bin TL ustu" },
+    ],
+    buzdolabi: [
+      { label: "15-30 bin TL" },
+      { label: "30-50 bin TL" },
+      { label: "50-80 bin TL" },
+      { label: "80 bin TL ustu" },
+    ],
+    "camasir-makinesi": [
+      { label: "10-20 bin TL" },
+      { label: "20-35 bin TL" },
+      { label: "35-60 bin TL" },
+      { label: "60 bin TL ustu" },
+    ],
+    "bulasik-makinesi": [
+      { label: "10-20 bin TL" },
+      { label: "20-35 bin TL" },
+      { label: "35-60 bin TL" },
+      { label: "60 bin TL ustu" },
+    ],
+    klima: [
+      { label: "15-25 bin TL" },
+      { label: "25-40 bin TL" },
+      { label: "40-60 bin TL" },
+      { label: "60 bin TL ustu" },
+    ],
+    elbise: [
+      { label: "500-1.500 TL" },
+      { label: "1.500-3.000 TL" },
+      { label: "3.000-7.000 TL" },
+      { label: "7.000 TL ustu" },
+    ],
+    ayakkabi: [
+      { label: "1-3 bin TL" },
+      { label: "3-6 bin TL" },
+      { label: "6-12 bin TL" },
+      { label: "12 bin TL ustu" },
+    ],
+    sneaker: [
+      { label: "1-3 bin TL" },
+      { label: "3-6 bin TL" },
+      { label: "6-12 bin TL" },
+      { label: "12 bin TL ustu" },
+    ],
+    canta: [
+      { label: "500-1.500 TL" },
+      { label: "1.500-3.000 TL" },
+      { label: "3.000-7.000 TL" },
+      { label: "7.000 TL ustu" },
+    ],
+    mama: [
+      { label: "0-500 TL" },
+      { label: "500-1.000 TL" },
+      { label: "1.000-2.000 TL" },
+      { label: "2.000 TL ustu" },
+    ],
+    kum: [
+      { label: "0-300 TL" },
+      { label: "300-700 TL" },
+      { label: "700-1.500 TL" },
+      { label: "1.500 TL ustu" },
+    ],
+    kahve: [
+      { label: "0-300 TL" },
+      { label: "300-700 TL" },
+      { label: "700-1.500 TL" },
+      { label: "1.500 TL ustu" },
     ],
   };
+
   return (
-    map[slug || ""] || [
+    map[leaf] || [
       { label: "1-5 bin TL" },
       { label: "5-15 bin TL" },
       { label: "15-50 bin TL" },
-      { label: "50 bin TL üstü" },
+      { label: "50 bin TL ustu" },
     ]
   );
 }
@@ -304,7 +470,7 @@ function buildRecommendationDetailSuggestions(
 ): Suggestion[] {
   if (products.length < 3) {
     return [
-      { label: "Başka seçenek", value: "başka seçenek göster", type: "shortcut", icon: "🔄" },
+      { label: "Baska secenek", value: "baska secenek goster", type: "shortcut", icon: "🔁" },
     ];
   }
 
@@ -312,40 +478,41 @@ function buildRecommendationDetailSuggestions(
   const economic = sorted[Math.max(0, Math.floor(sorted.length * 0.2))];
   const balance = sorted[Math.max(0, Math.floor(sorted.length * 0.5))];
   const premium = sorted[Math.max(0, Math.floor(sorted.length * 0.8))];
+  const suggestions: Suggestion[] = [];
 
-  const items: Suggestion[] = [];
   if (economic) {
-    items.push({
+    suggestions.push({
       label: "Ekonomik detay",
-      value: `${economic.title} hakkında detay`,
+      value: `${economic.title} hakkinda detay`,
       type: "freetext",
       icon: "💰",
     });
   }
   if (balance && balance !== economic) {
-    items.push({
+    suggestions.push({
       label: "Denge detay",
-      value: `${balance.title} hakkında detay`,
+      value: `${balance.title} hakkinda detay`,
       type: "freetext",
       icon: "⭐",
     });
   }
   if (premium && premium !== balance && premium !== economic) {
-    items.push({
+    suggestions.push({
       label: "Premium detay",
-      value: `${premium.title} hakkında detay`,
+      value: `${premium.title} hakkinda detay`,
       type: "freetext",
       icon: "🚀",
     });
   }
-  items.push({
-    label: "Başka seçenek",
-    value: "başka seçenek göster",
+
+  suggestions.push({
+    label: "Baska secenek",
+    value: "baska secenek goster",
     type: "shortcut",
-    icon: "🔄",
+    icon: "🔁",
   });
 
-  return items;
+  return suggestions;
 }
 
 function buildPopularFollowUpSuggestions(
@@ -354,15 +521,16 @@ function buildPopularFollowUpSuggestions(
   userMessage: string
 ): Suggestion[] {
   const counts: Record<string, number> = {};
-  for (const p of products) {
-    if (p.brand && p.brand !== "null") {
-      counts[p.brand] = (counts[p.brand] || 0) + 1;
+  for (const product of products) {
+    if (product.brand && product.brand !== "null") {
+      counts[product.brand] = (counts[product.brand] || 0) + 1;
     }
   }
+
   const topBrands = Object.entries(counts)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 2)
-    .map(([b]) => b);
+    .map(([brand]) => brand);
 
   const baseValue = intent?.semantic_keywords?.join(" ") || userMessage;
 
@@ -375,8 +543,8 @@ function buildPopularFollowUpSuggestions(
       })
     ),
     {
-      label: "Bütçeye göre",
-      value: `${baseValue} bütçeye göre`,
+      label: "Butceye gore",
+      value: `${baseValue} butceye gore`,
       type: "shortcut",
       icon: "💰",
     },

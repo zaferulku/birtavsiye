@@ -1,0 +1,26 @@
+{
+  "generated_at": "2026-05-01T20:30:58.684Z",
+  "behavior_scenarios": 480,
+  "style_examples": 480,
+  "behavior_buckets": [
+    "switch_category",
+    "sort_only",
+    "accessory_followup",
+    "comparison",
+    "clarify",
+    "bad_path_avoidance"
+  ],
+  "style_buckets": [
+    "product_list",
+    "comparison",
+    "clarify",
+    "no_results",
+    "accessory",
+    "broad_recommendation"
+  ],
+  "files": {
+    "behavior_all": "C:\\projeler\\birtavsiye\\tests\\chatbot\\fixtures\\generated\\all\\chatbot_dialogs_intent_behaviors_480.jsonl",
+    "behavior_split": "C:\\projeler\\birtavsiye\\tests\\chatbot\\fixtures\\generated\\behaviors\\chatbot_dialogs_intent_behaviors_480.jsonl",
+    "response_style": "C:\\projeler\\birtavsiye\\tests\\chatbot\\fixtures\\generated\\style\\chatbot_response_style_examples_480.jsonl"
+  }
+}

@@ -1,0 +1,7 @@
+{
+  "generated_at": "2026-05-01T20:46:44.860Z",
+  "intent_file": "tests\\chatbot\\fixtures\\generated\\all\\chatbot_dialogs_intent_short_queries_64.jsonl",
+  "style_file": "tests\\chatbot\\fixtures\\generated\\style\\chatbot_response_style_short_queries_24.jsonl",
+  "intent_count": 64,
+  "style_count": 24
+}

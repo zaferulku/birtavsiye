@@ -1,0 +1,43 @@
+{
+  "generated_at": "2026-05-01T19:51:22.835Z",
+  "total_scenarios": 1200,
+  "total_user_queries": 6000,
+  "verticals": [
+    "telefon",
+    "kozmetik",
+    "beyaz_esya",
+    "moda"
+  ],
+  "flows": [
+    "daraltma",
+    "genisletme",
+    "reset"
+  ],
+  "counts": {
+    "by_vertical": {
+      "telefon": 300,
+      "kozmetik": 300,
+      "beyaz_esya": 300,
+      "moda": 300
+    },
+    "by_flow": {
+      "daraltma": 400,
+      "genisletme": 400,
+      "reset": 400
+    }
+  },
+  "files": {
+    "all": "C:\\projeler\\birtavsiye\\tests\\chatbot\\fixtures\\generated\\all\\chatbot_dialogs_intent_all_1200.jsonl",
+    "verticals": {
+      "telefon": "C:\\projeler\\birtavsiye\\tests\\chatbot\\fixtures\\generated\\verticals\\chatbot_dialogs_telefon_300.jsonl",
+      "kozmetik": "C:\\projeler\\birtavsiye\\tests\\chatbot\\fixtures\\generated\\verticals\\chatbot_dialogs_kozmetik_300.jsonl",
+      "beyaz_esya": "C:\\projeler\\birtavsiye\\tests\\chatbot\\fixtures\\generated\\verticals\\chatbot_dialogs_beyaz_esya_300.jsonl",
+      "moda": "C:\\projeler\\birtavsiye\\tests\\chatbot\\fixtures\\generated\\verticals\\chatbot_dialogs_moda_300.jsonl"
+    },
+    "flows": {
+      "daraltma": "C:\\projeler\\birtavsiye\\tests\\chatbot\\fixtures\\generated\\flows\\chatbot_dialogs_daraltma_400.jsonl",
+      "genisletme": "C:\\projeler\\birtavsiye\\tests\\chatbot\\fixtures\\generated\\flows\\chatbot_dialogs_genisletme_400.jsonl",
+      "reset": "C:\\projeler\\birtavsiye\\tests\\chatbot\\fixtures\\generated\\flows\\chatbot_dialogs_reset_400.jsonl"
+    }
+  }
+}
