@@ -19,75 +19,78 @@ import { categorizeFromTitle } from "../categorizeFromTitle";
 type SbLike = any;
 
 // ═══ Source Category Map — tüm pazaryerleri için merkezi mapping ═══
-// Yeni pazaryeri ekledikçe burayı genişlet. Tek source: SOR.
+// Phase 5 sonrası full hierarchik path format. DB'deki categories.slug ile
+// eşleşmeli (Migration 021: <root>/<sub>/<leaf>). Yeni pazaryeri ekledikçe
+// burayı genişlet — leaf-only YAZMA, hierarchik path zorunlu.
+// Source: scripts/scrape-classifier-map-audit.json (P6.2a, 2026-05-02)
 export const SOURCE_CATEGORY_MAP: Record<string, string> = {
   // MediaMarkt — Telefon
-  "Android Telefonlar": "akilli-telefon",
-  "iPhone 11": "akilli-telefon",
-  "iPhone 14 Pro Max": "akilli-telefon",
-  "iPhone 17 Pro Max": "akilli-telefon",
-  "Galaxy A": "akilli-telefon",
-  "Galaxy S": "akilli-telefon",
-  "Galaxy Z": "akilli-telefon",
-  "Samsung Telefon": "akilli-telefon",
-  "General Mobile Telefon": "akilli-telefon",
+  "Android Telefonlar": "elektronik/telefon/akilli-telefon",
+  "iPhone 11": "elektronik/telefon/akilli-telefon",
+  "iPhone 14 Pro Max": "elektronik/telefon/akilli-telefon",
+  "iPhone 17 Pro Max": "elektronik/telefon/akilli-telefon",
+  "Galaxy A": "elektronik/telefon/akilli-telefon",
+  "Galaxy S": "elektronik/telefon/akilli-telefon",
+  "Galaxy Z": "elektronik/telefon/akilli-telefon",
+  "Samsung Telefon": "elektronik/telefon/akilli-telefon",
+  "General Mobile Telefon": "elektronik/telefon/akilli-telefon",
 
   // MM — Laptop
-  "Casper Laptop": "laptop",
-  "HP Laptop": "laptop",
-  "Asus Laptop": "laptop",
-  "Acer Laptop": "laptop",
-  "Huawei Laptop": "laptop",
-  "Lenovo Laptop": "laptop",
-  "Lenovo Laptop Modelleri": "laptop",
-  Laptop: "laptop",
+  "Casper Laptop": "elektronik/bilgisayar-tablet/laptop",
+  "HP Laptop": "elektronik/bilgisayar-tablet/laptop",
+  "Asus Laptop": "elektronik/bilgisayar-tablet/laptop",
+  "Acer Laptop": "elektronik/bilgisayar-tablet/laptop",
+  "Huawei Laptop": "elektronik/bilgisayar-tablet/laptop",
+  "Lenovo Laptop": "elektronik/bilgisayar-tablet/laptop",
+  "Lenovo Laptop Modelleri": "elektronik/bilgisayar-tablet/laptop",
+  Laptop: "elektronik/bilgisayar-tablet/laptop",
 
   // MM — Akıllı Saat
-  "Akıllı Saatler": "akilli-saat",
-  "Bilicra Akıllı Saat": "akilli-saat",
+  "Akıllı Saatler": "elektronik/giyilebilir/akilli-saat",
+  "Bilicra Akıllı Saat": "elektronik/giyilebilir/akilli-saat",
 
   // MM — Tablet
-  "Android Tabletler": "tablet",
-  Tabletler: "tablet",
+  "Android Tabletler": "elektronik/bilgisayar-tablet/tablet",
+  Tabletler: "elektronik/bilgisayar-tablet/tablet",
 
-  // MM — Mutfak
-  Blender: "blender",
-  "Kahve Makinesi": "kahve-makinesi",
-  "Espresso Kahve Makineleri": "kahve-makinesi",
-  "Filtre Kahve Makineleri": "kahve-makinesi",
-  "Robot Süpürge": "robot-supurge",
-  "Ankastre Fırın": "firin",
-  "Ankastre Bulaşık Makineleri": "bulasik-makinesi",
-  "Çamaşır Makineleri": "camasir-makinesi",
-  Buzdolabi: "buzdolabi",
-  Klimalar: "klima",
+  // MM — Mutfak / Beyaz Eşya
+  Blender: "kucuk-ev-aletleri/mutfak/blender",
+  "Kahve Makinesi": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+  "Espresso Kahve Makineleri": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+  "Filtre Kahve Makineleri": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+  "Robot Süpürge": "kucuk-ev-aletleri/temizlik/robot-supurge",
+  "Ankastre Fırın": "beyaz-esya/firin-ocak",
+  "Ankastre Bulaşık Makineleri": "beyaz-esya/bulasik-makinesi",
+  "Çamaşır Makineleri": "beyaz-esya/camasir-makinesi",
+  Buzdolabi: "beyaz-esya/buzdolabi",
+  Klimalar: "beyaz-esya/klima",
 
   // MM — Powerbank
-  "Taşınabilir Şarj Cihazları": "powerbank",
-  "MagSafe Powerbank": "powerbank",
-  "Ttec Powerbank": "powerbank",
-  "Ugreen Powerbank": "powerbank",
+  "Taşınabilir Şarj Cihazları": "elektronik/telefon/powerbank",
+  "MagSafe Powerbank": "elektronik/telefon/powerbank",
+  "Ttec Powerbank": "elektronik/telefon/powerbank",
+  "Ugreen Powerbank": "elektronik/telefon/powerbank",
 
   // MM — Diğer
-  Drone: "drone",
-  "Oyun Konsolları": "oyun-konsol",
+  Drone: "elektronik/kamera/drone",
+  "Oyun Konsolları": "elektronik/oyun/konsol",
 
-  // PttAVM (kebab-case) — pre-existing slug formatı
-  "akilli-telefon": "akilli-telefon",
-  "telefon-kilifi": "telefon-kilifi",
-  "telefon-yedek-parca": "telefon-yedek-parca",
-  "telefon-aksesuar": "telefon-aksesuar",
-  "ekran-koruyucu": "ekran-koruyucu",
-  "sarj-kablo": "sarj-kablo",
-  "akilli-saat": "akilli-saat",
-  "kahve-makinesi": "kahve-makinesi",
-  buzdolabi: "buzdolabi",
-  "tost-makinesi": "tost-makinesi",
-  televizyon: "tv",
-  "tv-aksesuar": "tv-aksesuar",
-  "fotograf-kamera": "fotograf-kamera",
-  "guvenlik-kamerasi": "guvenlik-kamerasi",
-  "bilgisayar-bilesenleri": "bilgisayar-bilesenleri",
+  // PttAVM (kebab-case eski leaf-only key'ler — Phase 5 öncesi)
+  "akilli-telefon": "elektronik/telefon/akilli-telefon",
+  "telefon-kilifi": "elektronik/telefon/kilif",
+  "telefon-yedek-parca": "elektronik/telefon/yedek-parca",
+  "telefon-aksesuar": "elektronik/telefon/aksesuar",
+  "ekran-koruyucu": "elektronik/telefon/ekran-koruyucu",
+  "sarj-kablo": "elektronik/telefon/sarj-kablo",
+  "akilli-saat": "elektronik/giyilebilir/akilli-saat",
+  "kahve-makinesi": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+  buzdolabi: "beyaz-esya/buzdolabi",
+  "tost-makinesi": "kucuk-ev-aletleri/mutfak/tost-makinesi",
+  televizyon: "elektronik/tv-ses-goruntu/televizyon",
+  "tv-aksesuar": "elektronik/tv-ses-goruntu/tv-aksesuar",
+  "fotograf-kamera": "elektronik/kamera/fotograf-makinesi",
+  "guvenlik-kamerasi": "elektronik/ag-guvenlik/guvenlik-kamera",
+  "bilgisayar-bilesenleri": "elektronik/bilgisayar-tablet/bilesenler",
 };
 
 export type ClassifyMethod =
@@ -126,12 +129,54 @@ function slugifySourceCat(raw: string): string {
     .replace(/-+/g, "-");
 }
 
+// kept for future hierarchik auto-create (P6.2a — auto-create devre dışı 2026-05-02)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function isCleanSourceCategory(raw: string): boolean {
   if (!raw || raw.length < 3 || raw.length > 60) return false;
   if (/^[\d-]+$/.test(raw)) return false;
   return /[a-zçşğıöüA-ZÇŞĞİÖÜ]{3,}/.test(raw);
 }
 
+/**
+ * Leaf-only veya full-path slug'ı slugToId Map'inde çözer.
+ * Phase 5 sonrası slugToId key'leri full hierarchik path. Üç katman:
+ *   1. Direct hit (zaten full-path)
+ *   2. SOURCE_CATEGORY_MAP fallback (eski leaf-only → yeni full path,
+ *      categorizeFromTitle gibi leaf-only çıktılar için)
+ *   3. Leaf-suffix match (DB taxonomy'de "/leaf" ile biten tek satır)
+ * Çoklu match'te console.warn + null fallback.
+ */
+function resolveLeafToFullPath(
+  slugToId: Map<string, string>,
+  leafOrPath: string,
+): { id: string; slug: string } | null {
+  const direct = slugToId.get(leafOrPath);
+  if (direct) return { id: direct, slug: leafOrPath };
+
+  // SOURCE_CATEGORY_MAP fallback: eski leaf-only slug'ı yeni full path'e çevir.
+  // Örn. categorizeFromTitle "telefon-kilifi" → MAP'te "elektronik/telefon/kilif".
+  const mapped = SOURCE_CATEGORY_MAP[leafOrPath];
+  if (mapped) {
+    const id = slugToId.get(mapped);
+    if (id) return { id, slug: mapped };
+  }
+
+  const suffix = "/" + leafOrPath;
+  const matches: Array<[string, string]> = [];
+  for (const [slug, id] of slugToId) {
+    if (slug.endsWith(suffix)) matches.push([slug, id]);
+  }
+  if (matches.length === 1) return { id: matches[0][1], slug: matches[0][0] };
+  if (matches.length > 1) {
+    console.warn(
+      `[classify] ambiguous leaf: ${leafOrPath} -> matches: ${matches.map((m) => m[0]).join(", ")}`,
+    );
+  }
+  return null;
+}
+
+// kept for future hierarchik auto-create (P6.2a — auto-create devre dışı 2026-05-02)
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function findOrCreateAutoCategory(
   sb: SbLike,
   sourceCatRaw: string,
@@ -176,7 +221,9 @@ export async function classifyScrapedProduct(
   input: ScrapeClassifyInput,
   unclassParentId: string | null,
 ): Promise<ScrapeClassifyResult> {
-  const { sb, title, source, sourceCategoryRaw, fallbackCategoryId, slugToId } = input;
+  // sb + source destructuring'den çıkarıldı (auto-create devre dışı, runtime'da
+  // kullanılmıyor). input'ta hâlâ caller tarafından geçiyor — imza aynı.
+  const { title, sourceCategoryRaw, fallbackCategoryId, slugToId } = input;
 
   // 1. source_category MAP'te varsa
   if (sourceCategoryRaw) {
@@ -193,33 +240,28 @@ export async function classifyScrapedProduct(
     }
   }
 
-  // 2 + 3. Title classifier (high → medium)
+  // 2 + 3. Title classifier (high → medium). categorizeFromTitle leaf-only
+  // slug döndürür; Phase 5 slugToId full-path key — resolver leaf-suffix
+  // match ile çevirir.
   const guess = categorizeFromTitle(title || "");
   if (guess.slug && (guess.confidence === "high" || guess.confidence === "medium")) {
-    const id = slugToId.get(guess.slug);
-    if (id) {
+    const resolved = resolveLeafToFullPath(slugToId, guess.slug);
+    if (resolved) {
       return {
-        categoryId: id,
-        slug: guess.slug,
+        categoryId: resolved.id,
+        slug: resolved.slug,
         method: guess.confidence === "high" ? "title_high" : "title_medium",
         reason: `title-${guess.confidence}: ${guess.matchedKeyword}`,
       };
     }
   }
 
-  // 4. Auto-create (ONLY if title classifier gave nothing AND source_category is clean)
-  if (sourceCategoryRaw && isCleanSourceCategory(sourceCategoryRaw)) {
-    const created = await findOrCreateAutoCategory(sb, sourceCategoryRaw, source, unclassParentId);
-    if (created) {
-      slugToId.set(created.slug, created.id);
-      return {
-        categoryId: created.id,
-        slug: created.slug,
-        method: "auto_created",
-        reason: `auto: ${sourceCategoryRaw}`,
-      };
-    }
-  }
+  // 4. Auto-create — DEVRE DIŞI (P6.2a, 2026-05-02). Phase 5 hierarchik
+  //    taxonomy ile uyumsuz (auto-* kategoriler keywords NULL, NAV'da yok,
+  //    kullanıcı bulamıyor). Yeni source_category gelirse 5. fallback yoluna
+  //    düşer; sonra SOURCE_CATEGORY_MAP'e manuel ekle.
+  //    findOrCreateAutoCategory + isCleanSourceCategory + slugifySourceCat
+  //    function gövdeleri korundu (gelecekte hierarchik versiyon için).
 
   // 5. Fallback to provided
   if (fallbackCategoryId)
