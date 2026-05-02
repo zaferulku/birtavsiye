@@ -31,8 +31,18 @@ if (error) {
 }
 const taxonomy = new Set(catRows.map((c) => c.slug));
 
-// Manuel mapping fallback (Phase 5D-3.3 + Migration 029 ile uyumlu)
+// P6.8 helper: --dump-taxonomy flag
+if (process.argv.includes("--dump-taxonomy")) {
+  for (const s of [...taxonomy].sort()) console.log(s);
+  process.exit(0);
+}
+
+// Manuel mapping fallback (Phase 5D-3.3 + Migration 029 ile uyumlu).
+// P6.8: 130 leaf-only fixture entry için kategori-aile koruyan precise mapping.
+// DB taxonomy üzerinden manuel review (npx tsx scripts/migrate-eval-fixtures.mts
+// --dump-taxonomy ile alındı).
 const MANUAL_MAPPINGS: Record<string, string> = {
+  // P6.1 baseline (16 entry, korunuyor)
   "telefon-kilifi": "elektronik/telefon/kilif",
   "telefon-yedek-parca": "elektronik/telefon/yedek-parca",
   "telefon-aksesuar": "elektronik/telefon/aksesuar",
@@ -49,17 +59,195 @@ const MANUAL_MAPPINGS: Record<string, string> = {
   "kadin-giyim-ust": "moda/kadin-giyim/ust",
   "kadin-giyim-alt": "moda/kadin-giyim/alt",
   "kadin-elbise": "moda/kadin-giyim/elbise",
+
+  // P6.8 expansion — Elektronik / IoT
+  "akilli-ampul": "elektronik/akilli-ev",
+  "akilli-asistan": "elektronik/akilli-ev",
+  "akilli-priz": "elektronik/akilli-ev",
+  "router-modem": "elektronik/ag-guvenlik/modem",
+  "harici-disk": "elektronik/bilgisayar-tablet/bilesenler",
+  "klavye": "elektronik/bilgisayar-tablet/klavye-mouse",
+  "mouse": "elektronik/bilgisayar-tablet/klavye-mouse",
+  "dizustu-bilgisayar": "elektronik/bilgisayar-tablet/laptop",
+  "oyun-konsolu": "elektronik/oyun/konsol",
+  "dijital-kod-oyun": "elektronik/oyun/konsol",
+
+  // Anne-bebek
+  "bebek-arabasi": "anne-bebek/bebek-tasima/araba-puset",
+  "bebek-giyim": "moda/cocuk-moda/giyim",
+  "bebek-mama": "anne-bebek/bebek-beslenme/mama",
+  "bebek-oyuncak": "anne-bebek/oyuncak/diger",
+  "bebek-oyuncak-bez": "anne-bebek/bebek-bakim/bebek-bezi",
+  "biberon": "anne-bebek/bebek-beslenme/biberon-emzik",
+  "mama-sandalyesi": "anne-bebek/bebek-beslenme",
+  "puzzle": "anne-bebek/oyuncak/masa-oyunu",
+  "kutu-oyunu": "anne-bebek/oyuncak/masa-oyunu",
+  "kedi-mama": "pet-shop/kedi/mama",
+  "kopek-mama": "pet-shop/kopek/mama",
+  "kus-yemi": "pet-shop/kus",
+  "akvaryum-aksesuar": "pet-shop/akvaryum",
+  "evcil-tasima": "pet-shop/aksesuar",
+
+  // Moda — ayakkabı/giyim/aksesuar
+  "ayakkabi-erkek": "moda/erkek-ayakkabi",
+  "ayakkabi-kadin": "moda/kadin-ayakkabi",
+  "kosu-ayakkabisi": "moda/erkek-ayakkabi/sneaker",
+  "bot": "moda/kadin-ayakkabi/bot",
+  "canta-kadin": "moda/aksesuar/canta-cuzdan",
+  "cuzdan": "moda/aksesuar/canta-cuzdan",
+  "kemer": "moda/aksesuar",
+  "sapka": "moda/aksesuar",
+  "esarp-fular": "moda/aksesuar",
+  "corap": "moda/aksesuar",
+  "saat-aksesuar": "moda/aksesuar/saat-taki",
+  "kazak": "moda/kadin-giyim/ust",
+  "mont": "moda/kadin-giyim/dis-giyim",
+  "mayo-bikini": "moda/kadin-giyim",
+  "hamile-giyim": "moda/kadin-giyim",
+
+  // Kozmetik — makyaj/cilt/saç/kişisel bakım
+  "fondoten": "kozmetik/makyaj/yuz",
+  "maskara": "kozmetik/makyaj/goz",
+  "ruj": "kozmetik/makyaj/dudak",
+  "oje": "kozmetik/makyaj",
+  "goz-far": "kozmetik/makyaj/goz",
+  "makyaj-cantasi": "kozmetik/makyaj/firca-aksesuar",
+  "makyaj-firca": "kozmetik/makyaj/firca-aksesuar",
+  "tonik": "kozmetik/cilt-bakim/temizleyici",
+  "temizleme-jeli": "kozmetik/cilt-bakim/temizleyici",
+  "el-kremi": "kozmetik/cilt-bakim/nemlendirici",
+  "gunes-kremi": "kozmetik/cilt-bakim/gunes-koruyucu",
+  "vucut-losyonu": "kozmetik/kisisel-bakim/vucut",
+  "sac-aksesuar": "kozmetik/sac-bakim/urunler",
+  "sac-bakim-yagi": "kozmetik/sac-bakim/urunler",
+  "sac-kremi": "kozmetik/sac-bakim/urunler",
+  "dis-firca-elektrikli": "kozmetik/kisisel-bakim/agiz-dis",
+  "tras-makinesi": "kozmetik/kisisel-bakim/erkek",
+  "tirnak-bakim": "kozmetik/kisisel-bakim/hijyen",
+
+  // Kucuk-ev-aletleri
+  "epilator": "kucuk-ev-aletleri/kisisel-bakim/diger",
+  "sac-duzlestirici": "kucuk-ev-aletleri/kisisel-bakim/diger",
+  "sac-kurutma": "kucuk-ev-aletleri/kisisel-bakim/sac-kurutma",
+  "blender-rondo": "kucuk-ev-aletleri/mutfak/blender",
+  "sebil": "kucuk-ev-aletleri/mutfak/su-isiticisi",
+  "ankastre-set": "beyaz-esya",
+  "mikrodalga-firin": "beyaz-esya/mikrodalga",
+  "ates-olcer": "saglik-vitamin",
+  "tansiyon-aleti": "saglik-vitamin",
+  "seker-olcer": "saglik-vitamin",
+  "vitamin-takviye": "saglik-vitamin/vitamin-mineral",
+  "maske-medikal": "saglik-vitamin",
+
+  // Ev-yaşam — mobilya/banyo/mutfak
+  "abajur-aydinlatma": "ev-yasam/aydinlatma",
+  "ayna": "ev-yasam/mobilya/yatak-odasi",
+  "kanepe": "ev-yasam/mobilya/oturma-odasi",
+  "kitaplik": "ev-yasam/mobilya/oturma-odasi",
+  "yatak": "ev-yasam/mobilya/yatak-odasi",
+  "yemek-masasi": "ev-yasam/mobilya/yemek-odasi",
+  "sandalye": "ev-yasam/mobilya/yemek-odasi",
+  "ofis-koltugu": "ev-yasam/mobilya/ofis",
+  "ofis-masasi": "ev-yasam/mobilya/ofis",
+  "vazo-dekor": "ev-yasam/mobilya",
+  "perde": "ev-yasam/ev-tekstili",
+  "hali": "ev-yasam/ev-tekstili",
+  "yastik": "ev-yasam/ev-tekstili",
+  "yatak-takimi": "ev-yasam/ev-tekstili",
+  "havlu-bornoz": "ev-yasam/banyo",
+  "bahce-mobilya": "ev-yasam/bahce-balkon",
+  "bicak-seti": "ev-yasam/mutfak-sofra",
+  "catal-bicak-kasik": "ev-yasam/mutfak-sofra",
+  "tencere-tava": "ev-yasam/mutfak-sofra",
+  "yemek-takimi": "ev-yasam/mutfak-sofra",
+  "saklama-kabi": "ev-yasam/mutfak-sofra",
+
+  // Spor & Outdoor
+  "fitness-aksesuar": "spor-outdoor/fitness",
+  "dumbel-agirlik": "spor-outdoor/fitness",
+  "kosu-bandi": "spor-outdoor/fitness",
+  "yoga-mat": "spor-outdoor/yoga-pilates",
+  "kamp-cadiri": "spor-outdoor/kamp",
+  "uyku-tulumu": "spor-outdoor/kamp",
+  "termos-mataralar": "spor-outdoor/kamp",
+
+  // Hobi & Eglence — kitap/kırtasiye/müzik
+  "kalem": "hobi-eglence/kitap-kirtasiye/kirtasiye",
+  "defter": "hobi-eglence/kitap-kirtasiye/kirtasiye",
+  "kitap-cocuk": "hobi-eglence/kitap-kirtasiye/cocuk-kitap",
+  "kitap-kisisel-gelisim": "hobi-eglence/kitap-kirtasiye/kitap",
+  "kitap-roman": "hobi-eglence/kitap-kirtasiye/kitap",
+  "muzik-album": "hobi-eglence/sanat-muzik",
+  "gitar": "hobi-eglence/sanat-muzik/muzik-aleti",
+  "klavye-piyano": "hobi-eglence/sanat-muzik/muzik-aleti",
+  "rc-oyuncak": "anne-bebek/oyuncak/rc-robot",
+
+  // Otomotiv (Türkçe ç ascii-norm sonrası "arac-aksesuar")
+  "arac-aksesuar": "otomotiv/arac-aksesuar",
+
+  // Yapı-market
+  "el-aleti": "yapi-market/el-aletleri",
+  "matkap": "yapi-market/elektrikli-aletler",
+  "vidalama": "yapi-market/elektrikli-aletler",
+  "ot-cim-bicme": "yapi-market/elektrikli-aletler",
+
+  // Süpermarket — gıda
+  "bal": "supermarket/kahvalti-kahve",
+  "cay": "supermarket/kahvalti-kahve",
+  "zeytinyagi": "supermarket/kahvalti-kahve",
+  "kuruyemis": "supermarket/atistirmalik",
+  "cikolata": "supermarket/dondurma-tatli",
+  "konserve": "supermarket/konserve-sos",
+  "mineral-su": "supermarket/icecek",
+
+  // Kozmetik parfüm (variant kadin/erkek tek leaf)
+  "parfum-erkek": "kozmetik/parfum",
+  "parfum-kadin": "kozmetik/parfum",
 };
 
+// P6.8: Türkçe karakter normalize. Fixture'larda 'araç-aksesuar', 'guneş-kremi',
+// 'saç-kurutma', 'epilatör', 'vücut-losyonu' gibi non-ascii varyantlar var; DB
+// slug'lar Migration 021 sonrası ascii-only.
+function trAsciiNormalize(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/ı/g, "i")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c");
+}
+
 function resolveSlug(leafOrPath: string): string | null {
+  // 1. Exact taxonomy match
   if (taxonomy.has(leafOrPath)) return leafOrPath;
+
+  // 2. Manual override (curated, kategori-aile doğruluğu garanti)
   const mapped = MANUAL_MAPPINGS[leafOrPath];
   if (mapped && taxonomy.has(mapped)) return mapped;
-  const matches: string[] = [];
-  for (const t of taxonomy) {
-    if (t === leafOrPath || t.endsWith("/" + leafOrPath)) matches.push(t);
+
+  // 3. Türkçe ascii-normalize varyantı (guneş→gunes, epilatör→epilator vs.)
+  const ascii = trAsciiNormalize(leafOrPath);
+  if (ascii !== leafOrPath) {
+    if (taxonomy.has(ascii)) return ascii;
+    const mappedAscii = MANUAL_MAPPINGS[ascii];
+    if (mappedAscii && taxonomy.has(mappedAscii)) return mappedAscii;
   }
-  if (matches.length === 1) return matches[0];
+
+  // 4. Leaf-suffix unique match (Phase 5C helper paterni)
+  // Çoklu match → null (sticky context fixture'da yok, ilk-match heuristic
+  // kategori-aile yanlışlığı üretiyor: "fitness-aksesuar" → "elektronik/
+  // telefon/aksesuar" gibi). Doğru çözüm: MANUAL_MAPPINGS'e ekle.
+  const candidates = [leafOrPath, ascii];
+  for (const cand of candidates) {
+    const matches: string[] = [];
+    for (const t of taxonomy) {
+      if (t === cand || t.endsWith("/" + cand)) matches.push(t);
+    }
+    if (matches.length === 1) return matches[0];
+  }
+
   return null;
 }
 
@@ -139,7 +327,10 @@ for (const fpath of FIXTURE_PATHS) {
     `${fpath}: ${dialogsProcessed} dialog | resolved=${stats.resolved}, unchanged=${stats.unchanged}, unmatched=${stats.unmatched.length}`,
   );
   if (stats.unmatched.length > 0) {
-    console.log(`  Unmatched slug'lar:`, stats.unmatched.slice(0, 10).join(", "));
+    // P6.8: full unmatched list (slice kaldırıldı). Audit + manuel mapping
+    // genişletme için tüm değerler görünür.
+    console.log(`  Unmatched slug'lar (${stats.unmatched.length}):`);
+    for (const slug of stats.unmatched) console.log(`    - ${slug}`);
   }
 }
 
