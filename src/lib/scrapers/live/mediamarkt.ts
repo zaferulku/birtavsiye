@@ -69,8 +69,8 @@ export async function fetchMediaMarkt(ctx: FetchContext): Promise<StoreLiveData>
 
     const html = await response.text();
     return parseMediaMarktHtml(html);
-  } catch (err: any) {
-    if (err.name === "AbortError") throw new Error("timeout");
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === "AbortError") throw new Error("timeout");
     throw err;
   } finally {
     clearTimeout(timeoutId);
@@ -120,8 +120,15 @@ function parseMediaMarktHtml(html: string): StoreLiveData {
   return extractFromHtml(html);
 }
 
-function parseProductSchema(product: any): StoreLiveData | null {
-  const offers = Array.isArray(product.offers) ? product.offers[0] : product.offers;
+type JsonLdProduct = Record<string, unknown> & {
+  offers?: unknown;
+};
+
+function parseProductSchema(product: JsonLdProduct): StoreLiveData | null {
+  const rawOffers = product.offers;
+  const offers = (Array.isArray(rawOffers) ? rawOffers[0] : rawOffers) as
+    | Record<string, unknown>
+    | undefined;
   if (!offers) return null;
 
   const price = parseNumber(offers.price ?? offers.lowPrice);
@@ -131,6 +138,8 @@ function parseProductSchema(product: any): StoreLiveData | null {
   const availability = String(offers.availability ?? "").toLowerCase();
   const inStock = availability.includes("instock") || availability.includes("in_stock");
 
+  const seller = offers.seller as { name?: unknown } | undefined;
+
   return {
     price,
     original_price: originalPrice && originalPrice > price ? originalPrice : null,
@@ -139,7 +148,7 @@ function parseProductSchema(product: any): StoreLiveData | null {
     stock_count: null,
     shipping_price: null,
     free_shipping: false,
-    seller_name: parseString(offers.seller?.name) ?? "MediaMarkt",
+    seller_name: parseString(seller?.name) ?? "MediaMarkt",
     installment_hint: null,
     campaign_hint: null,
     affiliate_url: null,

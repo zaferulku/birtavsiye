@@ -67,8 +67,8 @@ export async function fetchPttavm(ctx: FetchContext): Promise<StoreLiveData> {
 
     const html = await response.text();
     return parsePttavmHtml(html);
-  } catch (err: any) {
-    if (err.name === "AbortError") throw new Error("timeout");
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === "AbortError") throw new Error("timeout");
     throw err;
   } finally {
     clearTimeout(timeoutId);
@@ -96,28 +96,31 @@ function extractFromJsonLd(html: string): StoreLiveData | null {
     const jsonText = match[1].trim();
     if (!jsonText) continue;
 
-    let parsed: any;
+    let parsed: unknown;
     try {
       parsed = JSON.parse(jsonText);
     } catch {
       continue;
     }
 
-    const candidates = Array.isArray(parsed)
+    const parsedObj = parsed as Record<string, unknown> | undefined;
+    const graphField = parsedObj?.["@graph"];
+    const candidates: unknown[] = Array.isArray(parsed)
       ? parsed
-      : parsed["@graph"] && Array.isArray(parsed["@graph"])
-        ? parsed["@graph"]
+      : Array.isArray(graphField)
+        ? graphField
         : [parsed];
 
     for (const item of candidates) {
       if (!item || typeof item !== "object") continue;
-      const type = item["@type"];
+      const itemObj = item as Record<string, unknown>;
+      const type = itemObj["@type"];
       const isProduct =
         type === "Product" ||
         (Array.isArray(type) && type.includes("Product"));
       if (!isProduct) continue;
 
-      const result = parseProductSchema(item);
+      const result = parseProductSchema(itemObj);
       if (result) return result;
     }
   }
@@ -125,7 +128,7 @@ function extractFromJsonLd(html: string): StoreLiveData | null {
   return null;
 }
 
-function parseProductSchema(product: any): StoreLiveData | null {
+function parseProductSchema(product: Record<string, unknown>): StoreLiveData | null {
   const offers = normalizeOffers(product.offers);
   if (!offers) return null;
 
@@ -139,9 +142,10 @@ function parseProductSchema(product: any): StoreLiveData | null {
   const inStock =
     /instock/i.test(availability) || /in_stock/i.test(availability);
 
+  const productBrand = product.brand as { name?: unknown } | undefined;
   const sellerName =
     parseString(offers.seller?.name) ??
-    parseString(product.brand?.name) ??
+    parseString(productBrand?.name) ??
     "PttAVM";
 
   const shippingRate = offers.shippingDetails?.shippingRate;
@@ -164,18 +168,30 @@ function parseProductSchema(product: any): StoreLiveData | null {
   };
 }
 
-function normalizeOffers(offers: any): any | null {
+// JSON-LD Offer şekli — pttavm/JSON-LD'den dönen alanların gevşek tipi.
+// Tüm field'lar opsiyonel/unknown çünkü kaynak schema standart dışı varyasyonlar içeriyor.
+type OfferLike = {
+  price?: unknown;
+  lowPrice?: unknown;
+  highPrice?: unknown;
+  priceCurrency?: unknown;
+  availability?: unknown;
+  seller?: { name?: unknown };
+  shippingDetails?: { shippingRate?: { value?: unknown } };
+};
+
+function normalizeOffers(offers: unknown): OfferLike | null {
   if (!offers) return null;
   if (Array.isArray(offers)) {
     if (offers.length === 0) return null;
-    const sorted = [...offers].sort((a, b) => {
+    const sorted = [...(offers as OfferLike[])].sort((a, b) => {
       const pa = parseNumber(a?.price ?? a?.lowPrice) ?? Infinity;
       const pb = parseNumber(b?.price ?? b?.lowPrice) ?? Infinity;
       return pa - pb;
     });
     return sorted[0];
   }
-  return offers;
+  return offers as OfferLike;
 }
 
 // ============================================================================

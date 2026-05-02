@@ -103,7 +103,7 @@ export function useLivePrices(productId: string | null): UseLivePricesResult {
       }
     });
 
-    es.addEventListener("error", (e: any) => {
+    es.addEventListener("error", (e: MessageEvent) => {
       if (e?.data) {
         try {
           const payload = JSON.parse(e.data);

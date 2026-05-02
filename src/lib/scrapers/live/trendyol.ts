@@ -30,8 +30,9 @@ export async function fetchTrendyol(ctx: FetchContext): Promise<StoreLiveData> {
   if (ctx.sourceUrl) {
     try {
       return await fetchTrendyolHtml(ctx.sourceUrl);
-    } catch (err: any) {
-      const msg = String(err?.message || err).toLowerCase();
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : String(err);
+      const msg = errMsg.toLowerCase();
       if (msg.includes("rate") || msg.includes("block")) throw err;
     }
   }
@@ -63,8 +64,8 @@ async function fetchTrendyolHtml(url: string): Promise<StoreLiveData> {
 
     const html = await response.text();
     return parseTrendyolHtml(html);
-  } catch (err: any) {
-    if (err.name === "AbortError") throw new Error("html_timeout");
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === "AbortError") throw new Error("html_timeout");
     throw err;
   } finally {
     clearTimeout(timeoutId);
@@ -207,8 +208,8 @@ async function fetchTrendyolApi(sourceProductId: string): Promise<StoreLiveData>
       affiliate_url: null,
       fetched_at: new Date().toISOString(),
     };
-  } catch (err: any) {
-    if (err.name === "AbortError") throw new Error("api_timeout");
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === "AbortError") throw new Error("api_timeout");
     throw err;
   } finally {
     clearTimeout(timeoutId);
