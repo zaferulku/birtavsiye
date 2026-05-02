@@ -165,6 +165,42 @@ export function findCanonicalSlugSync(
     }
   }
 
+  // P6.18b: Compound-path match (token-set'ten önce, daha spesifik).
+  // Input "erkek-giyim-ust" → DB "moda/erkek-giyim/ust" segmentlerine yayılan
+  // tokens. Tüm input token'lar segments'in birinde appear etmeli (full coverage).
+  // Çoklu match → P6.11 sticky tie-break. Tek match → döndür.
+  for (const c of normalizedCandidates) {
+    if (c.includes("/")) continue;
+    const inputTokens = c.split("-").filter((t) => t.length >= 2);
+    if (inputTokens.length < 2) continue;
+
+    const matches: string[] = [];
+    for (const original of taxonomy) {
+      const norm = trNormalize(original);
+      const segments = norm.split("/");
+      const allTokensFound = inputTokens.every((tok) =>
+        segments.some((seg) => seg.includes(tok)),
+      );
+      if (allTokensFound) matches.push(original);
+    }
+    if (matches.length === 1) return matches[0];
+    if (matches.length > 1 && options?.stickyContextSlug) {
+      const sticky = options.stickyContextSlug;
+      let best: { slug: string; dist: number } | null = null;
+      for (const candidate of matches) {
+        const dist = commonPrefixDistance(candidate, sticky);
+        if (!best || dist > best.dist) best = { slug: candidate, dist };
+      }
+      if (best && best.dist > 0) return best.slug;
+    }
+    if (matches.length > 1) {
+      // Tie-break yok → en kısa slug'ı seç (en spesifik leaf, gereksiz parent
+      // path'leri eliminate eder). Eşitse alfabetik ilk.
+      matches.sort((a, b) => a.length - b.length || a.localeCompare(b));
+      return matches[0];
+    }
+  }
+
   // Token-set match (leaf segment scope)
   for (const c of normalizedCandidates) {
     if (c.includes("/")) continue;
