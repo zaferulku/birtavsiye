@@ -3,6 +3,9 @@
 import { Suspense, useEffect, useEffectEvent, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import SearchFiltersSidebar, {
+  type SearchSidebarSection,
+} from "../components/arama/SearchFiltersSidebar";
 import Footer from "../components/layout/Footer";
 import Header from "../components/layout/Header";
 import StoreLogo from "../components/ui/StoreLogo";
@@ -39,6 +42,12 @@ type Product = {
   }[];
 };
 
+type RelatedSuggestion = {
+  label: string;
+  hint: string;
+  query: string;
+};
+
 const popularSearches = [
   "iPhone 16",
   "Samsung Galaxy",
@@ -62,11 +71,22 @@ const sourceDisplayLabels: Record<string, string> = {
   vatan: "Vatan Bilgisayar",
 };
 
-type RelatedSuggestion = {
-  label: string;
-  hint: string;
-  query: string;
-};
+const relatedQuerySuffixes = [
+  "kilif",
+  "sarj aleti",
+  "kulaklik",
+  "powerbank",
+  "ekran koruyucu",
+  "kalem",
+  "klavye",
+  "mouse",
+  "canta",
+  "sogutucu",
+  "usb c hub",
+  "aksesuar",
+  "benzer urunler",
+  "en uygun",
+];
 
 function getSourceDisplayName(source: string | null): string {
   if (!source) return "Magaza";
@@ -104,14 +124,37 @@ function normalizeSearchText(value: string): string {
     .replace(/ğ/g, "g")
     .replace(/ö/g, "o")
     .replace(/ş/g, "s")
-    .replace(/ü/g, "u");
+    .replace(/ü/g, "u")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function getAccessoryBaseQuery(query: string): string {
+  const normalized = normalizeSearchText(query);
+
+  for (const suffix of relatedQuerySuffixes) {
+    const token = ` ${suffix}`;
+    if (normalized.endsWith(token)) {
+      return normalized.slice(0, -token.length).trim();
+    }
+  }
+
+  return normalized;
+}
+
+function getSuggestionSuffix(baseQuery: string, suggestionQuery: string): string {
+  const normalizedBase = normalizeSearchText(baseQuery);
+  const normalizedSuggestion = normalizeSearchText(suggestionQuery);
+
+  if (!normalizedBase) return normalizedSuggestion;
+  if (!normalizedSuggestion.startsWith(normalizedBase)) return normalizedSuggestion;
+
+  return normalizedSuggestion.slice(normalizedBase.length).trim();
 }
 
 function getRelatedSuggestions(query: string): RelatedSuggestion[] {
-  const trimmed = query.trim();
-  if (!trimmed) return [];
-
-  const normalized = normalizeSearchText(trimmed);
+  const baseQuery = getAccessoryBaseQuery(query);
+  if (!baseQuery) return [];
 
   const phoneSignals = [
     "iphone",
@@ -125,42 +168,41 @@ function getRelatedSuggestions(query: string): RelatedSuggestion[] {
     "honor",
     "akilli telefon",
   ];
-
   const laptopSignals = ["laptop", "notebook", "macbook", "dizustu", "oyuncu laptopu"];
   const tabletSignals = ["tablet", "ipad", "galaxy tab"];
 
-  if (phoneSignals.some((signal) => normalized.includes(signal))) {
+  if (phoneSignals.some((signal) => baseQuery.includes(signal))) {
     return [
-      { label: "Kılıf", hint: "Koruyucu aksesuar", query: `${trimmed} kilif` },
-      { label: "Şarj Aleti", hint: "Hızlı şarj", query: `${trimmed} sarj aleti` },
-      { label: "Kulaklık", hint: "Kablosuz modeller", query: `${trimmed} kulaklik` },
-      { label: "Powerbank", hint: "Taşınabilir enerji", query: `${trimmed} powerbank` },
-      { label: "Ekran Koruyucu", hint: "Cam ve film", query: `${trimmed} ekran koruyucu` },
+      { label: "Kilif", hint: "Koruyucu aksesuar", query: `${baseQuery} kilif` },
+      { label: "Sarj Aleti", hint: "Hizli sarj", query: `${baseQuery} sarj aleti` },
+      { label: "Kulaklik", hint: "Kablosuz modeller", query: `${baseQuery} kulaklik` },
+      { label: "Powerbank", hint: "Tasinabilir enerji", query: `${baseQuery} powerbank` },
+      { label: "Ekran Koruyucu", hint: "Cam ve film", query: `${baseQuery} ekran koruyucu` },
     ];
   }
 
-  if (tabletSignals.some((signal) => normalized.includes(signal))) {
+  if (tabletSignals.some((signal) => baseQuery.includes(signal))) {
     return [
-      { label: "Kılıf", hint: "Standlı kapaklar", query: `${trimmed} kilif` },
-      { label: "Kalem", hint: "Not alma ve çizim", query: `${trimmed} kalem` },
-      { label: "Klavye", hint: "Taşınabilir kullanım", query: `${trimmed} klavye` },
-      { label: "Şarj Aleti", hint: "Hızlı şarj", query: `${trimmed} sarj aleti` },
+      { label: "Kilif", hint: "Standli kapaklar", query: `${baseQuery} kilif` },
+      { label: "Kalem", hint: "Not alma ve cizim", query: `${baseQuery} kalem` },
+      { label: "Klavye", hint: "Tasinabilir kullanim", query: `${baseQuery} klavye` },
+      { label: "Sarj Aleti", hint: "Hizli sarj", query: `${baseQuery} sarj aleti` },
     ];
   }
 
-  if (laptopSignals.some((signal) => normalized.includes(signal))) {
+  if (laptopSignals.some((signal) => baseQuery.includes(signal))) {
     return [
-      { label: "Mouse", hint: "Kablosuz modeller", query: `${trimmed} mouse` },
-      { label: "Çanta", hint: "Taşıma çözümleri", query: `${trimmed} canta` },
-      { label: "Soğutucu", hint: "Performans desteği", query: `${trimmed} sogutucu` },
-      { label: "USB-C Hub", hint: "Bağlantı genişletme", query: `${trimmed} usb c hub` },
+      { label: "Mouse", hint: "Kablosuz modeller", query: `${baseQuery} mouse` },
+      { label: "Canta", hint: "Tasima cozumleri", query: `${baseQuery} canta` },
+      { label: "Sogutucu", hint: "Performans destegi", query: `${baseQuery} sogutucu` },
+      { label: "USB-C Hub", hint: "Baglanti genisletme", query: `${baseQuery} usb c hub` },
     ];
   }
 
   return [
-    { label: "Benzer Ürünler", hint: "Alternatif aramalar", query: `${trimmed} benzer urunler` },
-    { label: "Aksesuarlar", hint: "Tamamlayıcı ürünler", query: `${trimmed} aksesuar` },
-    { label: "En Uygunlar", hint: "Daha avantajlı sonuçlar", query: `${trimmed} en uygun` },
+    { label: "Benzer Urunler", hint: "Alternatif aramalar", query: `${baseQuery} benzer urunler` },
+    { label: "Aksesuarlar", hint: "Tamamlayici urunler", query: `${baseQuery} aksesuar` },
+    { label: "En Uygunlar", hint: "Daha avantajli sonuclar", query: `${baseQuery} en uygun` },
   ];
 }
 
@@ -194,11 +236,16 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
   const [results, setResults] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState("populer");
-  const [selectedBrand, setSelectedBrand] = useState("");
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedStorage, setSelectedStorage] = useState("");
 
   const search = useEffectEvent(async (term: string) => {
-    if (!term.trim()) return;
+    if (!term.trim()) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
 
     const response = await fetch(`/api/public/products?q=${encodeURIComponent(term)}&limit=48`, {
@@ -206,7 +253,6 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
     });
 
     if (!response.ok) {
-      setResults([]);
       setLoading(false);
       return;
     }
@@ -217,16 +263,34 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
   });
 
   useEffect(() => {
-    if (initialQuery) void search(initialQuery);
+    if (initialQuery.trim()) {
+      void search(initialQuery);
+    }
   }, [initialQuery]);
+
+  const navigateToQuery = (nextQuery: string) => {
+    const trimmed = nextQuery.trim();
+    setQuery(trimmed);
+    setSelectedBrands([]);
+    setSelectedStorage("");
+    router.push(`/ara?q=${encodeURIComponent(trimmed)}`, { scroll: false });
+  };
 
   const handleSearch = (event: React.FormEvent) => {
     event.preventDefault();
-    if (query.trim()) router.push(`/ara?q=${encodeURIComponent(query)}`);
+    if (query.trim()) navigateToQuery(query);
   };
 
   const brands = [...new Set(results.map((product) => product.brand?.trim()).filter(Boolean))];
   const relatedSuggestions = getRelatedSuggestions(initialQuery);
+  const normalizedCurrentQuery = normalizeSearchText(initialQuery);
+  const relatedBaseQuery = getAccessoryBaseQuery(initialQuery);
+  const selectedRelatedSuffixes = relatedSuggestions
+    .map((suggestion) => ({
+      suggestion,
+      suffix: getSuggestionSuffix(relatedBaseQuery, suggestion.query),
+    }))
+    .filter(({ suffix }) => Boolean(suffix) && normalizedCurrentQuery.includes(suffix));
   const storages = [
     ...new Set(
       results
@@ -234,9 +298,131 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
         .filter((value): value is string => Boolean(value))
     ),
   ];
+  const sidebarSections: SearchSidebarSection[] = [];
+
+  if (storages.length > 1) {
+    sidebarSections.push({
+      id: "storage",
+      kind: "pills",
+      title: "Kapasite",
+      count: storages.length,
+      items: [
+        {
+          id: "storage-all",
+          label: "Tumu",
+          selected: selectedStorage === "",
+          onToggle: () => setSelectedStorage(""),
+        },
+        ...storages.slice(0, 8).map((storage) => ({
+          id: `storage-${storage}`,
+          label: storage,
+          selected: selectedStorage === storage,
+          onToggle: () => setSelectedStorage(storage),
+        })),
+      ],
+    });
+  }
+
+  if (relatedSuggestions.length > 0) {
+    sidebarSections.push({
+      id: "related",
+      kind: "checkbox",
+      title: "Ilgili Alt Kategoriler",
+      count: relatedSuggestions.length,
+      items: relatedSuggestions.map((suggestion) => {
+        const suffix = getSuggestionSuffix(relatedBaseQuery, suggestion.query);
+        const isSelected = Boolean(suffix) && normalizedCurrentQuery.includes(suffix);
+
+        return {
+          id: suggestion.query,
+          label: suggestion.label,
+          selected: isSelected,
+          onToggle: () => {
+            const nextSuffixes = isSelected
+              ? selectedRelatedSuffixes
+                  .map((item) => getSuggestionSuffix(relatedBaseQuery, item.suggestion.query))
+                  .filter((item) => item !== suffix)
+              : [
+                  ...selectedRelatedSuffixes.map((item) =>
+                    getSuggestionSuffix(relatedBaseQuery, item.suggestion.query)
+                  ),
+                  suffix,
+                ];
+
+            navigateToQuery([relatedBaseQuery, ...nextSuffixes].join(" ").trim());
+          },
+        };
+      }),
+    });
+  }
+
+  const activeFilterItems = [
+    ...selectedRelatedSuffixes.map(({ suggestion }) => ({
+      id: `related-chip-${suggestion.query}`,
+      label: suggestion.label,
+      onRemove: () => {
+        const removedSuffix = getSuggestionSuffix(relatedBaseQuery, suggestion.query);
+        const suffixes = selectedRelatedSuffixes
+          .map((item) => getSuggestionSuffix(relatedBaseQuery, item.suggestion.query))
+          .filter((suffix) => suffix !== removedSuffix);
+        navigateToQuery([relatedBaseQuery, ...suffixes].join(" ").trim());
+      },
+    })),
+    ...(selectedStorage
+      ? [
+          {
+            id: `storage-chip-${selectedStorage}`,
+            label: selectedStorage,
+            onRemove: () => setSelectedStorage(""),
+          },
+        ]
+      : []),
+    ...selectedBrands.map((brand) => ({
+      id: `brand-chip-${brand}`,
+      label: brand,
+      onRemove: () => setSelectedBrands((current) => current.filter((item) => item !== brand)),
+    })),
+  ];
+
+  if (activeFilterItems.length > 0) {
+    sidebarSections.push({
+      id: "active-filters",
+      kind: "chips",
+      title: "Aktif filtreler",
+      items: activeFilterItems,
+    });
+  }
+
+  if (brands.length > 1) {
+    sidebarSections.push({
+      id: "brands",
+      kind: "checkbox",
+      title: "Marka",
+      count: brands.length,
+      allOption: {
+        id: "brand-all",
+        label: "Tumu",
+        selected: selectedBrands.length === 0,
+        count: results.length,
+        onToggle: () => setSelectedBrands([]),
+      },
+      items: brands.map((brand) => ({
+        id: `brand-${brand}`,
+        label: brand ?? "",
+        selected: selectedBrands.includes(brand ?? ""),
+        count: results.filter((product) => product.brand?.trim() === brand).length,
+        onToggle: () =>
+          setSelectedBrands((current) =>
+            current.includes(brand ?? "")
+              ? current.filter((item) => item !== brand)
+              : [...current, brand ?? ""]
+          ),
+      })),
+    });
+  }
 
   const filteredResults = results
-    .filter((product) => selectedBrand === "" || product.brand?.trim() === selectedBrand)
+    .filter((product) => selectedBrands.length === 0 || selectedBrands.includes(product.brand?.trim() ?? ""))
     .filter((product) => selectedStorage === "" || product.variant_storage?.trim() === selectedStorage)
     .sort((left, right) => {
       if (sortBy === "guncel") {
@@ -288,7 +474,7 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
                 type="button"
                 onClick={() => {
                   setQuery("");
-                  router.push("/ara?q=");
+                  router.push("/ara?q=", { scroll: false });
                 }}
                 className="flex min-h-11 min-w-11 flex-shrink-0 items-center justify-center text-lg text-gray-400 hover:text-gray-600"
               >
@@ -314,7 +500,7 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
             {popularSearches.map((term) => (
               <button
                 key={term}
-                onClick={() => router.push(`/ara?q=${encodeURIComponent(term)}`)}
+                onClick={() => navigateToQuery(term)}
                 className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm text-gray-600 transition-all hover:border-[#E8460A] hover:text-[#E8460A]"
               >
                 {term}
@@ -324,7 +510,7 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
         </div>
       )}
 
-      {loading && (
+      {loading && results.length === 0 && (
         <div className="py-16 text-center">
           <div className="mb-3 animate-pulse text-4xl">Ara</div>
           <div className="text-sm text-gray-500">Araniyor...</div>
@@ -342,7 +528,7 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
             {popularSearches.map((term) => (
               <button
                 key={term}
-                onClick={() => router.push(`/ara?q=${encodeURIComponent(term)}`)}
+                onClick={() => navigateToQuery(term)}
                 className="rounded-full border border-gray-200 bg-white px-4 py-2 text-sm text-gray-600 transition-all hover:border-[#E8460A] hover:text-[#E8460A]"
               >
                 {term}
@@ -357,10 +543,10 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
           <div className="mb-2 text-lg font-bold text-slate-900">Secili filtrelerle urun bulunamadi</div>
           <div className="mb-6 text-sm text-slate-500">Marka veya kapasite filtresini gevsetmeyi deneyin.</div>
           <div className="flex flex-wrap justify-center gap-2">
-            {selectedBrand && (
+            {selectedBrands.length > 0 && (
               <button
                 type="button"
-                onClick={() => setSelectedBrand("")}
+                onClick={() => setSelectedBrands([])}
                 className="rounded-full border border-slate-200 px-4 py-2 text-xs font-medium text-slate-600 hover:border-[#E8460A] hover:text-[#E8460A]"
               >
                 Marka filtresini temizle
@@ -379,161 +565,9 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
         </div>
       )}
 
-      {!loading && filteredResults.length > 0 && (
+      {initialQuery && results.length > 0 && (
         <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
-          <aside className="w-full flex-shrink-0 lg:w-[248px]">
-            <div className="sticky top-24">
-              <div className="flex max-h-[calc(100vh-7rem)] flex-col overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_16px_42px_rgba(15,23,42,0.08)]">
-                <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 via-white to-[#FFF6F1] px-4 py-4">
-                  <div className="mb-1 text-[28px] leading-none text-slate-200">⌕</div>
-                  <div className="text-[16px] font-black tracking-tight text-slate-900">Filtrele</div>
-                  <div className="mt-1 text-[13px] leading-5 text-slate-500">Aramani biraz daha netlestirelim.</div>
-                </div>
-
-                <div className="space-y-5 overflow-y-auto px-5 py-5">
-                  {relatedSuggestions.length > 0 && (
-                    <div className="rounded-[22px] border border-slate-200 bg-white p-3.5 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
-                      <div className="mb-3 flex items-center justify-between">
-                        <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
-                          Ilgili Alt Kategoriler
-                        </div>
-                        <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-400">
-                          {relatedSuggestions.length}
-                        </span>
-                      </div>
-                      <div className="space-y-0.5">
-                        {relatedSuggestions.map((suggestion) => (
-                          <button
-                            key={suggestion.query}
-                            type="button"
-                            onClick={() => router.push(`/ara?q=${encodeURIComponent(suggestion.query)}`)}
-                            className="flex w-full items-center gap-2.5 rounded-lg px-1.5 py-1.5 text-left transition hover:bg-slate-50"
-                          >
-                            <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-[5px] border border-slate-300 bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]" />
-                            <span className="min-w-0 text-[13px] font-medium text-slate-700">{suggestion.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {(selectedBrand || selectedStorage) && (
-                    <div className="rounded-[22px] border border-[#F9D7C6] bg-[#FFF7F2] p-3">
-                      <div className="mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[#E8460A]/75">
-                        Aktif filtreler
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedStorage && (
-                          <button
-                            type="button"
-                            onClick={() => setSelectedStorage("")}
-                            className="rounded-full border border-[#F3C7B2] bg-white px-3 py-1.5 text-xs font-semibold text-[#E8460A]"
-                          >
-                            {selectedStorage} ×
-                          </button>
-                        )}
-                        {selectedBrand && (
-                          <button
-                            type="button"
-                            onClick={() => setSelectedBrand("")}
-                            className="rounded-full border border-[#F3C7B2] bg-white px-3 py-1.5 text-xs font-semibold text-[#E8460A]"
-                          >
-                            {selectedBrand} ×
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-
-                  {storages.length > 1 && (
-                    <div className="rounded-[24px] border border-slate-200 bg-slate-50/60 p-4">
-                      <div className="mb-3 flex items-center justify-between">
-                        <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
-                          Kapasite
-                        </div>
-                        <span className="rounded-full bg-white px-2 py-1 text-[10px] font-bold text-slate-400">
-                          {storages.length}
-                        </span>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedStorage("")}
-                          className={`rounded-full border px-3 py-2 text-xs font-semibold transition-all ${
-                            selectedStorage === ""
-                              ? "border-[#E8460A] bg-[#FFF4EE] text-[#E8460A]"
-                              : "border-slate-200 bg-white text-slate-600 hover:border-[#E8460A]/35"
-                          }`}
-                        >
-                          Tumu
-                        </button>
-                        {storages.slice(0, 8).map((storage) => (
-                          <button
-                            key={storage}
-                            type="button"
-                            onClick={() => setSelectedStorage(storage)}
-                            className={`rounded-full border px-3 py-2 text-xs font-semibold transition-all ${
-                              selectedStorage === storage
-                                ? "border-[#E8460A] bg-[#FFF4EE] text-[#E8460A]"
-                                : "border-slate-200 bg-white text-slate-600 hover:border-[#E8460A]/35"
-                            }`}
-                          >
-                            {storage}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {brands.length > 1 && (
-                    <div className="rounded-[24px] border border-slate-200 bg-white p-4 shadow-[0_8px_24px_rgba(15,23,42,0.04)]">
-                      <div className="mb-3 flex items-center justify-between">
-                        <div className="text-[11px] font-bold uppercase tracking-[0.18em] text-slate-400">
-                          Marka
-                        </div>
-                        <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-bold text-slate-400">
-                          {brands.length}
-                        </span>
-                      </div>
-                      <div className="space-y-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedBrand("")}
-                          className={`flex w-full items-center justify-between rounded-2xl px-3 py-2.5 text-left text-sm transition-all ${
-                            selectedBrand === ""
-                              ? "bg-[#FFF4EE] text-[#E8460A]"
-                              : "text-slate-600 hover:bg-slate-50"
-                          }`}
-                        >
-                          <span className="font-medium">Tumu</span>
-                          <span className="rounded-full bg-white/80 px-2 py-0.5 text-[10px] text-slate-400">
-                            {results.length}
-                          </span>
-                        </button>
-                        {brands.map((brand) => (
-                          <button
-                            key={brand}
-                            type="button"
-                            onClick={() => setSelectedBrand(brand ?? "")}
-                            className={`flex w-full items-center justify-between rounded-2xl px-3 py-2.5 text-left text-sm transition-all ${
-                              selectedBrand === brand
-                                ? "bg-[#FFF4EE] text-[#E8460A]"
-                                : "text-slate-600 hover:bg-slate-50"
-                            }`}
-                          >
-                            <span className="font-medium">{brand}</span>
-                            <span className="rounded-full bg-slate-50 px-2 py-0.5 text-[10px] text-slate-400">
-                              {results.filter((product) => product.brand?.trim() === brand).length}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </aside>
+          <SearchFiltersSidebar sections={sidebarSections} />
 
           <section className="min-w-0 flex-1">
             <div className="rounded-[28px] border border-slate-200 bg-white px-5 py-4 shadow-[0_8px_32px_rgba(15,23,42,0.05)]">
@@ -546,6 +580,12 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
                     Aramana uygun <span className="font-semibold text-slate-900">{filteredResults.length}</span> urun
                     listelendi.
                   </div>
+                  {loading && results.length > 0 && (
+                    <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-[#FAD9CA] bg-[#FFF6F1] px-3 py-1 text-[11px] font-semibold text-[#E8460A]">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#E8460A]" />
+                      Sonuclar guncelleniyor...
+                    </div>
+                  )}
                 </div>
                 <label className="flex items-center gap-3 text-sm text-slate-500">
                   <span className="font-medium">Sirala</span>
@@ -607,7 +647,7 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
                               <img
                                 src={product.image_url}
                                 alt={title}
-                                className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-[1.04] scale-[1.62]"
+                                className="h-full w-full scale-[1.62] object-contain transition-transform duration-300 group-hover:scale-[1.68]"
                               />
                             </div>
                           ) : (
@@ -734,7 +774,7 @@ function AramaSayfasiIcerik() {
   const searchParams = useSearchParams();
   const q = searchParams.get("q") || "";
 
-  return <AramaIcerik key={q} initialQuery={q} />;
+  return <AramaIcerik initialQuery={q} />;
 }
 
 export default function AramaSayfasi() {
