@@ -1153,15 +1153,30 @@ export async function resolveExistingProduct({
   categoryId,
 }: ResolveExistingProductInput): Promise<ExistingProductRow | null> {
   // 1. GTIN match — en güçlü sinyal (Akakçe-style canonical anchor)
+  // BRAND VERIFY: GTIN ayni, brand farkli = false positive (parallel import,
+  // barkod re-use, scraper hatasi). Bu durumda match REDDEDILIR ve fallback
+  // yollarina (model_code -> slug -> brand+family+variant tuple) dusulur.
   if (identity.gtin) {
     const { data: byGtin } = await sb
       .from("products")
       .select(PRODUCT_FIELDS)
       .eq("gtin", identity.gtin)
-      .limit(2);
+      .limit(5);
     if (byGtin && byGtin.length > 0) {
-      // GTIN UNIQUE olduğu için tek satır beklenir; yine de ilk match'i döner
-      return byGtin[0] as ExistingProductRow;
+      const incomingBrand = identity.brand?.trim().toLowerCase() ?? "";
+      if (incomingBrand) {
+        const sameBrand = byGtin.filter((p) => {
+          const dbBrand = (p.brand ?? "").trim().toLowerCase();
+          return dbBrand && dbBrand === incomingBrand;
+        });
+        if (sameBrand.length > 0) {
+          return sameBrand[0] as ExistingProductRow;
+        }
+        // Ayni GTIN + farkli brand -> match REDDET, fallback'e dus.
+      } else {
+        // identity.brand yoksa eski davranis: ilk GTIN match'i don.
+        return byGtin[0] as ExistingProductRow;
+      }
     }
   }
 

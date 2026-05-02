@@ -161,14 +161,14 @@ async function upsertListing(scraped) {
     // Önce yeni canonical gtin kolonu üzerinden ara, sonra legacy specs->>gtin13
     let { data: p } = await sb
       .from('products')
-      .select('id, specs, description, image_url, images, gtin')
+      .select('id, brand, specs, description, image_url, images, gtin')
       .eq('gtin', scraped.gtin13)
       .limit(1)
       .maybeSingle();
     if (!p) {
       const fallback = await sb
         .from('products')
-        .select('id, specs, description, image_url, images, gtin')
+        .select('id, brand, specs, description, image_url, images, gtin')
         .eq('specs->>gtin13', scraped.gtin13)
         .limit(1)
         .maybeSingle();
@@ -176,21 +176,30 @@ async function upsertListing(scraped) {
     }
 
     if (p) {
-      productId = p.id;
-      const updates = {};
-      // GTIN backfill — Migration 020 sonrası canonical kolon
-      if (!p.gtin) updates.gtin = scraped.gtin13;
-      if (!p.specs || Object.keys(p.specs).length <= 1) {
-        if (scraped.raw_specs) updates.specs = { ...scraped.raw_specs, gtin13: scraped.gtin13 };
+      // BRAND VERIFY: GTIN ayni brand farkli = false positive (parallel import,
+      // barkod re-use). Match REDDEDILIR -> fallback (slug match -> yeni product).
+      const dbBrand = (p.brand ?? '').trim().toLowerCase();
+      const incomingBrand = (scraped.brand ?? '').trim().toLowerCase();
+      const brandMatches = !incomingBrand || !dbBrand || dbBrand === incomingBrand;
+      if (brandMatches) {
+        productId = p.id;
+        const updates = {};
+        // GTIN backfill — Migration 020 sonrası canonical kolon
+        if (!p.gtin) updates.gtin = scraped.gtin13;
+        if (!p.specs || Object.keys(p.specs).length <= 1) {
+          if (scraped.raw_specs) updates.specs = { ...scraped.raw_specs, gtin13: scraped.gtin13 };
+        }
+        if (!p.description && scraped.raw_description) updates.description = scraped.raw_description;
+        if ((!p.images || p.images.length === 0) && scraped.raw_images.length > 0) {
+          updates.images = scraped.raw_images;
+          if (!p.image_url) updates.image_url = scraped.raw_images[0];
+        }
+        if (Object.keys(updates).length > 0) {
+          await sb.from('products').update(updates).eq('id', productId);
+        }
       }
-      if (!p.description && scraped.raw_description) updates.description = scraped.raw_description;
-      if ((!p.images || p.images.length === 0) && scraped.raw_images.length > 0) {
-        updates.images = scraped.raw_images;
-        if (!p.image_url) updates.image_url = scraped.raw_images[0];
-      }
-      if (Object.keys(updates).length > 0) {
-        await sb.from('products').update(updates).eq('id', productId);
-      }
+      // brandMatches=false ise productId null kalir, asagidaki !productId blogu
+      // slug match veya yeni product yoluna gider.
     }
   }
 
