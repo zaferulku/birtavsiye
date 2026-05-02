@@ -1,13 +1,119 @@
-# birtavsiye.net — Project State v15
+# birtavsiye.net — Project State v15.1
 
 > **Bu dosya tek kaynak gerçek.** Yeni sohbet/oturum başlattığınızda
 > bu dosyayı Claude veya Claude Code'a verin — tüm bağlamı 30 saniyede alır.
 
-**Son güncelleme:** 2026-05-02 v15 (Yol A tamamlandı: Migration 025b log_price_change trigger bind + Migration 029 categories.keywords backfill 216/216 + GIN index)
+**Son güncelleme:** 2026-05-02 v15.1 (öğlen sonrası — Phase 6 partial: P6.1+P6.2a + Codex chatbot zinciri + kod hijyen A1 + chat izolasyonu)
 
 ---
 
-## 🟢 GÜNCEL DURUM (2 May 2026 gece — Yol A done, v15 paket)
+## 🔴 GÜNCEL DURUM (2 May 2026 öğlen — v15.1 paket)
+
+Sabah-öğlen oturumu kapsamında 4 ana commit + Codex tarafı 4 ek commit
+production'a alındı. Working dir CLEAN.
+
+### Bu oturumda kapatılan borçlar:
+
+**P6.1 — Chatbot kategori match restore (KRİTİK):**
+- Bisect ile kök neden tespit (5/5 senaryo HEAD'de FAIL)
+- H4: categories.is_leaf flag 215/216 false → chatbot loadCategories
+  is_leaf=true filtresinde sadece siniflandirilmamis görüyordu
+- Migration 030 (recursive UPDATE) → 1 → 172 leaf
+- Eval fixture migrate (Phase 5 hierarchik path)
+- Sonuç: 0/5 → 3/5 PASS (60%)
+
+**P6.2a — Scraper classifier Phase 5 uyumu:**
+- SOURCE_CATEGORY_MAP 52 entry leaf-only → full hierarchik path
+- 41 auto-match + 11 manuel (DB-doğrulanmış)
+- categorizeFromTitle resolveLeafToFullPath helper eklendi
+- Auto-create devre dışı (findOrCreateAutoCategory çağrısı kaldırıldı)
+- 3/3 dry-run senaryo PASS
+- DB'de mevcut auto-* kategori YOK (geriye dönük migration gerek değil)
+
+**Codex çalışması (43a971a → 9875bb6, 5 commit):**
+- `43a971a`: category knowledge → intent agent prompt enjekte
+- `63d8753`: category knowledge → ranking sinyali (productRetrieval.ts)
+  - Ürün başlık + model + specs üzerinden knowledge profile match
+  - score_breakdown.knowledge alanı + ranking_reasons "kullanim:..." izi
+  - agent_decisions diagnostiklerine knowledge_category_slug,
+    knowledge_profile_id, knowledge_signal_terms eklendi
+- `abefb5f`: hız iyileştirme — rule-based fast intent + KB skip
+  - 12 turluk probe 58s → 21s (~%64 hızlanma)
+  - Kısa/refine takip mesajlarında LLM çağrısı atlanıyor
+- `a2ea588`: bug fix — telefon → kırmızı/siyah confusion + suggestion mismatch
+  - Kısa takiplerde fallback kategori state korunuyor
+  - "olsun" → "oyun" yanlış düzeltme engellendi
+  - Cevap/chip aynı flow mesajından üretiliyor (suggestionBuilder)
+- `9875bb6`: chat izolasyonu — httpOnly cookie + session scope
+  - btv_browser_sid cookie + chatSessionScope birleşik
+  - agent_decisions log + feedback fallback scope ile bağlandı
+  - Cross-session feedback injection riski kapatıldı
+  - Client credentials: 'same-origin'
+
+**Hijyen + güvenlik:**
+- `d1c44a1`: scrape PID/log/state-backup pattern .gitignore'a eklendi
+- `961716f`: orphan sil (Hero, BlogSection) + .env.example + CI workflow
+  - 17 zorunlu env + 6 toggle dökümante
+  - .github/workflows/ci.yml — npm ci + lint + build (PR + main push)
+
+### Production durumu:
+- Working dir CLEAN (0 M, 0 untracked tracked-able)
+- TSC clean
+- Tüm Phase 5/6 fonksiyonel düzeltmeler ve Codex chatbot zinciri canlıda
+- Site trafik almıyor (yapım aşamasında, kullanıcı belirtti)
+- Background scrape'ler aktif (PttAVM SKIP_PHONE=1, MM telefon entry'leri SKIP)
+
+### Eval2 dryrun (P6.1 sonrası):
+- Önce: 0/5 PASS
+- Sonra: **3/5 PASS (60%)**
+- Kalan 2 fail:
+  - `supermarket/kahve`: kategori OK, 0 ürün (DB content gap)
+  - `moda/erkek-giyim/ust`: chatbot leaf-only response (P6.7 borcu)
+
+### Bekleyen İşler (v15.1 sonrası, öncelik sırası):
+
+**🔴 KRİTİK**: yok şu an
+
+**🟠 ORTA — Phase 6 kalan borçları:**
+- **P6.2b** — `networking` leaf DB'ye ekle (NAV "Ağ & Modem" → DB'de yok)
+- **P6.3** — NAV constant 14 dup converge consolidation
+- **P6.4** — Migration 016 anon RLS SSR audit (sitemap.ts gibi başka var mı)
+- **P6.5** — `categoryKnowledge.ts` keys field full-path uyumu (Codex sistemi review)
+- **P6.6** — `is_leaf` trigger (parent_id değişikliği sonrası dinamik update).
+  Migration 031 ileride. Migration 025'teki `sync_category_level` pattern.
+- **P6.7** — chatbot response leaf-only → full path resolve (helper LLM yanıt
+  yolunda effective değil, eval2 dialog 4 fail kaynağı)
+- **P6.8** — 120 fixture unmatched manuel mapping
+  (P6.1 fixture migrate %60 resolve, kalan 120 manuel mapping genişletme)
+- **🆕 P6.9** — Chatbot provider timeout/rate (Codex notu)
+  Provider 0 Timeout 1800ms + Groq 429 + Provider 2 Timeout.
+  Sohbet kırılmıyor ama hız/stabilite borcu.
+- **🆕 P6.10** — Suggestion empty edge case
+  "kırmızı olsun" → 1 ürün → suggestion boş kalabiliyor.
+- **🆕 P6.11** — "kahve makinesi → en ucuz" 0 sonuç
+  Ranking/fallback iyileştirme gerek (eval2 dialog 3 fail kaynağı, DB content + ranking)
+
+**🟡 DİĞER (öncelik düşük):**
+- **ŞAH 5** — CRLF normalize (`.gitattributes` LF policy, kural 17 referans)
+- **Eval2 full re-run** — 200 dialog tam baseline (LLM quota reset sonrası)
+- **Cron baseline 24h takip** — cron 2 May'da yeniden açıldı, 3 May'da kontrol
+  (CPU, Disk IO, Connections, query latency)
+- **Pre-existing eslint** — `src/app/api/sync/route.ts:9` unused import,
+  `:164` prefer-const
+
+**🟢 OPSIYONEL (MVP sonrası):**
+- listings.in_stock BOOLEAN DROP (6 ay sonra, frontend/scraper migrate sonrası)
+- raw_offers ingestion (Migration 028 staging tablosu kullanım)
+- backup_20260430_categories + backup_20260422_products silme
+- H16 Google AI dedup (deprecated SDK)
+- H19 next-auth v5 migration
+- Pro plan iptal kararı (29 May 2026)
+- LLM cache veya paid tier
+- Hosting değerlendirme (Hetzner/Vargonen, 3-6 ay sonra)
+
+---
+
+## 🔵 ÖNCEKİ DURUM (2 May 2026 gece — Yol A done, v15 paket)
 
 **YAPILAN İŞLER (v14 sonrası akşam):**
 
@@ -910,6 +1016,11 @@ ProductDetailShell.tsx ortak nokta — uyumlu.
 - Migration **029** ✅ (2026-05-02): `categories.keywords` backfill 216/216,
   GIN index aktif. Multi-provider LLM (Gemini + Groq + NVIDIA fallback).
 
+**v15.1'de tamamlandı:**
+- Migration **030** ✅ (2026-05-02 öğlen): `categories.is_leaf` recursive
+  backfill. 1 → 172 leaf. Chatbot loadCategories effective set restore.
+  P6.1 root cause fix.
+
 ### Knowledge Base
 12 doküman / 141 chunk (`docs/knowledge/`):
 parfum_notalari (10), cilt_bakimi (11), makyaj (12), moda_ust_giyim (13),
@@ -1001,6 +1112,15 @@ anne_bebek (11) = **141**
 ## ✅ COMMIT GEÇMİŞİ (son 30)
 
 ```
+961716f   chore: kod hijyen — orphan sil + .env.example + CI workflow (2 May öğlen)
+9875bb6   feat(chatbot): chat izolasyonu — httpOnly cookie + session scope (Codex)
+d1c44a1   chore(scrapers): pttavm SKIP_PHONE filter + mm import path fix
+303bb77   fix(db): Migration 030 — categories.is_leaf backfill (recursive) + fixture migrate
+348fef2   fix(scrapers): P6.2a — scrape classifier Phase 5 hierarchik uyum
+a2ea588   (Codex) chatbot bug fix: telefon/laptop confusion + suggestion mismatch
+abefb5f   (Codex) perf: chatbot follow-up speed (~%64 hızlanma)
+63d8753   (Codex) feat: category knowledge → chatbot ranking
+43a971a   (Codex) feat: feed category knowledge into chatbot intent agent
 8d6c529   feat(db): Migration 029 — categories.keywords backfill (216 kategori)
 ead3d19   feat(db): Migration 025b — log_price_change trigger bind
 08d355a   refactor(scrapers): price_history manuel INSERT'ler kaldırıldı (PR-1)
@@ -1119,6 +1239,17 @@ e0b318d   fix(ui): liste kart başlığı = brand + model_family + storage + col
     - Yeni `enrichment_source` değeri: `external_spec_source`
     Eski kod/commit/DB değerlerinde kalanlara DOKUNMA (legacy, OK).
     Sadece YENİ commit'ler için kural geçerli.
+17. **CRLF/LF policy:** Windows'ta çalışırken Git auto-conversion bazen
+    geri dönüş yaratır. .gitattributes ile LF normalize gerek (ŞAH 5
+    ileride). O zamana kadar diff'lerde "çok M dosya" görüldüğünde
+    `git diff --ignore-cr-at-eol --stat HEAD` ile gerçek değişiklik
+    çıkarılır.
+18. **Codex paralel çalışması:** Codex (ChatGPT) bazen aynı kod tabanında
+    paralel commit yapabilir. Yeni session açılınca:
+    - `git status`: working dir bekle
+    - `git log --oneline -10`: yeni commit'leri tanı
+    - PROJECT_STATE bağlamı doğrula
+    Çakışma riskinde stash/rebase ile uyumla.
 
 ### Kullanıcı için
 
@@ -1253,6 +1384,7 @@ yeni kategoriler ekler. Tur 2 fixture taxonomy gereği.
 | 2026-05-01 | v13 — Tonight paketi: Migrations 024-028 + 027b BLOCKER, turn-type detection (MergeAction + 7 TurnType + classifyTurn pure func), eval2 specialized actions (installment_filter_added/rating_filter_added/best_value_sort_applied), Phase 5 frontend smoke test (TEST 1 KIRIK — yarın refactor), naming kuralı 16 | Claude |
 | 2026-05-02 | v14 — Phase 5 frontend refactor done (5A→5F, 8 commit): hierarchik slug full-path routing + sitemap RLS fix (Migration 016 yan etkisi) + turkishNormalize chatbot entegrasyon + Header NAV 73→0 broken (74 slug DB sync, 159→145 unique) + production smoke test 7/7 PASS. Phase 6 borçları: P6.1 chatbot tie-break, P6.2 networking DB eksik, P6.3 NAV dup converge, P6.4 anon RLS audit | Claude |
 | 2026-05-02 | v15 — Yol A done: Migration 025b (log_price_change trigger bind, 5 manuel INSERT kaldırıldı, smoke 3/3 PASS) + Migration 029 (categories.keywords backfill 216/216, multi-provider LLM Gemini/Groq/NVIDIA fallback, 7.46 avg kw/slug, GIN index, ambiguous parent context 5/5 doğru). KOD ETKİSİ SIFIR (categoryKnowledge.ts + queryParser.ts dokunulmadı). Yeni Phase 6 borcu P6.5 (categoryKnowledge.ts keys full-path uyumu). | Claude |
+| 2026-05-02 | v15.1 — Phase 6 partial (P6.1 chatbot kategori match restore: bisect → Migration 030 is_leaf backfill 1→172 + eval fixture migrate, 0/5→3/5 PASS) + P6.2a scraper classifier Phase 5 uyumu (52 entry leaf→full path + resolveLeafToFullPath helper + auto-create devre dışı). Codex paralel zinciri (4 commit: knowledge→intent+ranking, fast-path, bug fix, chat izolasyonu httpOnly cookie + session scope). Kod hijyen A1 (orphan sil Hero/BlogSection + .env.example + CI workflow). Yeni borçlar P6.6-11 (is_leaf trigger, response leaf-only, 120 fixture unmatched, provider timeout, suggestion empty, kahve makinesi 0 sonuç). Davranış kuralları 17 (CRLF/LF) + 18 (Codex paralel). | Claude |
 
 ---
 
