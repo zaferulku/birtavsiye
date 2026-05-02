@@ -247,6 +247,7 @@ export function ChatBar() {
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message, history, chatSessionId, decisionId }),
       });
@@ -331,6 +332,7 @@ export function ChatBar() {
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message, history, chatSessionId, decisionId, image: base64 }),
       });

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { createHash } from "node:crypto";
+import { cookies } from "next/headers";
+import { createHash, randomUUID } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { aiEmbed } from "../../../lib/ai/aiClient";
 import {
@@ -208,6 +209,58 @@ const MAX_IMAGE_BYTES = 7_000_000; // ~5 MB binary as base64
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 30;
 const rateLimitBuckets = new Map<string, { count: number; resetAt: number }>();
+const BROWSER_SESSION_COOKIE = "btv_browser_sid";
+const BROWSER_SESSION_COOKIE_MAX_AGE = 60 * 60 * 24 * 180;
+
+function generateBrowserSessionId(): string {
+  return `bsid_${randomUUID().replace(/-/g, "")}`;
+}
+
+function normalizeBrowserSessionId(value: string | undefined): string | null {
+  if (!value) return null;
+  return /^bsid_[a-f0-9]{32}$/i.test(value) ? value : null;
+}
+
+function normalizeClientChatSessionId(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return trimmed.slice(0, 120);
+}
+
+function buildChatSessionScope(
+  browserSessionId: string,
+  chatSessionId: string | null
+): string {
+  return createHash("sha256")
+    .update(`${browserSessionId}:${chatSessionId ?? "missing-client-session"}`)
+    .digest("hex");
+}
+
+async function resolveBrowserSessionId(): Promise<string> {
+  const cookieStore = await cookies();
+  return (
+    normalizeBrowserSessionId(cookieStore.get(BROWSER_SESSION_COOKIE)?.value) ??
+    generateBrowserSessionId()
+  );
+}
+
+function withBrowserSessionCookie(
+  response: NextResponse,
+  browserSessionId: string
+): NextResponse {
+  response.cookies.set({
+    name: BROWSER_SESSION_COOKIE,
+    value: browserSessionId,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: BROWSER_SESSION_COOKIE_MAX_AGE,
+    priority: "high",
+  });
+  return response;
+}
 
 function getClientIp(req: Request): string {
   const xf = req.headers.get("x-forwarded-for");
@@ -247,22 +300,53 @@ async function recordFeedback(
   feedbackType: "wrong" | "more",
   sessionContext: Record<string, unknown>,
   chatSessionId: string | null = null,
+  chatSessionScope: string | null = null,
   bodyDecisionId: number | null = null
 ): Promise<void> {
   // Race-safe path: client passes decision_id from prior response.
   // Fallback path: session-scoped query for last chatbot-search decision.
   let decisionId: number | null = bodyDecisionId;
 
-  if (!decisionId) {
-    if (!chatSessionId) {
-      console.warn("[recordFeedback] no decisionId or chatSessionId, ignored");
-      return;
-    }
-    const { data: lastDecision } = await sb
+  if (decisionId) {
+    let validationQuery = sb
       .from("agent_decisions")
       .select("id")
-      .eq("agent_name", "chatbot-search")
-      .eq("input_data->>chatSessionId", chatSessionId)
+      .eq("id", decisionId)
+      .eq("agent_name", "chatbot-search");
+
+    if (chatSessionScope) {
+      validationQuery = validationQuery.eq(
+        "input_data->>chatSessionScope",
+        chatSessionScope
+      );
+    } else if (chatSessionId) {
+      validationQuery = validationQuery.eq(
+        "input_data->>chatSessionId",
+        chatSessionId
+      );
+    }
+
+    const { data: validatedDecision } = await validationQuery.maybeSingle();
+    if (!validatedDecision) {
+      decisionId = null;
+    }
+  }
+
+  if (!decisionId) {
+    if (!chatSessionScope && !chatSessionId) {
+      console.warn("[recordFeedback] no decisionId or session scope, ignored");
+      return;
+    }
+    let query = sb
+      .from("agent_decisions")
+      .select("id")
+      .eq("agent_name", "chatbot-search");
+
+    query = chatSessionScope
+      ? query.eq("input_data->>chatSessionScope", chatSessionScope)
+      : query.eq("input_data->>chatSessionId", chatSessionId);
+
+    const { data: lastDecision } = await query
       .order("timestamp", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -530,12 +614,17 @@ function calculateProductLimit(state: ConversationState, mergeAction: string): n
 
 export async function POST(req: Request) {
   const startTime = Date.now();
+  const browserSessionId = await resolveBrowserSessionId();
+  const respondJson = (
+    payload: Parameters<typeof NextResponse.json>[0],
+    init?: Parameters<typeof NextResponse.json>[1]
+  ) => withBrowserSessionCookie(NextResponse.json(payload, init), browserSessionId);
 
   // Rate limit (per-IP, in-memory) — bot/DoS koruması
   const ip = getClientIp(req);
   const rl = checkRateLimit(ip);
   if (!rl.allowed) {
-    return NextResponse.json(
+    return respondJson(
       { error: "Çok fazla istek. Biraz sonra tekrar dene." },
       { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } }
     );
@@ -546,8 +635,11 @@ export async function POST(req: Request) {
     const rawMessage = (body?.message || "").toString().trim();
     const userId = body?.userId || null;
     const history = Array.isArray(body?.history) ? body.history.slice(-MAX_HISTORY_ITEMS) : [];
-    const chatSessionId =
-      typeof body?.chatSessionId === "string" ? body.chatSessionId : null;
+    const chatSessionId = normalizeClientChatSessionId(body?.chatSessionId);
+    const chatSessionScope = buildChatSessionScope(
+      browserSessionId,
+      chatSessionId
+    );
     const decisionIdFromBody =
       typeof body?.decisionId === "number" && Number.isFinite(body.decisionId)
         ? body.decisionId
@@ -565,13 +657,13 @@ export async function POST(req: Request) {
 
     // Server-side guards (client cap'leri güvenilmez)
     if (rawMessage.length > MAX_MESSAGE_CHARS) {
-      return NextResponse.json(
+      return respondJson(
         { error: `Mesaj cok uzun (max ${MAX_MESSAGE_CHARS} karakter)` },
         { status: 400 }
       );
     }
     if (image && image.length > MAX_IMAGE_BYTES) {
-      return NextResponse.json(
+      return respondJson(
         { error: "Gorsel cok buyuk (max ~5 MB)" },
         { status: 413 }
       );
@@ -593,7 +685,7 @@ export async function POST(req: Request) {
     }
 
     if (!message) {
-      return NextResponse.json(
+      return respondJson(
         { error: "message field required" },
         { status: 400 }
       );
@@ -604,8 +696,9 @@ export async function POST(req: Request) {
       await recordFeedback(
         userId,
         feedback,
-        { message, chatSessionId },
+        { message, chatSessionId, chatSessionScope },
         chatSessionId,
+        chatSessionScope,
         decisionIdFromBody
       );
 
@@ -614,7 +707,7 @@ export async function POST(req: Request) {
           ? "Anladım, sonuclar uygun olmamış. Daha spesifik bilgi verir misin? Örneğin marka, fiyat aralığı veya bir özellik söyleyebilirsin."
           : "Tamam, başka seçeneklere bakalım. Aramayı biraz değiştirir misin? Farklı bir kategori veya marka ekleyebilirsin.";
 
-      return NextResponse.json({
+      return respondJson({
         reply,
         products: [],
         meta: {
@@ -862,7 +955,13 @@ export async function POST(req: Request) {
 
     let loggedDecisionId: number | null = null;
     try {
-      const inputData = { message, userId, chatSessionId };
+      const inputData = {
+        message,
+        userId,
+        chatSessionId,
+        chatSessionScope,
+        browserSessionBound: true,
+      };
       const inputHash = createHash("sha256")
         .update(JSON.stringify(inputData))
         .digest("hex");
@@ -924,7 +1023,7 @@ export async function POST(req: Request) {
       );
     }
 
-    return NextResponse.json({
+    return respondJson({
       reply: orchResult.response,
       products: responseProducts,
       suggestions: orchResult.suggestions ?? null,
@@ -974,7 +1073,7 @@ export async function POST(req: Request) {
     });
   } catch (err) {
     console.error("[chat] POST error:", err);
-    return NextResponse.json(
+    return respondJson(
       {
         error: "internal error",
       },
