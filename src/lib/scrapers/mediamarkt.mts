@@ -12,7 +12,6 @@ import type {
   JsonLdOffer,
   JsonLdBreadcrumbItem,
   PreloadedState,
-  ApolloCacheEntry,
   ApolloCache,
 } from './mediamarkt-types.mjs';
 import { isApolloRef, hasFeatureName } from './mediamarkt-types.mjs';

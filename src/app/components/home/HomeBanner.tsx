@@ -31,17 +31,6 @@ const SLIDES = [
   },
 ];
 
-const QUICK_CATS = [
-  { label: "Telefon",    href: "/anasayfa/elektronik/telefon/akilli-telefon",   icon: "📱" },
-  { label: "Laptop",     href: "/anasayfa/elektronik/bilgisayar-tablet/laptop", icon: "💻" },
-  { label: "TV",         href: "/anasayfa/elektronik/tv-ses-goruntu/televizyon", icon: "📺" },
-  { label: "Kulaklık",   href: "/anasayfa/elektronik/tv-ses-goruntu/kulaklik",  icon: "🎧" },
-  { label: "Beyaz Eşya", href: "/anasayfa/beyaz-esya",                          icon: "🫙" },
-  { label: "Makyaj",     href: "/anasayfa/kozmetik/makyaj",                     icon: "💋" },
-  { label: "Spor",       href: "/anasayfa/spor-outdoor/fitness",                icon: "🏋️" },
-  { label: "Giyim",      href: "/anasayfa/moda/kadin-giyim",                    icon: "👗" },
-];
-
 export default function HomeBanner() {
   return (
     <div className="w-full bg-white border-b border-gray-100">

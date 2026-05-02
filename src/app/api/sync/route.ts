@@ -6,7 +6,6 @@ import {
   inferProductIdentity,
   resolveExistingProduct,
 } from "@/lib/productIdentity";
-import { categorizeFromTitle } from "@/lib/categorizeFromTitle";
 import { classifyScrapedProduct } from "@/lib/scrapers/scrapeClassifier";
 
 const INTERNAL_SECRET = process.env.INTERNAL_API_SECRET;

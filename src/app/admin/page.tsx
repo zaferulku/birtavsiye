@@ -125,7 +125,7 @@ export default function AdminPanel() {
   const [priceHealthError, setPriceHealthError] = useState("");
 
   // CSV import
-  const [csvText, setCsvText] = useState("");
+  const [_csvText, setCsvText] = useState("");
   const [csvParsed, setCsvParsed] = useState<AdminCsvRow[]>([]);
   const [csvError, setCsvError] = useState("");
   const [csvImporting, setCsvImporting] = useState(false);
@@ -353,7 +353,7 @@ export default function AdminPanel() {
       setIcecatProductId(String(productId));
 
       setSuccess("✅ Icecat'ten bilgiler çekildi! Kontrol edip kaydedin.");
-    } catch (err) {
+    } catch {
       setIcecatError("Bağlantı hatası");
     }
     setIcecatLoading(false);
@@ -565,7 +565,7 @@ export default function AdminPanel() {
             {/* Icecat Arama Bölümü */}
             <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5">
               <h2 className="font-bold text-sm text-blue-800 mb-1 flex items-center gap-2">
-                🔍 Icecat'ten Otomatik Çek
+                🔍 Icecat&apos;ten Otomatik Çek
               </h2>
               <p className="text-xs text-blue-600 mb-3">EAN barkodu veya Marka + Model kodu girerek ürün bilgilerini otomatik doldur</p>
 
@@ -604,7 +604,7 @@ export default function AdminPanel() {
                   <div>
                     <div className="text-xs font-semibold text-gray-800">{title}</div>
                     <div className="text-xs text-gray-500">{brand}</div>
-                    <div className="text-xs text-green-600 mt-1">✅ Icecat'ten çekildi</div>
+                    <div className="text-xs text-green-600 mt-1">✅ Icecat&apos;ten çekildi</div>
                   </div>
                 </div>
               )}
@@ -693,8 +693,8 @@ export default function AdminPanel() {
               <p className="text-xs text-blue-600 mb-3">Dosyanın ilk satırı başlık olmalı. Zorunlu: <strong>title, brand, category, image_url</strong></p>
               <div className="bg-white border border-blue-100 rounded-xl p-3 font-mono text-xs text-gray-600 overflow-x-auto">
                 title,brand,category,image_url,description<br />
-                "iPhone 15 Pro 256GB",Apple,telefon,https://example.com/img.jpg,"Apple'ın amiral gemisi"<br />
-                "Galaxy S24 Ultra",Samsung,telefon,https://example.com/img2.jpg,""
+                {`"iPhone 15 Pro 256GB",Apple,telefon,https://example.com/img.jpg,"Apple'ın amiral gemisi"`}<br />
+                {`"Galaxy S24 Ultra",Samsung,telefon,https://example.com/img2.jpg,""`}
               </div>
               <p className="text-xs text-blue-600 mt-2">
                 Kategoriler: <strong>telefon, laptop, tv, ses, kozmetik, ev-aletleri, spor, oyun, fotograf, saglik, bebek, kitap</strong>

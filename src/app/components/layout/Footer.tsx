@@ -8,7 +8,7 @@ export default function Footer() {
               birtavsiye.net
             </div>
             <p className="text-sm leading-relaxed">
-              Türkiye'nin en kapsamlı ürün öneri ve fiyat karşılaştırma platformu.
+              Türkiye&apos;nin en kapsamlı ürün öneri ve fiyat karşılaştırma platformu.
             </p>
           </div>
           <div>
@@ -32,7 +32,7 @@ export default function Footer() {
         </div>
         <div className="border-t border-[#222] pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-[#444]">
           <span>© 2025 birtavsiye.net · Tüm hakları saklıdır</span>
-          <span>Türkiye'de 🇹🇷 sevgiyle yapıldı</span>
+          <span>Türkiye&apos;de 🇹🇷 sevgiyle yapıldı</span>
         </div>
       </div>
     </footer>

@@ -24,7 +24,7 @@ export default function PriceBox() {
           <div className="text-xs text-[#FF6B35] mt-1">Ücretsiz kargo · 2-3 iş günü</div>
         </div>
         <button className="w-full bg-[#E8460A] text-white py-3 text-sm font-medium hover:bg-[#C93A08] transition-colors">
-          Trendyol'a Git →
+          Trendyol&apos;a Git →
         </button>
         <div>
           {prices.map((p) => (
