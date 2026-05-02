@@ -1,11 +1,11 @@
-import { supabase } from "../../../lib/supabase";
+import { supabaseAdmin } from "@/lib/supabaseServer";
 import type { Metadata } from "next";
 
 export async function generateMetadata(
   { params }: { params: Promise<{ id: string }> }
 ): Promise<Metadata> {
   const { id } = await params;
-  const { data: topic } = await supabase
+  const { data: topic } = await supabaseAdmin
     .from("topics").select("title, body, category").eq("id", id).maybeSingle();
 
   if (!topic) return { title: "Tavsiye Bulunamadı" };
