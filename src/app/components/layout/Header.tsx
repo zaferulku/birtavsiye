@@ -93,7 +93,7 @@ const NAV: NavGroup[] = [
       {
         label: "Bilgisayar & Tablet", slug: "elektronik/bilgisayar-tablet/laptop", icon: "💻",
         subs: [
-          { label: "Laptop", slug: "elektronik/bilgisayar-tablet/laptop/laptop", tags: ["Lenovo", "Asus", "MSI", "MacBook", "HP", "Casper", "Acer", "Monster", "Dell", "Gaming Laptop"] },
+          { label: "Laptop", slug: "elektronik/bilgisayar-tablet/laptop", tags: ["Lenovo", "Asus", "MSI", "MacBook", "HP", "Casper", "Acer", "Monster", "Dell", "Gaming Laptop"] },
           { label: "Tablet", slug: "elektronik/bilgisayar-tablet/tablet", tags: ["iPad", "Samsung", "Lenovo", "Huawei", "Xiaomi", "Honor", "Tablet Kılıfı", "Tablet Klavyesi"] },
           { label: "Masaüstü Bilgisayar", slug: "elektronik/bilgisayar-tablet/masaustu", tags: ["All-in-One", "MacBook Mini", "Mini PC", "Gaming PC", "İş İstasyonu"] },
           { label: "Oyuncu Donanımları", slug: "elektronik/oyun/konsol", tags: ["Oyuncu Klavyesi", "Gaming Laptop", "Oyuncu Mouse", "Oyuncu Kulaklığı", "Oyuncu Monitörü", "Mekanik Klavye", "Oyuncu Koltuk"] },
@@ -109,7 +109,7 @@ const NAV: NavGroup[] = [
       {
         label: "Telefon & Aksesuar", slug: "elektronik/telefon/akilli-telefon", icon: "📱",
         subs: [
-          { label: "Akıllı Telefon", slug: "elektronik/telefon/akilli-telefon/akilli-telefon", tags: ["iPhone", "Samsung Galaxy", "Xiaomi", "Huawei", "OnePlus", "Realme", "Oppo"] },
+          { label: "Akıllı Telefon", slug: "elektronik/telefon/akilli-telefon", tags: ["iPhone", "Samsung Galaxy", "Xiaomi", "Huawei", "OnePlus", "Realme", "Oppo"] },
           { label: "Telefon Kılıfı", slug: "elektronik/telefon/kilif", tags: ["iPhone Kılıfı", "Samsung Kılıfı", "Deri Kılıf", "Şeffaf Kılıf", "Cüzdanlı Kılıf"] },
           { label: "Şarj & Kablo", slug: "elektronik/telefon/sarj-kablo", tags: ["Hızlı Şarj", "Kablosuz Şarj", "USB-C Kablo", "Lightning Kablo", "Power Bank", "Araç Şarjı"] },
           { label: "Kulaklık", slug: "elektronik/tv-ses-goruntu/kulaklik", tags: ["AirPods", "Samsung Buds", "Bluetooth", "Kulak İçi", "Kulak Üstü", "ANC", "Sony", "JBL", "Jabra"] },
@@ -133,7 +133,7 @@ const NAV: NavGroup[] = [
       {
         label: "Yazıcı & Tarayıcı", slug: "elektronik/bilgisayar-tablet/yazici", icon: "🖨️",
         subs: [
-          { label: "Yazıcı", slug: "elektronik/bilgisayar-tablet/yazici/yazici", tags: ["Lazer Yazıcı", "Mürekkepli Yazıcı", "Fotoğraf Yazıcısı", "HP", "Canon", "Epson", "Brother"] },
+          { label: "Yazıcı", slug: "elektronik/bilgisayar-tablet/yazici", tags: ["Lazer Yazıcı", "Mürekkepli Yazıcı", "Fotoğraf Yazıcısı", "HP", "Canon", "Epson", "Brother"] },
           { label: "Çok Fonksiyonlu Yazıcı", slug: "elektronik/bilgisayar-tablet/yazici/cok-fonksiyonlu-yazici", tags: ["Fotokopi", "Faks", "Tarayıcı", "Wi-Fi", "HP", "Canon", "Brother"] },
           { label: "Mürekkep & Toner", slug: "elektronik/bilgisayar-tablet/yazici/murekkep-toner", tags: ["Orijinal Kartuş", "Muadil Kartuş", "Toner", "Şerit", "Drum"] },
         ]
@@ -487,7 +487,7 @@ const NAV: NavGroup[] = [
       {
         label: "Bisiklet & Scooter", slug: "spor-outdoor/bisiklet", icon: "🚴",
         subs: [
-          { label: "Bisiklet", slug: "spor-outdoor/bisiklet/bisiklet", tags: ["Dağ Bisikleti", "Yol Bisikleti", "Kent Bisikleti", "Elektrikli Bisiklet", "BMX", "Çocuk Bisikleti"] },
+          { label: "Bisiklet", slug: "spor-outdoor/bisiklet", tags: ["Dağ Bisikleti", "Yol Bisikleti", "Kent Bisikleti", "Elektrikli Bisiklet", "BMX", "Çocuk Bisikleti"] },
           { label: "Elektrikli Scooter", slug: "spor-outdoor/bisiklet/elektrikli-scooter", tags: ["Xiaomi Scooter", "Segway", "Ninebot", "Kaabo", "Motus"] },
           { label: "Bisiklet Aksesuar", slug: "spor-outdoor/bisiklet/bisiklet-aksesuar", tags: ["Kask", "Kilit", "Su Şişesi", "Bisiklet Çantası", "Işık Seti", "Tamir Kiti"] },
           { label: "Paten & Kaykay", slug: "spor-outdoor/bisiklet/paten-kaykay", tags: ["Inline Paten", "Buz Pateni", "Skateboard", "Longboard", "Paten Koruyucu"] },
