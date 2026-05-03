@@ -168,6 +168,68 @@ Keep 2-4 Turkish words. Tooltip on hover for full terms.
 - Price drop analysis — `price-intelligence`
 - Affiliate link generation — `affiliate-link-manager`
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "product_listing_id": "uuid",
+  "marketplace": "string",
+  "product_url": "string",
+  "checkout_url": "string | null"
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "base_price": 0,
+  "shipping_price": 0,
+  "shipping_threshold": 0,
+  "free_shipping_above": 0,
+  "available_coupons": [
+    { "code": "string", "discount": 0, "min_basket": 0 }
+  ],
+  "max_installments": 12,
+  "installment_with_interest": false,
+  "final_price_estimate": 0,
+  "confidence": 0.91,
+  "extraction_status": "complete | partial | failed"
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `checkout-info-extractor` |
+| `method` | `script` (DOM scraping with selectors per marketplace) |
+| `confidence` | 0.5-0.95 based on which fields successfully extracted |
+| `triggered_by` | `cron` (per-listing daily) or `webhook` (on comparison page render) |
+| `status` | success / partial (some fields missing) / error |
+| `patch_proposed` | false |
+| `related_entity_type` | "listing" |
+| `related_entity_id` | product_listing_id |
+
+### Pipeline Position
+
+```
+upstream:   comparison-engine (when building offer table), tr-ecommerce-scraper (initial seed)
+       ↓
+[checkout-info-extractor]
+       ↓
+downstream: comparison-engine (uses final_price_estimate), price-intelligence (real-cost analysis)
+```
+
+### Trigger Cadence
+
+- Daily per active listing
+- On-demand when user views comparison
+
 ## Success Criteria
 
 - Installment extracted: > 90% of supported stores

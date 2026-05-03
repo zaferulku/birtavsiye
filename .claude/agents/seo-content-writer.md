@@ -231,6 +231,72 @@ No plagiarism. Attributed quotes OK. Images: own, licensed stock, manufacturer p
 }
 ```
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "content_type": "category_description | product_description | comparison_intro | landing_section | blog_post",
+  "keyword_primary": "string",
+  "keywords_secondary": ["string"],
+  "target_audience": "string",
+  "tone": "professional | friendly | informative",
+  "products_context": [{ "name": "string", "price": 0, "feature": "string" }],
+  "min_words": 100,
+  "max_words": 600
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "title": "string",
+  "h1": "string",
+  "meta_title": "string",
+  "meta_description": "string",
+  "content_md": "string — Turkish markdown",
+  "intro_paragraph": "string",
+  "outro_paragraph": "string",
+  "cta_text": "string",
+  "word_count": 0,
+  "keyword_density_primary": 2.4,
+  "uniqueness_check": { "score": 0.92, "similar_to": [] }
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `seo-content-writer` |
+| `method` | `llm` (Gemini/NVIDIA Llama generation) |
+| `confidence` | derived from LLM logprobs + uniqueness score; range 0.6-0.95 |
+| `triggered_by` | `cron` (weekly content schedule) or `agent` (seo-landing-generator delegates) or `manual` |
+| `status` | `success` / `partial` (low uniqueness → review) / `error` |
+| `patch_proposed` | `true` when `uniqueness_check.score < 0.8` (proposes manual review before publishing) |
+| `related_entity_type` | `category` / `product` / `landing_page` |
+| `related_entity_id` | UUID of target entity (category, product, or landing page record) |
+
+### Pipeline Position
+
+```
+upstream:   seo-agent, seo-landing-generator, trend-detector
+       ↓
+[seo-content-writer]
+       ↓
+downstream: writes to seo_pages table; canonical-data-manager (validate canonical link)
+```
+
+### Trigger Cadence
+
+- Weekly content batch Mondays 08:00 (cron)
+- On-demand for new landing pages (delegated by seo-landing-generator)
+- Manual editorial requests for refreshes
+
 ## When NOT to Use
 
 - Product detail SEO — `seo-landing-generator`

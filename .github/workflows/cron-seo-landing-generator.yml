@@ -1,0 +1,17 @@
+name: Cron — SEO Landing Generator
+
+on:
+  schedule:
+    - cron: '52 * * * *'
+  workflow_dispatch:
+
+jobs:
+  trigger:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Call cron endpoint
+        run: |
+          curl -fsS -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            "https://www.birtavsiye.net/api/cron/seo-landing-generator"

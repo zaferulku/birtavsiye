@@ -106,6 +106,78 @@ You MUST output ONLY the following JSON object — no prose, no explanation, no 
 
 Output ONLY the JSON. Never include explanatory text before or after it.
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "period": "24h | 7d | 30d",
+  "category_id": "uuid | null",
+  "signals": {
+    "search_logs": "table_ref",
+    "click_logs": "table_ref",
+    "price_drops": "table_ref",
+    "external": ["google_trends_csv_path"]
+  },
+  "metrics_weight": { "clicks": 0.3, "searches": 0.4, "purchases": 0.3 }
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "trending_categories": [{ "category_slug": "string", "score": 87 }],
+  "trending_products": [
+    {
+      "product_id": "uuid",
+      "trend_score": 0,
+      "direction": "rising | falling | stable",
+      "change_percent": 0
+    }
+  ],
+  "rising_stars": ["product_uuid"],
+  "declining": ["product_uuid"],
+  "seasonal_signals": [{ "trend": "string", "confidence": 0.9 }],
+  "seo_opportunities": ["en ucuz X 2026"],
+  "next_agent": "seo-landing-generator | none"
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `trend-detector` |
+| `method` | `rule` (statistical baseline) or `hybrid` (LLM commentary on top of stats) |
+| `confidence` | derived from sample size & signal strength |
+| `triggered_by` | `cron` (hourly baseline; daily aggregate) |
+| `status` | `success` / `noop` (noop when no meaningful signal in period) |
+| `patch_proposed` | `true` when `seo_opportunities` is non-empty (proposes new landing pages to seo-landing-generator); otherwise `false` |
+| `related_entity_type` | `"category"` (when category-scoped) or `null` (global) |
+| `related_entity_id` | `category_id` or `null` |
+
+### Pipeline Position
+
+```
+upstream:   agent_logs (search history), price_history (drops),
+            external Google Trends signals
+       ↓
+[trend-detector]
+       ↓
+downstream: seo-landing-generator (creates pages from seo_opportunities),
+            notification-dispatcher (admin trend alerts)
+```
+
+### Trigger Cadence
+
+- Hourly snapshot for real-time dashboards (`triggered_by: cron`)
+- Daily aggregate at 06:00 TR time
+- Weekly trend report Sundays for marketing/SEO team
+
 # Persistent Agent Memory
 
 You have a persistent, file-based memory system at `C:\projeler\birtavsiye\.claude\agent-memory\trend-detector\`. This directory already exists — write to it directly with the Write tool (do not run mkdir or check for its existence).

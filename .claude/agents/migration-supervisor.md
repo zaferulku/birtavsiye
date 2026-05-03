@@ -138,6 +138,62 @@ birtavsiye.net is Turkish. Error messages, table names, and user communication m
 - Common Turkish rejection: "hayır", "iptal", "dur", "vazgeç", "durdur"
 - Backup table names use English (`backup_20260422_products`) for SQL consistency.
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "migration_type": "schema | data_backfill | category_tree | gtin_seed",
+  "old_schema_version": "string",
+  "new_schema_version": "string",
+  "dry_run": true,
+  "backup_required": true
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "migration_status": "ready | applied | partial | failed | rollback_required",
+  "risk_level": "low | medium | high",
+  "required_backups": ["table1", "table2"],
+  "validation_steps": ["step1", "step2"],
+  "rows_affected": 0,
+  "rollback_sql": "string | null"
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `migration-supervisor` |
+| `method` | `script` (delegates to `npm run migrate:*` or supabase migration) |
+| `confidence` | `1.0` on success; `0.5` on partial; `null` on failure |
+| `triggered_by` | `manual` (admin trigger only — never auto) |
+| `status` | `success` / `partial` / `error` |
+| `patch_proposed` | `false` (executes patches; doesn't propose) |
+| `related_entity_type` | `system` or `category` depending on scope |
+| `related_entity_id` | uuid of related entity, or `null` |
+
+### Pipeline Position
+
+```
+upstream:   admin panel, manual trigger
+       ↓
+[migration-supervisor]
+       ↓
+downstream: canonical-data-manager (post-migration validation), site-supervisor (notify completion)
+```
+
+### Trigger Cadence
+
+- Ad-hoc, only when DB schema/data needs change; pre-flight `--dry-run` then real apply
+
 ## Success Signals
 
 A well-run migration produces:

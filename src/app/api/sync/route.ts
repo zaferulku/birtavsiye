@@ -38,6 +38,7 @@ interface ScrapedProduct {
   // önce bu alanı SOURCE_CATEGORY_MAP'e karşı kontrol eder, sonra title
   // classifier'a düşer. Yoksa null/undefined kabul edilir.
   source_category?: string | null;
+  source_category_path?: string | null;
   // GTIN/EAN barkod — MM scraper gtin13'ü çekiyor; diğer scraper'lar için
   // title/specs/description'dan extract edilir (Migration 020)
   gtin?: string | null;
@@ -112,11 +113,16 @@ async function getStoreId(source: SyncSource): Promise<string | null> {
   return data?.id ?? null;
 }
 
-async function syncProducts(products: ScrapedProduct[], source: SyncSource, categoryId?: string) {
+async function syncProducts(
+  products: ScrapedProduct[],
+  source: SyncSource,
+  categoryId?: string,
+  sourceQuery?: string,
+) {
   const sb = getSupabase();
   const storeId = await getStoreId(source);
   if (!storeId) {
-    return { inserted: 0, errors: 1, firstError: ["store:not_found"], newProductIds: [] };
+    return { inserted: 0, errors: 1, skipped: 0, firstError: ["store:not_found"], newProductIds: [] };
   }
 
   // Slug → category_id mapping (title-based override için)
@@ -124,11 +130,16 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
   const slugToId = new Map<string, string>(
     (catRows ?? []).map((c: { id: string; slug: string }) => [c.slug, c.id])
   );
+  const idToSlug = new Map<string, string>(
+    (catRows ?? []).map((c: { id: string; slug: string }) => [c.id, c.slug])
+  );
   // siniflandirilmamis parent (auto-create için)
   const unclassParentId = slugToId.get("siniflandirilmamis") ?? null;
+  const fallbackCategorySlug = categoryId ? idToSlug.get(categoryId) ?? null : null;
 
   let inserted = 0;
   let errors = 0;
+  let skipped = 0;
   const firstError: string[] = [];
   const newProductIds: string[] = [];
 
@@ -155,11 +166,22 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
         title: product.name,
         source,
         sourceCategoryRaw: product.source_category ?? null,
+        sourceCategoryPathRaw:
+          product.source_category_path ??
+          product.specs?.pttavm_path ??
+          product.specs?.mediamarkt_path ??
+          null,
         fallbackCategoryId: categoryId ?? null,
+        fallbackCategorySlug,
+        sourceQuery: sourceQuery ?? null,
         slugToId,
       },
       unclassParentId,
     );
+    if (classified.skip) {
+      skipped++;
+      continue;
+    }
     const effectiveCategoryId = classified.categoryId ?? categoryId;
 
     let productId: string | null = null;
@@ -372,7 +394,7 @@ async function syncProducts(products: ScrapedProduct[], source: SyncSource, cate
     inserted++;
   }
 
-  return { inserted, errors, firstError, newProductIds };
+  return { inserted, errors, skipped, firstError, newProductIds };
 }
 
 async function triggerAgentValidation(productIds: string[]): Promise<void> {
@@ -466,7 +488,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  const stats = await syncProducts(products, source, category_id);
+  const stats = await syncProducts(products, source, category_id, query);
 
   if (stats.newProductIds.length > 0) {
     console.log(
@@ -483,6 +505,7 @@ export async function POST(request: NextRequest) {
     page,
     fetched: products.length,
     inserted: stats.inserted,
+    skipped: stats.skipped,
     errors: stats.errors,
     firstError: stats.firstError,
     newProducts: stats.newProductIds.length,

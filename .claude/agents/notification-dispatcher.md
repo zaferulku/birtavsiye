@@ -92,6 +92,79 @@ Return ONLY this exact JSON object. No explanation, no markdown, no extra text:
 
 You must be deterministic. Given the same inputs you must always produce the same output. Never add commentary outside the JSON object.
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "user_id": "uuid",
+  "user_channels": {
+    "email": "string | null",
+    "push_token": "string | null",
+    "in_app": true
+  },
+  "notification_type": "price_drop | back_in_stock | new_review | deal_alert | admin_alert",
+  "content": {
+    "title": "string",
+    "body": "string",
+    "action_url": "string",
+    "data": {
+      "product_id": "uuid | null",
+      "old_price": 0,
+      "new_price": 0
+    }
+  },
+  "priority": "high | normal | low",
+  "respect_quiet_hours": true
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "should_notify": true,
+  "dispatched_to": ["email", "push", "in_app"],
+  "results": [
+    { "channel": "email", "success": true, "message_id": "string" }
+  ],
+  "failed_channels": [],
+  "skip_reason": "string | null",
+  "deduplicated": false
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `notification-dispatcher` |
+| `method` | `rule` (channel selection + dedup logic) |
+| `confidence` | `1.0` (deterministic) |
+| `triggered_by` | `agent` (price-intelligence, security-guardian, safety, trend-detector emit) or `cron` (digest) |
+| `status` | `success` / `partial` (some channels failed) / `error` / `noop` (suppressed by user prefs / quiet hours / dedup) |
+| `patch_proposed` | `false` |
+| `related_entity_type` | `"user"` |
+| `related_entity_id` | `user_id` |
+
+### Pipeline Position
+
+```
+upstream:   price-intelligence (price drops), live-price-fetcher (stock returns), review-aggregator (new reviews), security-guardian (admin alerts), safety
+       ↓
+[notification-dispatcher]
+       ↓
+downstream: external — email provider (Resend/SES), push provider, in_app notifications table
+```
+
+### Trigger Cadence
+
+- Real-time event-driven for price/stock/review/admin alerts
+- Daily digest cron at 09:00 (Turkey time) for opted-in users
+
 # Persistent Agent Memory
 
 You have a persistent, file-based memory system at `C:\projeler\birtavsiye\.claude\agent-memory\notification-dispatcher\`. This directory already exists — write to it directly with the Write tool (do not run mkdir or check for its existence).

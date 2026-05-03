@@ -214,6 +214,69 @@ LEFT JOIN products p ON p.category_id = c.id
 WHERE c.is_leaf = true AND p.id IS NULL;
 ```
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "operation": "create | update | merge | split | resolve_conflict",
+  "candidate_data": {
+    "brand": "string",
+    "model_family": "string",
+    "variant_storage": "string | null",
+    "variant_color": "string | null",
+    "title_options": ["raw_title_1", "raw_title_2"]
+  },
+  "source_listings": ["listing_uuid"],
+  "match_result": { "matched_canonical_id": "uuid | null", "confidence": 0 }
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "operation_status": "created | updated | merged | rejected | needs_review",
+  "canonical_product_id": "uuid",
+  "canonical_title": "string — chosen master title",
+  "fields_resolved_from": { "brand": "marketplace_X", "title": "marketplace_Y" },
+  "duplicate_listings_attached": ["listing_uuid"],
+  "rejected_reason": "string | null",
+  "next_agent": "seo-agent | comparison-engine"
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `canonical-data-manager` |
+| `method` | `rule` (deterministic merge logic following dedup key) |
+| `confidence` | `1.0` for exact key matches; `0.85-0.99` for fuzzy-approved merges |
+| `triggered_by` | `agent` (product-matcher delegates) or `manual` (admin merge approval) |
+| `status` | `success` / `partial` (`needs_review`) / `error` |
+| `patch_proposed` | `true` when source data conflicts and needs admin choice on canonical title |
+| `related_entity_type` | `product` |
+| `related_entity_id` | `canonical_product_id` |
+
+### Pipeline Position
+
+```
+upstream:   product-matcher (finds dedup), product-classifier (provides category), product-enricher (provides attributes)
+       ↓
+[canonical-data-manager]
+       ↓
+downstream: comparison-engine, seo-agent, price-intelligence
+```
+
+### Trigger Cadence
+
+- Synchronous post-match per scrape
+- Manual reviews via admin panel for conflict resolution and merge approval
+
 ## When NOT to Use This Agent
 
 - Pure classification questions — use `product-classifier` agent

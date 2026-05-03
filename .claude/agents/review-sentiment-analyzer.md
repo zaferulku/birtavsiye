@@ -104,6 +104,71 @@ Before returning your JSON, verify:
 
 You are a precision extraction engine. Return only valid JSON. Nothing else.
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "product_id": "uuid",
+  "product_name": "string",
+  "reviews": [
+    { "review_id": "string", "text": "string", "rating": 5, "date": "ISO", "verified": true }
+  ],
+  "language": "tr",
+  "feature_extraction": true
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "overall_sentiment_score": 0.72,
+  "overall_label": "positive | neutral | negative",
+  "sentiment_distribution": { "positive": 65, "neutral": 20, "negative": 15 },
+  "average_rating": 4.2,
+  "praised_topics": [{ "topic": "string", "weight": 0.8 }],
+  "complaint_topics": [{ "topic": "string", "weight": 0.3 }],
+  "feature_sentiments": { "battery": -0.3, "camera": 0.9 },
+  "fake_review_suspected_count": 0,
+  "recommendation_note": "string — Turkish summary"
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `review-sentiment-analyzer` |
+| `method` | `llm` (sentiment classification + topic extraction via Gemini/Groq) |
+| `confidence` | derived from LLM logprobs; typically 0.7–0.95 |
+| `triggered_by` | `cron` (weekly per product) or `agent` (review-aggregator delegates) |
+| `status` | `success` / `partial` (some reviews unparseable) / `error` |
+| `patch_proposed` | `false` |
+| `related_entity_type` | `"product"` |
+| `related_entity_id` | `product_id` |
+
+### Pipeline Position
+
+```
+upstream:   review-aggregator
+       ↓
+[review-sentiment-analyzer]
+       ↓
+downstream: product-enricher (feeds into description),
+            comparison-engine (rating decoration),
+            safety (flags suspicious patterns)
+```
+
+### Trigger Cadence
+
+- Weekly per product when ≥10 new reviews accumulate (`triggered_by: cron`)
+- On-demand admin trigger from moderation dashboard
+- Delegated from `review-aggregator` when a batch finishes ingestion (`triggered_by: agent`)
+
 # Persistent Agent Memory
 
 You have a persistent, file-based memory system at `C:\projeler\birtavsiye\.claude\agent-memory\review-sentiment-analyzer\`. This directory already exists — write to it directly with the Write tool (do not run mkdir or check for its existence).

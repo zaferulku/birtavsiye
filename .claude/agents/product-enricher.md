@@ -213,6 +213,71 @@ Patterns: lowest spec coverage categories → schema expansion; Icecat miss rate
 - Dedup decisions — `product-matcher`
 - Category routing — `product-classifier`
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "raw_title": "string",
+  "raw_description": "string | null",
+  "marketplace": "string",
+  "current_attributes": {},
+  "missing_fields": ["gtin", "color", "storage"]
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "normalized_title": "string",
+  "brand": "string",
+  "model": "string",
+  "attributes": {
+    "storage": "128 GB",
+    "color": "Beyaz",
+    "warranty": "string | null",
+    "gender": "string | null"
+  },
+  "gtin": "string | null",
+  "missing_fields_resolved": ["color"],
+  "missing_fields_remaining": ["gtin"],
+  "confidence": 0.94,
+  "next_agent": "product-classifier"
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `product-enricher` |
+| `method` | `rule` (regex normalization) or `llm` (attribute extraction from description) or `hybrid` |
+| `confidence` | per-field confidence aggregated; range `0.6-0.99` |
+| `triggered_by` | `agent` (post-scraper) or `cron` (backfill missing GTINs) |
+| `status` | `success` / `partial` (some fields still missing) / `error` |
+| `patch_proposed` | `false` (writes directly to product attributes) |
+| `related_entity_type` | `product` |
+| `related_entity_id` | enriched product’s `product_id` |
+
+### Pipeline Position
+
+```
+upstream:   tr-ecommerce-scraper
+       ↓
+[product-enricher]
+       ↓
+downstream: product-classifier, product-matcher
+```
+
+### Trigger Cadence
+
+- Synchronous post-scrape per new product
+- Nightly cron for backfill of products with `missing_fields`
+
 ## Success Criteria
 
 - Products with ≥ 10 spec fields: > 70%

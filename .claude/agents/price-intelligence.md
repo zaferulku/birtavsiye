@@ -265,6 +265,70 @@ Ordered by deal_score DESC. Refreshed hourly.
 
 For a single product detail page render, expect < 100ms for price summary + < 200ms for history chart data.
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "product_id": "uuid",
+  "current_price": 0,
+  "historical_prices": [
+    { "ts": "ISO", "price": 0, "marketplace": "string" }
+  ],
+  "lookback_days": 30,
+  "market_average": 0
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "price_status": "good_price | normal | expensive | suspicious",
+  "price_score": 8.6,
+  "trend": "down | up | stable",
+  "trend_percent_30d": -5.2,
+  "lowest_price_30d": { "price": 0, "ts": "ISO", "marketplace": "string" },
+  "fake_discount_flag": false,
+  "recommendation": "buy_now | wait | neutral",
+  "comment": "string — Turkish summary",
+  "next_agent": "notification-dispatcher | none"
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `price-intelligence` |
+| `method` | `rule` (statistical: moving avg, percentiles) or `llm` (commentary generation) |
+| `confidence` | 0.8–0.99 with ≥7 historical points; 0.5–0.79 with sparse history; `null` when fewer than 3 points |
+| `triggered_by` | `agent` (live-price-fetcher delegates on price change) or `cron` (daily product analysis) |
+| `status` | `success` / `noop` (noop when insufficient history) |
+| `patch_proposed` | `false` (analytical only — never proposes schema/content patches) |
+| `related_entity_type` | `"product"` |
+| `related_entity_id` | `product_id` |
+
+### Pipeline Position
+
+```
+upstream:   live-price-fetcher (price events), price_history table
+       ↓
+[price-intelligence]
+       ↓
+downstream: notification-dispatcher (good_price triggers user alert),
+            comparison-engine (decorates offers with score)
+```
+
+### Trigger Cadence
+
+- On every price change event delegated from `live-price-fetcher` (`triggered_by: agent`)
+- Daily aggregation cron at 04:00 TR time (`triggered_by: cron`) for full-product analytics pass
+- On-demand from product detail page render (cached 5 minutes)
+
 ## When NOT to Use This Agent
 
 - Raw price scraping / ingestion — `tr-ecommerce-scraper`

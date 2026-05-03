@@ -1,0 +1,18 @@
+{
+  "generatedAt": "2026-05-02T23:54:10.838Z",
+  "summary": {
+    "total_active": 0,
+    "with_active_listing": 0,
+    "orphans": 0,
+    "orphan_rate_percent": 0,
+    "null_brand": 0,
+    "null_category": 0,
+    "null_image": 0,
+    "null_gtin": 0,
+    "no_gtin_rate_percent": 0,
+    "null_model_family": 0,
+    "patchProposed": false,
+    "severity": "low"
+  },
+  "orphan_samples": []
+}

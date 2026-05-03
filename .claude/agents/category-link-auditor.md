@@ -131,6 +131,77 @@ Critical: <list of broken slugs>
 Recommended actions: <prioritized list>
 ```
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "scope": "full | category | nav_only",
+  "category_id": "uuid | null",
+  "header_path": "src/app/components/layout/Header.tsx",
+  "auto_patch": false
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "navUniqueCount": 0,
+  "dbUniqueCount": 0,
+  "summary": {
+    "exact": 0,
+    "leaf": 0,
+    "ambiguous": 0,
+    "broken": 0,
+    "weak": 0,
+    "partialWeak": 0,
+    "orphan": 0,
+    "patchProposed": true,
+    "severity": "high | medium | low"
+  },
+  "leafMatch": [{ "flat": "string", "full": "string" }],
+  "ambiguous": [{ "flat": "string", "candidates": ["string"] }],
+  "broken": ["string"],
+  "weakLinks": [{ "cat": "string", "slug": "string", "subs": [] }],
+  "orphanDb": ["string"],
+  "audit_json_path": "scripts/.nav-audit.json",
+  "fix_command_proposed": "node scripts/fix-nav-slugs.mjs --apply | null"
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `category-link-auditor` |
+| `method` | `script` (probe-nav-db-compare.mjs cross-checks Header.tsx NAV vs DB categories) |
+| `confidence` | 1.0 for `exactMatch` + `leafMatch` (deterministic regex+SQL); 0.6 for `ambiguous` (manual decision needed) |
+| `triggered_by` | `cron` (hourly, 55 min cooldown) or `manual` (admin) or `agent` (canonical-data-manager after category mutation) |
+| `status` | `success` / `partial` (when `broken > 0`) / `noop` (when `broken=0` and `leaf=0`) |
+| `patch_proposed` | `true` when `summary.patchProposed=true` (i.e. `leafMatch>0` OR `broken>0`); admin must apply via `fix-nav-slugs.mjs` |
+| `related_entity_type` | `category` or `system` |
+| `related_entity_id` | category UUID when scoped to one category, otherwise null for site-wide audits |
+
+### Pipeline Position
+
+```
+upstream:   cron schedule, canonical-data-manager (after category mutation)
+       ↓
+[category-link-auditor]
+       ↓
+downstream: site-supervisor (admin notification on broken>0), seo-agent (revalidate canonical after fix)
+```
+
+### Trigger Cadence
+
+- **Hourly** via `/api/cron/category-link-auditor` (cron-job.org, every 60 min, internal `shouldRun` guard with 55 min cooldown to avoid double-fire)
+- On-demand admin trigger from `/admin/agents` panel
+- Delegated by `canonical-data-manager` after category INSERT/UPDATE/DELETE
+
 ## Çağırma örnekleri
 
 Kullanıcıdan beklenen tetikleyici durumlar:

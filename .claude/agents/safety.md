@@ -278,6 +278,61 @@ Precision >= 0.9 → auto-fire. Lower → composite scoring.
 
 ---
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "content_type": "review | comment | community_post | product_title | chat_message",
+  "text": "string",
+  "language": "tr | en",
+  "author_user_id": "uuid | null",
+  "context": {}
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "status": "allowed | flagged | blocked",
+  "risk_level": "low | medium | high",
+  "categories": ["spam", "hate", "fraud", "phishing", "self_harm"],
+  "reason": "string — Turkish description",
+  "human_review_required": false
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `safety` |
+| `method` | `llm` (Gemini/Groq classification) or `rule` (keyword/pattern matching) or `hybrid` |
+| `confidence` | from LLM logprobs or rule strength (`0.6-1.0`) |
+| `triggered_by` | `webhook` (on user content submission) or `cron` (retroactive audit) |
+| `status` | `success` / `error` |
+| `patch_proposed` | `false` (safety blocks; doesn't propose) |
+| `related_entity_type` | `review`, `community_post`, or whatever content type |
+| `related_entity_id` | uuid of related entity, or `null` |
+
+### Pipeline Position
+
+```
+upstream:   review-aggregator, community posts API, chat-assistant input filter
+       ↓
+[safety]
+       ↓
+downstream: notification-dispatcher (admin alert on blocked), site-supervisor (high-risk patterns)
+```
+
+### Trigger Cadence
+
+- Synchronous on every user content submission; nightly audit cron for retroactive review
+
 ## Success Criteria
 
 - False positive rate: < 2%

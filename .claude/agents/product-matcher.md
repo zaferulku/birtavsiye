@@ -116,6 +116,71 @@ Weekly cron:
 - Color synonym: "Starlight" vs "Yıldız Işığı" — taxonomy maps to one canonical
 - Clothing size: "40 Numara" vs "No: 40" — classifier normalizes to "40"
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "candidate": {
+    "title": "string",
+    "brand": "string | null",
+    "model_family": "string | null",
+    "variant_storage": "string | null",
+    "variant_color": "string | null",
+    "gtin": "string | null"
+  },
+  "source_listing_id": "uuid | null",
+  "fuzzy_threshold": 0.85,
+  "operation": "find_canonical | merge_check | duplicate_audit"
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "match_status": "exact | fuzzy_high | fuzzy_low | no_match | ambiguous",
+  "matched_canonical_id": "uuid | null",
+  "confidence": 0.97,
+  "matched_fields": ["brand", "model_family", "variant_storage"],
+  "mismatched_fields": [],
+  "reason": "string — Turkish",
+  "review_required": false,
+  "next_agent": "canonical-data-manager"
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `product-matcher` |
+| `method` | `rule` (exact dedup-key match) or `hybrid` (fuzzy + similarity scoring) |
+| `confidence` | `1.0` for exact key match; `0.85-0.99` for fuzzy via similarity score |
+| `triggered_by` | `agent` (canonical-data-manager calls before INSERT) or `cron` (weekly dedup audit) or `manual` (admin merge review) |
+| `status` | `success` / `partial` (ambiguous needs review) / `noop` (no candidates) |
+| `patch_proposed` | `true` when fuzzy match >= threshold but < 1.0 (proposes merge to admin queue) |
+| `related_entity_type` | `product` |
+| `related_entity_id` | candidate's existing `product_id` (if known) or `matched_canonical_id` |
+
+### Pipeline Position
+
+```
+upstream:   tr-ecommerce-scraper, product-enricher, product-classifier
+       ↓
+[product-matcher]
+       ↓
+downstream: canonical-data-manager (apply merge or create new), site-supervisor (admin queue)
+```
+
+### Trigger Cadence
+
+- Synchronous on every new listing ingestion
+- Weekly audit cron (Sunday 03:00) for duplicate detection across the catalog
+
 ## When NOT to Use
 
 - Classification — `product-classifier`

@@ -19,6 +19,7 @@ import {
 } from "../../lib/listingSignals";
 import { getDiscoveryProductLabel } from "../../lib/productDiscovery";
 import { cleanProductTitle } from "../../lib/productTitle";
+import { compareStorageValues, normalizeStorageValue } from "@/lib/storageValue";
 
 type Product = {
   id: string;
@@ -231,49 +232,127 @@ function BellIcon() {
   );
 }
 
+function dedupeProductsById(products: Product[]): Product[] {
+  const map = new Map<string, Product>();
+  for (const product of products) {
+    map.set(product.id, product);
+  }
+  return Array.from(map.values());
+}
+
 function AramaIcerik({ initialQuery }: { initialQuery: string }) {
   const router = useRouter();
+  const initialBaseQuery = getAccessoryBaseQuery(initialQuery);
+  const initialRelatedSuggestions = getRelatedSuggestions(initialQuery);
+  const initialNormalizedQuery = normalizeSearchText(initialQuery);
   const [query, setQuery] = useState(initialQuery);
-  const [results, setResults] = useState<Product[]>([]);
+  const [baseResults, setBaseResults] = useState<Product[]>([]);
+  const [relatedResults, setRelatedResults] = useState<Record<string, Product[]>>({});
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState("populer");
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedStorage, setSelectedStorage] = useState("");
+  const [selectedRelatedFilters, setSelectedRelatedFilters] = useState<string[]>(() =>
+    initialRelatedSuggestions
+      .map((suggestion) => getSuggestionSuffix(initialBaseQuery, suggestion.query))
+      .filter((suffix) => Boolean(suffix) && initialNormalizedQuery.includes(suffix))
+  );
+  const baseQuery = initialBaseQuery;
+  const activeQuery = [baseQuery, ...selectedRelatedFilters].join(" ").trim();
 
-  const search = useEffectEvent(async (term: string) => {
+  const fetchProducts = useEffectEvent(async (term: string): Promise<Product[]> => {
     if (!term.trim()) {
-      setResults([]);
-      setLoading(false);
-      return;
+      return [];
     }
-
-    setLoading(true);
 
     const response = await fetch(`/api/public/products?q=${encodeURIComponent(term)}&limit=48`, {
       cache: "no-store",
     });
 
     if (!response.ok) {
+      return [];
+    }
+
+    const payload = (await response.json()) as { products?: Product[] };
+    return (payload.products ?? []).filter((product) => (product.prices?.length ?? 0) > 0);
+  });
+
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    if (!baseQuery.trim()) {
+      setBaseResults([]);
       setLoading(false);
       return;
     }
 
-    const payload = (await response.json()) as { products?: Product[] };
-    setResults((payload.products ?? []).filter((product) => (product.prices?.length ?? 0) > 0));
-    setLoading(false);
-  });
+    let cancelled = false;
+    setLoading(true);
+
+    void fetchProducts(baseQuery)
+      .then((products) => {
+        if (!cancelled) {
+          setBaseResults(products);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [baseQuery]);
 
   useEffect(() => {
-    if (initialQuery.trim()) {
-      void search(initialQuery);
+    if (typeof window !== "undefined") {
+      const nextUrl = activeQuery ? `/ara?q=${encodeURIComponent(activeQuery)}` : "/ara?q=";
+      window.history.replaceState(null, "", nextUrl);
     }
-  }, [initialQuery]);
+
+    if (!baseQuery.trim() || selectedRelatedFilters.length === 0) {
+      return;
+    }
+
+    const missingFilters = selectedRelatedFilters.filter((suffix) => !relatedResults[suffix]);
+    if (missingFilters.length === 0) {
+      return;
+    }
+
+    /* eslint-disable react-hooks/set-state-in-effect */
+    let cancelled = false;
+    setLoading(true);
+
+    void Promise.all(
+      missingFilters.map(async (suffix) => [suffix, await fetchProducts(`${baseQuery} ${suffix}`)] as const)
+    )
+      .then((entries) => {
+        if (cancelled) return;
+        setRelatedResults((current) => {
+          const next = { ...current };
+          for (const [suffix, products] of entries) {
+            next[suffix] = products;
+          }
+          return next;
+        });
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [activeQuery, baseQuery, relatedResults, selectedRelatedFilters]);
 
   const navigateToQuery = (nextQuery: string) => {
     const trimmed = nextQuery.trim();
     setQuery(trimmed);
-    setSelectedBrands([]);
-    setSelectedStorage("");
     router.push(`/ara?q=${encodeURIComponent(trimmed)}`, { scroll: false });
   };
 
@@ -282,30 +361,25 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
     if (query.trim()) navigateToQuery(query);
   };
 
+  const results = selectedRelatedFilters.length > 0
+    ? dedupeProductsById(selectedRelatedFilters.flatMap((suffix) => relatedResults[suffix] ?? []))
+    : baseResults;
   const brands = [...new Set(results.map((product) => product.brand?.trim()).filter(Boolean))];
-  const relatedSuggestions = getRelatedSuggestions(initialQuery);
-  const normalizedCurrentQuery = normalizeSearchText(initialQuery);
-  const relatedBaseQuery = getAccessoryBaseQuery(initialQuery);
-  const selectedRelatedSuffixes = relatedSuggestions
-    .map((suggestion) => ({
-      suggestion,
-      suffix: getSuggestionSuffix(relatedBaseQuery, suggestion.query),
-    }))
-    .filter(({ suffix }) => Boolean(suffix) && normalizedCurrentQuery.includes(suffix));
+  const relatedSuggestions = getRelatedSuggestions(baseQuery);
   const storages = [
     ...new Set(
       results
-        .map((product) => product.variant_storage?.trim())
+        .map((product) => normalizeStorageValue(product.variant_storage))
         .filter((value): value is string => Boolean(value))
     ),
-  ];
+  ].sort(compareStorageValues);
   const sectionsByKey: Partial<Record<"storage" | "related" | "active-filters" | "brands", SearchSidebarSection>> = {};
 
   if (storages.length > 1) {
     sectionsByKey.storage = {
       id: "storage",
       kind: "pills",
-      title: "Kapasite",
+      title: "Bellek Kapasitesi",
       count: storages.length,
       items: [
         {
@@ -331,26 +405,20 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
       title: "Ilgili Alt Kategoriler",
       count: relatedSuggestions.length,
       items: relatedSuggestions.map((suggestion) => {
-        const suffix = getSuggestionSuffix(relatedBaseQuery, suggestion.query);
-        const isSelected = Boolean(suffix) && normalizedCurrentQuery.includes(suffix);
+        const suffix = getSuggestionSuffix(baseQuery, suggestion.query);
+        const isSelected = Boolean(suffix) && selectedRelatedFilters.includes(suffix);
 
         return {
           id: suggestion.query,
           label: suggestion.label,
           selected: isSelected,
           onToggle: () => {
-            const nextSuffixes = isSelected
-              ? selectedRelatedSuffixes
-                  .map((item) => getSuggestionSuffix(relatedBaseQuery, item.suggestion.query))
-                  .filter((item) => item !== suffix)
-              : [
-                  ...selectedRelatedSuffixes.map((item) =>
-                    getSuggestionSuffix(relatedBaseQuery, item.suggestion.query)
-                  ),
-                  suffix,
-                ];
-
-            navigateToQuery([relatedBaseQuery, ...nextSuffixes].join(" ").trim());
+            if (!suffix) return;
+            setSelectedRelatedFilters((current) =>
+              current.includes(suffix)
+                ? current.filter((item) => item !== suffix)
+                : [...current, suffix]
+            );
           },
         };
       }),
@@ -358,15 +426,11 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
   }
 
   const activeFilterItems = [
-    ...selectedRelatedSuffixes.map(({ suggestion }) => ({
-      id: `related-chip-${suggestion.query}`,
-      label: suggestion.label,
+    ...selectedRelatedFilters.map((suffix) => ({
+      id: `related-chip-${suffix}`,
+      label: relatedSuggestions.find((suggestion) => getSuggestionSuffix(baseQuery, suggestion.query) === suffix)?.label ?? suffix,
       onRemove: () => {
-        const removedSuffix = getSuggestionSuffix(relatedBaseQuery, suggestion.query);
-        const suffixes = selectedRelatedSuffixes
-          .map((item) => getSuggestionSuffix(relatedBaseQuery, item.suggestion.query))
-          .filter((suffix) => suffix !== removedSuffix);
-        navigateToQuery([relatedBaseQuery, ...suffixes].join(" ").trim());
+        setSelectedRelatedFilters((current) => current.filter((item) => item !== suffix));
       },
     })),
     ...(selectedStorage
@@ -422,11 +486,11 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
     };
   }
 
-  const sidebarSections = orderSearchFilterSections(initialQuery, sectionsByKey);
+  const sidebarSections = orderSearchFilterSections(baseQuery, sectionsByKey);
 
   const filteredResults = results
     .filter((product) => selectedBrands.length === 0 || selectedBrands.includes(product.brand?.trim() ?? ""))
-    .filter((product) => selectedStorage === "" || product.variant_storage?.trim() === selectedStorage)
+    .filter((product) => selectedStorage === "" || normalizeStorageValue(product.variant_storage) === selectedStorage)
     .sort((left, right) => {
       if (sortBy === "guncel") {
         return (getFreshestSeenAt(right.prices) ?? "").localeCompare(getFreshestSeenAt(left.prices) ?? "");
@@ -447,7 +511,7 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
 
   return (
     <div className="mx-auto max-w-[1480px] px-3 py-4 sm:px-6 md:py-6 lg:px-8">
-      {!initialQuery && (
+      {!activeQuery && (
         <form onSubmit={handleSearch} className="mb-4 flex gap-2 sm:gap-3 md:mb-6">
           <div className="flex h-12 min-w-0 flex-1 items-center gap-2 rounded-xl border-2 border-gray-200 bg-white px-3 transition-all focus-within:border-[#E8460A] sm:gap-3 sm:px-4">
             <svg
@@ -494,7 +558,7 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
         </form>
       )}
 
-      {!initialQuery && !loading && (
+      {!activeQuery && !loading && (
         <div className="py-12 text-center">
           <div className="mb-4 text-5xl">Ara</div>
           <div className="mb-2 text-base font-bold text-gray-800">Ne aramak istersiniz?</div>
@@ -520,11 +584,11 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
         </div>
       )}
 
-      {!loading && initialQuery && results.length === 0 && (
+      {!loading && activeQuery && results.length === 0 && (
         <div className="py-16 text-center">
           <div className="mb-4 text-5xl">Sonuc yok</div>
           <div className="mb-2 text-base font-bold text-gray-800">
-            &quot;{initialQuery}&quot; icin sonuc bulunamadi
+            &quot;{activeQuery}&quot; icin sonuc bulunamadi
           </div>
           <div className="mb-6 text-sm text-gray-500">Farkli bir kelime deneyin</div>
           <div className="flex flex-wrap justify-center gap-2">
@@ -541,11 +605,20 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
         </div>
       )}
 
-      {!loading && initialQuery && results.length > 0 && filteredResults.length === 0 && (
+      {!loading && activeQuery && results.length > 0 && filteredResults.length === 0 && (
         <div className="rounded-[28px] border border-slate-200 bg-white px-6 py-12 text-center shadow-sm">
           <div className="mb-2 text-lg font-bold text-slate-900">Secili filtrelerle urun bulunamadi</div>
-          <div className="mb-6 text-sm text-slate-500">Marka veya kapasite filtresini gevsetmeyi deneyin.</div>
+          <div className="mb-6 text-sm text-slate-500">Alt kategori, marka veya bellek filtresini gevsetmeyi deneyin.</div>
           <div className="flex flex-wrap justify-center gap-2">
+            {selectedRelatedFilters.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setSelectedRelatedFilters([])}
+                className="rounded-full border border-slate-200 px-4 py-2 text-xs font-medium text-slate-600 hover:border-[#E8460A] hover:text-[#E8460A]"
+              >
+                Alt kategori filtresini temizle
+              </button>
+            )}
             {selectedBrands.length > 0 && (
               <button
                 type="button"
@@ -561,14 +634,14 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
                 onClick={() => setSelectedStorage("")}
                 className="rounded-full border border-slate-200 px-4 py-2 text-xs font-medium text-slate-600 hover:border-[#E8460A] hover:text-[#E8460A]"
               >
-                Hafiza filtresini temizle
+                Bellek filtresini temizle
               </button>
             )}
           </div>
         </div>
       )}
 
-      {initialQuery && results.length > 0 && (
+      {activeQuery && results.length > 0 && (
         <div className="flex flex-col gap-4 lg:flex-row lg:gap-6">
           <SearchFiltersSidebar sections={sidebarSections} />
 
@@ -577,7 +650,7 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <div className="text-xl font-bold text-slate-900">
-                    &quot;{initialQuery}&quot; icin arama sonuclari
+                    &quot;{activeQuery}&quot; icin arama sonuclari
                   </div>
                   <div className="mt-1 text-sm text-slate-500">
                     Aramana uygun <span className="font-semibold text-slate-900">{filteredResults.length}</span> urun
@@ -621,7 +694,7 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
                           : "border-slate-200 bg-slate-50 text-slate-600 hover:border-[#E8460A]/35"
                       }`}
                     >
-                      Dahili Hafiza {storage}
+                      Bellek {storage}
                     </button>
                   ))}
                 </div>
@@ -667,9 +740,9 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
                                 {product.brand}
                               </span>
                             )}
-                            {product.variant_storage && (
+                            {normalizeStorageValue(product.variant_storage) && (
                               <span className="rounded-full bg-slate-100 px-2.5 py-1 text-[10px] font-semibold text-slate-500">
-                                {product.variant_storage}
+                                {normalizeStorageValue(product.variant_storage)}
                               </span>
                             )}
                             {product.variant_color && (
@@ -777,7 +850,7 @@ function AramaSayfasiIcerik() {
   const searchParams = useSearchParams();
   const q = searchParams.get("q") || "";
 
-  return <AramaIcerik initialQuery={q} />;
+  return <AramaIcerik key={q} initialQuery={q} />;
 }
 
 export default function AramaSayfasi() {

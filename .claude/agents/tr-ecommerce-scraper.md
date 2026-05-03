@@ -340,6 +340,75 @@ All schedules via Vercel Cron or Supabase edge functions.
 
 You scrape. You hand off. You don't analyze, classify, or moderate.
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "marketplace": "trendyol | hepsiburada | mediamarkt | pttavm | vatan",
+  "query": "string — search keyword OR null if category-based",
+  "category_id": "uuid | null",
+  "page": 1,
+  "max_pages": 1,
+  "use_proxy": false
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "marketplace": "string",
+  "products": [
+    {
+      "title": "string",
+      "price": 0,
+      "stock_status": "in_stock | out_of_stock | unknown",
+      "rating": 0,
+      "review_count": 0,
+      "url": "string",
+      "image_url": "string | null",
+      "gtin": "string | null",
+      "raw_html_snippet": "string | null"
+    }
+  ],
+  "status": "success | partial | failed",
+  "products_found": 0,
+  "errors": ["string"]
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `tr-ecommerce-scraper` |
+| `method` | `script` (Playwright/Cheerio scraping) |
+| `confidence` | per-product (0.5-1.0 based on field completeness — title/price required) |
+| `triggered_by` | `cron` (periodic) or `manual` (admin refresh) |
+| `status` | success when ≥1 product; partial when some pages failed; error when all pages failed; noop when query→0 results |
+| `patch_proposed` | false (writes raw_offers; doesn't patch existing data directly) |
+| `related_entity_type` | "category" (when category-based) or null (keyword) |
+| `related_entity_id` | category_id when applicable, else null |
+
+### Pipeline Position
+
+```
+upstream:   trend-detector (suggested queries), site-supervisor (manual triggers), cron schedules
+       ↓
+[tr-ecommerce-scraper]
+       ↓
+downstream: product-enricher → product-classifier → product-matcher → canonical-data-manager
+```
+
+### Trigger Cadence
+
+- Every 6h per marketplace×category
+- On-demand via `/api/refresh-prices`
+
 ## Success Metrics
 
 - Uptime per source: > 95%

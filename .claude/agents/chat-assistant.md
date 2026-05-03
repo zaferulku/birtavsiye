@@ -212,6 +212,77 @@ Patterns to watch:
 - Queries that get frequent "wrong" feedback → prompt or parser issue
 - Queries that take > 3s → embedding or RPC performance issue
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "user_message": "string",
+  "user_id": "uuid | null",
+  "session_id": "uuid",
+  "conversation_history": [{ "role": "user | assistant", "content": "string" }],
+  "session_context": {
+    "previous_searches": ["string"],
+    "preferred_budget": null
+  },
+  "image_base64": "string | null"
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "intent": "product_search | comparison | faq | clarification_needed | feedback",
+  "category_slugs": ["string"],
+  "filters": {
+    "brand": "string | null",
+    "color": "string | null",
+    "storage": "string | null",
+    "price_min": 0,
+    "price_max": 0
+  },
+  "follow_up_required": false,
+  "follow_up_question": "string | null",
+  "search_method": "vector | keyword | failed",
+  "product_count": 6,
+  "product_ids": ["uuid"],
+  "reply": "string — Turkish, 4-5 sentences max",
+  "confidence": 0.8
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `chat-assistant` |
+| `method` | `hybrid` (local deterministic parser via `queryParser.ts` + Gemini embedding + NVIDIA Llama / Groq for response) |
+| `confidence` | `0.6-0.95` — composite of parser confidence + embedding similarity |
+| `triggered_by` | `webhook` (user message via `/api/chat`) |
+| `status` | `success` / `partial` (vector failed → keyword fallback) / `error` / `noop` (feedback only, no search) |
+| `patch_proposed` | `false` (responds; doesn't propose patches) |
+| `related_entity_type` | `"user"` (when authenticated) or `null` |
+| `related_entity_id` | `user_id` or `null` |
+
+### Pipeline Position
+
+```
+upstream:   /api/chat/route.ts handler, user-profile-agent (personalization)
+       ↓
+[chat-assistant]
+       ↓
+downstream: comparison-engine (when comparison intent), affiliate-link-manager (decorates product cards), agent_decisions for feedback mining
+```
+
+### Trigger Cadence
+
+- Real-time per user message
+- Categories cached in-memory with 5-minute TTL
+
 ## Cache Strategy
 
 Categories are cached in-memory with 5-minute TTL (avoids DB hit every request). Product embeddings are pre-computed at classification time; no embedding cache needed (already in `products.embedding`).

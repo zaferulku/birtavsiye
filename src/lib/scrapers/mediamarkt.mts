@@ -5,7 +5,10 @@
  */
 
 import * as cheerio from 'cheerio';
-import { findDbSlugForMmBreadcrumb } from './mediamarkt-category-map.mjs';
+import {
+  buildMediaMarktCategoryPath,
+  findDbSlugForMmBreadcrumb,
+} from './mediamarkt-category-map.mjs';
 import type {
   JsonLdEnvelope,
   JsonLdProductLike,
@@ -28,6 +31,7 @@ export interface MmScrapedProduct {
   affiliate_url: string;
   source_title: string;
   source_category: string | null;
+  source_category_path: string | null;
   price: number;
   currency: 'TRY';
   free_shipping: boolean;
@@ -275,7 +279,8 @@ export async function scrapePdpDetailed(pdpUrl: string): Promise<ScrapeResult> {
     return { ok: false, reason: 'refurbished', debugTitle: productTitle.slice(0, 50) };
   }
 
-  const sourceCategory: string | null = matchedSegment;
+  const sourceMeta = buildMediaMarktCategoryPath(breadcrumb, productTitle);
+  const sourceCategory: string | null = sourceMeta.sourceCategory ?? matchedSegment;
 
   const productImage = product.image;
   const images: string[] = Array.isArray(productImage)
@@ -308,6 +313,7 @@ export async function scrapePdpDetailed(pdpUrl: string): Promise<ScrapeResult> {
       affiliate_url: affiliate,
       source_title: String(product.name ?? '').trim(),
       source_category: sourceCategory,
+      source_category_path: sourceMeta.sourceCategoryPath,
       price,
       currency: 'TRY',
       free_shipping: freeShipping,

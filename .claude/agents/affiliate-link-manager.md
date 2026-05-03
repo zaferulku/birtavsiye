@@ -117,6 +117,70 @@ Examples of what to record:
 - Link expiry durations per platform
 - Product categories with highest estimated commissions
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "operation": "generate | validate | track | report",
+  "product_id": "uuid | null",
+  "listing_id": "uuid | null",
+  "original_url": "string",
+  "marketplace": "trendyol | hepsiburada | amazon_tr | n11",
+  "user_id": "uuid | null",
+  "source": "comparison_page | chat | landing | email"
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "affiliate_url": "string",
+  "tracking_id": "uuid",
+  "marketplace": "string",
+  "estimated_commission_rate": 0.05,
+  "link_status": "active | broken | expired",
+  "validation": { "checked_at": "ISO", "http_status": 200 },
+  "performance": {
+    "clicks_30d": 0,
+    "conversions_30d": 0,
+    "revenue_30d": 0
+  }
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `affiliate-link-manager` |
+| `method` | `rule` (URL transformation per marketplace template) for generate; `script` (HTTP HEAD) for validate |
+| `confidence` | `1.0` (deterministic) |
+| `triggered_by` | `webhook` (user clicks listing) or `cron` (link health check) |
+| `status` | `success` / `error` / `noop` (when product has no marketplace link) |
+| `patch_proposed` | `true` when broken link detected (proposes refresh from scraper) |
+| `related_entity_type` | `"listing"` |
+| `related_entity_id` | `listing_id` |
+
+### Pipeline Position
+
+```
+upstream:   comparison-engine (when rendering offers), chat-assistant (when emitting product cards)
+       ↓
+[affiliate-link-manager]
+       ↓
+downstream: external marketplace (302 redirect on click); writes affiliate_clicks table
+```
+
+### Trigger Cadence
+
+- Synchronous on every outbound click
+- Nightly cron link-health audit
+
 # Persistent Agent Memory
 
 You have a persistent, file-based memory system at `C:\projeler\birtavsiye\.claude\agent-memory\affiliate-link-manager\`. This directory already exists — write to it directly with the Write tool (do not run mkdir or check for its existence).

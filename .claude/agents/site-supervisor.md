@@ -114,3 +114,63 @@ Maintainer olarak:
 1. "site-supervisor haftalık rapor çıkar" → supervisor denetim listesi çalıştırır, rapor üretir
 2. "Moda kategorisinde %20 coverage hedefle" → supervisor enrich chain'i başlatır
 3. "Chatbot yavaş cevap veriyor" → supervisor API latency ölçer, provider değişikliği önerir
+
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "source": "user | system | scheduler | admin",
+  "message": "string — incoming task description",
+  "context": {
+    "user_id": "uuid | null",
+    "session_id": "uuid | null",
+    "locale": "tr-TR"
+  },
+  "trace_id": "uuid"
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "task": "string — task type (product_search, scrape_run, audit_run, ...)",
+  "assigned_agent": "string — agent_name to delegate to",
+  "priority": "high | medium | low",
+  "payload": {},
+  "next_step": "wait_for_agent_response | parallel_dispatch | done",
+  "retry_count": 0
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `site-supervisor` |
+| `method` | `rule` (deterministic routing) or `llm` (intent classification) |
+| `confidence` | `1.0` if rule-based; `0.6-0.95` for LLM intent classification |
+| `triggered_by` | `webhook` (user requests) or `cron` (scheduled audits) |
+| `status` | `success` expected; `partial` when warnings; `error` on exception; `noop` when no work |
+| `patch_proposed` | `false` (orchestrator does not patch directly) |
+| `related_entity_type` | usually `null` (system-level), or `user` for user-initiated requests |
+| `related_entity_id` | uuid of related entity, or `null` |
+
+### Pipeline Position
+
+```
+upstream:   external HTTP / cron triggers
+       ↓
+[site-supervisor]
+       ↓
+downstream: ALL other agents (orchestrator dispatches to whichever)
+```
+
+### Trigger Cadence
+
+- Continuous (every API request); also periodic health-checks every 15 minutes via `/api/cron/health`
+

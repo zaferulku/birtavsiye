@@ -231,6 +231,83 @@ Key: sorted product IDs + use case. TTL 1h.
 - Price fetching — `live-price-fetcher`
 - User-profile rec — `user-profile-agent`
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "product_id": "uuid",
+  "offers": [
+    {
+      "listing_id": "uuid",
+      "marketplace": "string",
+      "seller": "string",
+      "price": 0,
+      "shipping_price": 0,
+      "rating": 0,
+      "stock": true,
+      "checkout_info": {}
+    }
+  ],
+  "filters": { "min_rating": 0, "in_stock_only": true, "max_price": 0 },
+  "sort_by": "final_price | rating | shipping",
+  "user_preferences": {}
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "best_offer": { "listing_id": "uuid", "final_price": 0, "marketplace": "string" },
+  "winners": {
+    "price": "listing_uuid",
+    "rating": "listing_uuid",
+    "shipping": "listing_uuid",
+    "trust": "listing_uuid"
+  },
+  "offers_sorted": [
+    { "listing_id": "uuid", "rank": 1, "final_price": 0, "score": 0 }
+  ],
+  "comparison_score": 9.1,
+  "highlights": ["best_overall", "fastest_shipping"]
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `comparison-engine` |
+| `method` | `rule` (deterministic ranking with weighted score) |
+| `confidence` | `1.0` (deterministic — no probabilistic component) |
+| `triggered_by` | `webhook` (user views comparison page) or `agent` (price-intelligence triggers refresh) |
+| `status` | `success` / `noop` (noop when 0 active offers) |
+| `patch_proposed` | `false` |
+| `related_entity_type` | `"product"` |
+| `related_entity_id` | `product_id` |
+
+### Pipeline Position
+
+```
+upstream:   live-price-fetcher, checkout-info-extractor,
+            price-intelligence, canonical-data-manager
+       ↓
+[comparison-engine]
+       ↓
+downstream: chat-assistant (returns to user),
+            affiliate-link-manager (decorates winner)
+```
+
+### Trigger Cadence
+
+- On-demand per `/karsilastir` page render (cached 5 minutes)
+- Webhook from product detail page comparison widget
+- Refresh on price-change events delegated from `price-intelligence`
+
 ## Success Criteria
 
 - Comparison view → clickout lift: measurable

@@ -178,3 +178,61 @@ npm audit --omit=dev
 2. Rate limit eksik — `/api/chat`'e Upstash Redis eklenmeli
 3. CSRF — POST endpoint'lerde NextAuth kontrolü
 4. NVIDIA_API_KEY Vercel'de yok — Groq fallback aktif, key eklenirse embedding açılır
+
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "user_id": "uuid | null",
+  "ip_hash": "sha256 string",
+  "request_count_1m": 0,
+  "request_count_1h": 0,
+  "action": "search | view_product | api_call | auth_attempt",
+  "endpoint": "string",
+  "user_agent_hash": "sha256 string"
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "risk_level": "low | medium | high | critical",
+  "action": "allow | rate_limit | challenge | block",
+  "ttl_seconds": 0,
+  "reason": "string — Turkish description",
+  "matched_rules": ["rule_id"]
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `security-guardian` |
+| `method` | `rule` (deterministic threshold checks) |
+| `confidence` | `1.0` (rule-based) |
+| `triggered_by` | `webhook` (every API request middleware); also `cron` for periodic abuse audits |
+| `status` | `success` / `noop` |
+| `patch_proposed` | `false` |
+| `related_entity_type` | `user` or `null` (anonymous traffic) |
+| `related_entity_id` | uuid of related entity, or `null` |
+
+### Pipeline Position
+
+```
+upstream:   API middleware (every request)
+       ↓
+[security-guardian]
+       ↓
+downstream: notification-dispatcher (high-risk alerts to admin), site-supervisor (system-wide threats)
+```
+
+### Trigger Cadence
+
+- Every API request (synchronous middleware) + nightly batch audit cron
+

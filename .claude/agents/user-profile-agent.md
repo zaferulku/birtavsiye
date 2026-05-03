@@ -47,6 +47,72 @@ Produce per-user:
 - Do NOT include personally identifiable data (email, name) in the output — only `user_id`.
 - If a brand/category appears in conflict (e.g. tracked both "Apple" and "Samsung"), list both in ranked order.
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "user_id": "uuid",
+  "activities": {
+    "searches": [{ "keyword": "string", "ts": "ISO" }],
+    "clicks": [{ "product_id": "uuid", "ts": "ISO" }],
+    "comparisons": [{ "product_ids": ["uuid"], "ts": "ISO" }],
+    "favorites": [{ "product_id": "uuid", "ts": "ISO" }]
+  },
+  "lookback_days": 90
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "user_segment": "bargain_hunter | tech_enthusiast | gift_shopper | premium_buyer | price_sensitive | new",
+  "interests": [{ "category": "string", "weight": 0.85 }],
+  "preferred_brands": ["string"],
+  "price_sensitivity": "low | mid | high",
+  "estimated_budget": { "min": 0, "max": 0 },
+  "preferred_marketplaces": ["string"],
+  "personalized_filters": {},
+  "recommendations": [{ "product_id": "uuid", "score": 0, "reason": "string" }],
+  "confidence": 0.74
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `user-profile-agent` |
+| `method` | `rule` (frequency-based clustering) or `hybrid` (LLM segment label on top of rule features) |
+| `confidence` | depends on activity volume; typically 0.4–0.95 |
+| `triggered_by` | `cron` (nightly batch) or `webhook` (user logs in) or `agent` (chat-assistant requests profile) |
+| `status` | `success` / `partial` (sparse data → low confidence) / `noop` (zero activity in lookback window) |
+| `patch_proposed` | `false` |
+| `related_entity_type` | `"user"` |
+| `related_entity_id` | `user_id` |
+
+### Pipeline Position
+
+```
+upstream:   agent_logs, favorites, price_alerts, search history
+       ↓
+[user-profile-agent]
+       ↓
+downstream: chat-assistant (personalized response),
+            notification-dispatcher (filter relevant alerts),
+            comparison-engine (re-rank offers per user)
+```
+
+### Trigger Cadence
+
+- Nightly batch for active users (`triggered_by: cron`)
+- On-login refresh for the signing-in user (`triggered_by: webhook`)
+- On-demand from `chat-assistant` when personalized response is needed (`triggered_by: agent`)
+
 ## Output Format
 
 Return ONLY this JSON:

@@ -1,0 +1,17 @@
+{
+  "generatedAt": "2026-05-02T23:54:11.154Z",
+  "windowHours": 24,
+  "summary": {
+    "rows_24h": 0,
+    "listings_analyzed": 0,
+    "price_drops_10p": 0,
+    "price_spikes_10p": 0,
+    "stable": 0,
+    "biggest_drop_percent": 0,
+    "biggest_spike_percent": 0,
+    "patchProposed": false,
+    "severity": "low"
+  },
+  "top_drops": [],
+  "top_spikes": []
+}

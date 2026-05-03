@@ -272,6 +272,77 @@ Each variant = separate `products.id` + slug. Cross-link:
 }
 ```
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "keyword": "string — e.g., 'en ucuz iphone 15 fiyatları'",
+  "search_intent": "price_comparison | best_of_list | category_overview | brand_focus",
+  "filters": {
+    "category_slug": "string | null",
+    "brand": "string | null",
+    "price_max": 0,
+    "city": "string | null"
+  },
+  "min_products_required": 5
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "page_type": "dynamic_landing | static_seo",
+  "slug": "string — e.g., 'en-ucuz-iphone-15-fiyatlari'",
+  "title": "string",
+  "sections": [
+    "best_offers",
+    "price_history",
+    "seller_comparison",
+    "similar_products",
+    "buyer_guide"
+  ],
+  "products_matched": 0,
+  "url_full": "string",
+  "sitemap_action": "add | update | skip",
+  "next_agent": "seo-content-writer | seo-agent",
+  "skip_reason": "string | null"
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `seo-landing-generator` |
+| `method` | `rule` (filter-based DB query for product match) + `agent` delegation to content-writer |
+| `confidence` | 1.0 for slug generation; lower if `products_matched < min_products_required` |
+| `triggered_by` | `agent` (trend-detector proposes opportunities) or `cron` (weekly opportunity scan) or `manual` |
+| `status` | `success` / `noop` (when `products_matched < threshold`) / `error` |
+| `patch_proposed` | `true` (every page is essentially a proposal — `sitemap_action='add'` is the patch) |
+| `related_entity_type` | `category` or `system` |
+| `related_entity_id` | category UUID when scoped, otherwise null |
+
+### Pipeline Position
+
+```
+upstream:   trend-detector (seo_opportunities), seo-agent
+       ↓
+[seo-landing-generator]
+       ↓
+downstream: seo-content-writer (generates copy), seo-agent (validates final page), canonical-data-manager
+```
+
+### Trigger Cadence
+
+- Weekly batch Sundays 22:00 (opportunity scan + page creation)
+- On-demand from trend-detector when high-volume keyword detected
+- Manual admin trigger for targeted landing page creation
+
 ## When NOT to Use
 
 - Category page SEO — `seo-content-writer`

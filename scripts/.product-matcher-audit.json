@@ -1,0 +1,12 @@
+{
+  "generatedAt": "2026-05-02T23:54:11.488Z",
+  "summary": {
+    "total_active_with_brand": 0,
+    "exact_dup_groups": 0,
+    "total_duplicate_products": 0,
+    "total_loser_products": 0,
+    "patchProposed": false,
+    "severity": "low"
+  },
+  "duplicate_groups": []
+}

@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import {
+  buildPttavmCategoryPath,
+  extractPttavmBreadcrumbSegmentsFromHtml,
+} from "@/lib/scrapers/pttavmCategoryMap";
 
 const PTTAVM_BASE = "https://www.pttavm.com";
 
@@ -15,7 +19,12 @@ interface ParsedProduct {
   url:   string;
   image: string;
   price: number;
+  source_category?: string | null;
+  source_category_path?: string | null;
+  specs?: Record<string, string>;
 }
+
+const DETAIL_CONCURRENCY = 6;
 
 function parseProducts(html: string): ParsedProduct[] {
   const results: ParsedProduct[] = [];
@@ -43,6 +52,60 @@ function parseProducts(html: string): ParsedProduct[] {
   return results;
 }
 
+async function fetchPttavmDetailMeta(product: ParsedProduct): Promise<ParsedProduct> {
+  try {
+    const res = await fetch(product.url, {
+      headers: FETCH_HEADERS,
+      next: { revalidate: 300 },
+      signal: AbortSignal.timeout(12_000),
+    });
+
+    if (!res.ok) return product;
+
+    const html = await res.text();
+    const breadcrumb = extractPttavmBreadcrumbSegmentsFromHtml(html);
+    const { sourceCategory, sourceCategoryPath } = buildPttavmCategoryPath(
+      breadcrumb,
+      product.name,
+    );
+
+    if (!sourceCategory && !sourceCategoryPath) return product;
+
+    return {
+      ...product,
+      source_category: sourceCategory ?? product.source_category ?? null,
+      source_category_path: sourceCategoryPath ?? product.source_category_path ?? null,
+      specs: {
+        ...(product.specs ?? {}),
+        ...(sourceCategory ? { pttavm_category: sourceCategory } : {}),
+        ...(sourceCategoryPath ? { pttavm_path: sourceCategoryPath } : {}),
+      },
+    };
+  } catch {
+    return product;
+  }
+}
+
+async function enrichProductsWithDetailMeta(products: ParsedProduct[]): Promise<ParsedProduct[]> {
+  if (products.length === 0) return products;
+
+  const results = [...products];
+  let nextIndex = 0;
+
+  await Promise.all(
+    Array.from({ length: Math.min(DETAIL_CONCURRENCY, products.length) }, async () => {
+      while (true) {
+        const currentIndex = nextIndex;
+        nextIndex += 1;
+        if (currentIndex >= products.length) return;
+        results[currentIndex] = await fetchPttavmDetailMeta(products[currentIndex]);
+      }
+    }),
+  );
+
+  return results;
+}
+
 // GET /api/pttavm?q=laptop&page=1
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -62,8 +125,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: `PttAVM hatası: ${res.status}` }, { status: res.status });
     }
 
-    const html     = await res.text();
-    const products = parseProducts(html);
+    const html = await res.text();
+    const parsedProducts = parseProducts(html);
+    const products = await enrichProductsWithDetailMeta(parsedProducts);
 
     return NextResponse.json({ products, totalCount: products.length, page, source: "pttavm" });
   } catch {

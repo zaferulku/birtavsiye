@@ -301,6 +301,66 @@ Patterns: high exclusion → problem sellers; rating drops → quality regressio
 - Moderation — `safety`
 - Rating display — direct consumer of this agent's output
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "product_id": "uuid",
+  "marketplaces": ["trendyol", "hepsiburada"],
+  "since": "ISO timestamp | null",
+  "limit_per_source": 100
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "product_id": "uuid",
+  "total_reviews": 0,
+  "by_source": [
+    { "marketplace": "string", "count": 0, "avg_rating": 0 }
+  ],
+  "average_rating": 0,
+  "rating_distribution": { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0 },
+  "verified_purchase_only_count": 0,
+  "duplicates_removed": 0,
+  "next_agent": "review-sentiment-analyzer"
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `review-aggregator` |
+| `method` | `script` (scrape reviews) or `hybrid` (with LLM dedup) |
+| `confidence` | 1.0 for count metrics; lower for dedup quality |
+| `triggered_by` | `cron` (weekly per product) or `webhook` (admin trigger) |
+| `status` | success / partial / error |
+| `patch_proposed` | false |
+| `related_entity_type` | "product" |
+| `related_entity_id` | product_id |
+
+### Pipeline Position
+
+```
+upstream:   tr-ecommerce-scraper (provides product URLs), product-matcher (canonical product groups)
+       ↓
+[review-aggregator]
+       ↓
+downstream: review-sentiment-analyzer, safety (filter spam reviews)
+```
+
+### Trigger Cadence
+
+- Weekly per active product
+- Immediate refresh after sentiment_analyzer flags drift
+
 ## Success Criteria
 
 - Products > 10 reviews: 100% aggregated

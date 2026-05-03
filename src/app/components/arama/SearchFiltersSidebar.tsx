@@ -184,10 +184,10 @@ function SearchSidebarChipSection({
 
 export default function SearchFiltersSidebar({ sections }: SearchFiltersSidebarProps) {
   return (
-    <aside className="w-full flex-shrink-0 lg:w-[248px]">
+    <aside className="w-full flex-shrink-0 lg:w-[286px]">
       <div className="sticky top-24">
         <div className="flex max-h-[calc(100vh-7rem)] flex-col overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_16px_42px_rgba(15,23,42,0.08)]">
-          <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 via-white to-[#FFF6F1] px-4 py-4">
+          <div className="border-b border-slate-100 bg-gradient-to-r from-slate-50 via-white to-[#FFF6F1] px-5 py-4">
             <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-300">
               <SidebarSearchIcon />
             </div>

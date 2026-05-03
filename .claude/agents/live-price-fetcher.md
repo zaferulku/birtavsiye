@@ -198,6 +198,65 @@ Alerts: success < 85% → selector/API change; p95 > 4s → infra; cache hit < 3
 
 You fetch. You stream. You cache. No classifying, no analyzing, no moderating.
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "product_listing_id": "uuid",
+  "url": "string",
+  "marketplace": "string",
+  "last_known_price": 0
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "product_listing_id": "uuid",
+  "current_price": 0,
+  "previous_price": 0,
+  "price_changed": true,
+  "change_percent": 0,
+  "stock_status": "in_stock | out_of_stock",
+  "fetched_at": "ISO timestamp",
+  "next_agent": "price-intelligence | notification-dispatcher | none"
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `live-price-fetcher` |
+| `method` | `script` (HTTP fetch + parse) |
+| `confidence` | 1.0 if parse succeeds; lower if heuristic fallback used |
+| `triggered_by` | `webhook` (user opens product page) or `cron` (alarm-list periodic check) |
+| `status` | success / error / noop (noop if cache hit within TTL) |
+| `patch_proposed` | false (price updates are direct writes, not proposals) |
+| `related_entity_type` | "listing" |
+| `related_entity_id` | product_listing_id |
+
+### Pipeline Position
+
+```
+upstream:   product page request, price_alerts cron
+       ↓
+[live-price-fetcher]
+       ↓
+downstream: price-intelligence (analyze trend), notification-dispatcher (if drop crosses user threshold)
+```
+
+### Trigger Cadence
+
+- Synchronous on user view (cache 15min)
+- Cron every 1h for tracked listings
+- Every 5min for high-value alarms
+
 ## Success Criteria
 
 Sitenin Akakçe/Cimri'den ayırt edilmemesi. Kullanıcı "beklemeden fiyat gördüm" hissi yaşamalı. Arka planda 5 mağaza paralel, hata kısmen tolere edildi, gösterilen data 30 saniye içinde gerçek.

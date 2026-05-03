@@ -182,6 +182,67 @@ Do not "auto-correct" based on single feedback events. Feedback accumulates; pat
 4. **Title too short** ("iPhone") → low quality_score, confidence may still be decent, but no variants extracted.
 5. **Title too noisy** (paragraph of marketing copy) → extract the product noun phrase via Gemini's `canonical_title` output; original `title` stored separately.
 
+## Operational Contract
+
+When this agent runs in **production runtime** (via `agentRunner` cron/webhook routes or `runScriptAgent` pipeline) — distinct from Claude Code Task tool invocation which uses this file's body as the system prompt — it follows this contract for `agent_decisions` table logging.
+
+### Input Schema (`input_data`)
+
+```json
+{
+  "product_title": "string",
+  "description": "string | null",
+  "raw_category_path": ["string"],
+  "marketplace": "string",
+  "existing_categories": ["category_slug"]
+}
+```
+
+### Output Schema (`output_data`)
+
+```json
+{
+  "main_category": "string",
+  "category_path": ["root", "sub", "leaf"],
+  "category_slug": "string — full hierarchical slug",
+  "category_id": "uuid",
+  "brand": "string",
+  "model": "string",
+  "model_family": "string",
+  "confidence": 0.96,
+  "needs_review": false,
+  "alternative_categories": [{ "slug": "string", "confidence": 0.4 }]
+}
+```
+
+### agent_decisions field mapping
+
+| Field | Value |
+|-------|-------|
+| `agent_name` | `product-classifier` |
+| `method` | `hybrid` (taxonomy.yaml keyword match + LLM fallback for ambiguous) |
+| `confidence` | from longest-keyword-match score; LLM logprob when fallback |
+| `triggered_by` | `agent` (post-scraper) or `cron` (recategorization runs) |
+| `status` | `success` / `partial` (low confidence triggers review) / `error` |
+| `patch_proposed` | `true` when `needs_review=true` (proposes manual category assignment) |
+| `related_entity_type` | `product` |
+| `related_entity_id` | classified product’s `product_id` |
+
+### Pipeline Position
+
+```
+upstream:   tr-ecommerce-scraper, product-enricher
+       ↓
+[product-classifier]
+       ↓
+downstream: product-matcher (uses brand/model_family for dedup key), canonical-data-manager
+```
+
+### Trigger Cadence
+
+- Synchronous post-scrape per new product
+- Weekly recategorization cron for the low-confidence backlog
+
 ## When NOT to Use This Agent
 
 - Price analysis — `price-intelligence` agent

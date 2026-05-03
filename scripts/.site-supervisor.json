@@ -1,0 +1,24 @@
+{
+  "generatedAt": "2026-05-02T23:54:11.831Z",
+  "summary": {
+    "agents_known": 0,
+    "agents_real": 0,
+    "agents_stub": 0,
+    "overdue_count": 0,
+    "errors_24h": 0,
+    "agents_with_errors": 0,
+    "pending_patches": 0,
+    "total_decisions_24h": 0,
+    "total_products": 0,
+    "total_listings": 0,
+    "price_history_24h": 0,
+    "total_categories": 0,
+    "patchProposed": false,
+    "severity": "low"
+  },
+  "overdue_agents": [],
+  "error_counts_24h": {},
+  "stub_agents": [],
+  "real_agents": [],
+  "last_seen": {}
+}
