@@ -5,7 +5,13 @@
 
 "use client";
 
-import { formatTL, getMarketplaceLogoUrl, type MergedOfferRow } from "@/app/components/urun/offerUtils";
+import {
+  formatSellerRating,
+  formatTL,
+  formatWarrantyTypeLabel,
+  getMarketplaceLogoUrl,
+  type MergedOfferRow,
+} from "@/app/components/urun/offerUtils";
 
 type Props = {
   productTitle: string;
@@ -105,6 +111,8 @@ function StoreRow({ row, isMinPrice }: StoreRowProps) {
   const isPending = state.status === "pending";
   const isOutOfStock = data?.in_stock === false;
   const storeUrl = data?.affiliate_url ?? fallback_url ?? null;
+  const warrantyDuration = data?.warranty_duration ?? null;
+  const warrantyLabel = data?.warranty_label ?? formatWarrantyTypeLabel(row.warranty_type);
 
   return (
     <li className={`lpc-row ${isError ? "lpc-row--error" : ""} ${isOutOfStock ? "lpc-row--oos" : ""}`}>
@@ -117,14 +125,25 @@ function StoreRow({ row, isMinPrice }: StoreRowProps) {
         )}
         <div className="lpc-store-info">
           <span className="lpc-store-name">{storeName}</span>
-          {data?.seller_name && data.seller_name !== storeName && (
-            <span className="lpc-seller">Satici: {data.seller_name}</span>
+          <span className="lpc-seller">
+            <span>Satici: {data?.seller_name ?? storeName}</span>
+            {data?.seller_rating != null && (
+              <span className="lpc-seller-badge">{formatSellerRating(data.seller_rating)}</span>
+            )}
+          </span>
+          {typeof data?.seller_review_count === "number" && (
+            <span className="lpc-seller lpc-seller--muted">
+              {data.seller_review_count.toLocaleString("tr-TR")} yorum
+            </span>
           )}
-          {data?.seller_rating != null && (
-            <span className="lpc-seller">
-              {data.seller_rating.toFixed(1)} / 5
-              {typeof data?.seller_review_count === "number" &&
-                ` · ${data.seller_review_count.toLocaleString("tr-TR")} yorum`}
+          {(warrantyDuration || warrantyLabel) && (
+            <span className="lpc-seller lpc-seller--muted">
+              <span>Garanti:</span>
+              <span>
+                {warrantyDuration && warrantyLabel
+                  ? `${warrantyDuration} · ${warrantyLabel}`
+                  : warrantyDuration ?? warrantyLabel}
+              </span>
             </span>
           )}
         </div>
@@ -214,7 +233,9 @@ const STYLES = `
   .lpc-logo-placeholder { background: var(--surface-subtle, #f9fafb); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--text-muted, #6b7280); }
   .lpc-store-info { display: flex; flex-direction: column; min-width: 0; }
   .lpc-store-name { font-weight: 500; color: var(--text, #111); }
-  .lpc-seller { font-size: 0.75rem; color: var(--text-muted, #6b7280); }
+  .lpc-seller { display: inline-flex; align-items: center; gap: 6px; font-size: 0.75rem; color: var(--text-muted, #6b7280); }
+  .lpc-seller--muted { color: var(--text-muted, #8b95a7); }
+  .lpc-seller-badge { display: inline-flex; min-width: 32px; align-items: center; justify-content: center; border-radius: 999px; background: #0d8f4d; padding: 2px 7px; font-size: 0.7rem; font-weight: 700; line-height: 1; color: #fff; }
   .lpc-details { display: flex; flex-wrap: wrap; gap: 6px; }
   .lpc-badge { padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 500; }
   .lpc-badge--campaign { background: var(--accent-soft, #fef2f2); color: var(--accent, #dc2626); }

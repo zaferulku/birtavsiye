@@ -2,7 +2,9 @@
 
 import { useMemo } from "react";
 import {
+  formatSellerRating,
   formatTL,
+  formatWarrantyTypeLabel,
   getMarketplaceLogoUrl,
   pickBestOffer,
   sourceTrustScore,
@@ -50,12 +52,14 @@ export default function ProductBestOfferCard({ rows, isLoading, refresh }: Props
   const sellerName = data?.seller_name ?? storeName;
   const sellerRating = data?.seller_rating ?? null;
   const sellerReviewCount = data?.seller_review_count ?? null;
+  const warrantyDuration = data?.warranty_duration ?? null;
+  const warrantyLabel = data?.warranty_label ?? formatWarrantyTypeLabel(bestOffer.warranty_type);
   const destinationUrl = data?.affiliate_url ?? bestOffer.fallback_url ?? null;
   const isOutOfStock = data?.in_stock === false;
   const logoUrl = getMarketplaceLogoUrl(bestOffer.source, bestOffer.store?.logo_url ?? null);
 
   return (
-    <aside className="rounded-[22px] border border-[#E8E4DF] bg-white p-5 shadow-sm xl:sticky xl:top-24">
+    <aside className="h-fit self-start rounded-[22px] border border-[#DCEAFB] bg-[#EDF6FF] p-5 shadow-[0_14px_32px_rgba(29,112,224,0.08)] xl:sticky xl:top-24">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           {logoUrl ? (
@@ -79,23 +83,23 @@ export default function ProductBestOfferCard({ rows, isLoading, refresh }: Props
           type="button"
           onClick={refresh}
           disabled={isLoading}
-          className="rounded-full border border-[#E8E4DF] px-3 py-1 text-xs font-medium text-[#5F5952] transition hover:border-[#E8460A] hover:text-[#E8460A] disabled:opacity-60"
+          className="rounded-full border border-[#D7E7FB] bg-white px-3 py-1 text-xs font-medium text-[#5F5952] transition hover:border-[#1D70E0] hover:text-[#1D70E0] disabled:opacity-60"
         >
           {isLoading ? "Guncelleniyor" : "Yenile"}
         </button>
       </div>
 
-      <div className="mt-4 rounded-[18px] bg-[#FFF3EE] px-4 py-4">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#B56B48]">
-          En dusuk fiyat
+      <div className="mt-4 rounded-[18px] border border-[#CFE2FA] bg-white px-4 py-4 shadow-[0_10px_26px_rgba(29,112,224,0.07)]">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#1D70E0]/75">
+          En uygun teklif
         </div>
-        <div className="mt-1 text-[2rem] font-black leading-none text-[#E8460A]">
+        <div className="mt-2 text-[2rem] font-black leading-none text-[#171412]">
           {bestOffer.displayPrice !== null ? formatTL(bestOffer.displayPrice) : "-"}
         </div>
         {data?.original_price &&
           bestOffer.displayPrice !== null &&
           data.original_price > bestOffer.displayPrice && (
-            <div className="mt-1 text-sm text-[#8A6E63] line-through">
+            <div className="mt-1 text-sm text-[#94A3B8] line-through">
               {formatTL(data.original_price)}
             </div>
           )}
@@ -108,35 +112,39 @@ export default function ProductBestOfferCard({ rows, isLoading, refresh }: Props
         </div>
         <div className="flex items-start justify-between gap-3">
           <dt className="text-[#8C837B]">Satici</dt>
-          <dd className="text-right font-semibold text-[#171412]">{sellerName}</dd>
-        </div>
-        {(sellerRating !== null || sellerReviewCount !== null) && (
-          <div className="flex items-start justify-between gap-3">
-            <dt className="text-[#8C837B]">Satici puani</dt>
-            <dd className="text-right font-semibold text-[#171412]">
-              {sellerRating !== null ? `${sellerRating.toFixed(1)} / 5` : "-"}
-              {sellerReviewCount !== null && (
-                <span className="ml-1 text-xs font-medium text-[#8C837B]">
-                  ({sellerReviewCount.toLocaleString("tr-TR")} yorum)
+          <dd className="text-right">
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              <span className="font-semibold text-[#171412]">{sellerName}</span>
+              {sellerRating !== null && (
+                <span className="inline-flex min-w-[34px] items-center justify-center rounded-full bg-[#0D8F4D] px-2.5 py-0.5 text-[12px] font-bold leading-none text-white">
+                  {formatSellerRating(sellerRating)}
                 </span>
               )}
-            </dd>
-          </div>
-        )}
-        <div className="flex items-start justify-between gap-3">
-          <dt className="text-[#8C837B]">Durum</dt>
-          <dd className={`text-right font-semibold ${isOutOfStock ? "text-[#B42318]" : "text-[#15803D]"}`}>
-            {isOutOfStock ? "Stokta yok" : "Aktif teklif"}
+            </div>
+            {sellerReviewCount !== null && (
+              <div className="mt-1 text-xs font-medium text-[#8C837B]">
+                {sellerReviewCount.toLocaleString("tr-TR")} yorum
+              </div>
+            )}
           </dd>
-        </div>
-        <div className="flex items-start justify-between gap-3">
-          <dt className="text-[#8C837B]">Guven sinyali</dt>
-          <dd className={`text-right font-semibold ${trust.colorClass}`}>{trust.label}</dd>
         </div>
         <div className="flex items-start justify-between gap-3">
           <dt className="text-[#8C837B]">Son gorulme</dt>
           <dd className="text-right font-semibold text-[#171412]">{trust.freshnessLabel}</dd>
         </div>
+        {(warrantyDuration || warrantyLabel) && (
+          <div className="flex items-start justify-between gap-3">
+            <dt className="text-[#8C837B]">Garanti</dt>
+            <dd className="text-right">
+              {warrantyDuration && (
+                <div className="font-semibold text-[#171412]">{warrantyDuration}</div>
+              )}
+              {warrantyLabel && (
+                <div className="text-xs font-medium text-[#8C837B]">{warrantyLabel}</div>
+              )}
+            </dd>
+          </div>
+        )}
         {data?.shipping_price !== null && data?.shipping_price !== undefined && (
           <div className="flex items-start justify-between gap-3">
             <dt className="text-[#8C837B]">Kargo</dt>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { compareStorageValues, normalizeStorageValue } from "@/lib/storageValue";
 import { formatTL } from "./offerUtils";
 import type { VariantOption } from "./ProductDetailShell";
 
@@ -56,20 +57,10 @@ export default function ProductVariantOptions({
   return (
     <section className="space-y-4 rounded-[22px] border border-[#E8E4DF] bg-white p-4 shadow-sm">
       {storageCards.length > 0 && (
-        <OptionSection
-          title="Kapasite"
-          items={storageCards}
-          mode="storage"
-        />
+        <OptionSection title="Bellek Kapasitesi" items={storageCards} mode="storage" />
       )}
 
-      {colorCards.length > 0 && (
-        <OptionSection
-          title="Renk"
-          items={colorCards}
-          mode="color"
-        />
-      )}
+      {colorCards.length > 0 && <OptionSection title="Renk" items={colorCards} mode="color" />}
     </section>
   );
 }
@@ -129,9 +120,7 @@ function OptionSection({
                 </div>
 
                 <div className="flex min-w-0 flex-1 flex-col leading-none">
-                  <span className="truncate text-[13px] font-medium text-[#1F2A37]">
-                    {item.label}
-                  </span>
+                  <span className="truncate text-[13px] font-medium text-[#1F2A37]">{item.label}</span>
                   {item.min_price !== null ? (
                     <span className="mt-1 truncate text-[12px] font-medium text-[#64748B]">
                       {formatTL(item.min_price)}
@@ -166,9 +155,11 @@ function buildOptionCards(
   }
 ): VariantCard[] {
   const bestByValue = new Map<string, VariantOption>();
+  const normalizedSelectedValue = normalizeVariantValue(kind, selectedValue);
 
   for (const variant of variants) {
-    const value = kind === "storage" ? variant.variant_storage : variant.variant_color;
+    const rawValue = kind === "storage" ? variant.variant_storage : variant.variant_color;
+    const value = normalizeVariantValue(kind, rawValue);
     if (!value) continue;
 
     const existing = bestByValue.get(value);
@@ -193,21 +184,21 @@ function buildOptionCards(
     }
   }
 
-  if (bestByValue.size === 0 && selectedValue) {
-    bestByValue.set(selectedValue, {
+  if (bestByValue.size === 0 && normalizedSelectedValue) {
+    bestByValue.set(normalizedSelectedValue, {
       id: currentSlug,
       slug: currentSlug,
       title: currentProduct.title,
       image_url: currentProduct.image_url,
-      variant_storage: kind === "storage" ? selectedValue : null,
-      variant_color: kind === "color" ? selectedValue : null,
+      variant_storage: kind === "storage" ? normalizedSelectedValue : null,
+      variant_color: kind === "color" ? normalizedSelectedValue : null,
       min_price: currentProduct.min_price,
       freshest_seen_at: currentProduct.freshest_seen_at,
     });
   }
 
   return Array.from(bestByValue.entries())
-    .sort(([left], [right]) => left.localeCompare(right, "tr"))
+    .sort(([left], [right]) => compareVariantValues(kind, left, right))
     .map(([value, variant]) => ({
       key: `${kind}-${value}`,
       label: value,
@@ -216,6 +207,24 @@ function buildOptionCards(
       image_url: variant.image_url,
       min_price: variant.min_price,
       freshest_seen_at: variant.freshest_seen_at,
-      active: variant.slug === currentSlug || value === selectedValue,
+      active: variant.slug === currentSlug || value === normalizedSelectedValue,
     }));
+}
+
+function normalizeVariantValue(kind: "storage" | "color", value: string | null): string | null {
+  if (!value) return null;
+
+  if (kind === "color") {
+    return value.trim().replace(/\s+/g, " ");
+  }
+
+  return normalizeStorageValue(value);
+}
+
+function compareVariantValues(kind: "storage" | "color", left: string, right: string) {
+  if (kind === "color") {
+    return left.localeCompare(right, "tr");
+  }
+
+  return compareStorageValues(left, right);
 }

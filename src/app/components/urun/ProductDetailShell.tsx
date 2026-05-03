@@ -140,12 +140,6 @@ export default function ProductDetailShell({
     }
     return arr.length > 0 ? arr : (product.image_url ? [product.image_url] : []);
   })();
-  const quickFacts = [
-    product.brand ? { label: "Marka", value: product.brand } : null,
-    product.variant_storage ? { label: "Depolama", value: product.variant_storage } : null,
-    product.variant_color ? { label: "Renk", value: product.variant_color } : null,
-    product.category ? { label: "Kategori", value: product.category.name } : null,
-  ].filter(Boolean) as Array<{ label: string; value: string }>;
 
   const openCommentsTab = () => {
     setActiveTab("yorumlar");
@@ -201,14 +195,26 @@ export default function ProductDetailShell({
         </div>
 
         <div className="space-y-5">
-          {product.brand && (
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#A06B53]">
-              {product.brand}
-            </p>
-          )}
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2.5">
+            {product.brand && (
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#A06B53]">
+                {product.brand}
+              </p>
+            )}
+
+            <div className="min-w-0">
+              <ProductActionsBar
+                productId={product.id}
+                productSlug={product.slug}
+                productTitle={product.title}
+                currentPrice={lowestKnownPrice}
+                compact
+              />
+            </div>
+          </div>
 
           <div>
-            <h1 className="text-3xl font-black leading-tight text-[#171412] sm:text-[2.15rem]">
+            <h1 className="text-[18px] font-semibold leading-[1.4] text-[#171412] sm:text-[19px]">
               {product.title}
             </h1>
 
@@ -230,44 +236,6 @@ export default function ProductDetailShell({
               Toplam yorum {reviewSummary.commentCount}
             </p>
           </div>
-
-          <div className="grid gap-3 sm:grid-cols-1">
-            <div className="rounded-2xl border border-[#EFE7DF] bg-[#FFF7F2] p-4">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#B56B48]">
-                En dusuk fiyat
-              </div>
-              <div className="mt-1 text-xl font-black text-[#E8460A]">
-                {lowestKnownPrice !== null ? formatTL(lowestKnownPrice) : "-"}
-              </div>
-              <div className="mt-1 text-xs font-medium text-[#8A8179]">
-                Son fiyat kontrolu {formatFreshnessLabel(freshestListingSeenAt)}
-              </div>
-            </div>
-          </div>
-
-          <ProductActionsBar
-            productId={product.id}
-            productSlug={product.slug}
-            productTitle={product.title}
-            currentPrice={lowestKnownPrice}
-          />
-
-          <p className="text-sm leading-7 text-[#5E5750]">
-            {product.description?.trim() || buildAutoDescription(product)}
-          </p>
-
-          {quickFacts.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {quickFacts.map((item) => (
-                <span
-                  key={`${item.label}-${item.value}`}
-                  className="rounded-full border border-[#EFE7DF] bg-white px-3 py-1.5 text-xs font-medium text-[#4D4741]"
-                >
-                  <span className="text-[#8A8179]">{item.label}:</span> {item.value}
-                </span>
-              ))}
-            </div>
-          )}
 
           <ProductVariantOptions
             currentSlug={product.slug}
@@ -500,34 +468,6 @@ function RecommendationsList({
       ))}
     </ul>
   );
-}
-
-function buildAutoDescription(product: ProductDetailModel): string {
-  const specs = product.specs ?? {};
-  const highlightKeys = [
-    "Ekran Boyutu",
-    "Ekran Boyutu (inc)",
-    "RAM Kapasitesi",
-    "Batarya Kapasitesi",
-    "Islemci",
-    "Arka Kamera",
-    "On Kamera",
-  ];
-
-  const highlights: string[] = [];
-  for (const key of highlightKeys) {
-    const value = specs[key];
-    if (typeof value === "string" && value.trim()) {
-      highlights.push(`${key}: ${value}`);
-    }
-    if (highlights.length >= 4) break;
-  }
-
-  if (highlights.length === 0) {
-    return `${product.title} icin fiyatlar, teknik ozellikler ve kullanici yorumlarini bu sayfada inceleyebilirsiniz.`;
-  }
-
-  return `${product.title} icin one cikan bilgiler: ${highlights.join(", ")}. Tum magaza fiyatlari ve yorumlar asagida listelenir.`;
 }
 
 function scrollToId(id: string) {

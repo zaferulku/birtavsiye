@@ -53,6 +53,7 @@ type ProductPageData = {
     source_url: string | null;
     affiliate_url: string | null;
     last_seen: string | null;
+    warranty_type: string | null;
   }>;
   stores: Record<string, StoreDefinition>;
   reviewSummary: ReviewSummary;
@@ -68,6 +69,7 @@ type ProductListingRow = {
   affiliate_url: string | null;
   price: number | string;
   last_seen: string | null;
+  warranty_type?: string | null;
   is_active?: boolean | null;
   in_stock?: boolean | null;
 };
@@ -354,7 +356,7 @@ const loadProduct = cache(async (slug: string): Promise<ProductPageData | null> 
       description, image_url, images, specs,
       category_id,
       category:categories!inner(id, slug, name),
-      listings(id, source, source_url, affiliate_url, price, last_seen, is_active, in_stock)
+      listings(id, source, source_url, affiliate_url, price, last_seen, warranty_type, is_active, in_stock)
     `)
     .eq("slug", slug)
     .eq("is_active", true)
@@ -421,6 +423,7 @@ const loadProduct = cache(async (slug: string): Promise<ProductPageData | null> 
       source_url: listing.source_url ?? null,
       affiliate_url: listing.affiliate_url ?? null,
       last_seen: listing.last_seen ?? null,
+      warranty_type: listing.warranty_type ?? null,
     })),
     stores,
     reviewSummary,
@@ -592,6 +595,7 @@ export default async function ProductPage({
     cached_price: listing.price,
     last_seen: listing.last_seen ?? null,
     fallback_url: listing.affiliate_url || listing.source_url || null,
+    warranty_type: listing.warranty_type ?? null,
   }));
 
   return (
@@ -667,7 +671,7 @@ async function loadExactClusterRows(product: ProductRow): Promise<ProductRow[]> 
       id, slug, title, brand, model_code, model_family, variant_storage, variant_color,
       description, image_url, images, specs, category_id,
       category:categories(id, slug, name),
-      listings(id, source, source_url, affiliate_url, price, last_seen, is_active, in_stock)
+      listings(id, source, source_url, affiliate_url, price, last_seen, warranty_type, is_active, in_stock)
     `)
     .eq("is_active", true)
     .neq("id", product.id)

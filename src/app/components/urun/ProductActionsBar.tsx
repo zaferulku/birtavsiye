@@ -10,6 +10,7 @@ type Props = {
   productSlug: string;
   productTitle: string;
   currentPrice: number | null;
+  compact?: boolean;
 };
 
 export default function ProductActionsBar({
@@ -17,6 +18,7 @@ export default function ProductActionsBar({
   productSlug,
   productTitle,
   currentPrice,
+  compact = false,
 }: Props) {
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteLoading, setFavoriteLoading] = useState(false);
@@ -194,32 +196,37 @@ export default function ProductActionsBar({
   };
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap gap-2">
+    <div className={compact ? "space-y-1.5" : "space-y-3"}>
+      <div
+        className={`flex flex-wrap items-center gap-2 ${compact ? "justify-start md:flex-nowrap md:gap-1.5" : ""}`}
+      >
         <ActionButton
           onClick={handleFavorite}
           loading={favoriteLoading}
           active={isFavorite}
           label={isFavorite ? "Favoride" : "Favorilere Al"}
           icon={<HeartIcon active={isFavorite} />}
-        />
-        <ActionButton onClick={handleShare} label="Paylas" icon={<ShareIcon />} />
-        <ActionButton
-          onClick={handleCompare}
-          active={compareActive}
-          label={compareActive ? "Karsilastirmada" : "Karsilastir"}
-          icon={<CompareIcon />}
+          compact={compact}
         />
         <ActionButton
           onClick={() => setShowAlertForm((current) => !current)}
           active={showAlertForm}
           label="Alarm Kur"
           icon={<BellIcon />}
+          compact={compact}
         />
+        <ActionButton
+          onClick={handleCompare}
+          active={compareActive}
+          label={compareActive ? "Karsilastirmada" : "Karsilastir"}
+          icon={<CompareIcon />}
+          compact={compact}
+        />
+        <ActionButton onClick={handleShare} label="Paylas" icon={<ShareIcon />} compact={compact} />
       </div>
 
       {showAlertForm && (
-        <div className="rounded-2xl border border-[#EFE7DF] bg-[#FAF7F4] p-4">
+        <div className={`rounded-2xl border border-[#EFE7DF] bg-[#FAF7F4] ${compact ? "p-3" : "p-4"}`}>
           <div className="grid gap-3 sm:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)_auto]">
             <label className="flex flex-col gap-1 text-xs font-semibold text-[#5E5750]">
               E-posta (hesabindan)
@@ -257,7 +264,7 @@ export default function ProductActionsBar({
         </div>
       )}
 
-      {message && <p className="text-xs font-medium text-[#8A8179]">{message}</p>}
+      {message && <p className={`font-medium text-[#8A8179] ${compact ? "text-[11px]" : "text-xs"}`}>{message}</p>}
     </div>
   );
 }
@@ -268,23 +275,25 @@ function ActionButton({
   icon,
   active = false,
   loading = false,
+  compact = false,
 }: {
   onClick: () => void;
   label: string;
   icon: ReactNode;
   active?: boolean;
   loading?: boolean;
+  compact?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={loading}
-      className={`inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition ${
+      className={`inline-flex items-center rounded-full border font-semibold transition ${
         active
           ? "border-[#F3C8B8] bg-[#FFF3EE] text-[#E8460A]"
           : "border-[#EFE7DF] bg-white text-[#4D4741] hover:border-[#E8460A] hover:text-[#E8460A]"
-      } disabled:opacity-60`}
+      } ${compact ? "gap-1.5 px-3 py-1.5 text-[13px] leading-none [&_svg]:h-3.5 [&_svg]:w-3.5" : "gap-2 px-4 py-2 text-sm"} disabled:opacity-60`}
     >
       {icon}
       <span>{label}</span>

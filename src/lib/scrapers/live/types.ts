@@ -7,8 +7,8 @@
 
 export type StoreLiveData = {
   price: number;
-  original_price: number | null;          // strike-through if shown
-  currency: string;                        // "TRY"
+  original_price: number | null;
+  currency: string;
   in_stock: boolean;
   stock_count: number | null;
   shipping_price: number | null;
@@ -16,16 +16,18 @@ export type StoreLiveData = {
   seller_name: string | null;
   seller_rating?: number | null;
   seller_review_count?: number | null;
-  installment_hint: string | null;         // "12 taksit" — short summary
-  campaign_hint: string | null;            // "5000 TL üstü %10 indirim"
+  warranty_duration?: string | null;
+  warranty_label?: string | null;
+  installment_hint: string | null;
+  campaign_hint: string | null;
   affiliate_url: string | null;
-  fetched_at: string;                      // ISO timestamp
+  fetched_at: string;
 };
 
 /**
  * Context passed to every fetcher.
  *
- * Fetchers may use sourceUrl directly (preferred — stored at ingest time)
+ * Fetchers may use sourceUrl directly (preferred - stored at ingest time)
  * or fall back to constructing URLs from sourceProductId + a known pattern.
  *
  * PttAVM uses sourceUrl exclusively. MediaMarkt and Trendyol may reconstruct
@@ -37,8 +39,8 @@ export type FetchContext = {
 };
 
 /**
- * Search-augmentation context — kullanıcı detail page'e geldiğinde, mevcut
- * listing'lerimiz olmayan mağazalar için title+brand ile canlı arama.
+ * Search-augmentation context - kullanici detail page'e geldiginde, mevcut
+ * listing'lerimiz olmayan magazalar icin title+brand ile canli arama.
  */
 export type SearchContext = {
   title: string;
@@ -49,8 +51,8 @@ export type StoreFetcher = {
   source: string;
   fetch: (ctx: FetchContext) => Promise<StoreLiveData>;
   /**
-   * Opsiyonel: title+brand'den arama yaparak ilk match'i döner. Detail page
-   * "discover" akışı için kullanılır. Mağazada listing yoksa search ile keşfet.
+   * Opsiyonel: title+brand'den arama yaparak ilk match'i doner. Detail page
+   * "discover" akisi icin kullanilir. Magazada listing yoksa search ile kesfet.
    */
   searchByTitle?: (ctx: SearchContext) => Promise<StoreLiveData | null>;
   timeoutMs: number;
@@ -104,9 +106,9 @@ export type FetchOptions = {
   forceFresh?: boolean;
   cacheTtlMs?: number;
   /**
-   * Discover (search-augmentation) flow: mevcut listing'i olmayan mağazalarda
-   * title+brand ile arama yap, ilk match'in fiyatını ephemeral olarak emit et.
-   * Default false (eski davranış).
+   * Discover (search-augmentation) flow: mevcut listing'i olmayan magazalarda
+   * title+brand ile arama yap, ilk match'in fiyatini ephemeral olarak emit et.
+   * Default false (eski davranis).
    */
   discover?: boolean;
 };

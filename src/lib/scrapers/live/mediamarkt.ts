@@ -12,6 +12,7 @@
  */
 
 import type { StoreFetcher, StoreLiveData, FetchContext } from "./types";
+import { extractWarrantyInfo } from "./warranty";
 
 const TIMEOUT_MS = 5000;
 
@@ -78,6 +79,7 @@ export async function fetchMediaMarkt(ctx: FetchContext): Promise<StoreLiveData>
 }
 
 function parseMediaMarktHtml(html: string): StoreLiveData {
+  const warranty = extractWarrantyInfo(html);
   const jsonLdMatches = html.matchAll(
     /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
   );
@@ -109,7 +111,7 @@ function parseMediaMarktHtml(html: string): StoreLiveData {
             : null;
         if (!productNode) continue;
 
-        const result = parseProductSchema(productNode);
+        const result = parseProductSchema(productNode, warranty);
         if (result) return result;
       }
     } catch {
@@ -117,14 +119,17 @@ function parseMediaMarktHtml(html: string): StoreLiveData {
     }
   }
 
-  return extractFromHtml(html);
+  return extractFromHtml(html, warranty);
 }
 
 type JsonLdProduct = Record<string, unknown> & {
   offers?: unknown;
 };
 
-function parseProductSchema(product: JsonLdProduct): StoreLiveData | null {
+function parseProductSchema(
+  product: JsonLdProduct,
+  warranty: { duration: string | null; label: string | null }
+): StoreLiveData | null {
   const rawOffers = product.offers;
   const offers = (Array.isArray(rawOffers) ? rawOffers[0] : rawOffers) as
     | Record<string, unknown>
@@ -149,6 +154,8 @@ function parseProductSchema(product: JsonLdProduct): StoreLiveData | null {
     shipping_price: null,
     free_shipping: false,
     seller_name: parseString(seller?.name) ?? "MediaMarkt",
+    warranty_duration: warranty.duration,
+    warranty_label: warranty.label,
     installment_hint: null,
     campaign_hint: null,
     affiliate_url: null,
@@ -156,7 +163,10 @@ function parseProductSchema(product: JsonLdProduct): StoreLiveData | null {
   };
 }
 
-function extractFromHtml(html: string): StoreLiveData {
+function extractFromHtml(
+  html: string,
+  warranty: { duration: string | null; label: string | null }
+): StoreLiveData {
   const pricePatterns = [
     /data-price=["'](\d+(?:[.,]\d+)?)["']/,
     /"price"\s*:\s*["']?(\d+(?:[.,]\d+)?)["']?/,
@@ -186,6 +196,8 @@ function extractFromHtml(html: string): StoreLiveData {
     shipping_price: null,
     free_shipping: /ücretsiz\s*kargo|kargo\s*bedava/i.test(html),
     seller_name: "MediaMarkt",
+    warranty_duration: warranty.duration,
+    warranty_label: warranty.label,
     installment_hint: null,
     campaign_hint: null,
     affiliate_url: null,

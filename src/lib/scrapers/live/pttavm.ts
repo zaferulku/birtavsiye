@@ -15,6 +15,7 @@
  */
 
 import type { StoreFetcher, StoreLiveData, FetchContext } from "./types";
+import { extractWarrantyInfo } from "./warranty";
 
 const TIMEOUT_MS = 5000;
 
@@ -199,8 +200,14 @@ function normalizeOffers(offers: unknown): OfferLike | null {
 // ============================================================================
 
 function enrichWithHtmlFields(base: StoreLiveData, html: string): StoreLiveData {
+  const warranty = extractWarrantyInfo(html);
+  const sellerSignals = extractSellerSignals(html);
   return {
     ...base,
+    seller_rating: sellerSignals.rating,
+    seller_review_count: sellerSignals.reviewCount,
+    warranty_duration: warranty.duration,
+    warranty_label: warranty.label,
     installment_hint: extractInstallmentHint(html),
     campaign_hint: extractCampaignHint(html),
   };
@@ -247,6 +254,7 @@ function extractCampaignHint(html: string): string | null {
 // ============================================================================
 
 function extractFromHtml(html: string): StoreLiveData {
+  const sellerSignals = extractSellerSignals(html);
   const pricePatterns = [
     /itemprop=["']price["'][^>]*content=["']([\d.]+)["']/i,
     /<meta[^>]*property=["']product:price:amount["'][^>]*content=["']([\d.]+)["']/i,
@@ -279,6 +287,10 @@ function extractFromHtml(html: string): StoreLiveData {
     shipping_price: null,
     free_shipping: /ücretsiz\s*kargo|kargo\s*bedava/i.test(html),
     seller_name: "PttAVM",
+    seller_rating: sellerSignals.rating,
+    seller_review_count: sellerSignals.reviewCount,
+    warranty_duration: extractWarrantyInfo(html).duration,
+    warranty_label: extractWarrantyInfo(html).label,
     installment_hint: extractInstallmentHint(html),
     campaign_hint: extractCampaignHint(html),
     affiliate_url: null,
@@ -328,6 +340,38 @@ function parseNumber(v: unknown): number | null {
 function parseString(v: unknown): string | null {
   if (typeof v === "string" && v.trim()) return v.trim();
   return null;
+}
+
+function extractSellerSignals(html: string): { rating: number | null; reviewCount: number | null } {
+  const ratingPatterns = [
+    /(?:satici|sat[ıi]c[ıi]|magaza|mağaza)[\s\S]{0,140}?(?:puan[ıi]?|rating|degerlendirme)[^0-9]{0,20}(\d(?:[.,]\d+)?)/i,
+    /class=["'][^"']*(?:rating|score)[^"']*["'][^>]*>\s*(\d(?:[.,]\d+)?)\s*</i,
+    /"ratingValue"\s*:\s*"?(\d(?:[.,]\d+)?)"?/i,
+  ];
+  const reviewPatterns = [
+    /(\d[\d.]*)\s*(?:yorum|degerlendirme|değerlendirme)/i,
+    /"reviewCount"\s*:\s*"?(\d+)"?/i,
+  ];
+
+  let rating: number | null = null;
+  for (const pattern of ratingPatterns) {
+    const match = html.match(pattern);
+    if (match) {
+      rating = parseNumber(match[1]);
+      if (rating !== null) break;
+    }
+  }
+
+  let reviewCount: number | null = null;
+  for (const pattern of reviewPatterns) {
+    const match = html.match(pattern);
+    if (match) {
+      reviewCount = parseNumber(match[1]);
+      if (reviewCount !== null) break;
+    }
+  }
+
+  return { rating, reviewCount };
 }
 
 export const pttavmFetcher: StoreFetcher = {

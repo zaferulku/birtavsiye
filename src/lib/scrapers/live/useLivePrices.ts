@@ -17,6 +17,8 @@ export type StoreLiveData = {
   seller_name: string | null;
   seller_rating?: number | null;
   seller_review_count?: number | null;
+  warranty_duration?: string | null;
+  warranty_label?: string | null;
   installment_hint: string | null;
   campaign_hint: string | null;
   affiliate_url: string | null;
@@ -66,18 +68,14 @@ export function useLivePrices(productId: string | null): UseLivePricesResult {
       eventSourceRef.current.close();
     }
 
-    // P6.12: productId değişince stale fiyat/stat'ı temizle ve yeni SSE'yi
-    // subscribe et — "subscribe-on-key-change" deseni. ESLint
-    // set-state-in-effect bunu cascading render olarak işaretliyor; 3 sync
-    // setState batch'lenir, refactor (useReducer / parent key prop) scope dışı.
+    // productId degisince stale fiyat/stat'i temizle ve yeni SSE'yi subscribe et.
     /* eslint-disable react-hooks/set-state-in-effect */
     setListings({});
     setIsDone(false);
     setStats({ totalStores: 0, successful: 0, failed: 0, durationMs: 0 });
     /* eslint-enable react-hooks/set-state-in-effect */
 
-    // discover=1 → mevcut listing'i olmayan mağazalarda title+brand araması yap.
-    // Orphan ürünlerde (tek-mağaza) diğer pazaryeri fiyatları gösterir.
+    // discover=1 -> mevcut listing'i olmayan magazalarda title+brand aramasi yap.
     const url = `/api/live-prices?product_id=${encodeURIComponent(productId)}&discover=1${
       refreshToken > 0 ? "&fresh=1" : ""
     }`;

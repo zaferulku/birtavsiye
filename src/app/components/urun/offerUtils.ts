@@ -14,6 +14,7 @@ export type InitialListing = {
   cached_price: number | null;
   last_seen?: string | null;
   fallback_url?: string | null;
+  warranty_type?: string | null;
 };
 
 export type MergedOfferRow = {
@@ -26,6 +27,7 @@ export type MergedOfferRow = {
   isCached: boolean;
   last_seen: string | null;
   fallback_url: string | null;
+  warranty_type: string | null;
 };
 
 export function formatTL(amount: number): string {
@@ -66,6 +68,31 @@ export function computeTotal(data: StoreLiveData): number {
   return data.price + (data.shipping_price && !data.free_shipping ? data.shipping_price : 0);
 }
 
+export function normalizeSellerRating(value: number | null | undefined): number | null {
+  if (typeof value !== "number" || !Number.isFinite(value)) return null;
+  const normalized = value <= 5 ? value * 2 : value;
+  return Math.max(0, Math.min(10, normalized));
+}
+
+export function formatSellerRating(value: number | null | undefined): string {
+  const normalized = normalizeSellerRating(value);
+  if (normalized === null) return "-";
+  return normalized.toFixed(1);
+}
+
+export function formatWarrantyTypeLabel(value: string | null | undefined): string | null {
+  switch ((value ?? "").trim().toLowerCase()) {
+    case "apple_tr":
+      return "Apple Turkiye Garantili";
+    case "ithalatci":
+      return "Ithalatci Garantili";
+    case "distri":
+      return "Distributor Garantili";
+    default:
+      return value?.trim() ? value.trim() : null;
+  }
+}
+
 // Re-export (ProductBestOfferCard ./offerUtils üzerinden alıyor)
 export { sourceTrustScore };
 
@@ -97,6 +124,7 @@ export function mergeOfferRows(
         isCached: !liveState,
         last_seen: initialListing.last_seen ?? null,
         fallback_url: initialListing.fallback_url ?? null,
+        warranty_type: initialListing.warranty_type ?? null,
       } satisfies MergedOfferRow;
     })
     .sort((left, right) => {

@@ -394,11 +394,11 @@ export default function CommunitySection({
     <div className="space-y-8">
       <section
         id="urun-yorumlari"
-        className="rounded-[24px] border border-[#E8E4DF] bg-white p-5 shadow-sm sm:p-6"
+        className="rounded-[28px] border border-[#DCEAFB] bg-[#F7FBFF] p-5 shadow-[0_18px_48px_rgba(29,112,224,0.08)] sm:p-6"
       >
-        <div className="flex flex-col gap-4 border-b border-[#F2ECE6] pb-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="flex flex-col gap-4 border-b border-[#E4EEF9] pb-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#A06B53]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#5F8FD6]">
               Urun Yorumlari
             </p>
             <h2 className="mt-1 text-2xl font-black text-[#171412]">
@@ -411,16 +411,16 @@ export default function CommunitySection({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <div className="rounded-2xl bg-[#FFF7F2] px-4 py-3">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#B56B48]">
+            <div className="rounded-2xl border border-[#DCEAFB] bg-[#EDF6FF] px-4 py-3">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#5F8FD6]">
                 Ortalama puan
               </div>
-              <div className="mt-1 text-2xl font-black text-[#E8460A]">
+              <div className="mt-1 text-2xl font-black text-[#173D8E]">
                 {reviewSummary.ratingCount > 0 ? reviewSummary.average.toFixed(1) : "—"}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[#EFE7DF] bg-white px-4 py-3">
+            <div className="rounded-2xl border border-[#DCEAFB] bg-white px-4 py-3 shadow-[0_10px_24px_rgba(29,112,224,0.06)]">
               <div className="flex items-center gap-2">
                 <StarRating rating={reviewSummary.average} size="lg" />
                 <span className="text-sm font-semibold text-[#171412]">
@@ -434,7 +434,7 @@ export default function CommunitySection({
 
         <div className="mt-6 grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
           <aside className="space-y-5">
-            <div className="rounded-[20px] border border-[#EFE7DF] bg-[#FAF7F4] p-4">
+            <div className="rounded-[22px] border border-[#DCEAFB] bg-[#EFF7FF] p-4 shadow-[0_10px_24px_rgba(29,112,224,0.05)]">
               <div className="text-5xl font-black text-[#171412]">
                 {reviewSummary.ratingCount > 0 ? reviewSummary.average.toFixed(1) : "—"}
               </div>
@@ -445,9 +445,9 @@ export default function CommunitySection({
                 {ratingDistribution.map(({ star, count }) => (
                   <div key={star} className="flex items-center gap-2">
                     <span className="w-10 text-xs font-medium text-[#7C746D]">{star} yildiz</span>
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#E9E1D8]">
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-[#DCEAFB]">
                       <div
-                        className="h-full rounded-full bg-[#E8A000]"
+                        className="h-full rounded-full bg-[#5F8FD6]"
                         style={{ width: `${Math.round((count / maxDistributionValue) * 100)}%` }}
                       />
                     </div>
@@ -457,7 +457,7 @@ export default function CommunitySection({
               </div>
             </div>
 
-            <div className="rounded-[20px] border border-[#EFE7DF] bg-white p-4">
+            <div className="rounded-[22px] border border-[#DCEAFB] bg-white p-4 shadow-[0_10px_24px_rgba(29,112,224,0.05)]">
               <h3 className="text-sm font-bold text-[#171412]">Kendi yorumunu birak</h3>
               <p className="mt-1 text-sm leading-6 text-[#6D655E]">
                 Yorum yazmak istersen puanini da ekle. Sadece puan vermek de mumkun.
@@ -465,7 +465,7 @@ export default function CommunitySection({
               <button
                 type="button"
                 onClick={() => document.getElementById("yorum-formu")?.scrollIntoView({ behavior: "smooth" })}
-                className="mt-4 w-full rounded-xl border border-[#E8E4DF] px-4 py-3 text-sm font-semibold text-[#171412] transition hover:border-[#E8460A] hover:text-[#E8460A]"
+                className="mt-4 w-full rounded-xl border border-[#DCEAFB] bg-[#F5FAFF] px-4 py-3 text-sm font-semibold text-[#173D8E] transition hover:border-[#1D70E0] hover:text-[#1D70E0]"
               >
                 Yorum alanina git
               </button>
@@ -475,9 +475,9 @@ export default function CommunitySection({
           <div className="space-y-6">
             <div
               id="yorum-formu"
-              className="rounded-[22px] border border-[#EFE7DF] bg-white shadow-sm"
+              className="rounded-[24px] border border-[#DCEAFB] bg-white shadow-[0_12px_28px_rgba(29,112,224,0.06)]"
             >
-              <div className="border-b border-[#F2ECE6] px-5 py-4">
+              <div className="border-b border-[#E4EEF9] px-5 py-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
                     <h3 className="text-lg font-bold text-[#171412]">Degerlendir ve yorumla</h3>
@@ -493,7 +493,7 @@ export default function CommunitySection({
                     <select
                       value={sortBy}
                       onChange={(event) => setSortBy(event.target.value as SortValue)}
-                      className="rounded-xl border border-[#E8E4DF] bg-white px-3 py-2 text-sm text-[#171412] outline-none transition focus:border-[#E8460A]"
+                      className="rounded-xl border border-[#DCEAFB] bg-[#F8FBFF] px-3 py-2 text-sm text-[#171412] outline-none transition focus:border-[#1D70E0]"
                     >
                       <option value="recommended">Onerilen</option>
                       <option value="newest">En yeni</option>
@@ -529,7 +529,7 @@ export default function CommunitySection({
                     onChange={(event) => setBody(event.target.value)}
                     rows={4}
                     placeholder="Bu urunle ilgili deneyimini yazabilirsin. Yalnizca puan vermek istersen yorumu bos da birakabilirsin."
-                    className="w-full rounded-[18px] border border-[#E8E4DF] bg-[#FAF7F4] px-4 py-3 text-sm text-[#171412] outline-none transition focus:border-[#E8460A] focus:bg-white"
+                    className="w-full rounded-[18px] border border-[#DCEAFB] bg-[#F5FAFF] px-4 py-3 text-sm text-[#171412] outline-none transition focus:border-[#1D70E0] focus:bg-white"
                   />
 
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -540,7 +540,7 @@ export default function CommunitySection({
                       type="button"
                       onClick={handleSubmit}
                       disabled={loading || userRating === 0}
-                      className="rounded-xl bg-[#E8460A] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#C93A08] disabled:opacity-40"
+                      className="rounded-xl bg-[#1D70E0] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#165BB6] disabled:opacity-40"
                     >
                       {loading ? "Gonderiliyor..." : "Yorumu gonder"}
                     </button>
@@ -548,14 +548,14 @@ export default function CommunitySection({
                 </div>
               ) : (
                 <div className="px-5 py-6">
-                  <div className="rounded-[18px] border border-dashed border-[#E8E4DF] bg-[#FAF7F4] px-4 py-6 text-center">
+                  <div className="rounded-[18px] border border-dashed border-[#DCEAFB] bg-[#F5FAFF] px-4 py-6 text-center">
                     <h4 className="text-base font-bold text-[#171412]">Yorum yapmak icin giris yap</h4>
                     <p className="mt-2 text-sm leading-6 text-[#6D655E]">
                       Puan verip yorum birakabilir, diger yorumlara cevap yazabilir ve oy kullanabilirsin.
                     </p>
                     <Link
                       href="/giris"
-                      className="mt-4 inline-flex rounded-xl bg-[#E8460A] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#C93A08]"
+                      className="mt-4 inline-flex rounded-xl bg-[#1D70E0] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#165BB6]"
                     >
                       Giris yap
                     </Link>
@@ -564,13 +564,13 @@ export default function CommunitySection({
               )}
             </div>
 
-            <div className="flex flex-col gap-3 rounded-[22px] border border-[#EFE7DF] bg-white p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3 rounded-[22px] border border-[#DCEAFB] bg-white p-4 shadow-[0_10px_24px_rgba(29,112,224,0.05)] sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h3 className="text-base font-bold text-[#171412]">Yorumlari tara</h3>
                 <p className="mt-1 text-sm text-[#6D655E]">Kullanici adi veya yorum icerigiyle ara.</p>
               </div>
-              <div className="flex w-full max-w-md items-center gap-2 rounded-xl border border-[#E8E4DF] bg-[#FAF7F4] px-3 py-2">
-                <svg className="h-4 w-4 text-[#8A8179]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <div className="flex w-full max-w-md items-center gap-2 rounded-xl border border-[#DCEAFB] bg-[#F5FAFF] px-3 py-2">
+                <svg className="h-4 w-4 text-[#6D90CB]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 21l-4.35-4.35" strokeLinecap="round" strokeLinejoin="round" />
                   <circle cx="11" cy="11" r="6" />
                 </svg>
@@ -626,7 +626,7 @@ export default function CommunitySection({
               <h3 className="text-base font-bold text-[#171412]">Tum yorumlar</h3>
 
               {visibleComments.length === 0 ? (
-                <div className="rounded-[22px] border border-dashed border-[#E8E4DF] bg-[#FAF7F4] px-5 py-10 text-center">
+                <div className="rounded-[22px] border border-dashed border-[#DCEAFB] bg-[#F5FAFF] px-5 py-10 text-center">
                   <div className="text-lg font-bold text-[#171412]">Henuz yorum gorunmuyor</div>
                   <p className="mt-2 text-sm leading-6 text-[#6D655E]">
                     Bu urun icin ilk puani veya ilk yorumu sen birakabilirsin.
@@ -821,8 +821,8 @@ function CommentCard({
 }) {
   return (
     <article
-      className={`rounded-[22px] border p-5 shadow-sm ${
-        isPinned ? "border-[#F3CDBB] bg-[#FFF9F5]" : "border-[#EFE7DF] bg-white"
+      className={`rounded-[22px] border p-5 shadow-[0_10px_24px_rgba(29,112,224,0.05)] ${
+        isPinned ? "border-[#D6E7FB] bg-[#F3F9FF]" : "border-[#DCEAFB] bg-white"
       }`}
     >
       <div className="flex items-start gap-3">
@@ -833,10 +833,10 @@ function CommentCard({
             <span className="text-xs text-[#8A8179]">{formatDate(post.created_at)}</span>
             {(post.rating ?? 0) > 0 && <StarRating rating={post.rating ?? 0} />}
             {isPinned && (
-              <span className="rounded-full bg-[#FFE7D9] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#D13F05]">
-                One cikan
-              </span>
-            )}
+                <span className="rounded-full bg-[#E7F1FF] px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#1D70E0]">
+                  One cikan
+                </span>
+              )}
           </div>
 
           <p className="mt-3 whitespace-pre-line text-sm leading-7 text-[#4D4741]">{post.body}</p>
@@ -859,7 +859,7 @@ function CommentCard({
             <button
               type="button"
               onClick={onReplyClick}
-              className="rounded-full border border-[#E8E4DF] px-3 py-1.5 text-xs font-semibold text-[#5E5750] transition hover:border-[#E8460A] hover:text-[#E8460A]"
+              className="rounded-full border border-[#DCEAFB] bg-[#F5FAFF] px-3 py-1.5 text-xs font-semibold text-[#1D70E0] transition hover:border-[#1D70E0] hover:text-[#1D70E0]"
             >
               Cevapla {replies.length > 0 ? `(${replies.length})` : ""}
             </button>
@@ -868,9 +868,9 @@ function CommentCard({
           {children}
 
           {replies.length > 0 && (
-            <div className="mt-4 space-y-3 border-l-2 border-[#F3ECE5] pl-4">
+            <div className="mt-4 space-y-3 border-l-2 border-[#DCEAFB] pl-4">
               {replies.map((reply) => (
-                <div key={reply.id} className="rounded-[18px] bg-[#FAF7F4] p-4">
+                <div key={reply.id} className="rounded-[18px] border border-[#E4EEF9] bg-[#F5FAFF] p-4">
                   <div className="flex items-start gap-3">
                     <Avatar name={reply.user_name} size="sm" />
                     <div className="min-w-0 flex-1">
@@ -928,20 +928,20 @@ function ReplyComposer({
   };
 
   return (
-    <div className="mt-4 rounded-[18px] border border-[#EFE7DF] bg-[#FAF7F4] p-4">
+    <div className="mt-4 rounded-[18px] border border-[#DCEAFB] bg-[#F5FAFF] p-4">
       <div className="mb-2 text-sm font-semibold text-[#171412]">{post.user_name} yorumuna cevap yaz</div>
       <textarea
         rows={3}
         value={replyBody}
         onChange={(event) => setReplyBody(event.target.value)}
         placeholder="Cevabini buraya yaz..."
-        className="w-full rounded-[16px] border border-[#E8E4DF] bg-white px-4 py-3 text-sm text-[#171412] outline-none transition focus:border-[#E8460A]"
+        className="w-full rounded-[16px] border border-[#DCEAFB] bg-white px-4 py-3 text-sm text-[#171412] outline-none transition focus:border-[#1D70E0]"
       />
       <div className="mt-3 flex items-center justify-end gap-2">
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-xl border border-[#E8E4DF] px-4 py-2 text-sm font-semibold text-[#5E5750] transition hover:border-[#E8460A] hover:text-[#E8460A]"
+          className="rounded-xl border border-[#DCEAFB] bg-white px-4 py-2 text-sm font-semibold text-[#5E5750] transition hover:border-[#1D70E0] hover:text-[#1D70E0]"
         >
           Vazgec
         </button>
@@ -949,7 +949,7 @@ function ReplyComposer({
           type="button"
           onClick={handleSubmit}
           disabled={loading || !replyBody.trim()}
-          className="rounded-xl bg-[#E8460A] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#C93A08] disabled:opacity-40"
+          className="rounded-xl bg-[#1D70E0] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#165BB6] disabled:opacity-40"
         >
           {loading ? "Gonderiliyor..." : "Cevabi gonder"}
         </button>
@@ -978,8 +978,8 @@ function VoteButton({
       onClick={onClick}
       className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
         active
-          ? "border-[#E8460A] bg-[#FFF3EE] text-[#E8460A]"
-          : "border-[#E8E4DF] text-[#5E5750] hover:border-[#E8460A] hover:text-[#E8460A]"
+          ? "border-[#1D70E0] bg-[#EEF6FF] text-[#1D70E0]"
+          : "border-[#DCEAFB] text-[#5E5750] hover:border-[#1D70E0] hover:text-[#1D70E0]"
       }`}
     >
       {icon === "up" ? <ThumbUpIcon /> : <ThumbDownIcon />}
@@ -991,7 +991,7 @@ function VoteButton({
 function Avatar({ name, size = "md" }: { name: string; size?: "sm" | "md" }) {
   return (
     <div
-      className={`flex flex-shrink-0 items-center justify-center rounded-full bg-[#FFF3EE] font-bold text-[#E8460A] ${
+      className={`flex flex-shrink-0 items-center justify-center rounded-full bg-[#EAF3FF] font-bold text-[#1D70E0] ${
         size === "sm" ? "h-8 w-8 text-xs" : "h-10 w-10 text-sm"
       }`}
     >

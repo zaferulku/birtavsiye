@@ -11,6 +11,7 @@
  */
 
 import type { StoreFetcher, StoreLiveData, FetchContext, SearchContext } from "./types";
+import { extractWarrantyInfo } from "./warranty";
 
 const TIMEOUT_MS = 5000;
 
@@ -73,6 +74,8 @@ async function fetchTrendyolHtml(url: string): Promise<StoreLiveData> {
 }
 
 function parseTrendyolHtml(html: string): StoreLiveData {
+  const warranty = extractWarrantyInfo(html);
+  const sellerSignals = extractSellerSignalsFromHtml(html);
   const jsonLdMatches = html.matchAll(
     /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
   );
@@ -102,6 +105,10 @@ function parseTrendyolHtml(html: string): StoreLiveData {
           shipping_price: null,
           free_shipping: /ücretsiz\s*kargo|kargo\s*bedava/i.test(html),
           seller_name: parseString(offers.seller?.name),
+          seller_rating: sellerSignals.rating,
+          seller_review_count: sellerSignals.reviewCount,
+          warranty_duration: warranty.duration,
+          warranty_label: warranty.label,
           installment_hint: null,
           campaign_hint: null,
           affiliate_url: null,
@@ -121,6 +128,7 @@ function parseTrendyolHtml(html: string): StoreLiveData {
       const state = JSON.parse(stateMatch[1]);
       const product = state?.product ?? state?.productDetail;
       if (product) {
+        const merchantSignals = extractSellerSignalsFromObject(product?.merchant ?? product?.seller ?? product);
         const price = parseNumber(
           product?.price?.sellingPrice ?? product?.price?.discounted ?? product?.sellingPrice
         );
@@ -136,6 +144,10 @@ function parseTrendyolHtml(html: string): StoreLiveData {
             shipping_price: null,
             free_shipping: Boolean(product?.freeCargo ?? product?.freeShipping),
             seller_name: parseString(product?.merchant?.name ?? product?.seller?.name),
+            seller_rating: merchantSignals.rating ?? sellerSignals.rating,
+            seller_review_count: merchantSignals.reviewCount ?? sellerSignals.reviewCount,
+            warranty_duration: warranty.duration,
+            warranty_label: warranty.label,
             installment_hint: null,
             campaign_hint: null,
             affiliate_url: null,
@@ -176,6 +188,7 @@ async function fetchTrendyolApi(sourceProductId: string): Promise<StoreLiveData>
 
     const data = await response.json();
     const result = data?.result ?? data?.data ?? data;
+    const merchantSignals = extractSellerSignalsFromObject(result?.merchant ?? result?.seller ?? result);
 
     const price = parseNumber(
       result?.price?.sellingPrice ??
@@ -203,6 +216,10 @@ async function fetchTrendyolApi(sourceProductId: string): Promise<StoreLiveData>
       shipping_price: null,
       free_shipping: Boolean(result?.freeCargo ?? result?.freeShipping),
       seller_name: parseString(result?.merchant?.name ?? result?.seller?.name),
+      seller_rating: merchantSignals.rating,
+      seller_review_count: merchantSignals.reviewCount,
+      warranty_duration: null,
+      warranty_label: null,
       installment_hint: null,
       campaign_hint: null,
       affiliate_url: null,
@@ -245,6 +262,72 @@ function parseNumber(v: unknown): number | null {
 function parseString(v: unknown): string | null {
   if (typeof v === "string" && v.trim()) return v.trim();
   return null;
+}
+
+function extractSellerSignalsFromObject(value: unknown): { rating: number | null; reviewCount: number | null } {
+  if (!value || typeof value !== "object") {
+    return { rating: null, reviewCount: null };
+  }
+
+  const source = value as Record<string, unknown>;
+  const ratingNode = (source.rating ?? source.merchantRating ?? source.sellerRating) as
+    | Record<string, unknown>
+    | undefined;
+
+  const rating =
+    parseNumber(
+      ratingNode?.average ??
+        ratingNode?.score ??
+        ratingNode?.ratingScore ??
+        source.ratingScore ??
+        source.averageRating ??
+        source.score
+    ) ?? null;
+
+  const reviewCount =
+    parseNumber(
+      ratingNode?.count ??
+        ratingNode?.reviewCount ??
+        ratingNode?.ratingCount ??
+        source.reviewCount ??
+        source.ratingCount ??
+        source.totalReviewCount
+    ) ?? null;
+
+  return { rating, reviewCount };
+}
+
+function extractSellerSignalsFromHtml(html: string): { rating: number | null; reviewCount: number | null } {
+  const ratingPatterns = [
+    /"merchantRating"\s*:\s*(\d+(?:[.,]\d+)?)/i,
+    /"sellerRating"\s*:\s*(\d+(?:[.,]\d+)?)/i,
+    /"ratingScore"\s*:\s*(\d+(?:[.,]\d+)?)/i,
+  ];
+  const reviewPatterns = [
+    /"merchantReviewCount"\s*:\s*(\d+)/i,
+    /"sellerReviewCount"\s*:\s*(\d+)/i,
+    /"ratingCount"\s*:\s*(\d+)/i,
+  ];
+
+  let rating: number | null = null;
+  for (const pattern of ratingPatterns) {
+    const match = html.match(pattern);
+    if (match) {
+      rating = parseNumber(match[1]);
+      if (rating !== null) break;
+    }
+  }
+
+  let reviewCount: number | null = null;
+  for (const pattern of reviewPatterns) {
+    const match = html.match(pattern);
+    if (match) {
+      reviewCount = parseNumber(match[1]);
+      if (reviewCount !== null) break;
+    }
+  }
+
+  return { rating, reviewCount };
 }
 
 // ────────────────────────────────────────────────────────────────────────
