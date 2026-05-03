@@ -59,7 +59,7 @@ export default function ProductBestOfferCard({ rows, isLoading, refresh }: Props
   const logoUrl = getMarketplaceLogoUrl(bestOffer.source, bestOffer.store?.logo_url ?? null);
 
   return (
-    <aside className="h-fit self-start rounded-[22px] border border-[#DCEAFB] bg-[#EDF6FF] p-5 shadow-[0_14px_32px_rgba(29,112,224,0.08)] xl:sticky xl:top-24">
+    <aside className="h-fit self-start rounded-[22px] border border-[#DCEAFB] bg-[#EDF6FF] p-5 shadow-[0_14px_32px_rgba(29,112,224,0.08)]">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           {logoUrl ? (

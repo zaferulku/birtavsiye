@@ -394,7 +394,7 @@ export default function CommunitySection({
     <div className="space-y-8">
       <section
         id="urun-yorumlari"
-        className="rounded-[28px] border border-[#DCEAFB] bg-[#F7FBFF] p-5 shadow-[0_18px_48px_rgba(29,112,224,0.08)] sm:p-6"
+        className="rounded-[28px] border border-[#DCEAFB] bg-white p-5 shadow-[0_18px_48px_rgba(29,112,224,0.08)] sm:p-6"
       >
         <div className="flex flex-col gap-4 border-b border-[#E4EEF9] pb-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
@@ -411,7 +411,7 @@ export default function CommunitySection({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
-            <div className="rounded-2xl border border-[#DCEAFB] bg-[#EDF6FF] px-4 py-3">
+            <div className="rounded-2xl border border-[#DCEAFB] bg-[#F8FBFF] px-4 py-3">
               <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#5F8FD6]">
                 Ortalama puan
               </div>
@@ -434,7 +434,7 @@ export default function CommunitySection({
 
         <div className="mt-6 grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)]">
           <aside className="space-y-5">
-            <div className="rounded-[22px] border border-[#DCEAFB] bg-[#EFF7FF] p-4 shadow-[0_10px_24px_rgba(29,112,224,0.05)]">
+            <div className="rounded-[22px] border border-[#DCEAFB] bg-white p-4 shadow-[0_10px_24px_rgba(29,112,224,0.05)]">
               <div className="text-5xl font-black text-[#171412]">
                 {reviewSummary.ratingCount > 0 ? reviewSummary.average.toFixed(1) : "—"}
               </div>
@@ -465,7 +465,7 @@ export default function CommunitySection({
               <button
                 type="button"
                 onClick={() => document.getElementById("yorum-formu")?.scrollIntoView({ behavior: "smooth" })}
-                className="mt-4 w-full rounded-xl border border-[#DCEAFB] bg-[#F5FAFF] px-4 py-3 text-sm font-semibold text-[#173D8E] transition hover:border-[#1D70E0] hover:text-[#1D70E0]"
+                className="mt-4 w-full rounded-xl border border-[#DCEAFB] bg-white px-4 py-3 text-sm font-semibold text-[#173D8E] transition hover:border-[#1D70E0] hover:text-[#1D70E0]"
               >
                 Yorum alanina git
               </button>
@@ -529,7 +529,7 @@ export default function CommunitySection({
                     onChange={(event) => setBody(event.target.value)}
                     rows={4}
                     placeholder="Bu urunle ilgili deneyimini yazabilirsin. Yalnizca puan vermek istersen yorumu bos da birakabilirsin."
-                    className="w-full rounded-[18px] border border-[#DCEAFB] bg-[#F5FAFF] px-4 py-3 text-sm text-[#171412] outline-none transition focus:border-[#1D70E0] focus:bg-white"
+                    className="w-full rounded-[18px] border border-[#DCEAFB] bg-white px-4 py-3 text-sm text-[#171412] outline-none transition focus:border-[#1D70E0]"
                   />
 
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -548,7 +548,7 @@ export default function CommunitySection({
                 </div>
               ) : (
                 <div className="px-5 py-6">
-                  <div className="rounded-[18px] border border-dashed border-[#DCEAFB] bg-[#F5FAFF] px-4 py-6 text-center">
+                  <div className="rounded-[18px] border border-dashed border-[#DCEAFB] bg-white px-4 py-6 text-center">
                     <h4 className="text-base font-bold text-[#171412]">Yorum yapmak icin giris yap</h4>
                     <p className="mt-2 text-sm leading-6 text-[#6D655E]">
                       Puan verip yorum birakabilir, diger yorumlara cevap yazabilir ve oy kullanabilirsin.
@@ -569,7 +569,7 @@ export default function CommunitySection({
                 <h3 className="text-base font-bold text-[#171412]">Yorumlari tara</h3>
                 <p className="mt-1 text-sm text-[#6D655E]">Kullanici adi veya yorum icerigiyle ara.</p>
               </div>
-              <div className="flex w-full max-w-md items-center gap-2 rounded-xl border border-[#DCEAFB] bg-[#F5FAFF] px-3 py-2">
+              <div className="flex w-full max-w-md items-center gap-2 rounded-xl border border-[#DCEAFB] bg-white px-3 py-2">
                 <svg className="h-4 w-4 text-[#6D90CB]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M21 21l-4.35-4.35" strokeLinecap="round" strokeLinejoin="round" />
                   <circle cx="11" cy="11" r="6" />
@@ -626,7 +626,7 @@ export default function CommunitySection({
               <h3 className="text-base font-bold text-[#171412]">Tum yorumlar</h3>
 
               {visibleComments.length === 0 ? (
-                <div className="rounded-[22px] border border-dashed border-[#DCEAFB] bg-[#F5FAFF] px-5 py-10 text-center">
+                <div className="rounded-[22px] border border-dashed border-[#DCEAFB] bg-white px-5 py-10 text-center">
                   <div className="text-lg font-bold text-[#171412]">Henuz yorum gorunmuyor</div>
                   <p className="mt-2 text-sm leading-6 text-[#6D655E]">
                     Bu urun icin ilk puani veya ilk yorumu sen birakabilirsin.

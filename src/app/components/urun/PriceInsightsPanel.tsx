@@ -21,8 +21,6 @@ type Props = {
   verdictBody: string;
   verdictTone: "good" | "neutral" | "watch";
   variant?: "full" | "compact";
-  primaryActionLabel?: string;
-  onPrimaryAction?: () => void;
 };
 
 export default function PriceInsightsPanel({
@@ -36,8 +34,6 @@ export default function PriceInsightsPanel({
   verdictBody,
   verdictTone,
   variant = "full",
-  primaryActionLabel,
-  onPrimaryAction,
 }: Props) {
   const toneClass =
     verdictTone === "good"
@@ -47,6 +43,8 @@ export default function PriceInsightsPanel({
         : "border-[#E8E4DF] bg-[#FAF7F4] text-[#5F5952]";
 
   const latestRecordedAt = history[history.length - 1]?.recorded_at ?? null;
+  const lowest7d = getWindowPriceStat(history, 7, "min");
+  const highest90d = getWindowPriceStat(history, 90, "max");
 
   if (variant === "compact") {
     const compactSeries = buildCompactSeries(history, {
@@ -56,32 +54,32 @@ export default function PriceInsightsPanel({
     });
 
     return (
-      <section className="rounded-[22px] border border-[#E8E4DF] bg-white p-3 shadow-sm">
+      <section className="min-h-[214px] rounded-[22px] border border-[#DCEAFB] bg-[#EDF6FF] p-3 shadow-[0_14px_28px_rgba(29,112,224,0.07)]">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#A06B53]">
-              Fiyat karari
+            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#5F8FD6]">
+              Fiyat ozeti
             </p>
             <h2 className="mt-1 text-sm font-bold text-[#171412]">{verdictTitle}</h2>
           </div>
-          <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${toneClass}`}>
-            {toneLabel(verdictTone)}
+          <span className="rounded-full border border-[#D7E7FB] bg-white px-2.5 py-1 text-[11px] font-semibold text-[#5F5952]">
+            Son 90 gun
           </span>
         </div>
 
         <p className="mt-2.5 text-[12px] leading-5 text-[#6D655E]">{verdictBody}</p>
 
         {compactSeries.length > 1 && (
-          <div className="mt-3 rounded-2xl border border-[#F1E6DE] bg-[#FFF9F6] px-2 py-2">
+          <div className="mt-3 rounded-2xl border border-[#D7E7FB] bg-white px-2 py-2">
             <div className="h-14 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={compactSeries} margin={{ top: 4, right: 4, left: 4, bottom: 2 }}>
                   <Line
                     type="monotone"
                     dataKey="price"
-                    stroke={compactStroke(verdictTone)}
+                    stroke="#D97706"
                     strokeWidth={2.5}
-                    dot={{ r: 2.5, strokeWidth: 0, fill: compactStroke(verdictTone) }}
+                    dot={{ r: 2.5, strokeWidth: 0, fill: "#D97706" }}
                     connectNulls
                   />
                 </LineChart>
@@ -90,32 +88,14 @@ export default function PriceInsightsPanel({
           </div>
         )}
 
-        <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2">
-          <InsightCell label="En dusuk" value={formatNullablePrice(currentLowPrice)} accent />
-          <InsightCell label="30 gun dip" value={formatNullablePrice(lowest30d)} />
-          <InsightCell label="90 gun ort." value={formatNullablePrice(average90d)} />
-          <InsightCell label="30 gun fark" value={formatNullableDelta(vsLowest30dPct)} />
+        <dl className="mt-3 grid grid-cols-2 gap-3">
+          <InsightCell label="7 gun en dusuk" value={formatNullablePrice(lowest7d)} accent />
+          <InsightCell label="90 gun en yuksek" value={formatNullablePrice(highest90d)} />
         </dl>
 
-        {vsAverage90dPct !== null && (
-          <p className="mt-2.5 text-[11px] leading-4 text-[#8A8179]">
-            90 gun ortalamasina gore fark: {formatNullableDelta(vsAverage90dPct)}.
-          </p>
-        )}
-
-        <p className="mt-1.5 text-[11px] leading-4 text-[#8A8179]">
+        <p className="mt-2.5 text-[11px] leading-4 text-[#8A8179]">
           Son kayit: {formatRecordedAt(latestRecordedAt)}
         </p>
-
-        {onPrimaryAction && primaryActionLabel && (
-          <button
-            type="button"
-            onClick={onPrimaryAction}
-            className="mt-3 w-full rounded-xl border border-[#E8E4DF] px-4 py-2.5 text-xs font-semibold text-[#171412] transition hover:border-[#E8460A] hover:text-[#E8460A]"
-          >
-            {primaryActionLabel}
-          </button>
-        )}
       </section>
     );
   }
@@ -220,12 +200,6 @@ function InsightCell({
   );
 }
 
-function toneLabel(tone: "good" | "neutral" | "watch") {
-  if (tone === "good") return "Iyi seviye";
-  if (tone === "watch") return "Beklenebilir";
-  return "Normal";
-}
-
 function formatNullablePrice(value: number | null) {
   return value === null ? "-" : formatTL(value);
 }
@@ -299,8 +273,20 @@ function buildCompactSeries(
   return [];
 }
 
-function compactStroke(tone: "good" | "neutral" | "watch") {
-  if (tone === "good") return "#16A34A";
-  if (tone === "watch") return "#D97706";
-  return "#E8460A";
+function getWindowPriceStat(
+  history: HistoryRow[],
+  days: number,
+  mode: "min" | "max"
+): number | null {
+  if (history.length === 0) return null;
+
+  const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+  const values = history
+    .filter((row) => new Date(row.recorded_at).getTime() >= cutoff)
+    .map((row) => row.price)
+    .filter((price) => Number.isFinite(price));
+
+  if (values.length === 0) return null;
+
+  return mode === "min" ? Math.min(...values) : Math.max(...values);
 }

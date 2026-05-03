@@ -148,12 +148,6 @@ export default function ProductDetailShell({
     }, 0);
   };
 
-  const openPriceSection = () => {
-    window.setTimeout(() => {
-      scrollToId("magaza-fiyatlari");
-    }, 0);
-  };
-
   return (
     <article className="mx-auto flex w-full max-w-[1180px] flex-col gap-6 px-4 py-6">
       <nav className="flex flex-wrap items-center gap-2 text-xs text-[#8B847C]" aria-label="Navigasyon">
@@ -175,23 +169,6 @@ export default function ProductDetailShell({
       <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)_320px]">
         <div className="space-y-4">
           <ProductGallery images={galleryImages} alt={product.title} />
-
-          {priceInsights && (
-            <PriceInsightsPanel
-              history={priceInsights.history}
-              currentLowPrice={priceInsights.currentLowPrice}
-              lowest30d={priceInsights.lowest30d}
-              average90d={priceInsights.average90d}
-              vsLowest30dPct={priceInsights.vsLowest30dPct}
-              vsAverage90dPct={priceInsights.vsAverage90dPct}
-              verdictTitle={priceInsights.verdictTitle}
-              verdictBody={priceInsights.verdictBody}
-              verdictTone={priceInsights.verdictTone}
-              variant="compact"
-              primaryActionLabel="Tekliflere git"
-              onPrimaryAction={openPriceSection}
-            />
-          )}
         </div>
 
         <div className="space-y-5">
@@ -249,7 +226,24 @@ export default function ProductDetailShell({
           />
         </div>
 
-        <ProductBestOfferCard rows={offerRows} isLoading={isLoading} refresh={refresh} />
+        <div className="space-y-4">
+          <ProductBestOfferCard rows={offerRows} isLoading={isLoading} refresh={refresh} />
+
+          {priceInsights && (
+            <PriceInsightsPanel
+              history={priceInsights.history}
+              currentLowPrice={priceInsights.currentLowPrice}
+              lowest30d={priceInsights.lowest30d}
+              average90d={priceInsights.average90d}
+              vsLowest30dPct={priceInsights.vsLowest30dPct}
+              vsAverage90dPct={priceInsights.vsAverage90dPct}
+              verdictTitle={priceInsights.verdictTitle}
+              verdictBody={priceInsights.verdictBody}
+              verdictTone={priceInsights.verdictTone}
+              variant="compact"
+            />
+          )}
+        </div>
       </div>
 
       <div id="magaza-fiyatlari">
