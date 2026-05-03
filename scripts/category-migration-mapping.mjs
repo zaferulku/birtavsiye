@@ -248,13 +248,13 @@ export const CATEGORY_MIGRATION_MAP = {
   // ════════════════════════════════════════════════
   // SÜPERMARKET
   // ════════════════════════════════════════════════
-  "atistirmalik-cikolata": "supermarket/atistirmalik",
-  "bakliyat-makarna": "supermarket/bakliyat-makarna",
-  "dondurma-tatli": "supermarket/dondurma-tatli",
-  "icecek": "supermarket/icecek",
-  "kahvalti-kahve": "supermarket/kahvalti-kahve",
-  "kahve": "supermarket/kahve",
-  "konserve-sos": "supermarket/konserve-sos",
+  "atistirmalik-cikolata": "supermarket/gida-icecek/atistirmalik",
+  "bakliyat-makarna": "supermarket/gida-icecek/bakliyat-makarna",
+  "dondurma-tatli": "supermarket/gida-icecek/dondurma-tatli",
+  "icecek": "supermarket/gida-icecek/icecek",
+  "kahvalti-kahve": "supermarket/gida-icecek/kahvalti-kahve",
+  "kahve": "supermarket/gida-icecek/kahve",
+  "konserve-sos": "supermarket/gida-icecek/konserve-sos",
 
   // ════════════════════════════════════════════════
   // YAPI MARKET

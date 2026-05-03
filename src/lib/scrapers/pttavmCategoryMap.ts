@@ -52,13 +52,13 @@ const PTTAVM_SEGMENT_CATEGORY_MAP: Record<string, string> = {
   supurge: "kucuk-ev-aletleri/temizlik/supurge",
   "robot supurge": "kucuk-ev-aletleri/temizlik/robot-supurge",
   "kahve makinesi": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
-  "filtre cekirdek kahveler": "supermarket/icecek/kahve/filtre-cekirdek-kahveler",
-  "kahve kapsulleri": "supermarket/icecek/kahve/kahve-kapsulleri",
-  "nespresso kapsul": "supermarket/icecek/kahve/kahve-kapsulleri",
-  "turk kahvesi": "supermarket/icecek/kahve/turk-kahvesi",
-  "cekirdek kahve": "supermarket/icecek/kahve/cekirdek-kahve",
-  "hazir kahve": "supermarket/icecek/kahve/hazir-kahve",
-  kahve: "supermarket/icecek/kahve",
+  "filtre cekirdek kahveler": "supermarket/gida-icecek/kahve/filtre-cekirdek-kahveler",
+  "kahve kapsulleri": "supermarket/gida-icecek/kahve/kahve-kapsulleri",
+  "nespresso kapsul": "supermarket/gida-icecek/kahve/kahve-kapsulleri",
+  "turk kahvesi": "supermarket/gida-icecek/kahve/turk-kahvesi",
+  "cekirdek kahve": "supermarket/gida-icecek/kahve/cekirdek-kahve",
+  "hazir kahve": "supermarket/gida-icecek/kahve/hazir-kahve",
+  kahve: "supermarket/gida-icecek/kahve",
   blender: "kucuk-ev-aletleri/mutfak/blender",
   blenderler: "kucuk-ev-aletleri/mutfak/blender",
   mikser: "kucuk-ev-aletleri/mutfak/mikser",
@@ -154,7 +154,20 @@ const PTTAVM_AUTO_SEGMENT_SLUG_OVERRIDES: Record<string, string> = {
   "power banklar": "powerbank",
   "ag modem": "modem",
   "air fryer": "airfryer",
+  gida: "gida-icecek",
+  "gida icecek": "gida-icecek",
 };
+
+const PTTAVM_SUPERMARKET_FOOD_SEGMENTS = new Set([
+  "atistirmalik",
+  "bakliyat-makarna",
+  "dondurma-tatli",
+  "gida-icecek",
+  "icecek",
+  "kahvalti-kahve",
+  "kahve",
+  "konserve-sos",
+]);
 
 export interface PttavmCategoryChainNode {
   slug: string;
@@ -416,6 +429,17 @@ export function buildPttavmAutoCategoryChain(
       slugifyPttavmCategorySegment(segment);
 
     if (!part) continue;
+    if (
+      currentSlug === "supermarket" &&
+      part !== "gida-icecek" &&
+      PTTAVM_SUPERMARKET_FOOD_SEGMENTS.has(part)
+    ) {
+      currentSlug = "supermarket/gida-icecek";
+      chain.push({
+        slug: currentSlug,
+        name: "Gıda & İçecek",
+      });
+    }
     if (rootParts.includes(part) || currentSlug.endsWith(`/${part}`)) continue;
 
     currentSlug = `${currentSlug}/${part}`;

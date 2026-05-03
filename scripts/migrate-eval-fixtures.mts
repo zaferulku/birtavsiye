@@ -192,13 +192,13 @@ const MANUAL_MAPPINGS: Record<string, string> = {
   "ot-cim-bicme": "yapi-market/elektrikli-aletler",
 
   // Süpermarket — gıda
-  "bal": "supermarket/kahvalti-kahve",
-  "cay": "supermarket/kahvalti-kahve",
-  "zeytinyagi": "supermarket/kahvalti-kahve",
-  "kuruyemis": "supermarket/atistirmalik",
-  "cikolata": "supermarket/dondurma-tatli",
-  "konserve": "supermarket/konserve-sos",
-  "mineral-su": "supermarket/icecek",
+  "bal": "supermarket/gida-icecek/kahvalti-kahve",
+  "cay": "supermarket/gida-icecek/kahvalti-kahve",
+  "zeytinyagi": "supermarket/gida-icecek/kahvalti-kahve",
+  "kuruyemis": "supermarket/gida-icecek/atistirmalik",
+  "cikolata": "supermarket/gida-icecek/dondurma-tatli",
+  "konserve": "supermarket/gida-icecek/konserve-sos",
+  "mineral-su": "supermarket/gida-icecek/icecek",
 
   // Kozmetik parfüm (variant kadin/erkek tek leaf)
   "parfum-erkek": "kozmetik/parfum",

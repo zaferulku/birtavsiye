@@ -11,6 +11,7 @@ import KategoriSayfasi from "../components/kategori/KategoriSayfasi";
 import ModelPageView from "../components/marka/ModelPageView";
 import { mergeClusteredProducts } from "../../lib/productCluster";
 import { getActiveOfferCount, getLowestActivePrice } from "../../lib/listingSignals";
+import { resolveCategorySlug } from "../../lib/categoryAliases";
 import {
   getDiscoveryProductLabel,
   shouldHideDiscoveryProduct,
@@ -32,7 +33,8 @@ async function resolveSegments(segments: string[]) {
 
   const { data: allCatsData } = await supabaseAdmin
     .from("categories")
-    .select("id, slug, name, parent_id, icon");
+    .select("id, slug, name, parent_id, icon")
+    .eq("is_active", true);
   const allCats = (allCatsData ?? []) as CategoryNode[];
   const bySlug = new Map(allCats.map((c) => [c.slug, c]));
   const byId = new Map(allCats.map((c) => [c.id, c]));
@@ -46,7 +48,8 @@ async function resolveSegments(segments: string[]) {
   let leafCategory: CategoryNode | null = null;
   for (let n = segments.length; n >= 1; n--) {
     const candidate = segments.slice(0, n).join("/");
-    const cat = bySlug.get(candidate);
+    const canonicalCandidate = resolveCategorySlug(candidate);
+    const cat = bySlug.get(canonicalCandidate) ?? bySlug.get(candidate);
     if (cat) {
       consumedCount = n;
       leafCategory = cat;

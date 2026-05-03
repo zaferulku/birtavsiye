@@ -813,7 +813,13 @@ function petOptionsFor(path: string): string[] {
 }
 
 function isSupermarketCoffeeCategory(path: string, leaf: string): boolean {
-  return path.includes("supermarket/kahve") || path.includes("supermarket/kahvalti-kahve") || leaf === "kahve";
+  return (
+    path.includes("supermarket/gida-icecek/kahve") ||
+    path.includes("supermarket/gida-icecek/kahvalti-kahve") ||
+    path.includes("supermarket/kahve") ||
+    path.includes("supermarket/kahvalti-kahve") ||
+    leaf === "kahve"
+  );
 }
 
 function isSportsCategory(path: string, leaf: string): boolean {

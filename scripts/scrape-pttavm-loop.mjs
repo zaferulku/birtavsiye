@@ -140,8 +140,8 @@ const QUERIES = [
   { query: "bebek arabası",         category_slug: "anne-bebek/bebek-arabasi" },
 
   // === SUPERMARKET ===
-  { query: "filtre kahve",          category_slug: "supermarket/kahve" },
-  { query: "espresso",              category_slug: "supermarket/kahve" },
+  { query: "filtre kahve",          category_slug: "supermarket/gida-icecek/kahve" },
+  { query: "espresso",              category_slug: "supermarket/gida-icecek/kahve" },
 
   // === MODA — sadece buyuk markalar (kullanici karari 2026-05-02) ===
   // PTT moda kategorisinde generic/kucuk marka query'leri orphan uretme riski

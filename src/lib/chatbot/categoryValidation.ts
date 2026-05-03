@@ -14,7 +14,8 @@ const TTL_MS = 5 * 60 * 1000;
 async function refreshCache(): Promise<void> {
   const { data, error } = await supabaseAdmin
     .from("categories")
-    .select("slug");
+    .select("slug")
+    .eq("is_active", true);
 
   if (error) {
     console.error("[categoryValidation] taxonomy fetch FAIL:", error.message);

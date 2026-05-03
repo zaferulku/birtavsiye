@@ -590,15 +590,15 @@ const NAV: NavGroup[] = [
         ]
       },
       {
-        label: "Gıda & İçecek", slug: "supermarket/icecek", icon: "🛒",
+        label: "Gıda & İçecek", slug: "supermarket/gida-icecek", icon: "🛒",
         subs: [
-          { label: "Atıştırmalık & Çikolata", slug: "supermarket/atistirmalik", tags: ["Çikolata", "Bisküvi", "Gofret", "Cips", "Kraker", "Milka", "Ülker", "M&M"] },
-          { label: "İçecek", slug: "supermarket/icecek", tags: ["Kola", "Pepsi", "Meyve Suyu", "Maden Suyu", "Ayran", "Red Bull"] },
-          { label: "Kahvaltı & Kahve", slug: "supermarket/kahvalti-kahve", tags: ["Granola", "Mısır Gevreği", "Reçel", "Tahin", "Bal"] },
-          { label: "Kahve", slug: "supermarket/icecek/kahve", tags: ["Filtre Kahve", "Espresso", "Türk Kahvesi", "Kahve Kapsülleri", "Nespresso Kapsül", "Lavazza", "Illy", "Starbucks"] },
-          { label: "Bakliyat & Makarna", slug: "supermarket/bakliyat-makarna", tags: ["Mercimek", "Nohut", "Pirinç", "Bulgur", "Makarna", "Spagetti"] },
-          { label: "Konserve & Sos", slug: "supermarket/konserve-sos", tags: ["Ton Balığı", "Domates Sos", "Mayonez", "Ketçap", "Zeytinyağı"] },
-          { label: "Dondurma & Tatlı", slug: "supermarket/dondurma-tatli", tags: ["Algida", "Magnum", "Panda", "Puding", "Jöle Toz"] },
+          { label: "Atıştırmalık & Çikolata", slug: "supermarket/gida-icecek/atistirmalik", tags: ["Çikolata", "Bisküvi", "Gofret", "Cips", "Kraker", "Milka", "Ülker", "M&M"] },
+          { label: "İçecek", slug: "supermarket/gida-icecek/icecek", tags: ["Kola", "Pepsi", "Meyve Suyu", "Maden Suyu", "Ayran", "Red Bull"] },
+          { label: "Kahvaltı & Kahve", slug: "supermarket/gida-icecek/kahvalti-kahve", tags: ["Granola", "Mısır Gevreği", "Reçel", "Tahin", "Bal"] },
+          { label: "Kahve", slug: "supermarket/gida-icecek/kahve", tags: ["Filtre Kahve", "Espresso", "Türk Kahvesi", "Kahve Kapsülleri", "Nespresso Kapsül", "Lavazza", "Illy", "Starbucks"] },
+          { label: "Bakliyat & Makarna", slug: "supermarket/gida-icecek/bakliyat-makarna", tags: ["Mercimek", "Nohut", "Pirinç", "Bulgur", "Makarna", "Spagetti"] },
+          { label: "Konserve & Sos", slug: "supermarket/gida-icecek/konserve-sos", tags: ["Ton Balığı", "Domates Sos", "Mayonez", "Ketçap", "Zeytinyağı"] },
+          { label: "Dondurma & Tatlı", slug: "supermarket/gida-icecek/dondurma-tatli", tags: ["Algida", "Magnum", "Panda", "Puding", "Jöle Toz"] },
         ]
       },
       {

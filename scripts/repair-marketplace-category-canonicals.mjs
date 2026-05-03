@@ -22,19 +22,84 @@ const sb = createClient(supabaseUrl, serviceRoleKey, {
   auth: { autoRefreshToken: false, persistSession: false },
 });
 
+const FOOD_GROUP_SLUG = "supermarket/gida-icecek";
+
 const CATEGORY_DEFINITIONS = {
+  [FOOD_GROUP_SLUG]: {
+    name: "Gıda & İçecek",
+    parentSlug: "supermarket",
+    isLeaf: false,
+  },
+  [`${FOOD_GROUP_SLUG}/kahve`]: {
+    name: "Kahve",
+    parentSlug: FOOD_GROUP_SLUG,
+    isLeaf: false,
+  },
+  [`${FOOD_GROUP_SLUG}/kahve/cekirdek-kahve`]: {
+    name: "Çekirdek Kahve",
+    parentSlug: `${FOOD_GROUP_SLUG}/kahve`,
+  },
+  [`${FOOD_GROUP_SLUG}/kahve/espresso-cappucino-kahve`]: {
+    name: "Espresso, Cappucino Kahve",
+    parentSlug: `${FOOD_GROUP_SLUG}/kahve`,
+  },
+  [`${FOOD_GROUP_SLUG}/kahve/filtre-cekirdek-kahveler`]: {
+    name: "Filtre & Çekirdek Kahveler",
+    parentSlug: `${FOOD_GROUP_SLUG}/kahve`,
+  },
+  [`${FOOD_GROUP_SLUG}/kahve/hazir-kahve`]: {
+    name: "Hazır Kahve",
+    parentSlug: `${FOOD_GROUP_SLUG}/kahve`,
+  },
+  [`${FOOD_GROUP_SLUG}/kahve/kahve-aksesuarlari`]: {
+    name: "Kahve Aksesuarları",
+    parentSlug: `${FOOD_GROUP_SLUG}/kahve`,
+  },
+  [`${FOOD_GROUP_SLUG}/kahve/kahve-kapsulleri`]: {
+    name: "Kahve Kapsülleri",
+    parentSlug: `${FOOD_GROUP_SLUG}/kahve`,
+  },
+  [`${FOOD_GROUP_SLUG}/kahve/turk-kahvesi`]: {
+    name: "Türk Kahvesi",
+    parentSlug: `${FOOD_GROUP_SLUG}/kahve`,
+  },
   "spor-outdoor/yoga-pilates/pilates-mati": {
     name: "Pilates Matı",
     parentSlug: "spor-outdoor/yoga-pilates",
   },
 };
 
+const FOOD_BRANCH_MOVES = [
+  ["supermarket/gida", FOOD_GROUP_SLUG, "supermarket"],
+  ["supermarket/atistirmalik", `${FOOD_GROUP_SLUG}/atistirmalik`, FOOD_GROUP_SLUG],
+  ["supermarket/bakliyat-makarna", `${FOOD_GROUP_SLUG}/bakliyat-makarna`, FOOD_GROUP_SLUG],
+  ["supermarket/dondurma-tatli", `${FOOD_GROUP_SLUG}/dondurma-tatli`, FOOD_GROUP_SLUG],
+  ["supermarket/icecek", `${FOOD_GROUP_SLUG}/icecek`, FOOD_GROUP_SLUG],
+  ["supermarket/kahvalti-kahve", `${FOOD_GROUP_SLUG}/kahvalti-kahve`, FOOD_GROUP_SLUG],
+  ["supermarket/konserve-sos", `${FOOD_GROUP_SLUG}/konserve-sos`, FOOD_GROUP_SLUG],
+  [`${FOOD_GROUP_SLUG}/icecek/kahve`, `${FOOD_GROUP_SLUG}/kahve`, FOOD_GROUP_SLUG],
+];
+
 const LEGACY_CATEGORY_TARGETS = {
-  "supermarket/kahve": "supermarket/icecek/kahve",
-  "supermarket/kahve/espresso": "supermarket/icecek/kahve/espresso-cappucino-kahve",
-  "supermarket/kahve/filtre-kahve": "supermarket/icecek/kahve/filtre-cekirdek-kahveler",
-  "supermarket/kahve/nespresso-kapsul": "supermarket/icecek/kahve/kahve-kapsulleri",
-  "supermarket/kahve/turk-kahvesi": "supermarket/icecek/kahve/turk-kahvesi",
+  "supermarket/atistirmalik": `${FOOD_GROUP_SLUG}/atistirmalik`,
+  "supermarket/bakliyat-makarna": `${FOOD_GROUP_SLUG}/bakliyat-makarna`,
+  "supermarket/dondurma-tatli": `${FOOD_GROUP_SLUG}/dondurma-tatli`,
+  "supermarket/icecek": `${FOOD_GROUP_SLUG}/icecek`,
+  "supermarket/icecek/kahve": `${FOOD_GROUP_SLUG}/kahve`,
+  "supermarket/icecek/kahve/cekirdek-kahve": `${FOOD_GROUP_SLUG}/kahve/cekirdek-kahve`,
+  "supermarket/icecek/kahve/espresso-cappucino-kahve": `${FOOD_GROUP_SLUG}/kahve/espresso-cappucino-kahve`,
+  "supermarket/icecek/kahve/filtre-cekirdek-kahveler": `${FOOD_GROUP_SLUG}/kahve/filtre-cekirdek-kahveler`,
+  "supermarket/icecek/kahve/hazir-kahve": `${FOOD_GROUP_SLUG}/kahve/hazir-kahve`,
+  "supermarket/icecek/kahve/kahve-aksesuarlari": `${FOOD_GROUP_SLUG}/kahve/kahve-aksesuarlari`,
+  "supermarket/icecek/kahve/kahve-kapsulleri": `${FOOD_GROUP_SLUG}/kahve/kahve-kapsulleri`,
+  "supermarket/icecek/kahve/turk-kahvesi": `${FOOD_GROUP_SLUG}/kahve/turk-kahvesi`,
+  "supermarket/kahvalti-kahve": `${FOOD_GROUP_SLUG}/kahvalti-kahve`,
+  "supermarket/kahve": `${FOOD_GROUP_SLUG}/kahve`,
+  "supermarket/kahve/espresso": `${FOOD_GROUP_SLUG}/kahve/espresso-cappucino-kahve`,
+  "supermarket/kahve/filtre-kahve": `${FOOD_GROUP_SLUG}/kahve/filtre-cekirdek-kahveler`,
+  "supermarket/kahve/nespresso-kapsul": `${FOOD_GROUP_SLUG}/kahve/kahve-kapsulleri`,
+  "supermarket/kahve/turk-kahvesi": `${FOOD_GROUP_SLUG}/kahve/turk-kahvesi`,
+  "supermarket/konserve-sos": `${FOOD_GROUP_SLUG}/konserve-sos`,
   "spor-outdoor/spor-fitness/fitness-kondisyon/pilates/pilates-mati":
     "spor-outdoor/yoga-pilates/pilates-mati",
 };
@@ -60,13 +125,13 @@ let byId = new Map(categories.map((category) => [category.id, category]));
 
 console.log(`Marketplace category canonical repair | mode=${apply ? "APPLY" : "DRY_RUN"}`);
 
+await repairFoodHierarchy();
+
 for (const [slug, definition] of Object.entries(CATEGORY_DEFINITIONS)) {
-  await ensureCategory(slug, definition.name, definition.parentSlug);
+  await ensureCategory(slug, definition.name, definition.parentSlug, definition.isLeaf ?? true);
 }
 
-categories = await fetchAllCategories();
-bySlug = new Map(categories.map((category) => [category.slug, category]));
-byId = new Map(categories.map((category) => [category.id, category]));
+await refreshCategoryMaps();
 
 const products = await fetchAllProducts();
 const plannedMoves = [];
@@ -161,27 +226,128 @@ function resolveTargetSlug(product, currentCategory) {
   return LEGACY_CATEGORY_TARGETS[currentCategory.slug] ?? null;
 }
 
-async function ensureCategory(slug, name, parentSlug) {
+async function refreshCategoryMaps() {
+  if (!apply) {
+    bySlug = new Map(categories.map((category) => [category.slug, category]));
+    byId = new Map(categories.map((category) => [category.id, category]));
+    return;
+  }
+  categories = await fetchAllCategories();
+  bySlug = new Map(categories.map((category) => [category.slug, category]));
+  byId = new Map(categories.map((category) => [category.id, category]));
+}
+
+async function repairFoodHierarchy() {
+  const [foodSeedMove, ...branchMoves] = FOOD_BRANCH_MOVES;
+  if (foodSeedMove) {
+    await moveCategoryPrefix(foodSeedMove[0], foodSeedMove[1], foodSeedMove[2]);
+  }
+
+  await ensureCategory(FOOD_GROUP_SLUG, "Gıda & İçecek", "supermarket", false);
+  await refreshCategoryMaps();
+
+  for (const [fromSlug, toSlug, parentSlug] of branchMoves) {
+    await moveCategoryPrefix(fromSlug, toSlug, parentSlug);
+  }
+}
+
+async function moveCategoryPrefix(fromSlug, toSlug, newParentSlug) {
+  if (fromSlug === toSlug) return;
+  const matches = categories
+    .filter((category) => category.slug === fromSlug || category.slug.startsWith(`${fromSlug}/`))
+    .sort((left, right) => left.slug.length - right.slug.length);
+
+  if (matches.length === 0) return;
+
+  const root = matches.find((category) => category.slug === fromSlug);
+  const parent = newParentSlug ? bySlug.get(newParentSlug) : null;
+  if (newParentSlug && !parent) {
+    console.warn(`cannot move ${fromSlug}: parent not found ${newParentSlug}`);
+    return;
+  }
+
+  console.log(`move category branch: ${fromSlug} -> ${toSlug} (${matches.length} rows)`);
+
+  for (const category of matches) {
+    const nextSlug = `${toSlug}${category.slug.slice(fromSlug.length)}`;
+    if (nextSlug === category.slug) continue;
+
+    const collision = bySlug.get(nextSlug);
+    if (collision && collision.id !== category.id) {
+      console.warn(`slug collision, skip ${category.slug} -> ${nextSlug}`);
+      continue;
+    }
+
+    const patch = {
+      slug: nextSlug,
+      ...(root?.id === category.id && parent ? { parent_id: parent.id } : {}),
+      ...(root?.id === category.id && nextSlug === FOOD_GROUP_SLUG
+        ? { name: "Gıda & İçecek", is_leaf: false, is_active: true }
+        : {}),
+    };
+
+    if (apply) {
+      const { error } = await sb.from("categories").update(patch).eq("id", category.id);
+      if (error) {
+        console.warn(`category move failed ${category.slug} -> ${nextSlug}: ${error.message}`);
+        continue;
+      }
+    }
+
+    bySlug.delete(category.slug);
+    Object.assign(category, patch);
+    bySlug.set(category.slug, category);
+    byId.set(category.id, category);
+  }
+
+  await refreshCategoryMaps();
+}
+
+async function ensureCategory(slug, name, parentSlug, isLeaf = true) {
   const parent = bySlug.get(parentSlug);
   if (!parent) throw new Error(`parent category not found: ${parentSlug}`);
 
   const existing = bySlug.get(slug);
   if (existing) {
-    if (existing.parent_id === parent.id && existing.is_leaf === true) return existing;
+    if (
+      existing.parent_id === parent.id &&
+      existing.is_leaf === isLeaf &&
+      existing.name === name &&
+      existing.is_active === true
+    ) {
+      return existing;
+    }
 
     console.log(`repair category shape: ${slug}`);
+    const patch = { parent_id: parent.id, name, is_leaf: isLeaf, is_active: true };
     if (apply) {
       const { error } = await sb
         .from("categories")
-        .update({ parent_id: parent.id, is_leaf: true, is_active: true })
+        .update(patch)
         .eq("id", existing.id);
       if (error) throw new Error(`category repair failed ${slug}: ${error.message}`);
     }
-    return { ...existing, parent_id: parent.id, is_leaf: true };
+    Object.assign(existing, patch);
+    bySlug.set(existing.slug, existing);
+    byId.set(existing.id, existing);
+    return existing;
   }
 
   console.log(`create category: ${slug}`);
-  if (!apply) return null;
+  if (!apply) {
+    const synthetic = {
+      id: `dry-run:${slug}`,
+      slug,
+      name,
+      parent_id: parent.id,
+      is_leaf: isLeaf,
+      is_active: true,
+    };
+    categories.push(synthetic);
+    bySlug.set(slug, synthetic);
+    byId.set(synthetic.id, synthetic);
+    return synthetic;
+  }
 
   await sb.from("categories").update({ is_leaf: false }).eq("id", parent.id);
   const { data, error } = await sb
@@ -190,10 +356,10 @@ async function ensureCategory(slug, name, parentSlug) {
       slug,
       name,
       parent_id: parent.id,
-      is_leaf: true,
+      is_leaf: isLeaf,
       is_active: true,
     })
-    .select("id, slug, name, parent_id, is_leaf")
+        .select("id, slug, name, parent_id, is_leaf, is_active")
     .single();
 
   if (error || !data) throw new Error(`category create failed ${slug}: ${error?.message}`);
@@ -226,7 +392,7 @@ async function fetchAllCategories() {
   for (let from = 0; ; from += 1000) {
     const { data, error } = await sb
       .from("categories")
-      .select("id, slug, name, parent_id, is_leaf")
+      .select("id, slug, name, parent_id, is_leaf, is_active")
       .order("id", { ascending: true })
       .range(from, from + 999);
     if (error) throw new Error(`category fetch failed: ${error.message}`);

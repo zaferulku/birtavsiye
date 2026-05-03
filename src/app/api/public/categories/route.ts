@@ -44,6 +44,7 @@ async function fetchAllCategories(): Promise<CategoryRow[] | null> {
       .from("categories")
       .select("id, slug, parent_id, name, icon")
       .neq("slug", "siniflandirilmamis")
+      .eq("is_active", true)
       .order("name")
       .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
     if (error) {
