@@ -78,7 +78,7 @@ function StoreRow({
   const storeUrl = data?.affiliate_url ?? fallback_url ?? null;
   const warrantyDuration = data?.warranty_duration ?? null;
   const warrantyLabel = data?.warranty_label ?? formatWarrantyTypeLabel(row.warranty_type);
-  const clickable = !isError && !isOutOfStock && Boolean(storeUrl);
+  const clickable = !isOutOfStock && Boolean(storeUrl);
 
   const WrapperTag = clickable ? "a" : "div";
 

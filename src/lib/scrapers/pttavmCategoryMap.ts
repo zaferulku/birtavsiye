@@ -52,7 +52,13 @@ const PTTAVM_SEGMENT_CATEGORY_MAP: Record<string, string> = {
   supurge: "kucuk-ev-aletleri/temizlik/supurge",
   "robot supurge": "kucuk-ev-aletleri/temizlik/robot-supurge",
   "kahve makinesi": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
-  "filtre cekirdek kahveler": "supermarket/kahve",
+  "filtre cekirdek kahveler": "supermarket/icecek/kahve/filtre-cekirdek-kahveler",
+  "kahve kapsulleri": "supermarket/icecek/kahve/kahve-kapsulleri",
+  "nespresso kapsul": "supermarket/icecek/kahve/kahve-kapsulleri",
+  "turk kahvesi": "supermarket/icecek/kahve/turk-kahvesi",
+  "cekirdek kahve": "supermarket/icecek/kahve/cekirdek-kahve",
+  "hazir kahve": "supermarket/icecek/kahve/hazir-kahve",
+  kahve: "supermarket/icecek/kahve",
   blender: "kucuk-ev-aletleri/mutfak/blender",
   blenderler: "kucuk-ev-aletleri/mutfak/blender",
   mikser: "kucuk-ev-aletleri/mutfak/mikser",
@@ -103,6 +109,11 @@ const PTTAVM_SEGMENT_CATEGORY_MAP: Record<string, string> = {
   "kilif ve kapaklar": "elektronik/telefon/kilif",
   "el fenerleri": "spor-outdoor/outdoor/kamp-kampcilik-malzemeleri/el-fenerleri",
   "uyku tulumu": "spor-outdoor/outdoor/kamp-kampcilik-malzemeleri/uyku-tulumu",
+  "pilates mati": "spor-outdoor/yoga-pilates/pilates-mati",
+  "yoga mati": "spor-outdoor/yoga-pilates/yoga-mati",
+  "pilates topu": "spor-outdoor/yoga-pilates/pilates-topu",
+  "yoga malzemeleri": "spor-outdoor/yoga-pilates",
+  pilates: "spor-outdoor/yoga-pilates",
 };
 
 const PTTAVM_ROOT_CATEGORY_MAP: Record<string, { slug: string; name: string }> = {

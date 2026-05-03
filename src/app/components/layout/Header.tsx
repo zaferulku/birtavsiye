@@ -590,12 +590,12 @@ const NAV: NavGroup[] = [
         ]
       },
       {
-        label: "Gıda & İçecek", slug: "supermarket", icon: "🛒",
+        label: "Gıda & İçecek", slug: "supermarket/icecek", icon: "🛒",
         subs: [
           { label: "Atıştırmalık & Çikolata", slug: "supermarket/atistirmalik", tags: ["Çikolata", "Bisküvi", "Gofret", "Cips", "Kraker", "Milka", "Ülker", "M&M"] },
           { label: "İçecek", slug: "supermarket/icecek", tags: ["Kola", "Pepsi", "Meyve Suyu", "Maden Suyu", "Ayran", "Red Bull"] },
-          { label: "Kahvaltı & Kahve", slug: "supermarket/kahvalti-kahve", tags: ["Nescafe", "Jacobs", "Granola", "Mısır Gevreği", "Reçel", "Tahin", "Bal"] },
-          { label: "Kahve", slug: "supermarket/kahve", tags: ["Filtre Kahve", "Espresso", "Türk Kahvesi", "Nespresso Kapsül", "Lavazza", "Illy", "Starbucks"] },
+          { label: "Kahvaltı & Kahve", slug: "supermarket/kahvalti-kahve", tags: ["Granola", "Mısır Gevreği", "Reçel", "Tahin", "Bal"] },
+          { label: "Kahve", slug: "supermarket/icecek/kahve", tags: ["Filtre Kahve", "Espresso", "Türk Kahvesi", "Kahve Kapsülleri", "Nespresso Kapsül", "Lavazza", "Illy", "Starbucks"] },
           { label: "Bakliyat & Makarna", slug: "supermarket/bakliyat-makarna", tags: ["Mercimek", "Nohut", "Pirinç", "Bulgur", "Makarna", "Spagetti"] },
           { label: "Konserve & Sos", slug: "supermarket/konserve-sos", tags: ["Ton Balığı", "Domates Sos", "Mayonez", "Ketçap", "Zeytinyağı"] },
           { label: "Dondurma & Tatlı", slug: "supermarket/dondurma-tatli", tags: ["Algida", "Magnum", "Panda", "Puding", "Jöle Toz"] },

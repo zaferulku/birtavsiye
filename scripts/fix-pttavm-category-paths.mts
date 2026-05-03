@@ -296,6 +296,23 @@ async function resolveTargetFromCategoryPath(
   product: ProductRow,
   sourceCategoryPath: string,
 ): Promise<CategoryRow | null> {
+  const mapped = pttavmCategoryMap.resolvePttavmSourceCategory(
+    sourceCategoryPath,
+    null,
+  );
+  if (mapped) {
+    const existing = slugToCategory.get(mapped.canonicalSlug);
+    if (existing) {
+      if (createMissing) return ensureCategoryPathFromSlug(mapped.canonicalSlug, mapped.matchedSegment);
+      return existing;
+    }
+
+    if (createMissing) return ensureCategoryPathFromSlug(mapped.canonicalSlug, mapped.matchedSegment);
+
+    plannedCategoryCreates.add(mapped.canonicalSlug);
+    return null;
+  }
+
   const chain = pttavmCategoryMap.buildPttavmAutoCategoryChain(
     sourceCategoryPath,
     product.title,

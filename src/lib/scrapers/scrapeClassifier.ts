@@ -343,6 +343,32 @@ function resolvePhoneAccessoryOverride(
   };
 }
 
+function resolvePttavmTitleCategoryOverride(
+  title: string,
+  slugToId: Map<string, string>,
+): { id: string; slug: string; reason: string } | null {
+  const normalizedTitle = normalizeSearchText(title || "");
+  const targetSlug =
+    /\byoga mati\b|\byoga mat\b/.test(normalizedTitle)
+      ? "spor-outdoor/yoga-pilates/yoga-mati"
+      : /\bpilates mati\b|\bpilates mat\b/.test(normalizedTitle)
+        ? "spor-outdoor/yoga-pilates/pilates-mati"
+        : /\bpilates topu\b/.test(normalizedTitle)
+          ? "spor-outdoor/yoga-pilates/pilates-topu"
+          : null;
+
+  if (!targetSlug) return null;
+
+  const id = slugToId.get(targetSlug);
+  if (!id) return null;
+
+  return {
+    id,
+    slug: targetSlug,
+    reason: `pttavm-title-override:${targetSlug}`,
+  };
+}
+
 type EnsuredCategory = { id: string; slug: string };
 
 async function findCategoryBySlug(
@@ -526,8 +552,15 @@ export async function classifyScrapedProduct(
   } = input;
 
   if (source === "pttavm") {
-    const pathEnsured = await ensurePttavmCategoryFromPath(input);
-    if (pathEnsured) return pathEnsured;
+    const titleOverride = resolvePttavmTitleCategoryOverride(title, slugToId);
+    if (titleOverride) {
+      return {
+        categoryId: titleOverride.id,
+        slug: titleOverride.slug,
+        method: "title_high",
+        reason: titleOverride.reason,
+      };
+    }
 
     const pttavmMapped = resolvePttavmSourceCategory(
       sourceCategoryPathRaw,
@@ -559,6 +592,9 @@ export async function classifyScrapedProduct(
         };
       }
     }
+
+    const pathEnsured = await ensurePttavmCategoryFromPath(input);
+    if (pathEnsured) return pathEnsured;
   }
 
   if (sourceCategoryPathRaw) {
