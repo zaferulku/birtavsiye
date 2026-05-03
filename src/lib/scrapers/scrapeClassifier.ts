@@ -14,7 +14,11 @@
  */
 import { categorizeFromTitle } from "../categorizeFromTitle";
 import { checkAccessory } from "../accessoryDetector";
-import { resolvePttavmSourceCategory } from "./pttavmCategoryMap";
+import {
+  buildPttavmAutoCategoryChain,
+  resolvePttavmSourceCategory,
+  type PttavmCategoryChainNode,
+} from "./pttavmCategoryMap";
 
 // Caller passes a Supabase client (any to avoid generic depth issues).
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -339,6 +343,129 @@ function resolvePhoneAccessoryOverride(
   };
 }
 
+type EnsuredCategory = { id: string; slug: string };
+
+async function findCategoryBySlug(
+  sb: SbLike,
+  slug: string,
+): Promise<{
+  id: string;
+  slug: string;
+  name: string | null;
+  parent_id: string | null;
+  is_leaf: boolean | null;
+} | null> {
+  const { data, error } = await sb
+    .from("categories")
+    .select("id, slug, name, parent_id, is_leaf")
+    .eq("slug", slug)
+    .maybeSingle();
+
+  if (error) {
+    console.warn(`[classify] category lookup failed ${slug}: ${error.message}`);
+    return null;
+  }
+
+  return data ?? null;
+}
+
+async function ensurePttavmCategoryChain(
+  sb: SbLike,
+  slugToId: Map<string, string>,
+  chain: PttavmCategoryChainNode[],
+): Promise<EnsuredCategory | null> {
+  if (chain.length === 0) return null;
+
+  let parentId: string | null = null;
+  let last: EnsuredCategory | null = null;
+
+  for (let index = 0; index < chain.length; index += 1) {
+    const node = chain[index];
+    const isLeaf = index === chain.length - 1;
+    let id = slugToId.get(node.slug) ?? null;
+    let existing = id ? await findCategoryBySlug(sb, node.slug) : null;
+
+    if (!existing) {
+      const insertResult: {
+        data: Awaited<ReturnType<typeof findCategoryBySlug>>;
+        error: { message?: string } | null;
+      } = await sb
+        .from("categories")
+        .insert({
+          slug: node.slug,
+          name: node.name,
+          parent_id: parentId,
+          is_active: true,
+          is_leaf: isLeaf,
+        })
+        .select("id, slug, name, parent_id, is_leaf")
+        .single();
+
+      if (insertResult.error || !insertResult.data) {
+        const retry = await findCategoryBySlug(sb, node.slug);
+        if (!retry) {
+          console.warn(
+            `[classify] pttavm category create failed ${node.slug}: ${insertResult.error?.message ?? "unknown"}`,
+          );
+          return null;
+        }
+        existing = retry;
+      } else {
+        existing = insertResult.data;
+      }
+
+      id = existing.id;
+      slugToId.set(existing.slug, existing.id);
+    }
+
+    if (!existing || !id) return null;
+
+    const category = existing;
+    const needsRepair = category.parent_id !== parentId || category.is_leaf !== isLeaf;
+    if (needsRepair) {
+      const { error } = await sb
+        .from("categories")
+        .update({ parent_id: parentId, is_leaf: isLeaf, is_active: true })
+        .eq("id", category.id);
+
+      if (error) {
+        console.warn(`[classify] pttavm category repair failed ${category.slug}: ${error.message}`);
+      }
+    }
+
+    if (parentId) {
+      await sb.from("categories").update({ is_leaf: false }).eq("id", parentId);
+    }
+
+    parentId = id;
+    last = { id, slug: node.slug };
+  }
+
+  return last;
+}
+
+async function ensurePttavmCategoryFromPath(
+  input: ScrapeClassifyInput,
+): Promise<ScrapeClassifyResult | null> {
+  if (!input.sourceCategoryPathRaw) return null;
+
+  const chain = buildPttavmAutoCategoryChain(
+    input.sourceCategoryPathRaw,
+    input.title,
+  );
+  if (chain.length === 0) return null;
+
+  const ensured = await ensurePttavmCategoryChain(input.sb, input.slugToId, chain);
+  if (!ensured) return null;
+
+  return {
+    categoryId: ensured.id,
+    slug: ensured.slug,
+    method: "source_mapped",
+    reason: `pttavm-path-chain:${chain.map((node) => node.name).join(" > ")}`,
+  };
+}
+
 // kept for future hierarchik auto-create (P6.2a — auto-create devre dışı 2026-05-02)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function findOrCreateAutoCategory(
@@ -399,6 +526,9 @@ export async function classifyScrapedProduct(
   } = input;
 
   if (source === "pttavm") {
+    const pathEnsured = await ensurePttavmCategoryFromPath(input);
+    if (pathEnsured) return pathEnsured;
+
     const pttavmMapped = resolvePttavmSourceCategory(
       sourceCategoryPathRaw,
       sourceCategoryRaw,

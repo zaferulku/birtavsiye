@@ -258,6 +258,11 @@ async function resolveTargetCategory(
   product: ProductRow,
   meta: SourceMeta,
 ): Promise<CategoryRow | null> {
+  if (meta.sourceCategoryPath) {
+    const pathTarget = await resolveTargetFromCategoryPath(product, meta.sourceCategoryPath);
+    if (pathTarget) return pathTarget;
+  }
+
   const trustedLeaf = meta.sourceCategoryPath || trustLeafOnly ? meta.sourceCategory : null;
   const resolved = pttavmCategoryMap.resolvePttavmSourceCategory(
     meta.sourceCategoryPath,
@@ -285,6 +290,31 @@ async function resolveTargetCategory(
   if (chain.length === 0) return null;
 
   return ensureCategoryChain(chain);
+}
+
+async function resolveTargetFromCategoryPath(
+  product: ProductRow,
+  sourceCategoryPath: string,
+): Promise<CategoryRow | null> {
+  const chain = pttavmCategoryMap.buildPttavmAutoCategoryChain(
+    sourceCategoryPath,
+    product.title,
+  );
+  if (chain.length === 0) return null;
+
+  const finalSlug = chain[chain.length - 1]?.slug;
+  if (!finalSlug) return null;
+
+  const existing = slugToCategory.get(finalSlug);
+  if (existing) {
+    if (createMissing) return ensureCategoryChain(chain);
+    return existing;
+  }
+
+  if (createMissing) return ensureCategoryChain(chain);
+
+  plannedCategoryCreates.add(finalSlug);
+  return null;
 }
 
 async function getSourceMeta(product: ProductRow, listing: ListingRow | null): Promise<SourceMeta> {
