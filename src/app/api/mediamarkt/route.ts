@@ -15,12 +15,8 @@ interface ParsedProduct {
   url:   string;
   image: string;
   price: number;
-  source_category?: string | null;
-  source_category_path?: string | null;
   specs: Record<string, string>;
 }
-
-const DETAIL_CONCURRENCY = 4;
 
 function parseSpecsFromTitle(name: string): Record<string, string> {
   const specs: Record<string, string> = {};
@@ -126,53 +122,6 @@ function parseProducts(html: string): ParsedProduct[] {
   return results;
 }
 
-async function fetchMediaMarktDetailMeta(product: ParsedProduct): Promise<ParsedProduct> {
-  try {
-    const { scrapePdpDetailed } = await import("@/lib/scrapers/mediamarkt.mjs");
-    const result = await scrapePdpDetailed(product.url);
-    if (!result.ok) return product;
-
-    return {
-      ...product,
-      source_category: result.scraped.source_category,
-      source_category_path: result.scraped.source_category_path,
-      specs: {
-        ...product.specs,
-        ...(result.scraped.source_category
-          ? { mediamarkt_category: result.scraped.source_category }
-          : {}),
-        ...(result.scraped.source_category_path
-          ? { mediamarkt_path: result.scraped.source_category_path }
-          : {}),
-        ...(result.scraped.raw_specs ?? {}),
-        ...(result.scraped.gtin13 ? { gtin13: result.scraped.gtin13 } : {}),
-      },
-    };
-  } catch {
-    return product;
-  }
-}
-
-async function enrichProductsWithDetailMeta(products: ParsedProduct[]): Promise<ParsedProduct[]> {
-  if (products.length === 0) return products;
-
-  const results = [...products];
-  let nextIndex = 0;
-
-  await Promise.all(
-    Array.from({ length: Math.min(DETAIL_CONCURRENCY, products.length) }, async () => {
-      while (true) {
-        const currentIndex = nextIndex;
-        nextIndex += 1;
-        if (currentIndex >= products.length) return;
-        results[currentIndex] = await fetchMediaMarktDetailMeta(products[currentIndex]);
-      }
-    }),
-  );
-
-  return results;
-}
-
 // GET /api/mediamarkt?q=laptop&page=1
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -192,9 +141,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: `MediaMarkt hatası: ${res.status}` }, { status: res.status });
     }
 
-    const html = await res.text();
-    const parsedProducts = parseProducts(html);
-    const products = await enrichProductsWithDetailMeta(parsedProducts);
+    const html     = await res.text();
+    const products = parseProducts(html);
 
     // Fallback: search'te price=0 dönen ürünler için detail page'den price çek.
     // (Search JSON-LD'sinde bazı varyantlar price'sız gelir; live fetcher modülü

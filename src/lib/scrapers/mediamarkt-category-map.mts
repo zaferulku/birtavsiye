@@ -58,78 +58,18 @@ export const MEDIAMARKT_CATEGORY_MAP: MmCategoryTarget[] = [
   { dbSlug: 'sac-kurutma-sekillendirici', mmBreadcrumbNames: ['Saç Kurutma', 'Arzum Saç Kurutma Makinesi', 'Babyliss Saç Düzleştirici', 'Babyliss Saç Kurutma Makinesi', 'Philips Saç Düzleştirici', 'Philips Saç Kurutma Makinesi'], priority: 2 },
 ];
 
-const DB_SLUG_ALIASES: Record<string, string> = {
-  "akilli-telefon": "elektronik/telefon/akilli-telefon",
-  "telefon-aksesuar": "elektronik/telefon/aksesuar",
-  powerbank: "elektronik/telefon/powerbank",
-  kulaklik: "elektronik/tv-ses-goruntu/kulaklik",
-  hoparlor: "elektronik/tv-ses-goruntu/bluetooth-hoparlor",
-  "akilli-saat": "elektronik/giyilebilir/akilli-saat",
-  laptop: "elektronik/bilgisayar-tablet/laptop",
-  tablet: "elektronik/bilgisayar-tablet/tablet",
-  mouse: "elektronik/bilgisayar-tablet/klavye-mouse",
-  klavye: "elektronik/bilgisayar-tablet/klavye-mouse",
-  televizyon: "elektronik/tv-ses-goruntu/televizyon",
-  "oyun-konsol": "elektronik/oyun/konsol",
-  buzdolabi: "beyaz-esya/buzdolabi",
-  "camasir-makinesi": "beyaz-esya/camasir-makinesi",
-  "bulasik-makinesi": "beyaz-esya/bulasik-makinesi",
-  "firin-ocak": "beyaz-esya/firin-ocak",
-  supurge: "kucuk-ev-aletleri/temizlik/supurge",
-  "kahve-makinesi": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
-  mikrodalga: "beyaz-esya/mikrodalga",
-  "blender-robot": "kucuk-ev-aletleri/mutfak/blender-mutfak-robotu",
-  klima: "beyaz-esya/klima",
-  drone: "elektronik/kamera/drone",
-  "fotograf-kamera": "elektronik/kamera/fotograf-makinesi",
-  "aksiyon-kamera": "elektronik/kamera/aksiyon-kamera",
-  "aspirator-davlumbaz": "beyaz-esya/aspirator-davlumbaz",
-  "sac-kurutma-sekillendirici": "kucuk-ev-aletleri/kisisel-bakim/sac-kurutma",
-};
-
-export function resolveMediaMarktDbSlug(dbSlug: string): string {
-  return DB_SLUG_ALIASES[dbSlug] ?? dbSlug;
-}
-
-function normalizeMmSegment(value: string): string {
-  return value.trim();
-}
-
-export function buildMediaMarktCategoryPath(
-  breadcrumb: { name: string; position: number }[],
-  productTitle?: string | null,
-): { sourceCategory: string | null; sourceCategoryPath: string | null } {
-  const normalizedTitle = productTitle?.trim().toLocaleLowerCase("tr") ?? "";
-  const segments = breadcrumb
-    .map((item) => normalizeMmSegment(item.name ?? ""))
-    .filter((segment) => segment && segment.toLocaleLowerCase("tr") !== "home")
-    .filter((segment, index, arr) => {
-      if (index !== arr.length - 1 || !normalizedTitle) return true;
-      return segment.toLocaleLowerCase("tr") !== normalizedTitle;
-    });
-
-  if (segments.length === 0) {
-    return { sourceCategory: null, sourceCategoryPath: null };
-  }
-
-  return {
-    sourceCategory: segments[segments.length - 1] ?? null,
-    sourceCategoryPath: segments.join(" > "),
-  };
-}
-
 export function findDbSlugForMmBreadcrumb(
   breadcrumb: { name: string; position: number }[]
 ): { dbSlug: string; matchedSegment: string } | null {
-  if (!breadcrumb || breadcrumb.length < 1) return null;
-  for (let i = breadcrumb.length - 1; i >= 0; i--) {
+  if (!breadcrumb || breadcrumb.length < 2) return null;
+  for (let i = breadcrumb.length - 1; i >= 1; i--) {
     const segName = breadcrumb[i].name?.trim();
     if (!segName) continue;
     for (const target of MEDIAMARKT_CATEGORY_MAP) {
       if (target.mmBreadcrumbNames.some(name =>
         name.localeCompare(segName, 'tr', { sensitivity: 'base' }) === 0
       )) {
-        return { dbSlug: resolveMediaMarktDbSlug(target.dbSlug), matchedSegment: segName };
+        return { dbSlug: target.dbSlug, matchedSegment: segName };
       }
     }
   }

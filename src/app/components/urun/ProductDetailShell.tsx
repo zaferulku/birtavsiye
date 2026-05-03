@@ -37,11 +37,6 @@ type ProductDetailModel = {
     slug: string;
     name: string;
   } | null;
-  categoryPath?: Array<{
-    id: string;
-    slug: string;
-    name: string;
-  }>;
 };
 
 export type SimilarProduct = {
@@ -159,19 +154,14 @@ export default function ProductDetailShell({
         <Link href="/" className="transition hover:text-[#171412]">
           Anasayfa
         </Link>
-        {(product.categoryPath?.length
-          ? product.categoryPath
-          : product.category
-            ? [product.category]
-            : []
-        ).map((category) => (
-          <span key={category.id} className="inline-flex items-center gap-2">
+        {product.category && (
+          <>
             <span aria-hidden="true">/</span>
-            <Link href={`/anasayfa/${category.slug}`} className="transition hover:text-[#171412]">
-              {category.name}
+            <Link href={`/anasayfa/${product.category.slug}`} className="transition hover:text-[#171412]">
+              {product.category.name}
             </Link>
-          </span>
-        ))}
+          </>
+        )}
         <span aria-hidden="true">/</span>
         <span className="text-[#5E5750]">{product.title}</span>
       </nav>

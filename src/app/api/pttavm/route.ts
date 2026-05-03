@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  buildPttavmCategoryPath,
-  extractPttavmBreadcrumbSegmentsFromHtml,
-} from "@/lib/scrapers/pttavmCategoryMap";
+import { buildPttavmCategoryPath } from "@/lib/scrapers/pttavmCategoryMap";
 
 const PTTAVM_BASE = "https://www.pttavm.com";
 
@@ -52,6 +49,79 @@ function parseProducts(html: string): ParsedProduct[] {
   return results;
 }
 
+function decodeHtmlEntities(value: string): string {
+  return value
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .trim();
+}
+
+function collectBreadcrumbSegments(node: unknown, results: string[][]): void {
+  if (!node) return;
+
+  if (Array.isArray(node)) {
+    for (const item of node) collectBreadcrumbSegments(item, results);
+    return;
+  }
+
+  if (typeof node !== "object") return;
+
+  const record = node as Record<string, unknown>;
+  const type = record["@type"];
+
+  if (type === "BreadcrumbList" && Array.isArray(record.itemListElement)) {
+    const segments = record.itemListElement
+      .map((item) => {
+        if (!item || typeof item !== "object") return null;
+        const entry = item as Record<string, unknown>;
+        const directName =
+          typeof entry.name === "string" ? decodeHtmlEntities(entry.name) : null;
+        const nested =
+          entry.item && typeof entry.item === "object"
+            ? (entry.item as Record<string, unknown>)
+            : null;
+        const nestedName =
+          nested && typeof nested.name === "string"
+            ? decodeHtmlEntities(nested.name)
+            : null;
+        return directName ?? nestedName;
+      })
+      .filter((segment): segment is string => Boolean(segment));
+
+    if (segments.length > 0) {
+      results.push(segments);
+    }
+  }
+
+  for (const value of Object.values(record)) {
+    collectBreadcrumbSegments(value, results);
+  }
+}
+
+function extractBreadcrumbSegments(html: string): string[] {
+  const results: string[][] = [];
+
+  for (const match of html.matchAll(
+    /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi,
+  )) {
+    const raw = match[1]?.trim();
+    if (!raw) continue;
+
+    try {
+      const parsed: unknown = JSON.parse(raw);
+      collectBreadcrumbSegments(parsed, results);
+    } catch {
+      continue;
+    }
+  }
+
+  return results[0] ?? [];
+}
+
 async function fetchPttavmDetailMeta(product: ParsedProduct): Promise<ParsedProduct> {
   try {
     const res = await fetch(product.url, {
@@ -63,7 +133,7 @@ async function fetchPttavmDetailMeta(product: ParsedProduct): Promise<ParsedProd
     if (!res.ok) return product;
 
     const html = await res.text();
-    const breadcrumb = extractPttavmBreadcrumbSegmentsFromHtml(html);
+    const breadcrumb = extractBreadcrumbSegments(html);
     const { sourceCategory, sourceCategoryPath } = buildPttavmCategoryPath(
       breadcrumb,
       product.name,
