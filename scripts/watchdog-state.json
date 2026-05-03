@@ -1,10 +1,10 @@
 {
   "startedAt": "2026-05-02T23:42:33.477Z",
-  "pttPid": 24236,
-  "mmPid": 9724,
+  "pttPid": 30616,
+  "mmPid": 36260,
   "restarts": {
-    "ptt": 2,
-    "mm": 24
+    "ptt": 3,
+    "mm": 25
   },
-  "lastTickAt": "2026-05-03T16:42:35.650Z"
+  "lastTickAt": "2026-05-03T17:12:35.667Z"
 }
