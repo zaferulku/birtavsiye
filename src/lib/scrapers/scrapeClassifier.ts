@@ -13,6 +13,7 @@
  * Yeni pazaryeri eklerken: bu modülü çağır, kendi kodunda kategori logic'i yazma.
  */
 import { categorizeFromTitle } from "../categorizeFromTitle";
+import { checkAccessory } from "../accessoryDetector";
 import { resolvePttavmSourceCategory } from "./pttavmCategoryMap";
 
 // Caller passes a Supabase client (any to avoid generic depth issues).
@@ -270,6 +271,74 @@ function resolveLeafToFullPath(
   return null;
 }
 
+function resolvePhoneAccessoryOverride(
+  title: string,
+  currentSlug: string | null | undefined,
+  slugToId: Map<string, string>,
+): { id: string; slug: string; reason: string } | null {
+  if (!currentSlug?.endsWith("/akilli-telefon")) return null;
+
+  const normalizedTitle = normalizeSearchText(title || "");
+  const hasPhoneSignal =
+    /\b(telefon|iphone|galaxy|redmi|poco|oppo|vivo|realme|honor|huawei|tecno|infinix|cep telefonu)\b/.test(
+      normalizedTitle,
+    );
+  const misrouteSlug =
+    !hasPhoneSignal && /\b(akilli kamera|guvenlik kamera|ip kamera)\b/.test(normalizedTitle)
+      ? "elektronik/ag-guvenlik/guvenlik-kamera"
+      : !hasPhoneSignal && /\b(video kamera|vlog kamera|fotograf makinesi|dslr kamera|mirrorless kamera)\b/.test(normalizedTitle)
+        ? "elektronik/kamera/fotograf-makinesi"
+        : null;
+  if (misrouteSlug) {
+    const id = slugToId.get(misrouteSlug);
+    if (id) {
+      return {
+        id,
+        slug: misrouteSlug,
+        reason: `phone-misroute-guard:${misrouteSlug}`,
+      };
+    }
+  }
+
+  const titleGuess = categorizeFromTitle(title || "");
+  if (titleGuess.slug && titleGuess.confidence === "high") {
+    const resolved = resolveLeafToFullPath(slugToId, titleGuess.slug);
+    if (
+      resolved &&
+      resolved.slug.startsWith("elektronik/telefon/") &&
+      resolved.slug !== currentSlug
+    ) {
+      return {
+        ...resolved,
+        reason: `phone-accessory-title:${titleGuess.matchedKeyword ?? titleGuess.slug}`,
+      };
+    }
+  }
+
+  const acc = checkAccessory(title || "", currentSlug);
+  if (!acc.isAccessory || acc.confidence !== "high") return null;
+
+  const matched = acc.matchedKeyword ?? "";
+  const accessorySlug =
+    /ekran|cam koruyucu|screen protector|tempered glass/i.test(matched)
+      ? "elektronik/telefon/ekran-koruyucu"
+      : /sarj|şarj|kablo|adapt/i.test(matched)
+        ? "elektronik/telefon/sarj-kablo"
+        : /yedek|batarya|pil/i.test(matched)
+          ? "elektronik/telefon/yedek-parca"
+          : /kilif|kılıf|kapak/i.test(matched)
+            ? "elektronik/telefon/kilif"
+            : "elektronik/telefon/aksesuar";
+  const id = slugToId.get(accessorySlug);
+  if (!id) return null;
+
+  return {
+    id,
+    slug: accessorySlug,
+    reason: `phone-accessory-guard:${matched || "keyword"}`,
+  };
+}
+
 // kept for future hierarchik auto-create (P6.2a — auto-create devre dışı 2026-05-02)
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 async function findOrCreateAutoCategory(
@@ -338,6 +407,20 @@ export async function classifyScrapedProduct(
     if (pttavmMapped) {
       const id = slugToId.get(pttavmMapped.canonicalSlug);
       if (id) {
+        const accessoryOverride = resolvePhoneAccessoryOverride(
+          title,
+          pttavmMapped.canonicalSlug,
+          slugToId,
+        );
+        if (accessoryOverride) {
+          return {
+            categoryId: accessoryOverride.id,
+            slug: accessoryOverride.slug,
+            method: "title_high",
+            reason: accessoryOverride.reason,
+          };
+        }
+
         return {
           categoryId: id,
           slug: pttavmMapped.canonicalSlug,
@@ -355,6 +438,20 @@ export async function classifyScrapedProduct(
       if (!mappedSlug) continue;
       const id = slugToId.get(mappedSlug);
       if (id) {
+        const accessoryOverride = resolvePhoneAccessoryOverride(
+          title,
+          mappedSlug,
+          slugToId,
+        );
+        if (accessoryOverride) {
+          return {
+            categoryId: accessoryOverride.id,
+            slug: accessoryOverride.slug,
+            method: "title_high",
+            reason: accessoryOverride.reason,
+          };
+        }
+
         return {
           categoryId: id,
           slug: mappedSlug,
@@ -370,13 +467,28 @@ export async function classifyScrapedProduct(
     const mappedSlug = SOURCE_CATEGORY_MAP[sourceCategoryRaw];
     if (mappedSlug) {
       const id = slugToId.get(mappedSlug);
-      if (id)
+      if (id) {
+        const accessoryOverride = resolvePhoneAccessoryOverride(
+          title,
+          mappedSlug,
+          slugToId,
+        );
+        if (accessoryOverride) {
+          return {
+            categoryId: accessoryOverride.id,
+            slug: accessoryOverride.slug,
+            method: "title_high",
+            reason: accessoryOverride.reason,
+          };
+        }
+
         return {
           categoryId: id,
           slug: mappedSlug,
           method: "source_mapped",
           reason: `mapped: ${sourceCategoryRaw}`,
         };
+      }
     }
   }
 
@@ -420,6 +532,20 @@ export async function classifyScrapedProduct(
 
   // 5. Fallback to provided
   if (fallbackCategoryId) {
+    const accessoryOverride = resolvePhoneAccessoryOverride(
+      title,
+      fallbackCategorySlug,
+      slugToId,
+    );
+    if (accessoryOverride) {
+      return {
+        categoryId: accessoryOverride.id,
+        slug: accessoryOverride.slug,
+        method: "title_high",
+        reason: accessoryOverride.reason,
+      };
+    }
+
     if (
       source === "pttavm" &&
       !sourceCategoryRaw &&

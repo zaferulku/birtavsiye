@@ -14,6 +14,8 @@ const cases = [
   ["DeLonghi Magnifica Kirec Sokucu 2x100ml", "kahve-makinesi", true, "kirec sokucu"],
   ["Samsung Galaxy A15 128GB", "akilli-telefon", false, "telefon"],
   ["iPhone 15 Pro Silikon Kilif Siyah", "akilli-telefon", true, "kilif"],
+  ["Apple iPhone 16 Raze Metal Kamera Lens Siyah", "elektronik/telefon/akilli-telefon", true, "full slug lens"],
+  ["iPhone 15 Pro Silikon Kilif Siyah", "elektronik/telefon/kilif", false, "aksesuar kategori"],
   ["Apple 20W USB-C Guc Adaptoru", "akilli-telefon", true, "adaptor"],
   ["Samsung 55 inc QLED 4K Smart TV", "televizyon", false, "TV"],
   ["TV Duvar Aski Aparati 32-65 inc", "televizyon", true, "aski"],
@@ -27,7 +29,8 @@ for (const [title, cat, expected, label] of cases) {
     (ok ? "OK" : "FAIL") + " [" + label + "] " + title.slice(0, 50) +
     " -> isAccessory=" + r.isAccessory + " (" + (r.reason ?? "-") + ", " + r.confidence + ")",
   );
-  ok ? pass++ : fail++;
+  if (ok) pass++;
+  else fail++;
 }
 console.log("\n" + pass + "/" + (pass + fail) + " gecti.");
 process.exit(fail > 0 ? 1 : 0);

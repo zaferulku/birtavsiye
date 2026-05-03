@@ -141,6 +141,9 @@ const ACCESSORY_RULES: Record<string, AccessoryRule> = {
       "popsocket", "yüzük tutucu",
       "mıknatıslı tutucu", "araç tutucu",
       "stylus",
+      "kamera lens", "kamera lensi", "lens koruyucu", "lens koruma",
+      "lensli", "lens yüzüklü", "kamera koruma", "kamera koruyucu",
+      "arka koruyucu", "kamera cam",
       "yedek parça", "yedek ekran", "yedek batarya", "yedek pil",
     ],
     minPriceTRY: 3000,
@@ -200,6 +203,31 @@ const ACCESSORY_CATEGORY_SLUGS = new Set([
   "mutfak-sofra",
 ]);
 
+const CATEGORY_SLUG_ALIASES: Record<string, string> = {
+  "elektronik/telefon/akilli-telefon": "akilli-telefon",
+  "elektronik/telefon/kilif": "telefon-kilifi",
+  "elektronik/telefon/aksesuar": "telefon-aksesuar",
+  "elektronik/telefon/ekran-koruyucu": "ekran-koruyucu",
+  "elektronik/telefon/sarj-kablo": "sarj-kablo",
+  "elektronik/telefon/powerbank": "powerbank",
+  "elektronik/telefon/yedek-parca": "telefon-yedek-parca",
+  "elektronik/giyilebilir/akilli-saat": "akilli-saat",
+  "elektronik/tv-ses-goruntu/televizyon": "televizyon",
+  "elektronik/tv-ses-goruntu/tv-aksesuar": "tv-aksesuar",
+  "elektronik/tv-ses-goruntu/kulaklik": "kulaklik",
+  "elektronik/bilgisayar-tablet/laptop": "laptop",
+  "kucuk-ev-aletleri/mutfak/kahve-makinesi": "kahve-makinesi",
+  "beyaz-esya/bulasik-makinesi": "bulasik-makinesi",
+  "beyaz-esya/camasir-makinesi": "camasir-makinesi",
+  "kucuk-ev-aletleri/kisisel-bakim/sac-kurutma": "sac-kurutma-makinesi",
+};
+
+function normalizeCategorySlug(categorySlug: string): string {
+  if (!categorySlug) return categorySlug;
+  if (CATEGORY_SLUG_ALIASES[categorySlug]) return CATEGORY_SLUG_ALIASES[categorySlug];
+  return categorySlug.split("/").filter(Boolean).at(-1) ?? categorySlug;
+}
+
 export function checkAccessory(
   title: string,
   categorySlug: string,
@@ -209,13 +237,15 @@ export function checkAccessory(
     return { isAccessory: false, reason: null, confidence: "low" };
   }
 
+  const normalizedCategorySlug = normalizeCategorySlug(categorySlug);
+
   // Aksesuar/yan urun kategorilerinde detector calistirmiyoruz
-  if (ACCESSORY_CATEGORY_SLUGS.has(categorySlug)) {
+  if (ACCESSORY_CATEGORY_SLUGS.has(normalizedCategorySlug)) {
     return { isAccessory: false, reason: null, confidence: "high" };
   }
 
   const titleNorm = normalize(title);
-  const rule = ACCESSORY_RULES[categorySlug];
+  const rule = ACCESSORY_RULES[normalizedCategorySlug];
 
   if (rule) {
     for (const kw of rule.accessoryKeywords) {
@@ -266,9 +296,9 @@ export function checkAccessory(
 }
 
 export function hasAccessoryRule(categorySlug: string): boolean {
-  return categorySlug in ACCESSORY_RULES;
+  return normalizeCategorySlug(categorySlug) in ACCESSORY_RULES;
 }
 
 export function getAccessoryRule(categorySlug: string): AccessoryRule | null {
-  return ACCESSORY_RULES[categorySlug] ?? null;
+  return ACCESSORY_RULES[normalizeCategorySlug(categorySlug)] ?? null;
 }

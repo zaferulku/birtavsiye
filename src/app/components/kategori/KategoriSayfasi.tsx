@@ -165,11 +165,20 @@ export default async function KategoriSayfasi({ params, searchParams }: {
     category?.id ? fetchChildCategories(category.id) : Promise.resolve([]),
     category?.id ? fetchDescendantIds(category.id) : Promise.resolve([]),
   ]);
+  const normalizedCategoryName = (category?.name ?? "").trim().toLocaleLowerCase("tr");
+  const visibleChildren = children.filter((child) => {
+    const childName = child.name.trim().toLocaleLowerCase("tr");
+    const isSelfNamedDuplicate =
+      normalizedCategoryName.length > 0 &&
+      childName === normalizedCategoryName &&
+      child.slug.startsWith(`${category?.slug ?? ""}/`);
+    return !isSelfNamedDuplicate;
+  });
 
   // Her child kategori için örnek ürün görseli çek (tek bulk query)
   const childImageMap = new Map<string, string>();
-  if (children.length > 0) {
-    const childDescendants = await Promise.all(children.map(c => fetchDescendantIds(c.id).then(ids => ({ childId: c.id, ids }))));
+  if (visibleChildren.length > 0) {
+    const childDescendants = await Promise.all(visibleChildren.map(c => fetchDescendantIds(c.id).then(ids => ({ childId: c.id, ids }))));
     const catToChild = new Map<string, string>();
     for (const { childId, ids } of childDescendants) {
       for (const id of ids) if (!catToChild.has(id)) catToChild.set(id, childId);
@@ -258,10 +267,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
     );
 
   const categorySlug = category?.slug ?? "";
-  const mergedRawProducts = normalizeProducts((rawProducts as ProductCard[] | null) ?? []).filter(
-    (product) => !shouldHideDiscoveryProduct(product)
-  ).filter((product) => {
-    // PAKET 1: high-confidence aksesuarlari gizle
+  const isMainCategoryProduct = (product: ProductCard): boolean => {
     const lowestPrice = getLowestActivePrice(product.prices, kaynak ?? null);
     const acc = checkAccessory(
       product.title ?? "",
@@ -269,7 +275,10 @@ export default async function KategoriSayfasi({ params, searchParams }: {
       typeof lowestPrice === "number" && lowestPrice > 0 ? lowestPrice : undefined,
     );
     return !(acc.isAccessory && acc.confidence === "high");
-  }).filter(
+  };
+  const mergedRawProducts = normalizeProducts((rawProducts as ProductCard[] | null) ?? []).filter(
+    (product) => !shouldHideDiscoveryProduct(product)
+  ).filter(isMainCategoryProduct).filter(
     // P6.21: aktif listing'i olmayan (orphan) urunleri gizle.
     // 38k+ PTT urunu listings'de yok -> "Fiyatlari Karsilastir" placeholder kalkti.
     (product) => visibleListingsOf(product).length > 0
@@ -333,6 +342,7 @@ export default async function KategoriSayfasi({ params, searchParams }: {
   const sourceCounts: Record<string, number> = {};
   const countBaseProducts = normalizeProducts((allProducts as ProductCard[] | null) ?? [])
     .filter((product) => !shouldHideDiscoveryProduct(product))
+    .filter(isMainCategoryProduct)
     // P6.21: orphan (listing'siz) urunleri sidebar count'larindan da dusur.
     .filter((product) => getActiveListings(product.prices, kaynak ?? null).length > 0);
   // Filter listesinde invalid model_family (SKU/EAN sayisal, Apple SKU MTPxxxTU/A) gizlensin
@@ -555,10 +565,10 @@ export default async function KategoriSayfasi({ params, searchParams }: {
       </div>
 
       {/* Alt kategoriler (varsa) — tek satırda, gerekirse yatay scroll */}
-      {children.length > 0 && (
+      {visibleChildren.length > 0 && (
         <div className="max-w-[1400px] mx-auto px-3 sm:px-6 pt-4">
           <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
-            {children.map((c) => {
+            {visibleChildren.map((c) => {
               const img = CATEGORY_IMAGE_OVERRIDES[c.slug] ?? childImageMap.get(c.id);
               return (
                 <Link
