@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
@@ -131,16 +131,33 @@ partialWeak.forEach(c => {
   c.weakSubs.forEach(s => console.log(`    weak sub: "${s.label}" -> ${s.slug}`));
 });
 
-// JSON çıktı dosyası — fix script kullanabilir
-import('node:fs').then(({ writeFileSync }) => {
-  const report = {
-    exactMatch: exactMatch.map(e => e.nav),
-    leafMatch: leafMatch.map(e => ({ flat: e.nav, full: e.db })),
-    broken,
-    orphanDb,
-    weakLinks: weakLinks.map(c => ({ cat: c.catLabel, slug: c.catSlug, subs: c.subs })),
-    partialWeak: partialWeak.map(c => ({ cat: c.catLabel, slug: c.catSlug, weakSubs: c.weakSubs })),
-  };
-  writeFileSync('./scripts/.nav-audit.json', JSON.stringify(report, null, 2));
-  console.log('\nAudit JSON: scripts/.nav-audit.json');
-});
+// JSON çıktı dosyası — fix script + agent_decisions kullanır
+const report = {
+  generatedAt: new Date().toISOString(),
+  navUniqueCount: navUnique.length,
+  dbUniqueCount: dbSlugs.length,
+  exactMatch: exactMatch.map(e => e.nav),
+  leafMatch: leafMatch.map(e => ({ flat: e.nav, full: e.db })),
+  ambiguous: ambiguous.map(a => ({ flat: a.nav, candidates: a.candidates })),
+  broken,
+  orphanDb,
+  weakLinks: weakLinks.map(c => ({ cat: c.catLabel, slug: c.catSlug, subs: c.subs })),
+  partialWeak: partialWeak.map(c => ({ cat: c.catLabel, slug: c.catSlug, weakSubs: c.weakSubs })),
+  // runScriptAgent için özet — agent_decisions.output_data'ya gidecek
+  summary: {
+    exact: exactMatch.length,
+    leaf: leafMatch.length,
+    ambiguous: ambiguous.length,
+    broken: broken.length,
+    weak: weakLinks.length,
+    partialWeak: partialWeak.length,
+    orphan: orphanDb.length,
+    patchProposed: leafMatch.length > 0 || broken.length > 0,
+    severity: broken.length > 0 ? 'high' : (leafMatch.length > 0 || weakLinks.length > 0 ? 'medium' : 'low'),
+  },
+};
+writeFileSync('./scripts/.nav-audit.json', JSON.stringify(report, null, 2));
+console.log('\nAudit JSON: scripts/.nav-audit.json');
+
+// Agent runner ya da CI bu satırın stdout'unu parse eder.
+console.log('\n__AUDIT_JSON__' + JSON.stringify(report.summary));
