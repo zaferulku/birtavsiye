@@ -13,32 +13,22 @@ import {
 
 type Props = {
   rows: MergedOfferRow[];
-  isLoading: boolean;
-  refresh: () => void;
 };
 
-export default function ProductBestOfferCard({ rows, isLoading, refresh }: Props) {
+export default function ProductBestOfferCard({ rows }: Props) {
   const bestOffer = useMemo(() => pickBestOffer(rows), [rows]);
   const trust = useMemo(() => buildOfferTrust(rows, bestOffer), [rows, bestOffer]);
 
   if (!bestOffer) {
     return (
       <aside className="rounded-[22px] border border-[#E8E4DF] bg-white p-5 shadow-sm">
-        <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="mb-4 flex items-center gap-3">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#A06B53]">
               En uygun teklif
             </p>
             <h2 className="mt-1 text-lg font-bold text-[#171412]">Teklif araniyor</h2>
           </div>
-          <button
-            type="button"
-            onClick={refresh}
-            disabled={isLoading}
-            className="rounded-full border border-[#E8E4DF] px-3 py-1 text-xs font-medium text-[#5F5952] transition hover:border-[#E8460A] hover:text-[#E8460A] disabled:opacity-60"
-          >
-            Yenile
-          </button>
         </div>
         <p className="text-sm leading-6 text-[#6C655E]">
           Bu urun icin henuz aktif magaza teklifi gorunmuyor.
@@ -59,8 +49,8 @@ export default function ProductBestOfferCard({ rows, isLoading, refresh }: Props
   const logoUrl = getMarketplaceLogoUrl(bestOffer.source, bestOffer.store?.logo_url ?? null);
 
   return (
-    <aside className="h-fit self-start rounded-[22px] border border-[#DCEAFB] bg-[#EDF6FF] p-5 shadow-[0_14px_32px_rgba(29,112,224,0.08)]">
-      <div className="flex items-start justify-between gap-3">
+    <aside className="h-fit self-start rounded-[22px] border border-[#E3EEFC] bg-[#F4FAFF] p-5 shadow-[0_14px_32px_rgba(29,112,224,0.08)]">
+      <div className="flex items-start gap-3">
         <div className="flex items-start gap-3">
           {logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -79,17 +69,9 @@ export default function ProductBestOfferCard({ rows, isLoading, refresh }: Props
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={refresh}
-          disabled={isLoading}
-          className="rounded-full border border-[#D7E7FB] bg-white px-3 py-1 text-xs font-medium text-[#5F5952] transition hover:border-[#1D70E0] hover:text-[#1D70E0] disabled:opacity-60"
-        >
-          {isLoading ? "Guncelleniyor" : "Yenile"}
-        </button>
       </div>
 
-      <div className="mt-4 rounded-[18px] border border-[#CFE2FA] bg-white px-4 py-4 shadow-[0_10px_26px_rgba(29,112,224,0.07)]">
+      <div className="mt-4 rounded-[18px] border border-[#DCEBFC] bg-white px-4 py-4 shadow-[0_10px_26px_rgba(29,112,224,0.06)]">
         <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#1D70E0]/75">
           En uygun teklif
         </div>

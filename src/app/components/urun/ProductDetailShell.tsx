@@ -87,7 +87,7 @@ export type PriceInsightsPayload = {
   verdictTone: "good" | "neutral" | "watch";
 };
 
-type TabId = "yorumlar" | "ozellikler" | "benzer" | "tavsiyeler";
+type TabId = "saticilar" | "yorumlar" | "ozellikler" | "benzer" | "tavsiyeler";
 
 type Props = {
   product: ProductDetailModel;
@@ -111,8 +111,8 @@ export default function ProductDetailShell({
   variants = [],
 }: Props) {
   const [reviewSummary, setReviewSummary] = useState(initialReviewSummary);
-  const [activeTab, setActiveTab] = useState<TabId>("yorumlar");
-  const { listings, isLoading, isDone, successful, failed, refresh } = useLivePrices(product.id);
+  const [activeTab, setActiveTab] = useState<TabId>("saticilar");
+  const { listings, isLoading, isDone, successful, failed } = useLivePrices(product.id);
 
   const offerRows = useMemo(
     () => mergeOfferRows(initialListings, listings, stores),
@@ -144,7 +144,7 @@ export default function ProductDetailShell({
   const openCommentsTab = () => {
     setActiveTab("yorumlar");
     window.setTimeout(() => {
-      scrollToId("urun-yorumlari");
+      scrollToId("urun-sekmeler");
     }, 0);
   };
 
@@ -227,10 +227,11 @@ export default function ProductDetailShell({
         </div>
 
         <div className="space-y-4">
-          <ProductBestOfferCard rows={offerRows} isLoading={isLoading} refresh={refresh} />
+          <ProductBestOfferCard rows={offerRows} />
 
           {priceInsights && (
             <PriceInsightsPanel
+              productTitle={product.title}
               history={priceInsights.history}
               currentLowPrice={priceInsights.currentLowPrice}
               lowest30d={priceInsights.lowest30d}
@@ -246,24 +247,18 @@ export default function ProductDetailShell({
         </div>
       </div>
 
-      <div id="magaza-fiyatlari">
-        <LivePriceComparison
-          productTitle={product.title}
-          rows={offerRows}
-          isLoading={isLoading}
-          isDone={isDone}
-          successful={successful}
-          failed={failed}
-          refresh={refresh}
-        />
-      </div>
-
       <section className="rounded-[22px] border border-[#E8E4DF] bg-white shadow-sm" id="urun-sekmeler">
         <div
           role="tablist"
           aria-label="Urun detay sekmeleri"
           className="flex flex-wrap gap-1 border-b border-[#EFE7DF] px-3 pt-3"
         >
+          <TabButton
+            id="saticilar"
+            label={`Saticilar / Magazalar${offerRows.length > 0 ? ` (${offerRows.length})` : ""}`}
+            active={activeTab === "saticilar"}
+            onSelect={setActiveTab}
+          />
           <TabButton
             id="yorumlar"
             label={`Yorumlar${reviewSummary.commentCount > 0 ? ` (${reviewSummary.commentCount})` : ""}`}
@@ -291,6 +286,21 @@ export default function ProductDetailShell({
         </div>
 
         <div className="p-4 sm:p-6">
+          {activeTab === "saticilar" && (
+            <div id="panel-saticilar" role="tabpanel" aria-labelledby="tab-saticilar">
+              <div id="magaza-fiyatlari">
+                <LivePriceComparison
+                  productTitle={product.title}
+                  rows={offerRows}
+                  isLoading={isLoading}
+                  isDone={isDone}
+                  successful={successful}
+                  failed={failed}
+                />
+              </div>
+            </div>
+          )}
+
           {activeTab === "yorumlar" && (
             <div id="panel-yorumlar" role="tabpanel" aria-labelledby="tab-yorumlar">
               <CommunitySection
