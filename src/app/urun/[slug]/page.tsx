@@ -17,6 +17,7 @@ import { buildVariantFamilyKey, isSameVariantFamily } from "@/lib/productVariant
 import type { InitialListing, StoreDefinition } from "../../components/urun/offerUtils";
 import type { ReviewSummary } from "../../components/urun/CommunitySection";
 import { cleanProductTitle } from "@/lib/productTitle";
+import { fetchCategoryPath } from "@/lib/categoryTree";
 
 // Ürün sayfası ISR — 30 dk cache. Önceden dynamic (her request DB'ye iniyordu);
 // 14 .from() × bot crawl × bin ürün = DB egress kuotası tüketme nedeni.
@@ -507,7 +508,7 @@ export default async function ProductPage({
   // P6.20-A: SSR Header initialCats prefetch
   const initialCats = await fetchCategoriesServer();
 
-  const [similarProducts, recommendations] = await Promise.all([
+  const [similarProducts, recommendations, categoryPath] = await Promise.all([
     loadSimilarProducts(
       product.brand,
       product.model_family,
@@ -515,6 +516,7 @@ export default async function ProductPage({
       product.cluster_product_ids
     ),
     loadRecommendations(product.cluster_product_ids),
+    product.category?.id ? fetchCategoryPath(product.category.id) : Promise.resolve([]),
   ]);
 
   const minPrice = product.listings.length > 0
@@ -570,19 +572,15 @@ export default async function ProductPage({
         name: "Anasayfa",
         item: "https://birtavsiye.net/",
       },
-      ...(product.category
-        ? [
-            {
-              "@type": "ListItem",
-              position: 2,
-              name: product.category.name,
-              item: `https://birtavsiye.net/anasayfa/${product.category.slug}`,
-            },
-          ]
-        : []),
+      ...categoryPath.map((category, index) => ({
+        "@type": "ListItem",
+        position: index + 2,
+        name: category.name,
+        item: `https://birtavsiye.net/anasayfa/${category.slug}`,
+      })),
       {
         "@type": "ListItem",
-        position: product.category ? 3 : 2,
+        position: categoryPath.length + 2,
         name: product.title,
         item: `https://birtavsiye.net/urun/${product.slug}`,
       },
@@ -625,6 +623,7 @@ export default async function ProductPage({
           images: product.images,
           specs: product.specs,
           category: product.category,
+          categoryPath,
         }}
         stores={product.stores}
         initialListings={initialListings}

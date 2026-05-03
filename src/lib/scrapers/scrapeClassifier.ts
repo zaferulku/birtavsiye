@@ -75,6 +75,7 @@ export const SOURCE_CATEGORY_MAP: Record<string, string> = {
   // MM — Diğer
   Drone: "elektronik/kamera/drone",
   "Oyun Konsolları": "elektronik/oyun/konsol",
+  "Saç Kurutma": "kucuk-ev-aletleri/kisisel-bakim/sac-kurutma",
 
   // PttAVM (kebab-case eski leaf-only key'ler — Phase 5 öncesi)
   "akilli-telefon": "elektronik/telefon/akilli-telefon",
@@ -173,6 +174,14 @@ function buildQueryTokens(query: string): string[] {
     .split(" ")
     .map((token) => token.trim())
     .filter((token) => token.length >= 3 && !QUERY_STOPWORDS.has(token));
+}
+
+function splitSourceCategoryPath(rawPath?: string | null): string[] {
+  if (!rawPath) return [];
+  return rawPath
+    .split(/\s*(?:\/|>|\u203a|\u00bb|\|)\s*/g)
+    .map((segment) => segment.trim())
+    .filter(Boolean);
 }
 
 function hasQueryRelevance(title: string, query?: string | null): boolean {
@@ -334,6 +343,23 @@ export async function classifyScrapedProduct(
           slug: pttavmMapped.canonicalSlug,
           method: "source_mapped",
           reason: `pttavm-path:${pttavmMapped.matchedSegment}`,
+        };
+      }
+    }
+  }
+
+  if (sourceCategoryPathRaw) {
+    const candidates = splitSourceCategoryPath(sourceCategoryPathRaw).reverse();
+    for (const candidate of candidates) {
+      const mappedSlug = SOURCE_CATEGORY_MAP[candidate];
+      if (!mappedSlug) continue;
+      const id = slugToId.get(mappedSlug);
+      if (id) {
+        return {
+          categoryId: id,
+          slug: mappedSlug,
+          method: "source_mapped",
+          reason: `${source}-path:${candidate}`,
         };
       }
     }

@@ -169,6 +169,7 @@ async function syncProducts(
         sourceCategoryPathRaw:
           product.source_category_path ??
           product.specs?.pttavm_path ??
+          product.specs?.mediamarkt_path ??
           null,
         fallbackCategoryId: categoryId ?? null,
         fallbackCategorySlug,

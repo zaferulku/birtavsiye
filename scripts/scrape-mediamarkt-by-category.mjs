@@ -167,6 +167,16 @@ async function getCategoryId(slug) {
   return id;
 }
 
+function buildMediaMarktSpecs(scraped, existingSpecs = null) {
+  return {
+    ...(existingSpecs ?? {}),
+    ...(scraped.raw_specs ?? {}),
+    ...(scraped.gtin13 ? { gtin13: scraped.gtin13 } : {}),
+    ...(scraped.source_category ? { mediamarkt_category: scraped.source_category } : {}),
+    ...(scraped.source_category_path ? { mediamarkt_path: scraped.source_category_path } : {}),
+  };
+}
+
 async function upsertListing(scraped) {
   let productId = null;
 
@@ -219,9 +229,7 @@ async function upsertListing(scraped) {
         const updates = {};
         // GTIN backfill — Migration 020 sonrası canonical kolon
         if (!p.gtin) updates.gtin = scraped.gtin13;
-        if (!p.specs || Object.keys(p.specs).length <= 1) {
-          if (scraped.raw_specs) updates.specs = { ...scraped.raw_specs, gtin13: scraped.gtin13 };
-        }
+        updates.specs = buildMediaMarktSpecs(scraped, p.specs);
         if (!p.description && scraped.raw_description) updates.description = scraped.raw_description;
         if ((!p.images || p.images.length === 0) && scraped.raw_images.length > 0) {
           updates.images = scraped.raw_images;
@@ -258,9 +266,7 @@ async function upsertListing(scraped) {
     if (slugConflict) {
       productId = slugConflict.id;
     } else {
-      const productSpecs = scraped.raw_specs
-        ? { ...scraped.raw_specs, ...(scraped.gtin13 ? { gtin13: scraped.gtin13 } : {}) }
-        : (scraped.gtin13 ? { gtin13: scraped.gtin13 } : null);
+      const productSpecs = buildMediaMarktSpecs(scraped);
 
       // Canonical model_family + model_code title'dan extract et.
       // Pattern match yoksa fallback olarak SKU'ya dus (constraint icin benzersiz).
