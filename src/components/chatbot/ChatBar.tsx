@@ -242,7 +242,7 @@ export function ChatBar() {
     const chatSessionId = useChatStore.getState().chatSessionId;
     const decisionId = useChatStore.getState().lastDecisionId;
 
-    router.push(`/sonuclar?q=${encodeURIComponent(message)}`);
+    router.push(`/ara?q=${encodeURIComponent(message)}`);
 
     try {
       const response = await fetch("/api/chat", {
@@ -327,7 +327,7 @@ export function ChatBar() {
     const history = getHistoryForBackend();
     const chatSessionId = useChatStore.getState().chatSessionId;
     const decisionId = useChatStore.getState().lastDecisionId;
-    router.push(`/sonuclar?q=${encodeURIComponent(message)}`);
+    router.push(`/ara?q=${encodeURIComponent(message)}`);
 
     try {
       const response = await fetch("/api/chat", {

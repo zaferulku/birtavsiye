@@ -1,0 +1,1539 @@
+{
+  "schemaVersion": 1,
+  "count": 43,
+  "scenarios": [
+    {
+      "name": "Renk + kategori + marka + renk değişimi + marka genişletme",
+      "bucket": "context_carry",
+      "messages": [
+        "Kırmızı telefon istiyorum",
+        "Apple seçtim",
+        "Sarı olsun",
+        "Diğer sarı telefonları göster"
+      ],
+      "expected": [
+        "Kırmızı telefonlar listelenir",
+        "Kırmızı Apple/iPhone telefonlar listelenir",
+        "Sarı iPhone telefonlar listelenir",
+        "Tüm sarı telefonlar listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "color": "Kırmızı",
+          "brand": null,
+          "shouldKeepContext": false,
+          "action": "merge_with_new_dims"
+        },
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "color": "Kırmızı",
+          "brand": "Apple",
+          "shouldKeepContext": true,
+          "action": "merge_with_new_dims"
+        },
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "color": "Sarı",
+          "brand": "Apple",
+          "shouldKeepContext": true,
+          "action": "merge_with_new_dims"
+        },
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "color": "Sarı",
+          "brand": null,
+          "shouldKeepContext": true,
+          "action": "user_requested_removal"
+        }
+      ]
+    },
+    {
+      "name": "Telefon bağlamından kahve makinesine niyet değişimi",
+      "bucket": "intent_reset",
+      "messages": [
+        "Siyah Samsung telefon",
+        "Kahve makinelerini göster",
+        "En ucuz olanı göster"
+      ],
+      "expected": [
+        "Siyah Samsung telefonlar listelenir",
+        "Telefon bağlamı bırakılır ve kahve makineleri listelenir",
+        "En ucuz kahve makineleri listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "brand": "Samsung",
+          "color": "Siyah",
+          "shouldResetContext": false
+        },
+        {
+          "category": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+          "productType": "coffee_machine",
+          "brand": null,
+          "color": null,
+          "shouldResetContext": true,
+          "action": "category_changed_reset"
+        },
+        {
+          "category": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+          "productType": "coffee_machine",
+          "sort": "price_asc",
+          "shouldKeepContext": true,
+          "action": "best_value_sort_applied"
+        }
+      ]
+    },
+    {
+      "name": "Fiyat aralığı korunur ve daha ucuz komutu aralığı aşağı taşır",
+      "bucket": "price_context",
+      "messages": [
+        "50k - 80k arası telefon göster",
+        "Pahalı geldi",
+        "Daha pahalı modellere bak"
+      ],
+      "expected": [
+        "50.000-80.000 TL arası telefonlar listelenir",
+        "Telefon niyeti korunup daha düşük fiyat aralığına geçilir",
+        "Telefon niyeti korunup daha yüksek fiyat aralığına geçilir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "priceRange": {
+            "min": 50000,
+            "max": 80000
+          }
+        },
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "priceRange": {
+            "min": 30000,
+            "max": 50000
+          },
+          "shouldKeepContext": true
+        },
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "priceRange": {
+            "min": 50000,
+            "max": 70000
+          },
+          "shouldKeepContext": true
+        }
+      ]
+    },
+    {
+      "name": "Filtre kahve ürünleri filtre kahve makinesinden ayrılır",
+      "bucket": "product_disambiguation",
+      "messages": [
+        "En ucuz filtre kahve",
+        "En ucuz filtre kahve makinesi"
+      ],
+      "expected": [
+        "Filtre kahve ürünleri listelenir, makine gösterilmez",
+        "Filtre kahve makineleri listelenir, kahve ürünü gösterilmez"
+      ],
+      "expectedAudit": [
+        {
+          "category": "supermarket/kahve/filtre-kahve",
+          "productType": "filter_coffee",
+          "sort": "price_asc"
+        },
+        {
+          "category": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+          "productType": "filter_coffee_machine",
+          "sort": "price_asc",
+          "shouldResetContext": true
+        }
+      ]
+    },
+    {
+      "name": "Tek kelimelik mat önceki bağlamı bırakır",
+      "bucket": "single_word",
+      "messages": [
+        "Apple telefon göster",
+        "Mat"
+      ],
+      "expected": [
+        "Apple telefonlar listelenir",
+        "Telefon bağlamı bırakılır ve yoga matı/mat kategorisi listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "brand": "Apple"
+        },
+        {
+          "category": "spor-outdoor/fitness/yoga-pilates",
+          "productType": "yoga_mat",
+          "brand": null,
+          "shouldResetContext": true,
+          "action": "category_changed_reset"
+        }
+      ]
+    },
+    {
+      "name": "Telefon kılıfı telefon değildir",
+      "bucket": "product_disambiguation",
+      "messages": [
+        "Telefon göster",
+        "Telefon kılıfı göster",
+        "Apple"
+      ],
+      "expected": [
+        "Telefonlar listelenir",
+        "Telefon bağlamı bırakılır ve telefon kılıfları listelenir",
+        "Apple/iPhone kılıfları listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "akilli-telefon",
+          "productType": "phone"
+        },
+        {
+          "category": "elektronik/telefon/kilif",
+          "productType": "phone_case",
+          "shouldResetContext": true
+        },
+        {
+          "category": "elektronik/telefon/kilif",
+          "productType": "phone_case",
+          "brand": "Apple",
+          "shouldKeepContext": true
+        }
+      ]
+    },
+    {
+      "name": "Şarj aleti telefon değildir",
+      "bucket": "product_disambiguation",
+      "messages": [
+        "Telefon göster",
+        "Şarj aleti",
+        "Samsung olsun"
+      ],
+      "expected": [
+        "Telefonlar listelenir",
+        "Şarj cihazı/kablo kategorisine geçilir",
+        "Samsung uyumlu/markalı şarj ürünleri listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "akilli-telefon",
+          "productType": "phone"
+        },
+        {
+          "category": "elektronik/telefon/sarj-kablo",
+          "productType": "charger",
+          "shouldResetContext": true
+        },
+        {
+          "category": "elektronik/telefon/sarj-kablo",
+          "productType": "charger",
+          "brand": "Samsung",
+          "shouldKeepContext": true
+        }
+      ]
+    },
+    {
+      "name": "Mouse pad mouse değildir",
+      "bucket": "product_disambiguation",
+      "messages": [
+        "Mouse",
+        "Mouse pad",
+        "Oyuncu mouse"
+      ],
+      "expected": [
+        "Mouse ürünleri listelenir",
+        "Mouse pad kategorisine geçilir",
+        "Mouse pad bağlamı bırakılıp oyuncu mouse listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "elektronik/bilgisayar-tablet/bilesenler/cevre-birim/mouse",
+          "productType": "mouse"
+        },
+        {
+          "category": "elektronik/telefon/aksesuar/mouse-pad",
+          "productType": "mouse_pad",
+          "shouldResetContext": true
+        },
+        {
+          "category": "elektronik/bilgisayar-tablet/bilesenler/cevre-birim/mouse",
+          "productType": "mouse",
+          "shouldResetContext": true
+        }
+      ]
+    },
+    {
+      "name": "Yoga matı ve kapı matı ayrılır",
+      "bucket": "same_word_different_meaning",
+      "messages": [
+        "Yoga matı",
+        "Kapı matı"
+      ],
+      "expected": [
+        "Yoga/pilates matları listelenir",
+        "Kapı matı/paspas kategorisine geçilir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "spor-outdoor/fitness/yoga-pilates",
+          "productType": "yoga_mat"
+        },
+        {
+          "category": "ev-yasam/temizlik/cop-torbasi-temizlik-araclari/paspas",
+          "productType": "door_mat",
+          "shouldResetContext": true
+        }
+      ]
+    },
+    {
+      "name": "Kahve makinesi ve kahve ürünü ayrılır",
+      "bucket": "product_disambiguation",
+      "messages": [
+        "Kahve makinesi",
+        "Jacobs filtre kahve"
+      ],
+      "expected": [
+        "Kahve makineleri listelenir",
+        "Kahve makinesi bağlamı bırakılır ve Jacobs filtre kahve ürünleri listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+          "productType": "coffee_machine"
+        },
+        {
+          "category": "supermarket/kahve/filtre-kahve",
+          "productType": "filter_coffee",
+          "brand": "Jacobs",
+          "shouldResetContext": true
+        }
+      ]
+    },
+    {
+      "name": "Airfryer fritöz yağından ayrılır",
+      "bucket": "product_disambiguation",
+      "messages": [
+        "Airfryer",
+        "Fritöz yağı"
+      ],
+      "expected": [
+        "Airfryer cihazları listelenir",
+        "Cihaz bağlamı bırakılır ve kızartma/fritöz yağı listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "kucuk-ev-aletleri/mutfak/airfryer",
+          "productType": "airfryer"
+        },
+        {
+          "category": "supermarket/konserve-sos/zeytinyagi",
+          "productType": "fryer_oil",
+          "shouldResetContext": true
+        }
+      ]
+    },
+    {
+      "name": "Laptop çantası laptop değildir",
+      "bucket": "product_disambiguation",
+      "messages": [
+        "Laptop",
+        "Laptop çantası"
+      ],
+      "expected": [
+        "Laptoplar listelenir",
+        "Laptop çantası/aksesuar kategorisine geçilir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "laptop",
+          "productType": "laptop"
+        },
+        {
+          "category": "elektronik/telefon/aksesuar/laptop-cantasi",
+          "productType": "laptop_bag",
+          "shouldResetContext": true
+        }
+      ]
+    },
+    {
+      "name": "Oyuncu koltuğu oyuncu laptopu değildir",
+      "bucket": "same_word_different_meaning",
+      "messages": [
+        "Oyuncu laptopu",
+        "Oyuncu koltuğu"
+      ],
+      "expected": [
+        "Oyuncu laptopları listelenir",
+        "Laptop bağlamı bırakılır ve oyuncu koltukları listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "elektronik/bilgisayar-tablet/laptop",
+          "productType": "gaming_laptop"
+        },
+        {
+          "category": "elektronik/oyun/konsol/oyuncu-koltuk",
+          "productType": "gaming_chair",
+          "shouldResetContext": true
+        }
+      ]
+    },
+    {
+      "name": "Net ürün/model araması da genel arama sayfasına gider",
+      "bucket": "exact_product_search",
+      "messages": [
+        "iphone 17 pro 1tb"
+      ],
+      "expected": [
+        "Apple/iPhone marka, iPhone 17 Pro model, 1TB depolama ile telefon araması yapılır; ürün detayına otomatik gidilmez"
+      ],
+      "expectedAudit": [
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "brand": "Apple",
+          "storage": "1TB",
+          "exactProduct": true,
+          "model": "iPhone 17 Pro",
+          "searchQuery": "iphone 17 pro 1tb",
+          "searchActionHref": "/ara?q=iphone%2017%20pro%201tb"
+        }
+      ]
+    },
+    {
+      "name": "Net marka + ürün tipi filtre kahve araması makineye gitmez",
+      "bucket": "exact_product_search",
+      "messages": [
+        "jacobs filtre kahve"
+      ],
+      "expected": [
+        "Jacobs filtre kahve için genel arama yapılır; filtre kahve makinesi gösterilmez ve ürün detayına otomatik gidilmez"
+      ],
+      "expectedAudit": [
+        {
+          "category": "supermarket/kahve/filtre-kahve",
+          "productType": "filter_coffee",
+          "brand": "Jacobs",
+          "exactProduct": false,
+          "searchActionHref": "/ara?q=Jacobs%20filtre%20kahve"
+        }
+      ]
+    },
+    {
+      "name": "Beğenmedim aktif bağlamda alternatif üretir",
+      "bucket": "short_commands",
+      "messages": [
+        "Kırmızı Apple telefon",
+        "Beğenmedim"
+      ],
+      "expected": [
+        "Kırmızı Apple telefonlar listelenir",
+        "Telefon bağlamı korunur, renk/storage gevşetilerek alternatifler listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "brand": "Apple",
+          "color": "Kırmızı"
+        },
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "brand": null,
+          "color": null,
+          "shouldKeepContext": true,
+          "action": "user_requested_removal"
+        }
+      ]
+    },
+    {
+      "name": "Parfümden ayakkabıya ana kategori değişimi",
+      "bucket": "intent_reset",
+      "messages": [
+        "Parfüm göster",
+        "Ayakkabı göster"
+      ],
+      "expected": [
+        "Parfümler listelenir",
+        "Parfüm bağlamı sıfırlanır ve ayakkabılar listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "parfum",
+          "productType": "perfume"
+        },
+        {
+          "category": "moda/erkek-ayakkabi/sneaker",
+          "productType": "shoes",
+          "shouldResetContext": true
+        }
+      ]
+    },
+    {
+      "name": "Kısa özellik komutları bağlamı korur",
+      "bucket": "short_commands",
+      "messages": [
+        "Samsung telefon",
+        "256 GB",
+        "Pro olan",
+        "En popüler"
+      ],
+      "expected": [
+        "Samsung telefonlar listelenir",
+        "Samsung telefon bağlamında 256GB depolama uygulanır",
+        "Aynı bağlamda Pro özelliği uygulanır",
+        "Aynı filtreler korunup popüler sıralama uygulanır"
+      ],
+      "expectedAudit": [
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "brand": "Samsung"
+        },
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "brand": "Samsung",
+          "storage": "256GB",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "brand": "Samsung",
+          "storage": "256GB",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "brand": "Samsung",
+          "storage": "256GB",
+          "sort": "best_value",
+          "shouldKeepContext": true
+        }
+      ]
+    },
+    {
+      "name": "Mat kelimesi kozmetikte mat ruj olarak ayrılır",
+      "bucket": "same_word_different_meaning",
+      "messages": [
+        "Mat ruj",
+        "Mat"
+      ],
+      "expected": [
+        "Mat ruj ürünleri listelenir",
+        "Tek kelime mat yeni yoga/pilates matı aramasına döner"
+      ],
+      "expectedAudit": [
+        {
+          "category": "kozmetik/makyaj/ruj",
+          "productType": "matte_lipstick"
+        },
+        {
+          "category": "spor-outdoor/fitness/yoga-pilates",
+          "productType": "yoga_mat",
+          "shouldResetContext": true
+        }
+      ]
+    },
+    {
+      "name": "Kombinasyonlu daraltma: Kırmızı telefon -> Apple -> Siyah",
+      "bucket": "generated_refinement",
+      "messages": [
+        "Kırmızı telefon",
+        "Apple olsun",
+        "Siyah olsun",
+        "Başka göster"
+      ],
+      "expected": [
+        "Kırmızı telefon listelenir",
+        "Apple markasıyla daraltılır",
+        "Siyah rengine geçilir",
+        "Aynı kategoride alternatifler listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "color": "Kırmızı"
+        },
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "color": "Kırmızı",
+          "brand": "Apple",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "color": "Siyah",
+          "brand": "Apple",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "brand": null,
+          "shouldKeepContext": true,
+          "action": "user_requested_removal"
+        }
+      ]
+    },
+    {
+      "name": "Kombinasyonlu daraltma: Siyah telefon -> Samsung -> Mavi",
+      "bucket": "generated_refinement",
+      "messages": [
+        "Siyah telefon",
+        "Samsung olsun",
+        "Mavi olsun",
+        "Başka göster"
+      ],
+      "expected": [
+        "Siyah telefon listelenir",
+        "Samsung markasıyla daraltılır",
+        "Mavi rengine geçilir",
+        "Aynı kategoride alternatifler listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "color": "Siyah"
+        },
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "color": "Siyah",
+          "brand": "Samsung",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "color": "Mavi",
+          "brand": "Samsung",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "brand": null,
+          "shouldKeepContext": true,
+          "action": "user_requested_removal"
+        }
+      ]
+    },
+    {
+      "name": "Kombinasyonlu daraltma: Mavi telefon -> Xiaomi -> Kırmızı",
+      "bucket": "generated_refinement",
+      "messages": [
+        "Mavi telefon",
+        "Xiaomi olsun",
+        "Kırmızı olsun",
+        "Başka göster"
+      ],
+      "expected": [
+        "Mavi telefon listelenir",
+        "Xiaomi markasıyla daraltılır",
+        "Kırmızı rengine geçilir",
+        "Aynı kategoride alternatifler listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "color": "Mavi"
+        },
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "color": "Mavi",
+          "brand": "Xiaomi",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "color": "Kırmızı",
+          "brand": "Xiaomi",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "akilli-telefon",
+          "productType": "phone",
+          "brand": null,
+          "shouldKeepContext": true,
+          "action": "user_requested_removal"
+        }
+      ]
+    },
+    {
+      "name": "Kombinasyonlu daraltma: Siyah laptop -> Lenovo -> Gri",
+      "bucket": "generated_refinement",
+      "messages": [
+        "Siyah laptop",
+        "Lenovo olsun",
+        "Gri olsun",
+        "Başka göster"
+      ],
+      "expected": [
+        "Siyah laptop listelenir",
+        "Lenovo markasıyla daraltılır",
+        "Gri rengine geçilir",
+        "Aynı kategoride alternatifler listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "laptop",
+          "productType": "laptop",
+          "color": "Siyah"
+        },
+        {
+          "category": "laptop",
+          "productType": "laptop",
+          "color": "Siyah",
+          "brand": "Lenovo",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "laptop",
+          "productType": "laptop",
+          "color": "Gri",
+          "brand": "Lenovo",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "laptop",
+          "productType": "laptop",
+          "brand": null,
+          "shouldKeepContext": true,
+          "action": "user_requested_removal"
+        }
+      ]
+    },
+    {
+      "name": "Kombinasyonlu daraltma: Gri laptop -> Asus -> Beyaz",
+      "bucket": "generated_refinement",
+      "messages": [
+        "Gri laptop",
+        "Asus olsun",
+        "Beyaz olsun",
+        "Başka göster"
+      ],
+      "expected": [
+        "Gri laptop listelenir",
+        "Asus markasıyla daraltılır",
+        "Beyaz rengine geçilir",
+        "Aynı kategoride alternatifler listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "laptop",
+          "productType": "laptop",
+          "color": "Gri"
+        },
+        {
+          "category": "laptop",
+          "productType": "laptop",
+          "color": "Gri",
+          "brand": "Asus",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "laptop",
+          "productType": "laptop",
+          "color": "Beyaz",
+          "brand": "Asus",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "laptop",
+          "productType": "laptop",
+          "brand": null,
+          "shouldKeepContext": true,
+          "action": "user_requested_removal"
+        }
+      ]
+    },
+    {
+      "name": "Kombinasyonlu daraltma: Beyaz laptop -> MSI -> Siyah",
+      "bucket": "generated_refinement",
+      "messages": [
+        "Beyaz laptop",
+        "MSI olsun",
+        "Siyah olsun",
+        "Başka göster"
+      ],
+      "expected": [
+        "Beyaz laptop listelenir",
+        "MSI markasıyla daraltılır",
+        "Siyah rengine geçilir",
+        "Aynı kategoride alternatifler listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "laptop",
+          "productType": "laptop",
+          "color": "Beyaz"
+        },
+        {
+          "category": "laptop",
+          "productType": "laptop",
+          "color": "Beyaz",
+          "brand": "MSI",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "laptop",
+          "productType": "laptop",
+          "color": "Siyah",
+          "brand": "MSI",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "laptop",
+          "productType": "laptop",
+          "brand": null,
+          "shouldKeepContext": true,
+          "action": "user_requested_removal"
+        }
+      ]
+    },
+    {
+      "name": "Kombinasyonlu daraltma: Sarı telefon kılıfı -> Apple -> Siyah",
+      "bucket": "generated_refinement",
+      "messages": [
+        "Sarı telefon kılıfı",
+        "Apple olsun",
+        "Siyah olsun",
+        "Başka göster"
+      ],
+      "expected": [
+        "Sarı telefon kılıfı listelenir",
+        "Apple markasıyla daraltılır",
+        "Siyah rengine geçilir",
+        "Aynı kategoride alternatifler listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "elektronik/telefon/kilif",
+          "productType": "phone_case",
+          "color": "Sarı"
+        },
+        {
+          "category": "elektronik/telefon/kilif",
+          "productType": "phone_case",
+          "color": "Sarı",
+          "brand": "Apple",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "elektronik/telefon/kilif",
+          "productType": "phone_case",
+          "color": "Siyah",
+          "brand": "Apple",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "elektronik/telefon/kilif",
+          "productType": "phone_case",
+          "brand": null,
+          "shouldKeepContext": true,
+          "action": "user_requested_removal"
+        }
+      ]
+    },
+    {
+      "name": "Kombinasyonlu daraltma: Siyah telefon kılıfı -> Samsung -> Şeffaf",
+      "bucket": "generated_refinement",
+      "messages": [
+        "Siyah telefon kılıfı",
+        "Samsung olsun",
+        "Şeffaf olsun",
+        "Başka göster"
+      ],
+      "expected": [
+        "Siyah telefon kılıfı listelenir",
+        "Samsung markasıyla daraltılır",
+        "Şeffaf rengine geçilir",
+        "Aynı kategoride alternatifler listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "elektronik/telefon/kilif",
+          "productType": "phone_case",
+          "color": "Siyah"
+        },
+        {
+          "category": "elektronik/telefon/kilif",
+          "productType": "phone_case",
+          "color": "Siyah",
+          "brand": "Samsung",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "elektronik/telefon/kilif",
+          "productType": "phone_case",
+          "color": "Şeffaf",
+          "brand": "Samsung",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "elektronik/telefon/kilif",
+          "productType": "phone_case",
+          "brand": null,
+          "shouldKeepContext": true,
+          "action": "user_requested_removal"
+        }
+      ]
+    },
+    {
+      "name": "Kombinasyonlu daraltma: Şeffaf telefon kılıfı -> Xiaomi -> Sarı",
+      "bucket": "generated_refinement",
+      "messages": [
+        "Şeffaf telefon kılıfı",
+        "Xiaomi olsun",
+        "Sarı olsun",
+        "Başka göster"
+      ],
+      "expected": [
+        "Şeffaf telefon kılıfı listelenir",
+        "Xiaomi markasıyla daraltılır",
+        "Sarı rengine geçilir",
+        "Aynı kategoride alternatifler listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "elektronik/telefon/kilif",
+          "productType": "phone_case",
+          "color": "Şeffaf"
+        },
+        {
+          "category": "elektronik/telefon/kilif",
+          "productType": "phone_case",
+          "color": "Şeffaf",
+          "brand": "Xiaomi",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "elektronik/telefon/kilif",
+          "productType": "phone_case",
+          "color": "Sarı",
+          "brand": "Xiaomi",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "elektronik/telefon/kilif",
+          "productType": "phone_case",
+          "brand": null,
+          "shouldKeepContext": true,
+          "action": "user_requested_removal"
+        }
+      ]
+    },
+    {
+      "name": "Kombinasyonlu daraltma: Kahverengi filtre kahve -> Jacobs -> Siyah",
+      "bucket": "generated_refinement",
+      "messages": [
+        "Kahverengi filtre kahve",
+        "Jacobs olsun",
+        "Siyah olsun",
+        "Başka göster"
+      ],
+      "expected": [
+        "Kahverengi filtre kahve listelenir",
+        "Jacobs markasıyla daraltılır",
+        "Siyah rengine geçilir",
+        "Aynı kategoride alternatifler listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "supermarket/kahve/filtre-kahve",
+          "productType": "filter_coffee",
+          "color": "Kahverengi"
+        },
+        {
+          "category": "supermarket/kahve/filtre-kahve",
+          "productType": "filter_coffee",
+          "color": "Kahverengi",
+          "brand": "Jacobs",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "supermarket/kahve/filtre-kahve",
+          "productType": "filter_coffee",
+          "color": "Siyah",
+          "brand": "Jacobs",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "supermarket/kahve/filtre-kahve",
+          "productType": "filter_coffee",
+          "brand": null,
+          "shouldKeepContext": true,
+          "action": "user_requested_removal"
+        }
+      ]
+    },
+    {
+      "name": "Kombinasyonlu daraltma: Siyah filtre kahve -> Tchibo -> Beyaz",
+      "bucket": "generated_refinement",
+      "messages": [
+        "Siyah filtre kahve",
+        "Tchibo olsun",
+        "Beyaz olsun",
+        "Başka göster"
+      ],
+      "expected": [
+        "Siyah filtre kahve listelenir",
+        "Tchibo markasıyla daraltılır",
+        "Beyaz rengine geçilir",
+        "Aynı kategoride alternatifler listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "supermarket/kahve/filtre-kahve",
+          "productType": "filter_coffee",
+          "color": "Siyah"
+        },
+        {
+          "category": "supermarket/kahve/filtre-kahve",
+          "productType": "filter_coffee",
+          "color": "Siyah",
+          "brand": "Tchibo",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "supermarket/kahve/filtre-kahve",
+          "productType": "filter_coffee",
+          "color": "Beyaz",
+          "brand": "Tchibo",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "supermarket/kahve/filtre-kahve",
+          "productType": "filter_coffee",
+          "brand": null,
+          "shouldKeepContext": true,
+          "action": "user_requested_removal"
+        }
+      ]
+    },
+    {
+      "name": "Kombinasyonlu daraltma: Beyaz filtre kahve -> Lavazza -> Kahverengi",
+      "bucket": "generated_refinement",
+      "messages": [
+        "Beyaz filtre kahve",
+        "Lavazza olsun",
+        "Kahverengi olsun",
+        "Başka göster"
+      ],
+      "expected": [
+        "Beyaz filtre kahve listelenir",
+        "Lavazza markasıyla daraltılır",
+        "Kahverengi rengine geçilir",
+        "Aynı kategoride alternatifler listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "supermarket/kahve/filtre-kahve",
+          "productType": "filter_coffee",
+          "color": "Beyaz"
+        },
+        {
+          "category": "supermarket/kahve/filtre-kahve",
+          "productType": "filter_coffee",
+          "color": "Beyaz",
+          "brand": "Lavazza",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "supermarket/kahve/filtre-kahve",
+          "productType": "filter_coffee",
+          "color": "Kahverengi",
+          "brand": "Lavazza",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "supermarket/kahve/filtre-kahve",
+          "productType": "filter_coffee",
+          "brand": null,
+          "shouldKeepContext": true,
+          "action": "user_requested_removal"
+        }
+      ]
+    },
+    {
+      "name": "Kombinasyonlu daraltma: Siyah kahve makinesi -> DeLonghi -> Beyaz",
+      "bucket": "generated_refinement",
+      "messages": [
+        "Siyah kahve makinesi",
+        "DeLonghi olsun",
+        "Beyaz olsun",
+        "Başka göster"
+      ],
+      "expected": [
+        "Siyah kahve makinesi listelenir",
+        "DeLonghi markasıyla daraltılır",
+        "Beyaz rengine geçilir",
+        "Aynı kategoride alternatifler listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+          "productType": "coffee_machine",
+          "color": "Siyah"
+        },
+        {
+          "category": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+          "productType": "coffee_machine",
+          "color": "Siyah",
+          "brand": "DeLonghi",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+          "productType": "coffee_machine",
+          "color": "Beyaz",
+          "brand": "DeLonghi",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+          "productType": "coffee_machine",
+          "brand": null,
+          "shouldKeepContext": true,
+          "action": "user_requested_removal"
+        }
+      ]
+    },
+    {
+      "name": "Kombinasyonlu daraltma: Beyaz kahve makinesi -> Philips -> Gri",
+      "bucket": "generated_refinement",
+      "messages": [
+        "Beyaz kahve makinesi",
+        "Philips olsun",
+        "Gri olsun",
+        "Başka göster"
+      ],
+      "expected": [
+        "Beyaz kahve makinesi listelenir",
+        "Philips markasıyla daraltılır",
+        "Gri rengine geçilir",
+        "Aynı kategoride alternatifler listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+          "productType": "coffee_machine",
+          "color": "Beyaz"
+        },
+        {
+          "category": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+          "productType": "coffee_machine",
+          "color": "Beyaz",
+          "brand": "Philips",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+          "productType": "coffee_machine",
+          "color": "Gri",
+          "brand": "Philips",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+          "productType": "coffee_machine",
+          "brand": null,
+          "shouldKeepContext": true,
+          "action": "user_requested_removal"
+        }
+      ]
+    },
+    {
+      "name": "Kombinasyonlu daraltma: Gri kahve makinesi -> Krups -> Siyah",
+      "bucket": "generated_refinement",
+      "messages": [
+        "Gri kahve makinesi",
+        "Krups olsun",
+        "Siyah olsun",
+        "Başka göster"
+      ],
+      "expected": [
+        "Gri kahve makinesi listelenir",
+        "Krups markasıyla daraltılır",
+        "Siyah rengine geçilir",
+        "Aynı kategoride alternatifler listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+          "productType": "coffee_machine",
+          "color": "Gri"
+        },
+        {
+          "category": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+          "productType": "coffee_machine",
+          "color": "Gri",
+          "brand": "Krups",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+          "productType": "coffee_machine",
+          "color": "Siyah",
+          "brand": "Krups",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+          "productType": "coffee_machine",
+          "brand": null,
+          "shouldKeepContext": true,
+          "action": "user_requested_removal"
+        }
+      ]
+    },
+    {
+      "name": "Kombinasyonlu daraltma: Mor yoga matı -> Nike -> Mavi",
+      "bucket": "generated_refinement",
+      "messages": [
+        "Mor yoga matı",
+        "Nike olsun",
+        "Mavi olsun",
+        "Başka göster"
+      ],
+      "expected": [
+        "Mor yoga matı listelenir",
+        "Nike markasıyla daraltılır",
+        "Mavi rengine geçilir",
+        "Aynı kategoride alternatifler listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "spor-outdoor/fitness/yoga-pilates",
+          "productType": "yoga_mat",
+          "color": "Mor"
+        },
+        {
+          "category": "spor-outdoor/fitness/yoga-pilates",
+          "productType": "yoga_mat",
+          "color": "Mor",
+          "brand": "Nike",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "spor-outdoor/fitness/yoga-pilates",
+          "productType": "yoga_mat",
+          "color": "Mavi",
+          "brand": "Nike",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "spor-outdoor/fitness/yoga-pilates",
+          "productType": "yoga_mat",
+          "brand": null,
+          "shouldKeepContext": true,
+          "action": "user_requested_removal"
+        }
+      ]
+    },
+    {
+      "name": "Kombinasyonlu daraltma: Mavi yoga matı -> Adidas -> Siyah",
+      "bucket": "generated_refinement",
+      "messages": [
+        "Mavi yoga matı",
+        "Adidas olsun",
+        "Siyah olsun",
+        "Başka göster"
+      ],
+      "expected": [
+        "Mavi yoga matı listelenir",
+        "Adidas markasıyla daraltılır",
+        "Siyah rengine geçilir",
+        "Aynı kategoride alternatifler listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "spor-outdoor/fitness/yoga-pilates",
+          "productType": "yoga_mat",
+          "color": "Mavi"
+        },
+        {
+          "category": "spor-outdoor/fitness/yoga-pilates",
+          "productType": "yoga_mat",
+          "color": "Mavi",
+          "brand": "Adidas",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "spor-outdoor/fitness/yoga-pilates",
+          "productType": "yoga_mat",
+          "color": "Siyah",
+          "brand": "Adidas",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "spor-outdoor/fitness/yoga-pilates",
+          "productType": "yoga_mat",
+          "brand": null,
+          "shouldKeepContext": true,
+          "action": "user_requested_removal"
+        }
+      ]
+    },
+    {
+      "name": "Kombinasyonlu daraltma: Siyah yoga matı -> Decathlon -> Mor",
+      "bucket": "generated_refinement",
+      "messages": [
+        "Siyah yoga matı",
+        "Decathlon olsun",
+        "Mor olsun",
+        "Başka göster"
+      ],
+      "expected": [
+        "Siyah yoga matı listelenir",
+        "Decathlon markasıyla daraltılır",
+        "Mor rengine geçilir",
+        "Aynı kategoride alternatifler listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "spor-outdoor/fitness/yoga-pilates",
+          "productType": "yoga_mat",
+          "color": "Siyah"
+        },
+        {
+          "category": "spor-outdoor/fitness/yoga-pilates",
+          "productType": "yoga_mat",
+          "color": "Siyah",
+          "brand": "Decathlon",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "spor-outdoor/fitness/yoga-pilates",
+          "productType": "yoga_mat",
+          "color": "Mor",
+          "brand": "Decathlon",
+          "shouldKeepContext": true
+        },
+        {
+          "category": "spor-outdoor/fitness/yoga-pilates",
+          "productType": "yoga_mat",
+          "brand": null,
+          "shouldKeepContext": true,
+          "action": "user_requested_removal"
+        }
+      ]
+    },
+    {
+      "name": "Niyet değişimi: Telefon -> Kahve makinesi",
+      "bucket": "generated_reset",
+      "messages": [
+        "telefon",
+        "kahve makinesi",
+        "En ucuz"
+      ],
+      "expected": [
+        "telefon listelenir",
+        "Yeni ana kategori olan kahve makinesi listelenir ve eski bağlam sıfırlanır",
+        "Aktif kahve makinesi bağlamında en ucuz sonuçlar listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "akilli-telefon",
+          "productType": "phone"
+        },
+        {
+          "category": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+          "productType": "coffee_machine",
+          "shouldResetContext": true,
+          "action": "category_changed_reset"
+        },
+        {
+          "category": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+          "productType": "coffee_machine",
+          "sort": "price_asc",
+          "shouldKeepContext": true
+        }
+      ]
+    },
+    {
+      "name": "Niyet değişimi: Kahve makinesi -> Filtre kahve",
+      "bucket": "generated_reset",
+      "messages": [
+        "kahve makinesi",
+        "filtre kahve",
+        "En ucuz"
+      ],
+      "expected": [
+        "kahve makinesi listelenir",
+        "Yeni ana kategori olan filtre kahve listelenir ve eski bağlam sıfırlanır",
+        "Aktif filtre kahve bağlamında en ucuz sonuçlar listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+          "productType": "coffee_machine"
+        },
+        {
+          "category": "supermarket/kahve/filtre-kahve",
+          "productType": "filter_coffee",
+          "shouldResetContext": true,
+          "action": "category_changed_reset"
+        },
+        {
+          "category": "supermarket/kahve/filtre-kahve",
+          "productType": "filter_coffee",
+          "sort": "price_asc",
+          "shouldKeepContext": true
+        }
+      ]
+    },
+    {
+      "name": "Niyet değişimi: Filtre kahve -> Yoga matı",
+      "bucket": "generated_reset",
+      "messages": [
+        "filtre kahve",
+        "yoga matı",
+        "En ucuz"
+      ],
+      "expected": [
+        "filtre kahve listelenir",
+        "Yeni ana kategori olan yoga matı listelenir ve eski bağlam sıfırlanır",
+        "Aktif yoga matı bağlamında en ucuz sonuçlar listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "supermarket/kahve/filtre-kahve",
+          "productType": "filter_coffee"
+        },
+        {
+          "category": "spor-outdoor/fitness/yoga-pilates",
+          "productType": "yoga_mat",
+          "shouldResetContext": true,
+          "action": "category_changed_reset"
+        },
+        {
+          "category": "spor-outdoor/fitness/yoga-pilates",
+          "productType": "yoga_mat",
+          "sort": "price_asc",
+          "shouldKeepContext": true
+        }
+      ]
+    },
+    {
+      "name": "Niyet değişimi: Telefon -> Kılıf",
+      "bucket": "generated_reset",
+      "messages": [
+        "telefon",
+        "telefon kılıfı",
+        "En ucuz"
+      ],
+      "expected": [
+        "telefon listelenir",
+        "Yeni ana kategori olan telefon kılıfı listelenir ve eski bağlam sıfırlanır",
+        "Aktif telefon kılıfı bağlamında en ucuz sonuçlar listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "akilli-telefon",
+          "productType": "phone"
+        },
+        {
+          "category": "elektronik/telefon/kilif",
+          "productType": "phone_case",
+          "shouldResetContext": true,
+          "action": "category_changed_reset"
+        },
+        {
+          "category": "elektronik/telefon/kilif",
+          "productType": "phone_case",
+          "sort": "price_asc",
+          "shouldKeepContext": true
+        }
+      ]
+    },
+    {
+      "name": "Niyet değişimi: Laptop -> Mouse",
+      "bucket": "generated_reset",
+      "messages": [
+        "laptop",
+        "mouse",
+        "En ucuz"
+      ],
+      "expected": [
+        "laptop listelenir",
+        "Yeni ana kategori olan mouse listelenir ve eski bağlam sıfırlanır",
+        "Aktif mouse bağlamında en ucuz sonuçlar listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "laptop",
+          "productType": "laptop"
+        },
+        {
+          "category": "elektronik/bilgisayar-tablet/bilesenler/cevre-birim/mouse",
+          "productType": "mouse",
+          "shouldResetContext": true,
+          "action": "category_changed_reset"
+        },
+        {
+          "category": "elektronik/bilgisayar-tablet/bilesenler/cevre-birim/mouse",
+          "productType": "mouse",
+          "sort": "price_asc",
+          "shouldKeepContext": true
+        }
+      ]
+    },
+    {
+      "name": "Niyet değişimi: Parfüm -> Ayakkabı",
+      "bucket": "generated_reset",
+      "messages": [
+        "parfüm",
+        "ayakkabı",
+        "En ucuz"
+      ],
+      "expected": [
+        "parfüm listelenir",
+        "Yeni ana kategori olan ayakkabı listelenir ve eski bağlam sıfırlanır",
+        "Aktif ayakkabı bağlamında en ucuz sonuçlar listelenir"
+      ],
+      "expectedAudit": [
+        {
+          "category": "parfum",
+          "productType": "perfume"
+        },
+        {
+          "category": "moda/erkek-ayakkabi/sneaker",
+          "productType": "shoes",
+          "shouldResetContext": true,
+          "action": "category_changed_reset"
+        },
+        {
+          "category": "moda/erkek-ayakkabi/sneaker",
+          "productType": "shoes",
+          "sort": "price_asc",
+          "shouldKeepContext": true
+        }
+      ]
+    }
+  ]
+}

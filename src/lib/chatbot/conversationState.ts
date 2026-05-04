@@ -14,7 +14,7 @@
  *   kategori değişir      → RESET (telefon → laptop = tertemiz başla)
  *   single word kategori  → KEEP_CATEGORY_DROP_FILTERS ("telefon" → kategori
  *                            kalsın, brand/color sıfırla — alternatife bakıyor)
- *   shortcut chip         → preserveCategoryOnly (popüler / tavsiye)
+ *   shortcut chip         → preserveCategoryOnly (hepsini / tavsiye)
  */
 
 import type { IntentType } from "./intentTypes";
@@ -100,6 +100,10 @@ export interface RawIntent {
   sort_by?: string | null;
   raw_query?: string;
   keywords?: string[];
+  clear_brand_filter?: boolean;
+  clear_color_filter?: boolean;
+  clear_storage_filter?: boolean;
+  clear_price_range?: boolean;
 }
 
 const CATEGORY_KEYWORDS = new Set([
@@ -156,6 +160,11 @@ function detectRemoval(msg: string): { brand?: boolean; color?: boolean; price?:
   return out;
 }
 
+function sameStringArray(a: string[] = [], b: string[] = []): boolean {
+  if (a.length !== b.length) return false;
+  return a.every((value, index) => normalize(value) === normalize(b[index] ?? ""));
+}
+
 export function mergeIntent(
   prev: ConversationState,
   rawIntent: RawIntent,
@@ -182,13 +191,56 @@ export function mergeIntent(
 
   const newCategory = intentHint?.category_slug ?? rawIntent.category_slug ?? null;
   if (newCategory && prev.category_slug && newCategory !== prev.category_slug) {
+    const next: ConversationState = {
+      ...emptyState(),
+      category_slug: newCategory,
+      turn_count_in_category: 1,
+    };
+    const setDimensions = ["category"];
+    if (rawIntent.brand_filter?.length) {
+      next.brand_filter = rawIntent.brand_filter;
+      setDimensions.push("brand");
+    }
+    if (rawIntent.variant_color_patterns?.length) {
+      next.variant_color_patterns = rawIntent.variant_color_patterns;
+      setDimensions.push("color");
+    }
+    if (rawIntent.variant_storage_patterns?.length) {
+      next.variant_storage_patterns = rawIntent.variant_storage_patterns;
+      setDimensions.push("storage");
+    }
+    if (rawIntent.price_min != null) {
+      next.price_min = rawIntent.price_min;
+      setDimensions.push("price_min");
+    }
+    if (rawIntent.price_max != null) {
+      next.price_max = rawIntent.price_max;
+      setDimensions.push("price_max");
+    }
+    if (rawIntent.features?.length) {
+      next.features = [...new Set(rawIntent.features)];
+      setDimensions.push("features");
+    }
+    if (rawIntent.installment_months_min != null) {
+      next.installment_months_min = rawIntent.installment_months_min;
+      setDimensions.push("installment");
+    }
+    if (rawIntent.min_avg_rating != null) {
+      next.min_avg_rating = rawIntent.min_avg_rating;
+      setDimensions.push("rating");
+    }
+    if (rawIntent.sort_by != null) {
+      next.sort_by = rawIntent.sort_by;
+      setDimensions.push("sort_by");
+    }
+    next.last_set_dimensions = setDimensions;
     return {
-      next: { ...emptyState(), category_slug: newCategory, turn_count_in_category: 1 },
+      next,
       action: "category_changed_reset",
     };
   }
   const msgNorm = normalize(userMessage);
-  const isShortcut = /^(en populer|hepsini goster|tavsiye ver|yeni arama)/i.test(msgNorm);
+  const isShortcut = /^(hepsini goster|tavsiye ver|yeni arama)$/i.test(msgNorm);
   if (isShortcut) {
     return {
       next: {
@@ -214,27 +266,27 @@ export function mergeIntent(
     };
   }
   const removals = detectRemoval(userMessage);
-  if (Object.keys(removals).length > 0) {
-    const next = {
-      ...prev,
-      intent_type: baseIntentType,
-      turn_count_in_category: prev.turn_count_in_category + 1,
-    };
-    if (removals.brand) next.brand_filter = [];
-    if (removals.color) next.variant_color_patterns = [];
-    if (removals.price) { next.price_min = null; next.price_max = null; }
-    next.category_slug = newCategory ?? prev.category_slug;
-    return { next, action: "user_requested_removal" };
-  }
+  const explicitClears = {
+    brand: rawIntent.clear_brand_filter === true,
+    color: rawIntent.clear_color_filter === true,
+    storage: rawIntent.clear_storage_filter === true,
+    price: rawIntent.clear_price_range === true,
+  };
+  const hasRemoval =
+    Object.keys(removals).length > 0 ||
+    explicitClears.brand ||
+    explicitClears.color ||
+    explicitClears.storage ||
+    explicitClears.price;
   const setDimensions: string[] = [];
   const next: ConversationState = {
     intent_type: baseIntentType,
     category_slug: newCategory ?? prev.category_slug,
-    brand_filter: prev.brand_filter,
-    variant_color_patterns: prev.variant_color_patterns,
-    variant_storage_patterns: prev.variant_storage_patterns,
-    price_min: prev.price_min,
-    price_max: prev.price_max,
+    brand_filter: removals.brand || explicitClears.brand ? [] : prev.brand_filter,
+    variant_color_patterns: removals.color || explicitClears.color ? [] : prev.variant_color_patterns,
+    variant_storage_patterns: explicitClears.storage ? [] : prev.variant_storage_patterns,
+    price_min: removals.price || explicitClears.price ? null : prev.price_min,
+    price_max: removals.price || explicitClears.price ? null : prev.price_max,
     features: prev.features ?? [],
     installment_months_min: prev.installment_months_min ?? null,
     min_avg_rating: prev.min_avg_rating ?? null,
@@ -259,10 +311,20 @@ export function mergeIntent(
     } else {
       next.brand_filter = rawIntent.brand_filter;
     }
-    setDimensions.push("brand");
+    if (!sameStringArray(next.brand_filter, prev.brand_filter)) setDimensions.push("brand");
   }
-  if (rawIntent.variant_color_patterns?.length) { next.variant_color_patterns = rawIntent.variant_color_patterns; setDimensions.push("color"); }
-  if (rawIntent.variant_storage_patterns?.length) { next.variant_storage_patterns = rawIntent.variant_storage_patterns; setDimensions.push("storage"); }
+  if (rawIntent.variant_color_patterns?.length) {
+    next.variant_color_patterns = rawIntent.variant_color_patterns;
+    if (!sameStringArray(next.variant_color_patterns, prev.variant_color_patterns)) {
+      setDimensions.push("color");
+    }
+  }
+  if (rawIntent.variant_storage_patterns?.length) {
+    next.variant_storage_patterns = rawIntent.variant_storage_patterns;
+    if (!sameStringArray(next.variant_storage_patterns, prev.variant_storage_patterns)) {
+      setDimensions.push("storage");
+    }
+  }
   if (rawIntent.price_min != null) { next.price_min = rawIntent.price_min; setDimensions.push("price_min"); }
   if (rawIntent.price_max != null) { next.price_max = rawIntent.price_max; setDimensions.push("price_max"); }
   // Features additive (önceki + yeni union, sırasız set)
@@ -283,6 +345,10 @@ export function mergeIntent(
     setDimensions.push("sort_by");
   }
   next.last_set_dimensions = setDimensions;
+
+  if (hasRemoval) {
+    return { next, action: "user_requested_removal" };
+  }
 
   // Specialized single-dimension labels (eval expectations).
   // Multi-dim ekleme ya da hiç yok ise generic label.

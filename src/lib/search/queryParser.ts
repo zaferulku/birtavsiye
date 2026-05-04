@@ -114,54 +114,77 @@ function extractPrice(query: string): { min: number | null; max: number | null; 
   let min: number | null = null;
   let max: number | null = null;
 
-  // P6.19: 'bin' çarpanı yardımcı — match içinde 'bin' geçiyorsa ×1000.
-  const numFromMatch = (numStr: string, hasBin: boolean): number => {
-    const n = parseInt(numStr.replace(/\./g, ""));
-    return hasBin ? n * 1000 : n;
+  // P6.19/P6.30: 'bin'/'k' çarpanı yardımcı — match içinde ölçek
+  // geçiyorsa ×1000. "50k - 80k" gibi kısa bütçe yazımlarını da kapsar.
+  const numFromMatch = (numStr: string, scale?: string): number => {
+    const normalizedScale = normalize(scale ?? "");
+    const normalizedNumber = numStr.includes(",")
+      ? Number(numStr.replace(",", "."))
+      : Number(numStr.replace(/\.(?=\d{3}\b)/g, ""));
+    const n = Number.isFinite(normalizedNumber)
+      ? normalizedNumber
+      : parseInt(numStr.replace(/\D/g, ""), 10);
+    return normalizedScale === "bin" || normalizedScale === "k"
+      ? Math.round(n * 1000)
+      : Math.round(n);
   };
 
+  // "50k - 80k arası" / "50 - 80 bin TL" / "50k ile 80k arası"
+  const scaledRangeRe = /(\d+(?:[.,]\d+)?)\s*(bin|k)?\s*(?:-|–|—|ile)\s*(\d+(?:[.,]\d+)?)\s*(bin|k)?\s*(?:tl|lira|₺)?\s*(?:aralığında|araliginda|arası|arasi)?/i;
+  const scaledRangeM = query.match(scaledRangeRe);
+  if (scaledRangeM) {
+    const sharedScale = scaledRangeM[2] || scaledRangeM[4];
+    const a = numFromMatch(scaledRangeM[1], scaledRangeM[2] || sharedScale);
+    const b = numFromMatch(scaledRangeM[3], scaledRangeM[4] || sharedScale);
+    if (a < b) {
+      min = a;
+      max = b;
+      remaining = remaining.replace(scaledRangeM[0], "").trim();
+    }
+  }
+
   // "X TL altı" / "X TL'nin altında" / "X bin altı"
-  const maxRe = /(\d+(?:\.\d{3})*)\s*(bin)?\s*(?:tl|lira|₺)?(?:'?nin?\s+)?\s*(?:altı|altında|alt)/i;
+  const maxRe = /(\d+(?:[.,]\d+)?)\s*(bin|k)?\s*(?:tl|lira|₺)?(?:'?nin?\s+)?\s*(?:altı|altında|alt)/i;
   const maxM = query.match(maxRe);
   if (maxM) {
-    max = numFromMatch(maxM[1], Boolean(maxM[2]));
+    max = numFromMatch(maxM[1], maxM[2]);
     remaining = remaining.replace(maxM[0], "").trim();
   }
 
   // "X TL üstü" / "X TL'nin üstünde" / "X bin üzeri"
-  const minRe = /(\d+(?:\.\d{3})*)\s*(bin)?\s*(?:tl|lira|₺)?(?:'?nin?\s+)?\s*(?:üstü|üstünde|üst|üzeri)/i;
+  const minRe = /(\d+(?:[.,]\d+)?)\s*(bin|k)?\s*(?:tl|lira|₺)?(?:'?nin?\s+)?\s*(?:üstü|üstünde|üst|üzeri)/i;
   const minM = query.match(minRe);
   if (minM) {
-    min = numFromMatch(minM[1], Boolean(minM[2]));
+    min = numFromMatch(minM[1], minM[2]);
     remaining = remaining.replace(minM[0], "").trim();
   }
 
   // P6.19: "X bine kadar" / "X TL'ye kadar"
   if (max === null) {
-    const kadarRe = /(\d+(?:\.\d{3})*)\s*(bin)?\s*(?:tl|lira|₺)?(?:'?ye)?\s*kadar/i;
+    const kadarRe = /(\d+(?:[.,]\d+)?)\s*(bin|k)?\s*(?:tl|lira|₺)?(?:'?ye)?\s*kadar/i;
     const kadarM = query.match(kadarRe);
     if (kadarM) {
-      max = numFromMatch(kadarM[1], Boolean(kadarM[2]));
+      max = numFromMatch(kadarM[1], kadarM[2]);
       remaining = remaining.replace(kadarM[0], "").trim();
     }
   }
 
   // P6.19: "max X TL" / "en fazla X bin"
   if (max === null) {
-    const maxKwRe = /(?:max|en\s+fazla)\s+(\d+(?:\.\d{3})*)\s*(bin)?\s*(?:tl|lira|₺)?/i;
+    const maxKwRe = /(?:max|en\s+fazla)\s+(\d+(?:[.,]\d+)?)\s*(bin|k)?\s*(?:tl|lira|₺)?/i;
     const maxKwM = query.match(maxKwRe);
     if (maxKwM) {
-      max = numFromMatch(maxKwM[1], Boolean(maxKwM[2]));
+      max = numFromMatch(maxKwM[1], maxKwM[2]);
       remaining = remaining.replace(maxKwM[0], "").trim();
     }
   }
 
   // P6.19: "min X TL" / "en az X bin"
   if (min === null) {
-    const minKwRe = /(?:min|en\s+az)\s+(\d+(?:\.\d{3})*)\s*(bin)?\s*(?:tl|lira|₺)?/i;
+    const minKwRe = /(?:min|en\s+az)\s+(\d+(?:[.,]\d+)?)\s*(bin|k)?\s*(?:tl|lira|₺)?/i;
     const minKwM = query.match(minKwRe);
     if (minKwM) {
-      min = numFromMatch(minKwM[1], Boolean(minKwM[2]));
+      min = numFromMatch(minKwM[1], minKwM[2]);
       remaining = remaining.replace(minKwM[0], "").trim();
     }
   }
@@ -218,7 +241,20 @@ function extractPrice(query: string): { min: number | null; max: number | null; 
 // rev: standalone scan (cache-bağımsız) — Tur 3 Fix 1.
 // TUR 4: giyim eklendi — erkek-giyim-ust, erkek-giyim-alt, kadin-giyim-*, kadin-elbise.
 const STATIC_CATEGORY_KEYWORDS: Record<string, string[]> = {
+  "supermarket/kahve/filtre-kahve": ["filtre kahve"],
+  "supermarket/kahve/turk-kahvesi": ["turk kahvesi", "türk kahvesi"],
+  "supermarket/kahve": ["kahve", "turk kahvesi", "filtre kahve", "espresso", "cekirdek kahve", "granul kahve"],
   "kahve": ["kahve", "turk kahvesi", "filtre kahve", "espresso", "cekirdek kahve", "granul kahve"],
+  "elektronik/telefon/kilif": ["telefon kilifi", "telefon kılıfı", "telefon kiliflari", "telefon kılıfları", "cep telefonu kilifi", "iphone kilifi", "samsung kilifi", "kilif", "kılıf"],
+  "elektronik/telefon/sarj-kablo": ["sarj aleti", "şarj aleti", "sarj cihazi", "şarj cihazı", "hizli sarj", "adaptör", "adaptor", "usb-c kablo"],
+  "elektronik/telefon/aksesuar/mouse-pad": ["mouse pad", "mousepad"],
+  "elektronik/telefon/aksesuar/laptop-cantasi": ["laptop cantasi", "laptop çantası", "notebook cantasi", "bilgisayar cantasi"],
+  "elektronik/bilgisayar-tablet/bilesenler/cevre-birim/mouse": ["mouse", "fare", "oyuncu mouse", "gaming mouse"],
+  "spor-outdoor/fitness/yoga-pilates": ["yoga mati", "yoga matı", "pilates mati", "pilates matı", "mat"],
+  "ev-yasam/temizlik/cop-torbasi-temizlik-araclari/paspas": ["kapi mati", "kapı matı", "kapi paspasi", "kapı paspası", "paspas"],
+  "elektronik/oyun/konsol/oyuncu-koltuk": ["oyuncu koltugu", "oyuncu koltuğu", "gaming koltuk"],
+  "elektronik/bilgisayar-tablet/laptop": ["oyuncu laptopu", "gaming laptop", "oyun laptopu"],
+  "supermarket/konserve-sos/zeytinyagi": ["fritoz yagi", "fritöz yağı", "kizartma yagi", "kızartma yağı"],
   "spor-cantasi": ["spor cantasi", "gym cantasi", "fitness cantasi", "antrenman cantasi"],
   "icecek": ["icecek", "mesrubat", "soda", "gazoz", "kola"],
   // Giyim — cache-bağımsız fallback (LLM dotted slug korumalı)
@@ -234,11 +270,62 @@ const CHATBOT_FALLBACK_CATEGORY_PHRASES: Array<{
   phrases: string[];
 }> = [
   {
+    slug: "elektronik/telefon/kilif",
+    phrases: ["telefon kilifi", "telefon kılıfı", "telefon kiliflari", "telefon kılıfları", "cep telefonu kilifi", "iphone kilifi", "samsung kilifi", "kilif", "kılıf"],
+  },
+  {
+    slug: "elektronik/telefon/sarj-kablo",
+    phrases: ["sarj aleti", "şarj aleti", "sarj cihazi", "şarj cihazı", "telefon sarj aleti", "hizli sarj", "adaptör", "adaptor"],
+  },
+  {
+    slug: "elektronik/telefon/aksesuar/mouse-pad",
+    phrases: ["mouse pad", "mousepad"],
+  },
+  {
+    slug: "elektronik/telefon/aksesuar/laptop-cantasi",
+    phrases: ["laptop cantasi", "laptop çantası", "notebook cantasi", "bilgisayar cantasi"],
+  },
+  {
+    slug: "elektronik/bilgisayar-tablet/bilesenler/cevre-birim/mouse",
+    phrases: ["oyuncu mouse", "gaming mouse", "mouse", "fare"],
+  },
+  {
+    slug: "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+    phrases: ["filtre kahve makinesi", "kahve makinasi", "kahve makinesi", "kahve makineleri", "kahve makinelerini", "espresso makinesi", "kapsullu kahve makinesi"],
+  },
+  {
+    slug: "supermarket/kahve/filtre-kahve",
+    phrases: ["filtre kahve"],
+  },
+  {
+    slug: "spor-outdoor/fitness/yoga-pilates",
+    phrases: ["yoga mati", "yoga matı", "pilates mati", "pilates matı", "mat"],
+  },
+  {
+    slug: "ev-yasam/temizlik/cop-torbasi-temizlik-araclari/paspas",
+    phrases: ["kapi mati", "kapı matı", "kapi paspasi", "kapı paspası", "paspas"],
+  },
+  {
+    slug: "kucuk-ev-aletleri/mutfak/airfryer",
+    phrases: ["airfryer", "hava fritozu", "hava fritözü", "fritoz makinesi", "fritöz makinesi"],
+  },
+  {
+    slug: "supermarket/konserve-sos/zeytinyagi",
+    phrases: ["fritoz yagi", "fritöz yağı", "kizartma yagi", "kızartma yağı"],
+  },
+  {
+    slug: "elektronik/oyun/konsol/oyuncu-koltuk",
+    phrases: ["oyuncu koltugu", "oyuncu koltuğu", "gaming koltuk"],
+  },
+  {
     slug: "telefon",
     phrases: [
       "akilli telefon",
       "cep telefonu",
       "telefon",
+      "telefonlar",
+      "telefonlari",
+      "telefonları",
       "iphone",
       "galaxy",
       "redmi",
@@ -466,6 +553,14 @@ function extractBrand(
   return null;
 }
 
+function hasExplicitBrandCue(query: string): boolean {
+  return /\bmarka|markasi|markası|brand\b/i.test(normalize(query));
+}
+
+function isColorBrandCollision(brand: string | null, color: string | null): boolean {
+  return Boolean(brand && color && normalize(brand) === normalize(color));
+}
+
 // =============================================================================
 // Color detection
 // =============================================================================
@@ -505,7 +600,11 @@ export function parseQuery(
   if (color) patterns.push(`color=${color}`);
 
   // 4. Marka
-  const brand = extractBrand(afterPrice, categories);
+  const detectedBrand = extractBrand(afterPrice, categories);
+  const brand =
+    isColorBrandCollision(detectedBrand, color) && !hasExplicitBrandCue(afterPrice)
+      ? null
+      : detectedBrand;
   if (brand) patterns.push(`brand=${brand}`);
 
   // 5. Kategori

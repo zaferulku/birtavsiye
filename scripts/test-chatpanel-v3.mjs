@@ -29,8 +29,8 @@ async function main() {
   await input.fill('siyah iphone 15');
   await input.press('Enter');
 
-  console.log('4. Wait for /sonuclar navigation');
-  await page.waitForURL(/\/sonuclar/, { timeout: 10_000 });
+  console.log('4. Wait for /ara navigation');
+  await page.waitForURL(/\/ara/, { timeout: 10_000 });
   console.log(`   Arrived at: ${page.url()}`);
 
   console.log('5. Check ChatPanel visibility after navigation');

@@ -36,6 +36,10 @@ import {
   detectChatIntentSignals,
   resolveChatbotCategoryHint,
 } from "../../../lib/chatbot/intentSignals";
+import {
+  buildEcommerceSearchAudit,
+  resolveContextualEcommerceIntent,
+} from "../../../lib/chatbot/ecommerceIntentRules";
 
 export const runtime = "nodejs";
 
@@ -699,7 +703,7 @@ export async function POST(req: Request) {
     }
 
     const feedback = detectFeedback(message);
-    if (feedback) {
+    if (feedback === "wrong") {
       await recordFeedback(
         userId,
         feedback,
@@ -709,13 +713,8 @@ export async function POST(req: Request) {
         decisionIdFromBody
       );
 
-      const reply =
-        feedback === "wrong"
-          ? "Anladım, sonuclar uygun olmamış. Daha spesifik bilgi verir misin? Örneğin marka, fiyat aralığı veya bir özellik söyleyebilirsin."
-          : "Tamam, başka seçeneklere bakalım. Aramayı biraz değiştirir misin? Farklı bir kategori veya marka ekleyebilirsin.";
-
       return respondJson({
-        reply,
+        reply: "Anladım, sonuclar uygun olmamış. Daha spesifik bilgi verir misin? Örneğin marka, fiyat aralığı veya bir özellik söyleyebilirsin.",
         products: [],
         meta: {
           method: "feedback",
@@ -735,8 +734,14 @@ export async function POST(req: Request) {
       categories,
       previousState,
     });
+    const contextualIntent = resolveContextualEcommerceIntent({
+      message,
+      previousState,
+    });
+    const interpretedSearchMessage =
+      contextualIntent.searchQuery || queryInterpretation.searchMessage;
     const intentSignals = detectChatIntentSignals(message);
-    const parsed = parseQuery(queryInterpretation.searchMessage, categories);
+    const parsed = parseQuery(interpretedSearchMessage, categories);
     const categoryTaxonomy = categories.map((category) => category.slug);
 
     // ── Stateful conversation intent merge ────────────────────────────────────
@@ -745,16 +750,18 @@ export async function POST(req: Request) {
     // LLM intent ile state enrich orchestrator sonrası yapılıyor (aşağıda).
     const chatbotCategoryHint = resolveChatbotCategoryHint(message);
     const fallbackCategorySlug =
+      contextualIntent.categorySlug ??
       queryInterpretation.fallbackCategorySlug ??
       chatbotCategoryHint ??
       resolveFallbackCategorySlugFromMessage(message);
     const parsedCategoryRaw = queryInterpretation.usedContextCategory
       ? previousState.category_slug ?? null
-      : resolvePreferredCategoryCandidate(
-      parsed.category_slugs?.[0] ?? null,
-      fallbackCategorySlug,
-      queryInterpretation.searchMessage || message
-    );
+      : contextualIntent.categorySlug ??
+        resolvePreferredCategoryCandidate(
+          parsed.category_slugs?.[0] ?? null,
+          fallbackCategorySlug,
+          interpretedSearchMessage || message
+        );
     // P6.11: Sticky context'i tie-break için geçir. "espresso olsun" gibi
     // follow-up'larda LLM bazen "kahve" gibi kısa bir slug üretir; leaf-suffix
     // birden çok match'lendiğinde (supermarket/kahve vs kucuk-ev-aletleri/
@@ -809,24 +816,54 @@ export async function POST(req: Request) {
 
     // Sort tercihi (popülerlik / puan / fiyat)
     let sortBy: string | null = null;
-    if (/en\s*pop[üu]ler|en\s*çok\s*tercih|en\s*çok\s*satan/i.test(message)) sortBy = "best_value";
+    if (/en\s*ucuz|fiyata\s*g[öo]re\s*artan/i.test(message)) sortBy = "price_asc";
+    else if (/en\s*pahal[ıi]|fiyata\s*g[öo]re\s*azalan/i.test(message)) sortBy = "price_desc";
+    else if (/en\s*pop[üu]ler|en\s*çok\s*tercih|en\s*çok\s*satan/i.test(message)) sortBy = "best_value";
     else if (/en\s*y[üu]ksek\s*puan|en\s*iyi\s*rated/i.test(message)) sortBy = "rating";
+
+    const mergedFeatures = Array.from(new Set([
+      ...features,
+      ...contextualIntent.features,
+    ]));
 
     const rawIntent: RawIntent = {
       intent_type: heuristicClassify(message) ?? "product_search",
       category_slug: resilientParsedCategory,
-      brand_filter: parsed.brand ? [parsed.brand] : [],
+      brand_filter: contextualIntent.brand
+        ? [contextualIntent.brand]
+        : parsed.brand
+          ? [parsed.brand]
+          : [],
       // State holds raw colors (e.g. "Beyaz"); the RPC layer adds %…% wildcards
       // when calling smart_search. Avoids leaking SQL LIKE syntax into state.
-      variant_color_patterns: parsed.color ? [parsed.color] : [],
-      variant_storage_patterns: parsed.storage ? [parsed.storage] : [],
-      price_min: parsed.price_min ?? intentSignals.budget.min,
-      price_max: parsed.price_max ?? intentSignals.budget.max,
-      features: features.length > 0 ? Array.from(new Set(features)) : undefined,
+      variant_color_patterns: contextualIntent.color
+        ? [contextualIntent.color]
+        : parsed.color
+          ? [parsed.color]
+          : [],
+      variant_storage_patterns: contextualIntent.storage
+        ? [contextualIntent.storage]
+        : parsed.storage
+          ? [parsed.storage]
+          : [],
+      price_min:
+        contextualIntent.priceRange.min ??
+        parsed.price_min ??
+        intentSignals.budget.min,
+      price_max:
+        contextualIntent.priceRange.max ??
+        parsed.price_max ??
+        intentSignals.budget.max,
+      features: mergedFeatures.length > 0 ? mergedFeatures : undefined,
       installment_months_min: installmentMin,
       min_avg_rating: minAvgRating,
-      sort_by: sortBy,
+      sort_by: contextualIntent.sortBy ?? sortBy,
       keywords: parsed.keywords ?? [],
+      raw_query: contextualIntent.searchQuery,
+      clear_brand_filter: contextualIntent.rawIntentPatch.clear_brand_filter,
+      clear_color_filter: contextualIntent.rawIntentPatch.clear_color_filter,
+      clear_storage_filter: contextualIntent.rawIntentPatch.clear_storage_filter,
+      clear_price_range: contextualIntent.rawIntentPatch.clear_price_range,
     };
 
     const { next: conversationState, action: initialMergeAction } = mergeIntent(
@@ -851,7 +888,7 @@ export async function POST(req: Request) {
       null;
     const intentFocusedSearchMessage = buildIntentFocusedSearchMessage({
       originalMessage: message,
-      searchMessage: queryInterpretation.searchMessage,
+      searchMessage: interpretedSearchMessage,
       categorySlug: effectiveCategory,
       fallbackCategorySlug,
       signals: intentSignals,
@@ -990,6 +1027,13 @@ export async function POST(req: Request) {
 
     const productLimit = calculateProductLimit(conversationState, mergeAction);
     const responseProducts = orchResult.products.slice(0, productLimit);
+    const ecommerceSearchAudit = buildEcommerceSearchAudit({
+      message,
+      previousState,
+      nextState: conversationState,
+      mergeAction,
+      contextualIntent,
+    });
 
     let loggedDecisionId: number | null = null;
     try {
@@ -1039,7 +1083,9 @@ export async function POST(req: Request) {
               used_context_brand: queryInterpretation.usedContextBrand,
               accessory_hint: queryInterpretation.accessoryHint,
               category_locked_to_state: lockCategorySlug,
+              contextual_search_message: contextualIntent.searchQuery,
             },
+            ecommerce_intent_audit: ecommerceSearchAudit,
             turn_type: turnType,
             merge_action: mergeAction,
           },
@@ -1093,7 +1139,9 @@ export async function POST(req: Request) {
           used_context_brand: queryInterpretation.usedContextBrand,
           accessory_hint: queryInterpretation.accessoryHint,
           category_locked_to_state: lockCategorySlug,
+          contextual_search_message: contextualIntent.searchQuery,
         },
+        ecommerceIntent: ecommerceSearchAudit,
       },
       // _debug field sadece dev/preview'de — prod'a internal architecture sızdırma
       ...(process.env.NODE_ENV !== "production" && {
@@ -1106,6 +1154,7 @@ export async function POST(req: Request) {
           diagnostics: orchResult.diagnostics,
           query_interpretation: queryInterpretation,
           category_locked_to_state: lockCategorySlug,
+          ecommerce_intent_audit: ecommerceSearchAudit,
         },
       }),
     });

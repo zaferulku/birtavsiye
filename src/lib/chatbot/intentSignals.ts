@@ -155,6 +155,66 @@ const USAGE_SIGNALS: Array<{
 
 const CATEGORY_HINTS: Array<{ slug: string; phrases: string[]; anchor: string }> = [
   {
+    slug: "elektronik/telefon/kilif",
+    phrases: ["telefon kilifi", "telefon kılıfı", "telefon kiliflari", "telefon kılıfları", "cep telefonu kilifi", "iphone kilifi", "samsung kilifi", "kilif", "kılıf"],
+    anchor: "telefon kilifi",
+  },
+  {
+    slug: "elektronik/telefon/sarj-kablo",
+    phrases: ["sarj aleti", "sarj cihazi", "sarz aleti", "sarz aletti", "adaptör", "adaptor", "charger"],
+    anchor: "sarj aleti",
+  },
+  {
+    slug: "elektronik/telefon/aksesuar/mouse-pad",
+    phrases: ["mouse pad", "mousepad"],
+    anchor: "mouse pad",
+  },
+  {
+    slug: "elektronik/telefon/aksesuar/laptop-cantasi",
+    phrases: ["laptop cantasi", "laptop çantası", "notebook cantasi", "bilgisayar cantasi"],
+    anchor: "laptop cantasi",
+  },
+  {
+    slug: "elektronik/bilgisayar-tablet/bilesenler/cevre-birim/mouse",
+    phrases: ["oyuncu mouse", "gaming mouse", "mouse", "fare"],
+    anchor: "mouse",
+  },
+  {
+    slug: "kucuk-ev-aletleri/mutfak/kahve-makinesi",
+    phrases: ["kahve makinesi", "kahve makinasi", "kahve makineleri", "kahve makinelerini", "espresso makinesi", "filtre kahve makinesi"],
+    anchor: "kahve makinesi",
+  },
+  {
+    slug: "supermarket/kahve/filtre-kahve",
+    phrases: ["filtre kahve"],
+    anchor: "filtre kahve",
+  },
+  {
+    slug: "spor-outdoor/fitness/yoga-pilates",
+    phrases: ["yoga mati", "yoga matı", "pilates mati", "pilates matı", "mat"],
+    anchor: "yoga mati",
+  },
+  {
+    slug: "ev-yasam/temizlik/cop-torbasi-temizlik-araclari/paspas",
+    phrases: ["kapi mati", "kapı matı", "kapi paspasi", "kapı paspası", "paspas"],
+    anchor: "paspas",
+  },
+  {
+    slug: "kucuk-ev-aletleri/mutfak/airfryer",
+    phrases: ["airfryer", "hava fritozu", "hava fritözü", "fritoz makinesi", "fritöz makinesi"],
+    anchor: "airfryer",
+  },
+  {
+    slug: "supermarket/konserve-sos/zeytinyagi",
+    phrases: ["fritoz yagi", "fritöz yağı", "kizartma yagi", "kızartma yağı"],
+    anchor: "fritoz yagi",
+  },
+  {
+    slug: "elektronik/oyun/konsol/oyuncu-koltuk",
+    phrases: ["oyuncu koltugu", "oyuncu koltuğu", "gaming koltuk"],
+    anchor: "oyuncu koltugu",
+  },
+  {
     slug: "akilli-telefon",
     phrases: ["akilli telefon", "cep telefonu", "telefon", "iphone", "galaxy", "redmi"],
     anchor: "telefon",
@@ -201,7 +261,7 @@ const CATEGORY_HINTS: Array<{ slug: string; phrases: string[]; anchor: string }>
   },
   {
     slug: "kahve-makinesi",
-    phrases: ["kahve makinesi", "kahve makinasi", "espresso makinesi", "filtre kahve makinesi"],
+    phrases: ["kahve makinesi", "kahve makinasi", "kahve makineleri", "kahve makinelerini", "espresso makinesi", "filtre kahve makinesi"],
     anchor: "kahve makinesi",
   },
   {

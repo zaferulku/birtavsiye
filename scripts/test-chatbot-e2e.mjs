@@ -37,7 +37,7 @@ async function testPanelOpensAfterPush(browser) {
     const input = page.locator('input[aria-label*="Mesaj"]').first();
     await input.fill('iPhone 15');
     await input.press('Enter');
-    await page.waitForURL(/\/sonuclar/, { timeout: 10_000 });
+    await page.waitForURL(/\/ara/, { timeout: 10_000 });
 
     const panelState = await page.evaluate(() => {
       const raw = sessionStorage.getItem('birtavsiye-chat');
@@ -45,9 +45,9 @@ async function testPanelOpensAfterPush(browser) {
       return JSON.parse(raw)?.state?.panelState;
     });
 
-    record('TEST 1: ChatPanel /sonuclar\'da açılıyor', panelState === 'open', `panelState=${panelState}`);
+    record('TEST 1: ChatPanel /ara\'da açılıyor', panelState === 'open', `panelState=${panelState}`);
   } catch (e) {
-    record('TEST 1: ChatPanel /sonuclar\'da açılıyor', false, String(e.message));
+    record('TEST 1: ChatPanel /ara\'da açılıyor', false, String(e.message));
   } finally {
     await ctx.close();
   }
@@ -62,7 +62,7 @@ async function testSingleWordNotVague(browser) {
     const input = page.locator('input[aria-label*="Mesaj"]').first();
     await input.fill('telefon');
     await input.press('Enter');
-    await page.waitForURL(/\/sonuclar/, { timeout: 10_000 });
+    await page.waitForURL(/\/ara/, { timeout: 10_000 });
 
     // Poll up to 30s for assistant response
     let replyFound = false;
@@ -122,7 +122,7 @@ async function testSessionIdInBody(browser) {
     const input = page.locator('input[aria-label*="Mesaj"]').first();
     await input.fill('iPhone');
     await input.press('Enter');
-    await page.waitForURL(/\/sonuclar/, { timeout: 10_000 });
+    await page.waitForURL(/\/ara/, { timeout: 10_000 });
     await page.waitForTimeout(2500);
 
     const ok =
@@ -153,7 +153,7 @@ async function testLifecycle(browser) {
     const input = page.locator('input[aria-label*="Mesaj"]').first();
     await input.fill('iPhone 15');
     await input.press('Enter');
-    await page.waitForURL(/\/sonuclar/, { timeout: 10_000 });
+    await page.waitForURL(/\/ara/, { timeout: 10_000 });
     await page.waitForTimeout(1500);
 
     const minimizeButton = page.locator('button[aria-label*="üçült" i], button[title*="üçült" i]').first();
