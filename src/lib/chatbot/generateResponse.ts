@@ -10,6 +10,7 @@ import {
   formatResponseStyleExamples,
   selectResponseStyleExamples,
 } from "./responseExamples";
+import { detectChatIntentSignals } from "./intentSignals";
 
 export type ResponseInput = {
   userMessage: string;
@@ -54,6 +55,11 @@ export async function generateResponse(input: ResponseInput): Promise<string> {
 
   if (input.products.length === 0) {
     return buildNoResultsResponse(input);
+  }
+
+  const advisorResponse = buildAdvisorIntentResponse(input);
+  if (advisorResponse) {
+    return advisorResponse;
   }
 
   const guidedResponse = buildGuidedProductResponse(input);
@@ -193,6 +199,74 @@ function formatProducts(products: ProductForResponse[]): string {
       return `${index + 1}. ${brand}${product.title} - ${price}`;
     }),
   ].join("\n");
+}
+
+function buildAdvisorIntentResponse(input: ResponseInput): string | null {
+  const signals = detectChatIntentSignals(input.userMessage);
+  const hasAdvisorIntent =
+    signals.wantsRecommendation ||
+    signals.wantsComparison ||
+    signals.productNeed ||
+    signals.budget.min != null ||
+    signals.budget.max != null ||
+    signals.budget.qualitative ||
+    signals.usageTerms.length > 0;
+
+  if (!hasAdvisorIntent) return null;
+
+  if (signals.wantsComparison) {
+    return buildComparisonResponse(input);
+  }
+
+  return buildRecommendationResponse(input, signals);
+}
+
+function buildRecommendationResponse(
+  input: ResponseInput,
+  signals: ReturnType<typeof detectChatIntentSignals>
+): string {
+  const categoryLabel = resolveCategoryLabel(
+    getEffectiveCategorySlug(input),
+    input.styleMessage ?? input.userMessage
+  );
+  const topProducts = input.products.slice(0, 3);
+  const topProduct = topProducts[0];
+  const alternatives = topProducts
+    .slice(1)
+    .map((product) => product.title)
+    .filter(Boolean);
+  const budgetText =
+    signals.budget.max != null
+      ? `butcene yakin`
+      : signals.budget.qualitative
+        ? "fiyat/performans odakli"
+        : signals.usageTerms.length > 0
+          ? "kullanim amacina gore"
+          : "en guclu eslesme olarak";
+
+  const firstSentence = topProduct
+    ? `Aramana uygun ${input.products.length} ${categoryLabel} listelendi; ${budgetText} ilk onerim ${topProduct.title}.`
+    : buildCountLine(input.products.length, categoryLabel);
+
+  if (alternatives.length === 0) {
+    return firstSentence;
+  }
+
+  return `${firstSentence} Alternatif olarak ${alternatives.join(" ve ")} da bakmaya deger.`;
+}
+
+function buildComparisonResponse(input: ResponseInput): string {
+  const categoryLabel = resolveCategoryLabel(
+    getEffectiveCategorySlug(input),
+    input.styleMessage ?? input.userMessage
+  );
+  const [first, second] = input.products;
+
+  if (!first || !second) {
+    return `Karsilastirma icin ${input.products.length} ${categoryLabel} listelendi; daha net fark cikarmak icin bir alternatif daha soyleyebilirsin.`;
+  }
+
+  return `Karsilastirma icin ${input.products.length} ${categoryLabel} listelendi; ilk iki guclu aday ${first.title} ve ${second.title}. Fiyat, depolama ve kullanim amacina gore karar vermek en sagliklisi.`;
 }
 
 function buildGuidedProductResponse(input: ResponseInput): string {

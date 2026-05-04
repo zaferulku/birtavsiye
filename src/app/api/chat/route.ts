@@ -31,6 +31,11 @@ import {
   interpretChatQuery,
   resolveFallbackCategorySlugFromMessage,
 } from "../../../lib/chatbot/queryInterpreter";
+import {
+  buildIntentFocusedSearchMessage,
+  detectChatIntentSignals,
+  resolveChatbotCategoryHint,
+} from "../../../lib/chatbot/intentSignals";
 
 export const runtime = "nodejs";
 
@@ -482,7 +487,7 @@ async function buildVectorCandidates(
 
 async function searchProducts(
   userQuery: string,
-  options?: { categorySlug?: string | null }
+  options?: { categorySlug?: string | null; relaxVariants?: boolean }
 ): Promise<SearchResult> {
   const startTime = Date.now();
   const categories = await loadCategories();
@@ -549,7 +554,7 @@ async function searchProducts(
     });
 
     const variantFilteredProducts =
-      parsed.color || parsed.storage
+      !options?.relaxVariants && (parsed.color || parsed.storage)
         ? rankedProducts.filter((product) =>
             matchesVariantFilters(product, {
               color: parsed.color,
@@ -730,6 +735,7 @@ export async function POST(req: Request) {
       categories,
       previousState,
     });
+    const intentSignals = detectChatIntentSignals(message);
     const parsed = parseQuery(queryInterpretation.searchMessage, categories);
     const categoryTaxonomy = categories.map((category) => category.slug);
 
@@ -737,8 +743,10 @@ export async function POST(req: Request) {
 
     // İlk pass: parseQuery (heuristic) — orchResult henüz yok.
     // LLM intent ile state enrich orchestrator sonrası yapılıyor (aşağıda).
+    const chatbotCategoryHint = resolveChatbotCategoryHint(message);
     const fallbackCategorySlug =
       queryInterpretation.fallbackCategorySlug ??
+      chatbotCategoryHint ??
       resolveFallbackCategorySlugFromMessage(message);
     const parsedCategoryRaw = queryInterpretation.usedContextCategory
       ? previousState.category_slug ?? null
@@ -785,6 +793,7 @@ export async function POST(req: Request) {
     if (/\bespresso\b/i.test(msgLower)) features.push("espresso");
     if (/\bfiltre\b/i.test(msgLower)) features.push("filtre");
     if (/\bkapsul|kapsül|kapsullu|kapsüllü\b/i.test(msgLower)) features.push("kapsul");
+    features.push(...intentSignals.featureTags);
 
     // Installment (taksit) ay sayısı extraction
     let installmentMin: number | null = null;
@@ -811,9 +820,9 @@ export async function POST(req: Request) {
       // when calling smart_search. Avoids leaking SQL LIKE syntax into state.
       variant_color_patterns: parsed.color ? [parsed.color] : [],
       variant_storage_patterns: parsed.storage ? [parsed.storage] : [],
-      price_min: parsed.price_min ?? null,
-      price_max: parsed.price_max ?? null,
-      features: features.length > 0 ? features : undefined,
+      price_min: parsed.price_min ?? intentSignals.budget.min,
+      price_max: parsed.price_max ?? intentSignals.budget.max,
+      features: features.length > 0 ? Array.from(new Set(features)) : undefined,
       installment_months_min: installmentMin,
       min_avg_rating: minAvgRating,
       sort_by: sortBy,
@@ -840,9 +849,16 @@ export async function POST(req: Request) {
       parsed.category_slugs?.[0] ||
       fallbackCategorySlug ||
       null;
+    const intentFocusedSearchMessage = buildIntentFocusedSearchMessage({
+      originalMessage: message,
+      searchMessage: queryInterpretation.searchMessage,
+      categorySlug: effectiveCategory,
+      fallbackCategorySlug,
+      signals: intentSignals,
+    });
     const categoryAwareSearchMessage = enhanceCategorySearchMessage({
       categorySlug: effectiveCategory,
-      searchMessage: queryInterpretation.searchMessage,
+      searchMessage: intentFocusedSearchMessage,
       originalMessage: message,
     });
     const shouldLockCategoryToState =
@@ -888,8 +904,8 @@ export async function POST(req: Request) {
         model_family: null,
         variant_storage: null,
         variant_color: effectiveColor,
-        price_min: conversationState.price_min ?? parsed.price_min,
-        price_max: conversationState.price_max ?? parsed.price_max,
+        price_min: conversationState.price_min ?? parsed.price_min ?? intentSignals.budget.min,
+        price_max: conversationState.price_max ?? parsed.price_max ?? intentSignals.budget.max,
         keywords: parsed.keywords || [],
         confidence: intentHintCategory
           ? 1.0

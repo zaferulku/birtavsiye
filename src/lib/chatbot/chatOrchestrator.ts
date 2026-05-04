@@ -29,6 +29,10 @@ import type { StructuredIntent } from "./intentParser";
 import { buildSuggestions, type Suggestion } from "./suggestionBuilder";
 import { buildCategoryRankingContext, findUsageProfile } from "./categoryKnowledge";
 import {
+  buildIntentFocusedSearchMessage,
+  detectChatIntentSignals,
+} from "./intentSignals";
+import {
   getQueryRankingProfile,
   isStrictIntentTerm,
   rerankKnownProducts,
@@ -49,7 +53,7 @@ export type OrchestratorInput = {
   // searchProducts (mevcut fonksiyon) ş bu modül oraya bşmlı olmasın
   legacySearch: (
     query: string,
-    options?: { categorySlug?: string | null }
+    options?: { categorySlug?: string | null; relaxVariants?: boolean }
   ) => Promise<LegacySearchResult>;
   // queryParser sonucu (mevcut chat route'tan geliyor)
   parsed: QueryParserResult;
@@ -628,10 +632,39 @@ async function runSlowPath(
   const queryTerms = splitSearchTerms(searchMessage);
   const queryProfile = getQueryRankingProfile(queryTerms);
   const strictTermCount = queryTerms.filter(isStrictIntentTerm).length;
+  const advisorSignals = detectChatIntentSignals(input.userMessage);
   const fallbackKnowledgeContext = buildCategoryRankingContext({
     categorySlug: getResponseCategorySlug(input, intent.category_slug),
     userMessage: searchMessage,
   });
+
+  if (intent.price_range.min == null && advisorSignals.budget.min != null) {
+    intent.price_range.min = advisorSignals.budget.min;
+  }
+  if (intent.price_range.max == null && advisorSignals.budget.max != null) {
+    intent.price_range.max = advisorSignals.budget.max;
+  }
+  if (advisorSignals.usageTerms.length > 0) {
+    intent.semantic_keywords = Array.from(
+      new Set([...intent.semantic_keywords, ...advisorSignals.usageTerms])
+    ).slice(0, 12);
+  }
+  const advisorSearchMessage = buildIntentFocusedSearchMessage({
+    originalMessage: input.userMessage,
+    searchMessage,
+    categorySlug: getResponseCategorySlug(input, intent.category_slug),
+    signals: advisorSignals,
+  });
+  const shouldRelaxVariantFallback =
+    advisorSignals.wantsRecommendation ||
+    advisorSignals.wantsComparison ||
+    advisorSignals.productNeed;
+  const shouldUseAdvisorFallback =
+    shouldRelaxVariantFallback ||
+    advisorSignals.budget.min != null ||
+    advisorSignals.budget.max != null ||
+    advisorSignals.budget.qualitative ||
+    advisorSignals.usageTerms.length > 0;
 
   // 3. Off-topic veya çok genel ş search yapma, direkt yanıt üret
   // Override: LLM kategori/brand çıkardıysa veya conversationState/parsed kategori
@@ -713,8 +746,9 @@ async function runSlowPath(
   // 5. Smart search 0 sonuç ş mevcut searchProducts'a fallback
   let finalProducts: ChatProductResult[] = smartResults;
   if (smartResults.length === 0) {
-    legacyFallbackResult = await input.legacySearch(searchMessage, {
+    legacyFallbackResult = await input.legacySearch(advisorSearchMessage || searchMessage, {
       categorySlug: getResponseCategorySlug(input, intent.category_slug),
+      relaxVariants: shouldRelaxVariantFallback,
     });
     finalProducts = legacyFallbackResult.products;
     method = `slow_fallback_${legacyFallbackResult.method}`;
@@ -727,11 +761,15 @@ async function runSlowPath(
       }));
 
       const shouldSupplementWithLegacy =
-        queryProfile.mode === "specific" || strictTermCount > 0;
+        queryProfile.mode === "specific" ||
+        strictTermCount > 0 ||
+        shouldUseAdvisorFallback ||
+        smartResults.length < 6;
 
       if (shouldSupplementWithLegacy) {
-        const supplemental = await input.legacySearch(searchMessage, {
+        const supplemental = await input.legacySearch(advisorSearchMessage || searchMessage, {
           categorySlug: getResponseCategorySlug(input, intent.category_slug),
+          relaxVariants: shouldRelaxVariantFallback,
         });
         supplementalCandidateCount = supplemental.products.length;
 
@@ -1117,13 +1155,24 @@ async function runSmartSearch(
     variant_storage_patterns,
     remaining_specs,
   } = extractVariantPatterns(intent.must_have_specs, intent.semantic_keywords);
+  const advisorSignals = detectChatIntentSignals(userMessage);
 
   // Dinamik match_count — filtre yoğunluğuna göre
   const filterDensity =
     (intent.brand_filter?.length ? 1 : 0) +
     (variant_color_patterns ? 1 : 0) +
     (variant_storage_patterns ? 1 : 0);
-  const dynamicMatchCount = filterDensity >= 2 ? 20 : filterDensity === 1 ? 30 : 40;
+  const dynamicMatchCount =
+    advisorSignals.wantsRecommendation ||
+    advisorSignals.wantsComparison ||
+    advisorSignals.budget.qualitative ||
+    advisorSignals.usageTerms.length > 0
+      ? 60
+      : filterDensity >= 2
+        ? 20
+        : filterDensity === 1
+          ? 30
+          : 40;
 
   // RPC parametreleri
   const params = {
