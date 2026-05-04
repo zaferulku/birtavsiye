@@ -10,14 +10,38 @@ export type CategoryNode = {
 
 let _fullCategoriesCache: CategoryNode[] | null = null;
 let _fullCacheTs = 0;
+const CATEGORY_PAGE_SIZE = 1000;
+
+async function fetchAllActiveCategoryRows<T>(select: string): Promise<T[]> {
+  const rows: T[] = [];
+  for (let from = 0; ; from += CATEGORY_PAGE_SIZE) {
+    const { data, error } = await supabaseAdmin
+      .from("categories")
+      .select(select)
+      .eq("is_active", true)
+      .order("id", { ascending: true })
+      .range(from, from + CATEGORY_PAGE_SIZE - 1);
+
+    if (error) {
+      throw new Error(`[categoryTree] category page fetch failed: ${error.message}`);
+    }
+
+    rows.push(...((data ?? []) as T[]));
+    if (!data || data.length < CATEGORY_PAGE_SIZE) break;
+  }
+  return rows;
+}
 
 async function fetchAllCategoriesFull(): Promise<CategoryNode[]> {
   const now = Date.now();
   if (_fullCategoriesCache && now - _fullCacheTs < 60_000) return _fullCategoriesCache;
-  const { data } = await supabaseAdmin.from("categories").select("id, slug, name, parent_id, icon");
-  _fullCategoriesCache = (data ?? []) as CategoryNode[];
+  _fullCategoriesCache = await fetchAllActiveCategoryRows<CategoryNode>("id, slug, name, parent_id, icon");
   _fullCacheTs = now;
   return _fullCategoriesCache;
+}
+
+export async function fetchAllActiveCategoryNodes(): Promise<CategoryNode[]> {
+  return fetchAllCategoriesFull();
 }
 
 export async function fetchCategoryPath(categoryId: string | null): Promise<CategoryNode[]> {
@@ -48,6 +72,7 @@ export async function fetchChildCategories(parentId: string): Promise<CategoryNo
   const { data } = await supabaseAdmin
     .from("categories")
     .select("id, slug, name, parent_id, icon")
+    .eq("is_active", true)
     .eq("parent_id", parentId)
     .order("name");
   return (data ?? []) as CategoryNode[];
@@ -60,8 +85,9 @@ const CACHE_MS = 60_000;
 async function fetchAllCategoriesOnce() {
   const now = Date.now();
   if (_allCategoriesCache && now - _cacheTs < CACHE_MS) return _allCategoriesCache;
-  const { data } = await supabaseAdmin.from("categories").select("id, parent_id");
-  _allCategoriesCache = (data ?? []) as { id: string; parent_id: string | null }[];
+  _allCategoriesCache = await fetchAllActiveCategoryRows<{ id: string; parent_id: string | null }>(
+    "id, parent_id",
+  );
   _cacheTs = now;
   return _allCategoriesCache;
 }

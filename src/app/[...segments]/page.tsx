@@ -5,7 +5,7 @@ import Footer from "../components/layout/Footer";
 import Link from "next/link";
 import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
-import { fetchDescendantIds, modelFamilyToSlug } from "../../lib/categoryTree";
+import { fetchAllActiveCategoryNodes, fetchDescendantIds, modelFamilyToSlug } from "../../lib/categoryTree";
 import type { Metadata } from "next";
 import KategoriSayfasi from "../components/kategori/KategoriSayfasi";
 import ModelPageView from "../components/marka/ModelPageView";
@@ -31,11 +31,7 @@ async function resolveSegments(segments: string[]) {
   // "anasayfa" prefix'ini yok say (breadcrumb-as-URL konvansiyonu)
   if (segments[0] === "anasayfa") segments = segments.slice(1);
 
-  const { data: allCatsData } = await supabaseAdmin
-    .from("categories")
-    .select("id, slug, name, parent_id, icon")
-    .eq("is_active", true);
-  const allCats = (allCatsData ?? []) as CategoryNode[];
+  const allCats = (await fetchAllActiveCategoryNodes()) as CategoryNode[];
   const bySlug = new Map(allCats.map((c) => [c.slug, c]));
   const byId = new Map(allCats.map((c) => [c.id, c]));
 

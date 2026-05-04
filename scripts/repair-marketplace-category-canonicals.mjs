@@ -280,6 +280,10 @@ const TITLE_TARGETS = [
     test: isPhoneScreenProtectorText,
   },
   {
+    targetSlug: "elektronik/telefon/kilif",
+    test: isPhoneCaseText,
+  },
+  {
     targetSlug: "kucuk-ev-aletleri/mutfak/su-isiticisi",
     test: (text) => /\bkettle\b|\bsu isitici\b|\bsu isiticisi\b/.test(text),
   },
@@ -399,6 +403,10 @@ function resolveTargetSlug(product, currentCategory) {
 
   for (const rule of TITLE_TARGETS) {
     if (rule.test(titleText)) return rule.targetSlug;
+  }
+
+  if (currentCategory?.slug === "elektronik/telefon/akilli-telefon" && isPhoneCameraAccessoryText(titleText)) {
+    return "elektronik/telefon/aksesuar";
   }
 
   if (/\bpilates mati\b|\bpilates mat\b/.test(sourceText)) {
@@ -619,18 +627,43 @@ function normalize(value) {
     .trim();
 }
 
+function hasPhoneTarget(text) {
+  return /\biphone\b|\bgalaxy\b|\bsamsung\b|\bxiaomi\b|\bredmi\b|\bpoco\b|\bhuawei\b|\bhonor\b|\boppo\b|\brealme\b|\boneplus\b|\bvivo\b|\btecno\b|\binfinix\b|\bnokia\b|\bomix\b|\breeder\b|\btcl\b|\btelefon\b/.test(
+    text,
+  );
+}
+
+function hasNonPhoneTarget(text) {
+  return /\bipad\b|\btablet\b|\btab\b|\bwatch\b|\btv\b|\btelevizyon\b|\bkamera\b|\bcanon\b|\bnikon\b|\bsony\b|\bgopro\b|\bairpods\b/.test(
+    text,
+  );
+}
+
+function hasNonPhoneAccessoryTarget(text) {
+  return /\bipad\b|\btablet\b|\btab\b|\bwatch\b|\btv\b|\btelevizyon\b|\bcanon\b|\bnikon\b|\bsony\b|\bgopro\b|\bairpods\b/.test(
+    text,
+  );
+}
+
 function isPhoneScreenProtectorText(text) {
   const hasScreenProtector =
-    /\bekran koruyucu\b|\bkirilmaz cam\b|\bhayalet ekran\b|\btemperli cam\b/.test(text);
-  if (!hasScreenProtector) return false;
-
-  const hasNonPhoneTarget =
-    /\bipad\b|\btablet\b|\btab\b|\bwatch\b|\btv\b|\btelevizyon\b|\bkamera\b|\bcanon\b|\bnikon\b|\bsony\b|\bgopro\b/.test(
+    /\bekran koruyucu\b|\bkirilmaz cam\b|\bhayalet ekran\b|\btemperli cam\b|\bnano glass\b|\bantistatik cam\b|\bseramik nano\b/.test(
       text,
     );
-  if (hasNonPhoneTarget) return false;
+  if (!hasScreenProtector) return false;
+  if (hasNonPhoneTarget(text)) return false;
 
-  return /\biphone\b|\bgalaxy\b|\bsamsung\b|\bxiaomi\b|\bredmi\b|\bpoco\b|\bhuawei\b|\bhonor\b|\boppo\b|\brealme\b|\boneplus\b|\bvivo\b|\btecno\b|\binfinix\b|\btelefon\b/.test(
+  return hasPhoneTarget(text);
+}
+
+function isPhoneCaseText(text) {
+  if (!hasPhoneTarget(text) || hasNonPhoneTarget(text)) return false;
+  return /\bkilif\b|\bkapak\b|\bairbag\b|\bcuzdanli\b|\bderi kilif\b/.test(text);
+}
+
+function isPhoneCameraAccessoryText(text) {
+  if (!hasPhoneTarget(text) || hasNonPhoneAccessoryTarget(text)) return false;
+  return /\bkamera lens\b|\bkamera lensi\b|\blens koruyucu\b|\blens koruma\b|\blensli\b|\blens yuzuklu\b|\bkamera koruma\b|\bkamera koruyucu\b|\bkamera cam\b|\bkamera standli\b|\bmagsafe\b.*\bstand\b|\bstand\b.*\bmagsafe\b/.test(
     text,
   );
 }

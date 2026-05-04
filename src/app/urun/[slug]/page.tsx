@@ -19,9 +19,8 @@ import type { ReviewSummary } from "../../components/urun/CommunitySection";
 import { cleanProductTitle } from "@/lib/productTitle";
 import { fetchCategoryPath } from "@/lib/categoryTree";
 
-// Ürün sayfası ISR — 30 dk cache. Önceden dynamic (her request DB'ye iniyordu);
-// 14 .from() × bot crawl × bin ürün = DB egress kuotası tüketme nedeni.
-export const revalidate = 1800;
+// Ürün sayfası ISR — kategori/breadcrumb onarımları kullanıcıya hızlı yansımalı.
+export const revalidate = 300;
 
 /** XSS guard: JSON-LD tag içinde </script>, <!--, <![CDATA[ kırılmasını engelle */
 function safeJsonLd(obj: unknown): string {
