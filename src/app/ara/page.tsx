@@ -132,12 +132,19 @@ function normalizeSearchText(value: string): string {
 }
 
 function getAccessoryBaseQuery(query: string): string {
-  const normalized = normalizeSearchText(query);
+  let normalized = normalizeSearchText(query);
+  let changed = true;
 
-  for (const suffix of relatedQuerySuffixes) {
-    const token = ` ${suffix}`;
-    if (normalized.endsWith(token)) {
-      return normalized.slice(0, -token.length).trim();
+  while (changed) {
+    changed = false;
+
+    for (const suffix of relatedQuerySuffixes) {
+      const token = ` ${suffix}`;
+      if (normalized.endsWith(token)) {
+        normalized = normalized.slice(0, -token.length).trim();
+        changed = true;
+        break;
+      }
     }
   }
 
@@ -208,6 +215,31 @@ function getRelatedSuggestions(query: string): RelatedSuggestion[] {
   ];
 }
 
+function getSelectedRelatedFilterSuffixes(baseQuery: string, query: string): string[] {
+  const normalizedQuery = normalizeSearchText(query);
+  const seen = new Set<string>();
+
+  return getRelatedSuggestions(baseQuery)
+    .map((suggestion) => getSuggestionSuffix(baseQuery, suggestion.query))
+    .filter((suffix) => {
+      if (!suffix || seen.has(suffix)) return false;
+      const isSelected = normalizedQuery.split(/\s+/).includes(suffix) || normalizedQuery.includes(` ${suffix}`);
+      if (!isSelected) return false;
+      seen.add(suffix);
+      return true;
+    });
+}
+
+function buildActiveQuery(baseQuery: string, selectedFilters: string[]): string {
+  const uniqueFilters = Array.from(new Set(selectedFilters.filter(Boolean)));
+  return [baseQuery, ...uniqueFilters].join(" ").replace(/\s+/g, " ").trim();
+}
+
+function getDisplayQuery(query: string): string {
+  const compact = query.replace(/\s+/g, " ").trim();
+  return compact.length > 96 ? `${compact.slice(0, 93)}...` : compact;
+}
+
 function FavoriteIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" stroke="currentColor" strokeWidth="1.8">
@@ -243,8 +275,6 @@ function dedupeProductsById(products: Product[]): Product[] {
 function AramaIcerik({ initialQuery }: { initialQuery: string }) {
   const router = useRouter();
   const initialBaseQuery = getAccessoryBaseQuery(initialQuery);
-  const initialRelatedSuggestions = getRelatedSuggestions(initialQuery);
-  const initialNormalizedQuery = normalizeSearchText(initialQuery);
   const [query, setQuery] = useState(initialQuery);
   const [baseResults, setBaseResults] = useState<Product[]>([]);
   const [relatedResults, setRelatedResults] = useState<Record<string, Product[]>>({});
@@ -253,12 +283,11 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedStorage, setSelectedStorage] = useState("");
   const [selectedRelatedFilters, setSelectedRelatedFilters] = useState<string[]>(() =>
-    initialRelatedSuggestions
-      .map((suggestion) => getSuggestionSuffix(initialBaseQuery, suggestion.query))
-      .filter((suffix) => Boolean(suffix) && initialNormalizedQuery.includes(suffix))
+    getSelectedRelatedFilterSuffixes(initialBaseQuery, initialQuery)
   );
   const baseQuery = initialBaseQuery;
-  const activeQuery = [baseQuery, ...selectedRelatedFilters].join(" ").trim();
+  const activeQuery = buildActiveQuery(baseQuery, selectedRelatedFilters);
+  const displayActiveQuery = getDisplayQuery(activeQuery);
 
   const fetchProducts = useEffectEvent(async (term: string): Promise<Product[]> => {
     if (!term.trim()) {
@@ -417,7 +446,7 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
             setSelectedRelatedFilters((current) =>
               current.includes(suffix)
                 ? current.filter((item) => item !== suffix)
-                : [...current, suffix]
+                : Array.from(new Set([...current, suffix]))
             );
           },
         };
@@ -588,7 +617,7 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
         <div className="py-16 text-center">
           <div className="mb-4 text-5xl">Sonuc yok</div>
           <div className="mb-2 text-base font-bold text-gray-800">
-            &quot;{activeQuery}&quot; icin sonuc bulunamadi
+            &quot;{displayActiveQuery}&quot; icin sonuc bulunamadi
           </div>
           <div className="mb-6 text-sm text-gray-500">Farkli bir kelime deneyin</div>
           <div className="flex flex-wrap justify-center gap-2">
@@ -650,7 +679,7 @@ function AramaIcerik({ initialQuery }: { initialQuery: string }) {
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <div className="text-xl font-bold text-slate-900">
-                    &quot;{activeQuery}&quot; icin arama sonuclari
+                    &quot;{displayActiveQuery}&quot; icin arama sonuclari
                   </div>
                   <div className="mt-1 text-sm text-slate-500">
                     Aramana uygun <span className="font-semibold text-slate-900">{filteredResults.length}</span> urun
