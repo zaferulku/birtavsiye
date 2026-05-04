@@ -104,6 +104,14 @@ export function stripColorTermsFromQuery(query: string | null | undefined): stri
   return normalized;
 }
 
+export function getNormalizedColorPhrasesInQuery(query: string | null | undefined): string[] {
+  const normalized = normalizeForSearch(query);
+  if (!normalized) return [];
+
+  const paddedQuery = ` ${normalized} `;
+  return NORMALIZED_COLOR_PHRASES.filter((color) => paddedQuery.includes(` ${color} `));
+}
+
 export function simplifySearchQueryForMatching(query: string | null | undefined): string {
   return stripColorTermsFromQuery(query).replace(/\s+/g, " ").trim();
 }

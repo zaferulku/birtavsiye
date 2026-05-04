@@ -56,6 +56,8 @@ type MatchedProduct = {
   sources?: string[] | null;
   score_breakdown?: {
     lexical: number;
+    family: number;
+    color: number;
     vector: number;
     offer: number;
     image: number;

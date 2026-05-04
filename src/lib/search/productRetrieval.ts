@@ -13,6 +13,7 @@ import {
   getUniqueActiveSources,
 } from "../listingSignals";
 import {
+  getNormalizedColorPhrasesInQuery,
   normalizeForSearch,
   simplifySearchQueryForMatching,
   splitNormalizedSearchTerms,
@@ -74,6 +75,8 @@ export type RankedProduct = Omit<SearchProductRow, "prices"> & {
 
 export type RankingScoreBreakdown = {
   lexical: number;
+  family: number;
+  color: number;
   vector: number;
   offer: number;
   image: number;
@@ -234,6 +237,39 @@ const VARIANT_INTENT_TERMS = new Set([
   "titanyum",
 ]);
 
+const SUBMODEL_INTENT_TERMS = new Set([
+  "air",
+  "edge",
+  "fe",
+  "flip",
+  "fold",
+  "max",
+  "mini",
+  "plus",
+  "pro",
+  "ultra",
+]);
+
+const STORAGE_UNIT_TERMS = new Set(["gb", "tb", "mb"]);
+
+const GENERATION_STOP_TERMS = new Set([
+  "3g",
+  "4g",
+  "5g",
+  "8k",
+  "4k",
+  "usb",
+  "wifi",
+  "wi",
+  "fi",
+  "led",
+  "lcd",
+  "oled",
+  "uhd",
+  "fhd",
+  "hd",
+]);
+
 function normalizeSearchText(value: string | null | undefined): string {
   return normalizeForSearch(value);
 }
@@ -328,6 +364,298 @@ function textHasSearchTerm(text: string, term: string): boolean {
   return tokens.some((token) => token === term || token.startsWith(term)) || text.includes(term);
 }
 
+type QueryFamilyFacets = {
+  anchorTerms: string[];
+  familyAnchorTerms: string[];
+  descriptorAnchorTerms: string[];
+  generationTerms: string[];
+  submodelTerms: string[];
+  storageTerms: string[];
+  storageTermIndexes: Set<number>;
+};
+
+type FamilyExpansionSignal = {
+  boost: number;
+  reasons: string[];
+};
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function isPlainNumberTerm(term: string): boolean {
+  return /^\d+(?:[.,]\d+)?$/.test(term);
+}
+
+function isCompactStorageTerm(term: string): boolean {
+  return /^\d+(?:[.,]\d+)?(?:gb|tb|mb)$/.test(term);
+}
+
+function buildStorageTermIndexes(terms: string[]): Set<number> {
+  const indexes = new Set<number>();
+
+  terms.forEach((term, index) => {
+    if (isCompactStorageTerm(term)) {
+      indexes.add(index);
+      return;
+    }
+
+    if (!STORAGE_UNIT_TERMS.has(term)) return;
+
+    indexes.add(index);
+    if (index > 0 && isPlainNumberTerm(terms[index - 1])) {
+      indexes.add(index - 1);
+    }
+    if (index + 1 < terms.length && isPlainNumberTerm(terms[index + 1])) {
+      indexes.add(index + 1);
+    }
+  });
+
+  return indexes;
+}
+
+function isGenerationIntentTerm(term: string, index: number, storageTermIndexes: Set<number>): boolean {
+  return /\d/.test(term) && !storageTermIndexes.has(index) && !GENERATION_STOP_TERMS.has(term);
+}
+
+function getQueryFamilyFacets(terms: string[]): QueryFamilyFacets {
+  const storageTermIndexes = buildStorageTermIndexes(terms);
+  const generationTerms = terms.filter((term, index) =>
+    isGenerationIntentTerm(term, index, storageTermIndexes)
+  );
+  const submodelTerms = terms.filter((term) => SUBMODEL_INTENT_TERMS.has(term));
+  const storageTerms = terms.filter((_, index) => storageTermIndexes.has(index));
+  const anchorEntries = terms
+    .map((term, index) => ({ term, index }))
+    .filter(({ term }) => isAnchorIntentTerm(term));
+  const specificIndexes = terms
+    .map((term, index) =>
+      storageTermIndexes.has(index) ||
+      generationTerms.includes(term) ||
+      submodelTerms.includes(term)
+        ? index
+        : Number.POSITIVE_INFINITY
+    )
+    .filter(Number.isFinite);
+  const firstSpecificIndex =
+    specificIndexes.length > 0 ? Math.min(...specificIndexes) : Number.POSITIVE_INFINITY;
+  const primaryAnchors = anchorEntries
+    .filter(({ index }) => index < firstSpecificIndex)
+    .map(({ term }) => term);
+  const anchorTerms = anchorEntries.map(({ term }) => term);
+  const familyAnchorTerms = primaryAnchors.length > 0 ? primaryAnchors : anchorTerms.slice(0, 2);
+  const familyAnchorSet = new Set(familyAnchorTerms);
+
+  return {
+    anchorTerms,
+    familyAnchorTerms,
+    descriptorAnchorTerms: anchorTerms.filter((term) => !familyAnchorSet.has(term)),
+    generationTerms: Array.from(new Set(generationTerms)),
+    submodelTerms: Array.from(new Set(submodelTerms)),
+    storageTerms: Array.from(new Set(storageTerms)),
+    storageTermIndexes,
+  };
+}
+
+function pushUniqueTermGroup(groups: string[][], terms: string[]): void {
+  const normalized = Array.from(new Set(terms.filter(Boolean)));
+  if (normalized.length === 0) return;
+  const key = normalized.join("|");
+  if (groups.some((group) => group.join("|") === key)) return;
+  groups.push(normalized);
+}
+
+function buildFamilyExpansionTermGroups(terms: string[]): string[][] {
+  if (terms.length < 2 || hasAccessoryIntent(terms)) return [];
+
+  const facets = getQueryFamilyFacets(terms);
+  const hasSpecificity =
+    facets.generationTerms.length > 0 ||
+    facets.submodelTerms.length > 0 ||
+    facets.storageTerms.length > 0;
+  if (!hasSpecificity || facets.familyAnchorTerms.length === 0) return [];
+
+  const groups: string[][] = [];
+  const nonStorageTerms = terms.filter((_, index) => !facets.storageTermIndexes.has(index));
+  const fullKey = terms.join("|");
+  const addGroup = (candidate: string[]) => {
+    const normalized = Array.from(new Set(candidate.filter(Boolean)));
+    if (normalized.join("|") === fullKey) return;
+    pushUniqueTermGroup(groups, normalized);
+  };
+
+  addGroup(nonStorageTerms);
+  addGroup([...facets.familyAnchorTerms, ...facets.generationTerms, ...facets.submodelTerms]);
+  addGroup([...facets.familyAnchorTerms, ...facets.generationTerms]);
+  addGroup([...facets.familyAnchorTerms, ...facets.submodelTerms]);
+
+  if (facets.generationTerms.length > 0) {
+    addGroup(facets.familyAnchorTerms);
+  }
+
+  return groups.slice(0, 6);
+}
+
+function textHasFacetTerm(text: string, term: string): boolean {
+  if (textHasSearchTerm(text, term)) return true;
+  if (!text || !isPlainNumberTerm(term)) return false;
+  return new RegExp(`(?:^|[^0-9])${escapeRegExp(term)}(?:[^0-9]|$)`).test(text);
+}
+
+function normalizedTextContainsPhrase(text: string, phrase: string): boolean {
+  if (!text || !phrase) return false;
+  return ` ${text} `.includes(` ${phrase} `);
+}
+
+function extractComparableNumbers(text: string): number[] {
+  const numbers = text
+    .split(/\s+/)
+    .filter((token) => token && !isCompactStorageTerm(token) && !GENERATION_STOP_TERMS.has(token))
+    .flatMap((token) => Array.from(token.matchAll(/\d+(?:[.,]\d+)?/g)).map((match) => Number(match[0].replace(",", "."))))
+    .filter((value) => Number.isFinite(value) && value > 0 && value < 10000);
+
+  return Array.from(new Set(numbers));
+}
+
+function getGenerationProximityBoost(queryGenerationTerms: string[], productText: string): number {
+  const queryNumbers = queryGenerationTerms.flatMap((term) => extractComparableNumbers(term));
+  if (queryNumbers.length === 0) return 0;
+
+  const productNumbers = extractComparableNumbers(productText);
+  if (productNumbers.length === 0) return 0;
+
+  const closestDistance = Math.min(
+    ...queryNumbers.flatMap((queryNumber) =>
+      productNumbers.map((productNumber) => Math.abs(productNumber - queryNumber))
+    )
+  );
+
+  if (closestDistance === 0) return 10;
+  return Math.max(0, 14 - Math.round(closestDistance * 3));
+}
+
+function getFamilyExpansionSignal(
+  product: RankedProduct,
+  category: SearchCategoryRow | undefined,
+  terms: string[]
+): FamilyExpansionSignal {
+  if (terms.length < 2) {
+    return { boost: 0, reasons: [] };
+  }
+
+  const categorySlug = normalizeSearchText(category?.slug);
+  if (ACCESSORY_CATEGORY_PATTERN.test(categorySlug) && !hasAccessoryIntent(terms)) {
+    return { boost: 0, reasons: [] };
+  }
+
+  const facets = getQueryFamilyFacets(terms);
+  const title = normalizeSearchText(product.title);
+  const brand = normalizeSearchText(product.brand);
+  const modelFamily = normalizeSearchText(product.model_family);
+  const modelCode = normalizeSearchText(product.model_code);
+  const storage = normalizeSearchText(product.variant_storage);
+  const categoryName = normalizeSearchText(category?.name);
+  const coreText = [title, brand, modelFamily, modelCode, categoryName, categorySlug]
+    .filter(Boolean)
+    .join(" ");
+  const searchableText = [coreText, storage].filter(Boolean).join(" ");
+
+  const termMatches = terms.filter((term) => textHasFacetTerm(searchableText, term));
+  const familyAnchorMatches = facets.familyAnchorTerms.filter((term) =>
+    textHasFacetTerm(coreText, term)
+  );
+  const descriptorMatches = facets.descriptorAnchorTerms.filter((term) =>
+    textHasFacetTerm(coreText, term)
+  );
+  const generationMatches = facets.generationTerms.filter((term) =>
+    textHasFacetTerm(coreText, term)
+  );
+  const submodelMatches = facets.submodelTerms.filter((term) =>
+    textHasFacetTerm(coreText, term)
+  );
+  const storageMatches = facets.storageTerms.filter((term) =>
+    textHasFacetTerm([storage, title].filter(Boolean).join(" "), term)
+  );
+
+  const anchorCoverage =
+    facets.familyAnchorTerms.length > 0
+      ? familyAnchorMatches.length / facets.familyAnchorTerms.length
+      : 0;
+  const anchorOk = anchorCoverage >= 0.6;
+  const sameGeneration =
+    facets.generationTerms.length > 0 &&
+    generationMatches.length === facets.generationTerms.length;
+  const sameSubmodel =
+    facets.submodelTerms.length > 0 && submodelMatches.length === facets.submodelTerms.length;
+  const sameStorage =
+    facets.storageTerms.length > 0 && storageMatches.length === facets.storageTerms.length;
+  const allTermsMatched = termMatches.length === terms.length;
+  const proximityBoost = getGenerationProximityBoost(
+    facets.generationTerms,
+    [modelFamily, title].filter(Boolean).join(" ")
+  );
+
+  let boost = 0;
+  const reasons = new Set<string>();
+
+  if (allTermsMatched) {
+    boost = 95;
+    reasons.add("aile:tam-eslesme");
+  } else if (anchorOk && sameGeneration && sameSubmodel) {
+    boost = 82;
+    reasons.add("aile:ayni-alt-model");
+  } else if (anchorOk && sameGeneration) {
+    boost = 64 + Math.min(submodelMatches.length * 6, 12);
+    reasons.add("aile:ayni-seri");
+  } else if (anchorOk && sameSubmodel && facets.generationTerms.length > 0) {
+    boost = 42 + proximityBoost;
+    reasons.add("aile:onceki-alt-model");
+  } else if (anchorOk && facets.generationTerms.length > 0) {
+    boost = 26 + proximityBoost;
+    reasons.add("aile:onceki-seri");
+  } else if (anchorOk && sameSubmodel) {
+    boost = 46;
+    reasons.add("aile:ayni-model-cizgisi");
+  } else if (anchorOk && descriptorMatches.length > 0) {
+    boost = 22;
+    reasons.add("aile:ilgili-tanim");
+  } else if (anchorOk && facets.storageTerms.length > 0) {
+    boost = 16;
+    reasons.add("aile:marka-seri");
+  }
+
+  if (boost > 0 && sameStorage) {
+    boost += 8;
+    reasons.add("depolama-eslesme");
+  }
+
+  if (boost > 0 && descriptorMatches.length > 0) {
+    boost += Math.min(descriptorMatches.length * 3, 6);
+    reasons.add("tanim-eslesme");
+  }
+
+  return {
+    boost,
+    reasons: Array.from(reasons),
+  };
+}
+
+function getColorPreferenceSignal(
+  product: RankedProduct,
+  colorTerms: string[]
+): { boost: number; reasons: string[] } {
+  if (colorTerms.length === 0) return { boost: 0, reasons: [] };
+
+  const colorText = normalizeSearchText([product.variant_color, product.title].filter(Boolean).join(" "));
+  const matchedColors = colorTerms.filter((color) => normalizedTextContainsPhrase(colorText, color));
+  if (matchedColors.length === 0) return { boost: 0, reasons: [] };
+
+  return {
+    boost: Math.min(10, 4 + matchedColors.length * 3),
+    reasons: matchedColors.slice(0, 2).map((color) => `renk:${color}`),
+  };
+}
+
 function getPhraseMatchBoost(text: string, query: string): number {
   if (!text || !query) return 0;
   if (text === query) return 90;
@@ -380,6 +708,8 @@ function normalizeProductRows(
       ranking_reasons: [],
       score_breakdown: {
         lexical: 0,
+        family: 0,
+        color: 0,
         vector: 0,
         offer: 0,
         image: 0,
@@ -762,6 +1092,7 @@ function applyRankingSignals(
   query: string,
   queryCategorySlug: string | null,
   terms: string[],
+  colorTerms: string[],
   vectorMap: Map<string, number>,
   priceMin: number | null | undefined,
   priceMax: number | null | undefined
@@ -782,6 +1113,12 @@ function applyRankingSignals(
         terms,
         profile
       );
+      const familySignal = getFamilyExpansionSignal(
+        product,
+        categoryMap.get(product.category_id ?? ""),
+        terms
+      );
+      const colorSignal = getColorPreferenceSignal(product, colorTerms);
       const vectorSimilarity = vectorMap.get(product.id) ?? null;
       const vectorBoost = getVectorBoost(vectorSimilarity, profile);
       const offerBoost = getOfferBoost(product, profile);
@@ -831,6 +1168,8 @@ function applyRankingSignals(
       }
 
       score +=
+        familySignal.boost +
+        colorSignal.boost +
         offerBoost +
         imageBoost +
         freshnessBoost +
@@ -838,6 +1177,8 @@ function applyRankingSignals(
         knowledgeBoost.boost +
         pricePenalty;
       if (offerBoost > 0 && !reasons.includes("aktif-teklif")) reasons.push("aktif-teklif");
+      if (familySignal.boost > 0) reasons.push(...familySignal.reasons);
+      if (colorSignal.boost > 0) reasons.push(...colorSignal.reasons);
       if (imageBoost > 0 && !reasons.includes("gorsel")) reasons.push("gorsel");
       if (freshnessBoost > 0) reasons.push(`tazelik:${freshnessBoost}`);
       if (sourceTrustBoost > 0) reasons.push(`guven:${sourceTrustBoost}`);
@@ -851,6 +1192,8 @@ function applyRankingSignals(
         ranking_reasons: reasons,
         score_breakdown: {
           lexical: lexical.score,
+          family: familySignal.boost,
+          color: colorSignal.boost,
           vector: vectorBoost,
           offer: offerBoost,
           image: imageBoost,
@@ -863,7 +1206,10 @@ function applyRankingSignals(
       };
     })
     .filter(
-      (product) => product.score_breakdown.lexical >= 0 || product.vector_similarity !== null
+      (product) =>
+        product.score_breakdown.lexical >= 0 ||
+        product.score_breakdown.family > 0 ||
+        product.vector_similarity !== null
     )
     .sort((left, right) => {
       if (right.search_score !== left.search_score) {
@@ -905,12 +1251,24 @@ function buildRelaxedTermVariants(terms: string[]): string[][] {
   return variants;
 }
 
+function getSearchResultClusterKey(product: RankedProduct): string | null {
+  const exactKey = getExactProductClusterKey(product);
+  if (!exactKey) return null;
+  if (!exactKey.startsWith("code:")) return exactKey;
+
+  const storage = normalizeSearchText(product.variant_storage).replace(/\s+/g, "");
+  const color = normalizeSearchText(product.variant_color).replace(/\s+/g, "");
+  if (!storage && !color) return exactKey;
+
+  return `${exactKey}|variant:${storage}|${color}`;
+}
+
 function mergeRankedClusters(products: RankedProduct[]): RankedProduct[] {
   const groups = new Map<string, RankedProduct[]>();
   const passthrough: RankedProduct[] = [];
 
   for (const product of products) {
-    const key = getExactProductClusterKey(product);
+    const key = getSearchResultClusterKey(product);
     if (!key) {
       passthrough.push(product);
       continue;
@@ -1021,6 +1379,7 @@ export async function retrieveRankedProducts(
 
   const originalQuery = query?.trim() ?? "";
   const normalizedQuery = simplifySearchQueryForMatching(originalQuery);
+  const colorTerms = getNormalizedColorPhrasesInQuery(originalQuery);
   const queryTerms = splitSearchTerms(normalizedQuery);
   const queryProfile = getQueryRankingProfile(queryTerms);
   const knowledgeContext = buildCategoryRankingContext({
@@ -1045,7 +1404,9 @@ export async function retrieveRankedProducts(
       .map((candidate) => [candidate.id, Number(candidate.similarity) || 0])
   );
 
-  const fetchLimit = Math.min(400, Math.max(offset + limit * 4, 48));
+  const fetchMultiplier = queryProfile.mode === "specific" ? 8 : 4;
+  const fetchFloor = queryProfile.mode === "specific" ? 96 : 48;
+  const fetchLimit = Math.min(400, Math.max(offset + limit * fetchMultiplier, fetchFloor));
   let rows: SearchProductRow[] = [];
 
   if (normalizedQuery) {
@@ -1103,6 +1464,38 @@ export async function retrieveRankedProducts(
         if (brand) andTitleQuery = andTitleQuery.ilike("brand", brand);
 
         promises.push(andTitleQuery as unknown as Promise<{ data: SearchProductRow[] | null; error: { message: string } | null }>);
+      }
+
+      for (const familyTerms of buildFamilyExpansionTermGroups(searchTerms)) {
+        let familyTitleQuery = sb
+          .from("products")
+          .select(SELECT_FIELDS)
+          .eq("is_active", true)
+          .range(0, fetchLimit - 1)
+          .order("created_at", { ascending: false });
+
+        for (const term of familyTerms) {
+          familyTitleQuery = familyTitleQuery.ilike("title", `%${escapeIlikeTerm(term)}%`);
+        }
+        if (categoryIds) familyTitleQuery = familyTitleQuery.in("category_id", categoryIds);
+        if (brand) familyTitleQuery = familyTitleQuery.ilike("brand", brand);
+
+        promises.push(familyTitleQuery as unknown as Promise<{ data: SearchProductRow[] | null; error: { message: string } | null }>);
+
+        let familyModelQuery = sb
+          .from("products")
+          .select(SELECT_FIELDS)
+          .eq("is_active", true)
+          .range(0, fetchLimit - 1)
+          .order("created_at", { ascending: false });
+
+        for (const term of familyTerms) {
+          familyModelQuery = familyModelQuery.ilike("model_family", `%${escapeIlikeTerm(term)}%`);
+        }
+        if (categoryIds) familyModelQuery = familyModelQuery.in("category_id", categoryIds);
+        if (brand) familyModelQuery = familyModelQuery.ilike("brand", brand);
+
+        promises.push(familyModelQuery as unknown as Promise<{ data: SearchProductRow[] | null; error: { message: string } | null }>);
       }
 
       const matchedCategoryIds = [
@@ -1169,6 +1562,7 @@ export async function retrieveRankedProducts(
       normalizedQuery,
       categorySlug ?? null,
       searchTerms,
+      colorTerms,
       vectorMap,
       priceMin,
       priceMax
@@ -1186,6 +1580,7 @@ export async function retrieveRankedProducts(
           normalizedQuery,
           categorySlug ?? null,
           relaxedTerms,
+          colorTerms,
           vectorMap,
           priceMin,
           priceMax
@@ -1273,6 +1668,7 @@ export async function rerankKnownProducts(
     new Set(productIds.filter((id) => typeof id === "string" && id.length > 0))
   ).slice(0, 64);
   const queryTerms = splitSearchTerms(query);
+  const colorTerms = getNormalizedColorPhrasesInQuery(query);
   const queryProfile = getQueryRankingProfile(queryTerms);
   const knowledgeContext = buildCategoryRankingContext({
     categorySlug: categorySlug ?? null,
@@ -1334,6 +1730,7 @@ export async function rerankKnownProducts(
     query,
     categorySlug ?? null,
     queryTerms,
+    colorTerms,
     vectorMap,
     priceMin,
     priceMax
