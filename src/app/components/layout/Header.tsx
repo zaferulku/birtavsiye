@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "../../../lib/supabase";
 import { findCanonicalSlugSync } from "@/lib/chatbot/categoryValidation";
-import HeaderSearchBar from "./HeaderSearchBar";
+import HeaderSearchBar, { type HeaderSearchSuggestion } from "./HeaderSearchBar";
 
 // NAV constant'ı eski flat slug'lar barındırıyor; DB hierarchik path'e geçti.
 // Tekrarlı warn'ı önlemek için per-session bir kez log'la.
@@ -769,6 +769,10 @@ export default function Header({ initialCats }: HeaderProps = {}) {
     if (value.trim()) router.push("/ara?q=" + encodeURIComponent(value.trim()));
   };
 
+  const selectSearchSuggestion = (suggestion: HeaderSearchSuggestion) => {
+    router.push(suggestion.href);
+  };
+
   const displayName =
     user?.user_metadata?.full_name ||
     user?.user_metadata?.name ||
@@ -826,7 +830,12 @@ export default function Header({ initialCats }: HeaderProps = {}) {
             </div>
           </Link>
 
-          <HeaderSearchBar query={query} onQueryChange={setQuery} onSubmitQuery={submitSearchQuery} />
+          <HeaderSearchBar
+            query={query}
+            onQueryChange={setQuery}
+            onSubmitQuery={submitSearchQuery}
+            onSelectSuggestion={selectSearchSuggestion}
+          />
 
           <div className="flex items-center gap-3 md:gap-5">
             <div className="relative" onMouseEnter={openProfile} onMouseLeave={closeProfile}>

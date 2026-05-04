@@ -1,23 +1,78 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import { getHeaderSearchSuggestions } from "./headerSearchSuggestions";
+import { useEffect, useRef, useState } from "react";
+
+export type HeaderSearchSuggestion = {
+  id: string;
+  label: string;
+  description: string;
+  href: string;
+  kind: "product" | "category" | "brand";
+};
 
 type HeaderSearchBarProps = {
   query: string;
   onQueryChange: (value: string) => void;
   onSubmitQuery: (value: string) => void;
+  onSelectSuggestion: (suggestion: HeaderSearchSuggestion) => void;
 };
 
 export default function HeaderSearchBar({
   query,
   onQueryChange,
   onSubmitQuery,
+  onSelectSuggestion,
 }: HeaderSearchBarProps) {
   const blurTimer = useRef<NodeJS.Timeout | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
-  const suggestions = useMemo(() => getHeaderSearchSuggestions(query), [query]);
+  const [suggestions, setSuggestions] = useState<HeaderSearchSuggestion[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [hasLoadedSuggestions, setHasLoadedSuggestions] = useState(false);
+
+  useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect */
+    const trimmed = query.trim();
+    setActiveIndex(0);
+
+    if (trimmed.length < 2) {
+      setSuggestions([]);
+      setLoadingSuggestions(false);
+      setHasLoadedSuggestions(false);
+      return;
+    }
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      setLoadingSuggestions(true);
+      setHasLoadedSuggestions(false);
+      fetch(`/api/search/suggestions?q=${encodeURIComponent(trimmed)}`, {
+        cache: "no-store",
+        signal: controller.signal,
+      })
+        .then((response) => (response.ok ? response.json() : { suggestions: [] }))
+        .then((payload: { suggestions?: HeaderSearchSuggestion[] }) => {
+          setSuggestions(Array.isArray(payload.suggestions) ? payload.suggestions : []);
+          setIsOpen(Boolean(trimmed));
+        })
+        .catch((error: unknown) => {
+          if (error instanceof DOMException && error.name === "AbortError") return;
+          setSuggestions([]);
+        })
+        .finally(() => {
+          if (!controller.signal.aborted) {
+            setLoadingSuggestions(false);
+            setHasLoadedSuggestions(true);
+          }
+        });
+    }, 180);
+
+    return () => {
+      controller.abort();
+      clearTimeout(timer);
+    };
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [query]);
 
   const submit = (value: string) => {
     const trimmed = value.trim();
@@ -26,6 +81,13 @@ export default function HeaderSearchBar({
     setIsOpen(false);
     setActiveIndex(0);
     onSubmitQuery(trimmed);
+  };
+
+  const selectSuggestion = (suggestion: HeaderSearchSuggestion) => {
+    onQueryChange(suggestion.label);
+    setIsOpen(false);
+    setActiveIndex(0);
+    onSelectSuggestion(suggestion);
   };
 
   return (
@@ -43,7 +105,7 @@ export default function HeaderSearchBar({
         onSubmit={(event) => {
           event.preventDefault();
           if (isOpen && suggestions[activeIndex]) {
-            submit(suggestions[activeIndex].label);
+            selectSuggestion(suggestions[activeIndex]);
             return;
           }
           submit(query);
@@ -85,7 +147,7 @@ export default function HeaderSearchBar({
 
             if (event.key === "Tab" && isOpen && suggestions[activeIndex]) {
               event.preventDefault();
-              submit(suggestions[activeIndex].label);
+              selectSuggestion(suggestions[activeIndex]);
             }
 
             if (event.key === "Escape") {
@@ -111,12 +173,18 @@ export default function HeaderSearchBar({
         )}
       </form>
 
-      {isOpen && suggestions.length > 0 && (
+      {isOpen && query.trim().length >= 2 && (suggestions.length > 0 || loadingSuggestions || hasLoadedSuggestions) && (
         <div className="absolute left-0 right-0 top-full z-[80] mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_20px_44px_rgba(15,23,42,0.16)]">
           <div className="border-b border-slate-100 px-4 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-slate-400">
-            Yazdikca tamamla
+            Arama onerileri
           </div>
           <div className="py-0.5">
+            {loadingSuggestions && suggestions.length === 0 && (
+              <div className="px-4 py-3 text-[13px] font-medium text-slate-400">Araniyor...</div>
+            )}
+            {!loadingSuggestions && hasLoadedSuggestions && suggestions.length === 0 && (
+              <div className="px-4 py-3 text-[13px] font-medium text-slate-400">Sonuc bulunamadi</div>
+            )}
             {suggestions.map((suggestion, index) => {
               const isActive = index === activeIndex;
 
@@ -125,7 +193,7 @@ export default function HeaderSearchBar({
                   key={suggestion.id}
                   type="button"
                   onMouseEnter={() => setActiveIndex(index)}
-                  onClick={() => submit(suggestion.label)}
+                  onClick={() => selectSuggestion(suggestion)}
                   className={`flex w-full items-center justify-between gap-3 px-4 py-2 text-left transition ${
                     isActive ? "bg-[#FFF5EF] text-[#E8460A]" : "text-slate-700 hover:bg-slate-50"
                   }`}
@@ -134,7 +202,9 @@ export default function HeaderSearchBar({
                     <div className="truncate text-[13px] font-semibold leading-[18px]">{suggestion.label}</div>
                     <div className="truncate text-[11px] leading-[14px] text-slate-400">{suggestion.description}</div>
                   </div>
-                  <span className="text-[11px] font-medium text-slate-300">Tamamla</span>
+                  <span className="text-[11px] font-medium text-slate-300">
+                    {suggestion.kind === "product" ? "Urun" : suggestion.kind === "category" ? "Kategori" : "Marka"}
+                  </span>
                 </button>
               );
             })}
