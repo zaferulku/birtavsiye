@@ -350,11 +350,11 @@ function resolvePttavmTitleCategoryOverride(
   const normalizedTitle = normalizeSearchText(title || "");
   const targetSlug =
     /\byoga mati\b|\byoga mat\b/.test(normalizedTitle)
-      ? "spor-outdoor/yoga-pilates/yoga-mati"
+      ? "spor-outdoor/fitness/yoga-pilates/yoga-mati"
       : /\bpilates mati\b|\bpilates mat\b/.test(normalizedTitle)
-        ? "spor-outdoor/yoga-pilates/pilates-mati"
+        ? "spor-outdoor/fitness/yoga-pilates/pilates-mati"
         : /\bpilates topu\b/.test(normalizedTitle)
-          ? "spor-outdoor/yoga-pilates/pilates-topu"
+          ? "spor-outdoor/fitness/yoga-pilates/pilates-topu"
           : null;
 
   if (!targetSlug) return null;

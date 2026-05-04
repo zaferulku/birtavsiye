@@ -166,7 +166,7 @@ const MANUAL_MAPPINGS: Record<string, string> = {
   "fitness-aksesuar": "spor-outdoor/fitness",
   "dumbel-agirlik": "spor-outdoor/fitness",
   "kosu-bandi": "spor-outdoor/fitness",
-  "yoga-mat": "spor-outdoor/yoga-pilates",
+  "yoga-mat": "spor-outdoor/fitness/yoga-pilates",
   "kamp-cadiri": "spor-outdoor/kamp",
   "uyku-tulumu": "spor-outdoor/kamp",
   "termos-mataralar": "spor-outdoor/kamp",

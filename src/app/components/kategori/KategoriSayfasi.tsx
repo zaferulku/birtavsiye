@@ -33,7 +33,7 @@ import {
 } from "../../../lib/productDiscovery";
 import { cleanProductTitle } from "../../../lib/productTitle";
 
-export const revalidate = 86400;
+export const revalidate = 300;
 
 type ListingRow = {
   id?: string | null;

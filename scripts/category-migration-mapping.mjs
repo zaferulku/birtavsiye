@@ -215,7 +215,7 @@ export const CATEGORY_MIGRATION_MAP = {
   "bisiklet": "spor-outdoor/bisiklet",
   "scooter": "spor-outdoor/scooter",
   "spor-cantasi": "spor-outdoor/spor-cantasi",
-  "yoga-pilates": "spor-outdoor/yoga-pilates",
+  "yoga-pilates": "spor-outdoor/fitness/yoga-pilates",
   "su-sporlari": "spor-outdoor/su-sporlari",
   "takim-sporlari": "spor-outdoor/takim-sporlari",
 

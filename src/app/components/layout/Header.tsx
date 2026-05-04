@@ -471,7 +471,7 @@ const NAV: NavGroup[] = [
           { label: "Kondisyon Aleti", slug: "spor-outdoor/fitness/kondisyon-aleti", tags: ["Koşu Bandı", "Eliptik Bisiklet", "Kondisyon Bisikleti", "Kürek Makinesi", "NordicTrack", "Technogym"] },
           { label: "Ağırlık & Güç", slug: "spor-outdoor/fitness/agirlik-guc", tags: ["Dumbbell Seti", "Olimpik Halter", "Ağırlık Plakası", "Rack", "Bench Press", "EZ Bar"] },
           { label: "Fonksiyonel Ekipman", slug: "spor-outdoor/fitness/fonksiyonel-ekipman", tags: ["Kettlebell", "TRX", "Resistance Band", "Pull-up Bar", "Battle Rope", "Ab Tekerleği"] },
-          { label: "Yoga & Pilates", slug: "spor-outdoor/yoga-pilates", tags: ["Yoga Matı", "Yoga Bloku", "Pilates Topu", "Foam Roller", "Manduka", "Gaiam"] },
+          { label: "Yoga & Pilates", slug: "spor-outdoor/fitness/yoga-pilates", tags: ["Yoga Matı", "Yoga Bloku", "Pilates Topu", "Foam Roller", "Manduka", "Gaiam"] },
           { label: "Sporcu Beslenmesi", slug: "spor-outdoor/fitness/sporcu-beslenmesi", tags: ["Whey Protein", "BCAA", "Kreatin", "Multivitamin", "Pre-Workout", "Protein Bar"] },
         ]
       },

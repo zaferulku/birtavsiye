@@ -107,13 +107,13 @@ const PTTAVM_SEGMENT_CATEGORY_MAP: Record<string, string> = {
   "kulot bez": "anne-bebek/bebek-bakim/bebek-bezi",
   kordonlar: "elektronik/giyilebilir/akilli-saat",
   "kilif ve kapaklar": "elektronik/telefon/kilif",
-  "el fenerleri": "spor-outdoor/outdoor/kamp-kampcilik-malzemeleri/el-fenerleri",
-  "uyku tulumu": "spor-outdoor/outdoor/kamp-kampcilik-malzemeleri/uyku-tulumu",
-  "pilates mati": "spor-outdoor/yoga-pilates/pilates-mati",
-  "yoga mati": "spor-outdoor/yoga-pilates/yoga-mati",
-  "pilates topu": "spor-outdoor/yoga-pilates/pilates-topu",
-  "yoga malzemeleri": "spor-outdoor/yoga-pilates",
-  pilates: "spor-outdoor/yoga-pilates",
+  "el fenerleri": "spor-outdoor/kamp/kamp-ekipmanlari",
+  "uyku tulumu": "spor-outdoor/kamp/kamp-ekipmanlari",
+  "pilates mati": "spor-outdoor/fitness/yoga-pilates/pilates-mati",
+  "yoga mati": "spor-outdoor/fitness/yoga-pilates/yoga-mati",
+  "pilates topu": "spor-outdoor/fitness/yoga-pilates/pilates-topu",
+  "yoga malzemeleri": "spor-outdoor/fitness/yoga-pilates",
+  pilates: "spor-outdoor/fitness/yoga-pilates",
 };
 
 const PTTAVM_ROOT_CATEGORY_MAP: Record<string, { slug: string; name: string }> = {

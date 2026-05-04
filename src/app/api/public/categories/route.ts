@@ -3,9 +3,9 @@ import { supabaseAdmin } from "../../../../lib/supabaseServer";
 
 export const runtime = "nodejs";
 // ISR: build sırasında DB bağlantısı yavaşlayınca 60sn limit aşılıp build fail
-// oluyordu. force-static + uzun revalidate ile build'de pre-render denemesi
-// yumuşatılır; ilk request'te generate, 1 saatte bir yenilenir.
-export const revalidate = 3600;
+// oluyordu. force-static build'i yumuşatır; 5 dakikalık revalidate kategori
+// onarımlarının header'a hızlı yansımasını sağlar.
+export const revalidate = 300;
 export const dynamic = "force-static";
 
 const QUERY_TIMEOUT_MS = 25_000;
@@ -72,6 +72,6 @@ export async function GET() {
 
   return NextResponse.json(
     { categories: data },
-    { headers: { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200" } },
+    { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" } },
   );
 }
