@@ -12,6 +12,12 @@ import {
   getLowestActivePrice,
   getUniqueActiveSources,
 } from "../listingSignals";
+import {
+  normalizeForSearch,
+  simplifySearchQueryForMatching,
+  splitNormalizedSearchTerms,
+  splitRawSearchTerms,
+} from "./searchQuery";
 
 type SearchCategoryRow = {
   id: string;
@@ -229,24 +235,11 @@ const VARIANT_INTENT_TERMS = new Set([
 ]);
 
 function normalizeSearchText(value: string | null | undefined): string {
-  return (value ?? "")
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\u0131/g, "i")
-    .replace(/\u0130/g, "I")
-    .toLowerCase()
-    .trim();
+  return normalizeForSearch(value);
 }
 
 export function splitSearchTerms(query: string | null | undefined): string[] {
-  return Array.from(
-    new Set(
-      normalizeSearchText(query)
-        .split(/\s+/)
-        .map((part) => part.trim())
-        .filter((part) => part.length >= 2)
-    )
-  ).slice(0, 8);
+  return splitNormalizedSearchTerms(query);
 }
 
 function collectSpecText(value: unknown, fragments: string[]): void {
@@ -326,6 +319,23 @@ function hasAccessoryIntent(terms: string[]): boolean {
   return terms.some((term) => ACCESSORY_QUERY_HINTS.has(term));
 }
 
+function textHasSearchTerm(text: string, term: string): boolean {
+  if (!text || !term) return false;
+  const tokens = text.split(/\s+/).filter(Boolean);
+  if (/\d/.test(term)) {
+    return tokens.some((token) => token === term);
+  }
+  return tokens.some((token) => token === term || token.startsWith(term)) || text.includes(term);
+}
+
+function getPhraseMatchBoost(text: string, query: string): number {
+  if (!text || !query) return 0;
+  if (text === query) return 90;
+  if (text.startsWith(`${query} `)) return 65;
+  if (text.includes(` ${query} `)) return 35;
+  return 0;
+}
+
 function normalizeProductRows(
   products: SearchProductRow[],
   categoryMap: Map<string, SearchCategoryRow>
@@ -386,6 +396,7 @@ function normalizeProductRows(
 function getProductSearchScore(
   product: RankedProduct,
   category: SearchCategoryRow | undefined,
+  query: string,
   terms: string[],
   profile: QueryRankingProfile
 ): { score: number; reasons: string[] } {
@@ -398,14 +409,16 @@ function getProductSearchScore(
   const modelFamily = normalizeSearchText(product.model_family);
   const modelCode = normalizeSearchText(product.model_code);
   const storage = normalizeSearchText(product.variant_storage);
-  const color = normalizeSearchText(product.variant_color);
   const specsText = flattenSpecsText(product.specs);
   const categoryName = normalizeSearchText(category?.name);
   const categorySlug = normalizeSearchText(category?.slug);
   const accessoryIntent = hasAccessoryIntent(terms);
 
   const reasons = new Set<string>();
-  let score = 0;
+  let score = getPhraseMatchBoost(title, query);
+  if (score > 0) {
+    reasons.add("baslik-ifade");
+  }
   let matchedTerms = 0;
   let missingTerms = 0;
   let matchedStrictTerms = 0;
@@ -415,37 +428,37 @@ function getProductSearchScore(
   for (const term of terms) {
     let matched = false;
 
-    if (title.includes(term)) {
+    if (textHasSearchTerm(title, term)) {
       score += 16;
       reasons.add(`baslik:${term}`);
       matched = true;
     }
-    if (modelFamily.includes(term)) {
+    if (textHasSearchTerm(modelFamily, term)) {
       score += 14;
       reasons.add(`model:${term}`);
       matched = true;
     }
-    if (brand.includes(term)) {
+    if (textHasSearchTerm(brand, term)) {
       score += 10;
       reasons.add(`marka:${term}`);
       matched = true;
     }
-    if (modelCode.includes(term)) {
+    if (textHasSearchTerm(modelCode, term)) {
       score += 10;
       reasons.add(`kod:${term}`);
       matched = true;
     }
-    if (storage.includes(term) || color.includes(term)) {
+    if (textHasSearchTerm(storage, term)) {
       score += 6;
       reasons.add(`varyant:${term}`);
       matched = true;
     }
-    if (specsText.includes(term)) {
+    if (textHasSearchTerm(specsText, term)) {
       score += 7;
       reasons.add(`ozellik:${term}`);
       matched = true;
     }
-    if (categoryName.includes(term) || categorySlug.includes(term)) {
+    if (textHasSearchTerm(categoryName, term) || textHasSearchTerm(categorySlug, term)) {
       score += 9;
       reasons.add(`kategori:${term}`);
       matched = true;
@@ -765,6 +778,7 @@ function applyRankingSignals(
       const lexical = getProductSearchScore(
         product,
         categoryMap.get(product.category_id ?? ""),
+        query,
         terms,
         profile
       );
@@ -1005,7 +1019,8 @@ export async function retrieveRankedProducts(
     vectorCandidates = [],
   } = options;
 
-  const normalizedQuery = query?.trim() ?? "";
+  const originalQuery = query?.trim() ?? "";
+  const normalizedQuery = simplifySearchQueryForMatching(originalQuery);
   const queryTerms = splitSearchTerms(normalizedQuery);
   const queryProfile = getQueryRankingProfile(queryTerms);
   const knowledgeContext = buildCategoryRankingContext({
@@ -1035,6 +1050,9 @@ export async function retrieveRankedProducts(
 
   if (normalizedQuery) {
     const searchTerms = queryTerms;
+    const rawSearchTerms = splitRawSearchTerms(originalQuery);
+    const candidateTerms = Array.from(new Set([...searchTerms, ...rawSearchTerms]));
+    const titleRequiredTerms = searchTerms;
     const categoryMap = new Map(categories.map((category) => [category.id, category]));
     const uniqueRows = new Map<string, SearchProductRow>();
 
@@ -1042,7 +1060,7 @@ export async function retrieveRankedProducts(
       [];
 
     if (searchTerms.length > 0) {
-      const textClauses = searchTerms.flatMap((term) => {
+      const textClauses = candidateTerms.flatMap((term) => {
         const safeTerm = escapeIlikeTerm(term);
         return [
           `title.ilike.%${safeTerm}%`,
@@ -1050,7 +1068,6 @@ export async function retrieveRankedProducts(
           `model_family.ilike.%${safeTerm}%`,
           `model_code.ilike.%${safeTerm}%`,
           `variant_storage.ilike.%${safeTerm}%`,
-          `variant_color.ilike.%${safeTerm}%`,
         ];
       });
 
@@ -1079,7 +1096,7 @@ export async function retrieveRankedProducts(
           .range(0, fetchLimit - 1)
           .order("created_at", { ascending: false });
 
-        for (const term of searchTerms) {
+        for (const term of titleRequiredTerms) {
           andTitleQuery = andTitleQuery.ilike("title", `%${escapeIlikeTerm(term)}%`);
         }
         if (categoryIds) andTitleQuery = andTitleQuery.in("category_id", categoryIds);

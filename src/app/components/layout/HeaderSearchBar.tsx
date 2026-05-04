@@ -7,7 +7,7 @@ export type HeaderSearchSuggestion = {
   label: string;
   description: string;
   href: string;
-  kind: "product" | "category" | "brand";
+  kind: "product" | "category" | "brand" | "query";
 };
 
 type HeaderSearchBarProps = {
@@ -104,24 +104,26 @@ export default function HeaderSearchBar({
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          if (isOpen && suggestions[activeIndex]) {
-            selectSuggestion(suggestions[activeIndex]);
-            return;
-          }
           submit(query);
         }}
         className="flex items-center bg-gray-100 rounded-xl px-3 md:px-4 gap-2 md:gap-3 h-11 focus-within:bg-white transition-all border border-transparent focus-within:border-[#E8460A]/40 focus-within:ring-2 focus-within:ring-[#E8460A]/10 min-w-0"
       >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="w-4 h-4 text-[#E8460A] flex-shrink-0"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2.5}
+        <button
+          type="submit"
+          aria-label="Ara"
+          className="flex h-9 w-9 flex-shrink-0 items-center justify-center text-[#E8460A] transition hover:text-[#C93A08]"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-        </svg>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth={2.5}
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </button>
         <input
           type="text"
           value={query}
@@ -203,7 +205,13 @@ export default function HeaderSearchBar({
                     <div className="truncate text-[11px] leading-[14px] text-slate-400">{suggestion.description}</div>
                   </div>
                   <span className="text-[11px] font-medium text-slate-300">
-                    {suggestion.kind === "product" ? "Urun" : suggestion.kind === "category" ? "Kategori" : "Marka"}
+                    {suggestion.kind === "product"
+                      ? "Urun"
+                      : suggestion.kind === "category"
+                        ? "Kategori"
+                        : suggestion.kind === "brand"
+                          ? "Marka"
+                          : "Arama"}
                   </span>
                 </button>
               );

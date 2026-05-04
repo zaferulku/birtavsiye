@@ -2,13 +2,17 @@ import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabaseServer";
 import { shouldHideDiscoveryProduct } from "@/lib/productDiscovery";
 import { cleanProductTitle } from "@/lib/productTitle";
-import { retrieveRankedProducts, splitSearchTerms } from "@/lib/search/productRetrieval";
-import { trNormalize } from "@/lib/turkishNormalize";
+import { retrieveRankedProducts } from "@/lib/search/productRetrieval";
+import {
+  normalizeForSearch,
+  simplifySearchQueryForMatching,
+  splitNormalizedSearchTerms,
+} from "@/lib/search/searchQuery";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-type SuggestionKind = "product" | "category" | "brand";
+type SuggestionKind = "product" | "category" | "brand" | "query";
 
 type SearchSuggestion = {
   id: string;
@@ -51,10 +55,7 @@ const ACCESSORY_TERMS = [
 ];
 
 function normalizeForMatch(value: string | null | undefined): string {
-  return trNormalize(value)
-    .replace(/[^a-z0-9]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
+  return normalizeForSearch(value);
 }
 
 function tokenMatches(candidateToken: string, queryToken: string): boolean {
@@ -87,6 +88,12 @@ function scoreTextMatch(candidateText: string, normalizedQuery: string, queryTer
 function containsAnyTerm(text: string, terms: string[]): boolean {
   const normalized = normalizeForMatch(text);
   return terms.some((term) => normalized.split(/\s+/).some((token) => tokenMatches(token, normalizeForMatch(term))));
+}
+
+function getAutocompleteTerms(query: string): string[] {
+  const tokens = normalizeForMatch(query).split(/\s+/).filter(Boolean);
+  const lastIndex = tokens.length - 1;
+  return tokens.filter((token, index) => token.length >= 2 || index === lastIndex);
 }
 
 function getCategorySearchText(category: CategorySuggestionRow): string {
@@ -146,6 +153,7 @@ async function getProductAndBrandSuggestions(
   query: string,
   normalizedQuery: string,
   queryTerms: string[],
+  autocompleteTerms: string[],
 ): Promise<SearchSuggestion[]> {
   const { products } = await retrieveRankedProducts({
     sb: supabaseAdmin,
@@ -155,6 +163,7 @@ async function getProductAndBrandSuggestions(
 
   const suggestions: SearchSuggestion[] = [];
   const brandScores = new Map<string, { label: string; score: number; count: number }>();
+  const modelScores = new Map<string, { label: string; score: number; count: number }>();
   const queryHasAccessoryIntent = containsAnyTerm(query, ACCESSORY_TERMS);
 
   for (const product of products.filter((item) => !shouldHideDiscoveryProduct(item))) {
@@ -165,7 +174,6 @@ async function getProductAndBrandSuggestions(
       product.model_family,
       product.model_code,
       product.variant_storage,
-      product.variant_color,
       product.category_slug?.replace(/[/_-]+/g, " "),
     ].filter(Boolean).join(" ");
     const productScore = scoreTextMatch(searchableProductText, normalizedQuery, queryTerms);
@@ -194,6 +202,20 @@ async function getProductAndBrandSuggestions(
         count: (current?.count ?? 0) + 1,
       });
     }
+
+    const modelLabel = [product.model_family, product.variant_storage].filter(Boolean).join(" ").trim();
+    if (modelLabel) {
+      const modelScore = scoreTextMatch(modelLabel, normalizedQuery, autocompleteTerms);
+      if (modelScore > 0) {
+        const key = normalizeForMatch(modelLabel);
+        const current = modelScores.get(key);
+        modelScores.set(key, {
+          label: current?.label ?? modelLabel,
+          score: Math.max(current?.score ?? 0, modelScore),
+          count: (current?.count ?? 0) + 1,
+        });
+      }
+    }
   }
 
   for (const [key, brand] of brandScores.entries()) {
@@ -204,6 +226,17 @@ async function getProductAndBrandSuggestions(
       href: `/ara?q=${encodeURIComponent(brand.label)}`,
       kind: "brand",
       score: brand.score + Math.min(12, brand.count * 2),
+    });
+  }
+
+  for (const [key, model] of modelScores.entries()) {
+    suggestions.push({
+      id: `query-${key}`,
+      label: model.label,
+      description: `${model.count} eslesen urun`,
+      href: `/ara?q=${encodeURIComponent(model.label)}`,
+      kind: "query",
+      score: model.score + Math.min(18, model.count * 2) + 8,
     });
   }
 
@@ -228,16 +261,17 @@ export async function GET(request: Request) {
   try {
     const url = new URL(request.url);
     const rawQuery = url.searchParams.get("q") ?? "";
-    const query = rawQuery.replace(/\s+/g, " ").trim();
+    const query = simplifySearchQueryForMatching(rawQuery);
     const normalizedQuery = normalizeForMatch(query);
-    const queryTerms = splitSearchTerms(query);
+    const queryTerms = splitNormalizedSearchTerms(query);
+    const autocompleteTerms = getAutocompleteTerms(query);
 
     if (normalizedQuery.length < 2 || queryTerms.length === 0) {
       return NextResponse.json({ suggestions: [] });
     }
 
     const [productAndBrandSuggestions, categorySuggestions] = await Promise.all([
-      getProductAndBrandSuggestions(query, normalizedQuery, queryTerms),
+      getProductAndBrandSuggestions(query, normalizedQuery, queryTerms, autocompleteTerms),
       getCategorySuggestions(normalizedQuery, queryTerms),
     ]);
 
@@ -245,7 +279,7 @@ export async function GET(request: Request) {
       .sort((left, right) => {
         if (right.score !== left.score) return right.score - left.score;
         if (left.kind !== right.kind) {
-          const priority: Record<SuggestionKind, number> = { product: 0, category: 1, brand: 2 };
+          const priority: Record<SuggestionKind, number> = { query: 0, product: 1, category: 2, brand: 3 };
           return priority[left.kind] - priority[right.kind];
         }
         return left.label.localeCompare(right.label, "tr");
